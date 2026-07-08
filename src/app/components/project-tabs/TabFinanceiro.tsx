@@ -116,7 +116,8 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
   };
 
   return (
-    <div className="flex flex-col gap-5 p-6 overflow-y-auto h-full">
+    <div className="space-y-5 p-6 overflow-y-auto h-full">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
