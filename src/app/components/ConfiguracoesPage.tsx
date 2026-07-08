@@ -192,8 +192,9 @@ export function ConfiguracoesPage() {
                 Credenciais
               </h3>
               <p style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                Nesta versão os logins são fixos (<b>CRIA / INOVA</b> para apresentação e <b>LJCRIA / 12332145+</b> como administrador de testes). A rotação de senha entra na próxima iteração.
+                Esta é a área de controle de credenciais e acessos. Qualquer alteração de login, senha ou permissão deve ser feita aqui. Por segurança, as senhas atuais não são exibidas — use o botão abaixo para redefini-las.
               </p>
+
               <button
                 onClick={() => toast.info('Alteração de senha estará disponível na próxima versão.')}
                 className="self-start px-3 py-1.5 rounded-lg text-[12px] font-medium border"
