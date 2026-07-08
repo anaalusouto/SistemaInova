@@ -77,7 +77,7 @@ export function TabCadastro({ project }: Props) {
             </select>
           </F>
           <F label="Nome do Projeto" full><input className="ci" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></F>
-          <F label="Objetivo" full><textarea className="ci min-h-[70px]" value={form.objective} onChange={e => setForm({ ...form, objective: e.target.value })} /></F>
+          <F label="Objetivo" full><textarea className="ci min-h-[140px] max-h-[240px] overflow-y-auto resize-y leading-relaxed" value={form.objective} onChange={e => setForm({ ...form, objective: e.target.value })} /></F>
         </div>
       </Section>
 
