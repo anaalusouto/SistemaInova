@@ -50,10 +50,8 @@ export function ConfiguracoesPage() {
   });
   const [team] = useState(initialTeam);
 
-  const myEntries = useMemo(
-    () => entries.filter(e => e.userLogin === user?.login).slice(0, 100),
-    [entries, user?.login],
-  );
+
+
 
   return (
     <div className="flex h-full overflow-hidden">
