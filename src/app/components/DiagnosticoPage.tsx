@@ -200,7 +200,19 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const [pendingMaturity, setPendingMaturity] = useState<{ key: string; value: number } | null>(null);
 
-  const requestMaturity = (key: string, value: number) => setPendingMaturity({ key, value });
+  const requestMaturity = (key: string, value: number) => {
+    // Antes do diagnóstico ser concluído, o índice pode ser marcado/alterado livremente
+    // (inclusive para desfazer a escolha). Após concluído (100%), qualquer alteração
+    // exige autenticação administrativa, pois decisões já foram tomadas a partir dele.
+    if (diagnostic.status === 'Concluído') {
+      setPendingMaturity({ key, value });
+    } else {
+      // toggle: clicar no mesmo valor volta para 0 (desfaz)
+      const current = diagnostic.maturity[key];
+      setMaturity(diagnostic.id, key, current === value ? 0 : value);
+    }
+  };
+
 
   const proj = projects.find(p => p.id === diagnostic.projectId);
 

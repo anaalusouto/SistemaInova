@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import {
   User,
@@ -50,10 +50,8 @@ export function ConfiguracoesPage() {
   });
   const [team] = useState(initialTeam);
 
-  const myEntries = useMemo(
-    () => entries.filter(e => e.userLogin === user?.login).slice(0, 100),
-    [entries, user?.login],
-  );
+
+
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -126,51 +124,13 @@ export function ConfiguracoesPage() {
                 <div style={{ fontWeight: 600, fontSize: '1rem', color: '#0F172A' }}>{user?.displayName}</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Login: {user?.login}</div>
                 <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: 4 }}>
-                  A edição de dados do perfil é feita em <b>Segurança</b>. Aqui é apenas a visão individual.
+                  A edição de credenciais e o histórico de atividade ficam em <b>Segurança</b>.
                 </div>
               </div>
-            </div>
-
-            <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-              <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-                <History size={14} color="#475569" />
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>
-                  Minha atividade
-                </h3>
-                <span className="ml-auto" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                  {myEntries.length} registros
-                </span>
-              </div>
-              {myEntries.length === 0 ? (
-                <div className="py-10 text-center" style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                  Nenhuma atividade registrada ainda.
-                </div>
-              ) : (
-                <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                  <table className="w-full">
-                    <thead>
-                      <tr style={{ background: '#FAFAFA' }}>
-                        {['Horário', 'Área', 'Ação', 'Detalhe'].map(h => (
-                          <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.68rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myEntries.map(e => (
-                        <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td className="px-4 py-2" style={{ fontSize: '0.73rem', color: '#475569', fontFamily: 'var(--font-mono)' }}>{formatTs(e.timestamp)}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: '#0F172A' }}>{e.area}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: '#475569' }}>{e.action}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>{e.detail ?? '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
           </div>
         )}
+
 
         {activeSection === 'notifications' && (
           <div className="max-w-xl flex flex-col gap-6">
@@ -232,8 +192,9 @@ export function ConfiguracoesPage() {
                 Credenciais
               </h3>
               <p style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                Nesta versão os logins são fixos (<b>CRIA / INOVA</b> para apresentação e <b>LJCRIA / 12332145+</b> como administrador de testes). A rotação de senha entra na próxima iteração.
+                Esta é a área de controle de credenciais e acessos. Qualquer alteração de login, senha ou permissão deve ser feita aqui. Por segurança, as senhas atuais não são exibidas — use o botão abaixo para redefini-las.
               </p>
+
               <button
                 onClick={() => toast.info('Alteração de senha estará disponível na próxima versão.')}
                 className="self-start px-3 py-1.5 rounded-lg text-[12px] font-medium border"
