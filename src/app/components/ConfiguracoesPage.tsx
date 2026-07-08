@@ -126,51 +126,13 @@ export function ConfiguracoesPage() {
                 <div style={{ fontWeight: 600, fontSize: '1rem', color: '#0F172A' }}>{user?.displayName}</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Login: {user?.login}</div>
                 <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: 4 }}>
-                  A edição de dados do perfil é feita em <b>Segurança</b>. Aqui é apenas a visão individual.
+                  A edição de credenciais e o histórico de atividade ficam em <b>Segurança</b>.
                 </div>
               </div>
-            </div>
-
-            <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-              <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-                <History size={14} color="#475569" />
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>
-                  Minha atividade
-                </h3>
-                <span className="ml-auto" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                  {myEntries.length} registros
-                </span>
-              </div>
-              {myEntries.length === 0 ? (
-                <div className="py-10 text-center" style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                  Nenhuma atividade registrada ainda.
-                </div>
-              ) : (
-                <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                  <table className="w-full">
-                    <thead>
-                      <tr style={{ background: '#FAFAFA' }}>
-                        {['Horário', 'Área', 'Ação', 'Detalhe'].map(h => (
-                          <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.68rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myEntries.map(e => (
-                        <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td className="px-4 py-2" style={{ fontSize: '0.73rem', color: '#475569', fontFamily: 'var(--font-mono)' }}>{formatTs(e.timestamp)}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: '#0F172A' }}>{e.area}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: '#475569' }}>{e.action}</td>
-                          <td className="px-4 py-2" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>{e.detail ?? '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
           </div>
         )}
+
 
         {activeSection === 'notifications' && (
           <div className="max-w-xl flex flex-col gap-6">
