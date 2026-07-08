@@ -54,7 +54,7 @@ export function TabCadastro({ project }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-5 p-6 overflow-y-auto h-full">
+    <div className="space-y-5 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
           Cadastro do Projeto
