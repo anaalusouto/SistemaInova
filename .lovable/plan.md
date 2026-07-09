@@ -1,97 +1,79 @@
-# Plano de alterações — Project Financier Buddy
+# Plano — Alterações INOVA CRIA (rodada atual)
 
-## Passo 0 — Sincronizar o projeto enviado
+## Reorganização do menu
 
-O ZIP contém a versão mais atualizada do sistema (React + TanStack Start, mesmo stack). O template atual do sandbox está praticamente vazio. Vou copiar toda a árvore `src/app/`, `src/components/`, `src/hooks/`, `src/lib/`, `src/styles.css` e `src/routes/index.tsx` do ZIP para `/dev-server`, mantendo `router.tsx`, `start.ts`, `server.ts`, `__root.tsx` e configs de build. Instalo dependências que faltarem (`sonner`, `recharts`, `zustand`, etc.).
+```
+Dashboard
+INOVA FAS/FUNBIO  ← grupo (expansível)
+  ├─ Comunidades
+  └─ Projetos
+Cronograma 2026
+Diagnóstico
+Relatórios
+Configurações
+```
 
-## 1. Dashboard
-- Remover botões **"+ Novo Projeto"** e **"Atualizar agora"** do `Dashboard.tsx`.
-- Restante permanece igual (mexemos depois).
+Sidebar recebe grupo com dois filhos; navegação já existe (`activeNav`), só adiciono os itens novos e um estado de "expandido" para o grupo.
 
-## 2. Projetos — reordenar abas dos módulos internos
+## 1. Comunidades (novo)
 
-Nova ordem em `ProjectView.tsx`:
-1. **Cadastro** (primeiro)
-2. **Monitoramento** (Visão Geral fundida aqui)
-3. **Financeiro**
-4. **Gestão de Risco**
-5. **Gestão de Mudança**
-6. **Evidências e Relatório**
+Seed com as 20 comunidades do `Planos_de_trabalho...xlsx`.
 
-### 2.1 Cadastro (`TabCadastro.tsx`)
-- Adicionar campo **Código Interno** somente-leitura no formato `NN-AAAA` (ex.: `01-2026`), gerado pela ordem de criação do projeto no ano vigente. Persistir no store (`src/app/store.tsx`) — atribuir na criação, imutável depois.
-- Manter Situação, Nome, Objetivo, Coordenador(A), Financiador/Organização, Equipe, Vigência e Financeiro.
+**Dados base:** Nome · Código Interno (`NN-2026`) · Responsável Técnico / Ponto Focal CRIA · Segmento Social · Eixo Principal · Classificação · Localização · Financiador · Objetivo · Valor Total · Início Previsto · Final Previsto · Status.
 
-### 2.2 Monitoramento (`TabMonitoramento.tsx` + funde `TabOverview.tsx`)
-- Remover a aba Visão Geral separada; trazer o **resumo completo do projeto** para o topo do Monitoramento.
-- Botão **"Ver detalhamento do monitoramento"** que expande / rola para o detalhamento.
-- Cada **Atividade** do plano de ação deve estar **vinculada a uma Meta** (select obrigatório de meta ao criar/editar atividade).
-- Todos os campos de metas/atividades **editáveis** (edit inline + diálogo). Ações registradas via sistema de auditoria (ver Config).
-- Manter a lógica atual de adicionar metas/atividades.
+**Seções (accordions editáveis, cada uma com lista + texto livre):**
+Pessoas · Infraestrutura · Certificação · Fornecedores · Compradores · Capacitação · Território · Produtos.
 
-### 2.3 Financeiro (`TabFinanceiro.tsx`)
-- Envolver as listas de **Detalhamento** e **Contrapartidas** em `ScrollArea` (barra de rolagem) com altura máxima.
-- Manter "+ Item Orçamentário" e demais funcionalidades.
+Cada comunidade tem **1 projeto vinculado** (mesmo id). O botão "Abrir projeto" leva para a aba Projeto correspondente.
 
-### 2.4 Gestão de Risco / Mudança — manter.
+## 2. Projetos (reescrito)
 
-### 2.5 Evidências e Relatório — manter (integrado à lógica de auditoria).
+**Removido:** aba **Monitoramento**. O resumo (progresso geral, alerta de metas, orçamento consumido) migra para o **Dashboard**.
 
-## 3. Diagnósticos (`DiagnosticoPage.tsx` + `diagnostic/store.tsx`)
-- Cada projeto passa a ter seu próprio diagnóstico (chave `diagnostics[projectId]` no store). Seletor de projeto no topo da página.
-- Questionário: manter como está.
-- **Índice de Maturidade**: ao clicar/alterar/desfazer uma marcação exigir **login administrativo** (modal). Só desbloqueia com credenciais válidas.
-- Cesta de Produtos e Resumo: manter.
+**Cadastro** agora reúne os tópicos do plano de trabalho (aplicáveis a todo projeto — não só ADESC), organizados em accordions editáveis:
 
-## 4. Relatórios (`ReportsPage.tsx`)
-- Substituir o "dashboard 2" atual por uma tela de **montagem de relatório**: checkboxes para escolher quais campos entram (Cadastro, Metas, Financeiro, Riscos, Mudanças, Diagnóstico, etc.), e um resumo unificado abaixo. Botão exportar (imprimir/PDF via `window.print`).
+- **I — Apresentação:** Título · Prazo de execução · Valor total · Coordenador(a) · Empresa/organização · Equipe.
+- **Critério I — Relevância:** Problemática · Justificativa · Localização e abrangência · Objetivo · Diversidade · Saberes locais.
+- **Critério II — Capacidade Técnica:** Experiência prévia · Capacidade técnica e gerencial/equipe · Estratégia · Cronograma físico (metas/etapas) · Detalhamento do plano de aplicação dos recursos · Contrapartida · Justificativa da contrapartida.
+- **Critério III — Impacto:** Resultado(s) e impacto(s) previstos · Beneficiários (público-alvo) · Total diretamente/indiretamente beneficiadas · Forma de acompanhamento e avaliação.
+- **Critério IV — Replicabilidade:** Potencial de replicabilidade · Potencial de ampliação.
+- **Extras da planilha:** Status · Pilares · Metas · Detalhamento por plano de trabalho · Compradores · Garantia de venda · Destinação · Ativações · Oportunidades · Receita · Valor do repasse · Forma de repasse · Status do repasse · Data do repasse · Observações · Plano atualizado.
 
-## 5. Configurações (`ConfiguracoesPage.tsx`)
+Cada projeto puxa dados iniciais da comunidade vinculada. Tudo editável (LJCRIA); histórico via auditoria.
 
-### 5.1 Autenticação + tela de Login (nova)
-- Nova tela de login antes de entrar no sistema. Estado de sessão em `localStorage`.
-- **Dois usuários fixos** (sem cadastro):
-  - Apresentação: `login: CRIA` / `senha: INOVA`
-  - Administrador: `login: LJCRIA` / `senha: 12332145+`
-- Admin pode tudo. Usuário `CRIA` também opera o sistema, mas ações sensíveis (desmarcar índice de maturidade, editar registros bloqueados) pedem re-autenticação administrativa.
+**Mantidos:** Financeiro · Gestão de Risco · Gestão de Mudança · Evidências e Relatório.
 
-### 5.2 Perfil
-- Mostra dados do usuário logado + **log de atividade individual**: hora de acesso, áreas visitadas, ações (create/update/delete) — persistido em `localStorage` (`audit_log`).
-- Cada mudança nas abas dispara `logAction({ user, area, action, target })`.
+## 3. Dashboard
 
-### 5.3 Notificações
-- Painel parcialmente desenvolvido: lista de eventos (metas próximas do prazo, atrasos) com toggle "enviar por e-mail" (mock). Deixar comentado no código o ponto de integração de e-mail para o admin e cada login.
+Recebe o **Resumo do Monitoramento** que estava na aba: progresso do portfólio, alertas de metas em atraso, orçamento consumido vs total, últimas ações auditadas. Botões "+ Novo Projeto" e "Atualizar agora" continuam ocultos.
 
-### 5.4 Segurança
-- Concentra: registro de auditoria completo (todos os usuários), gestão de senhas (placeholder), alterar/editar equipe.
+## 4. Cronograma 2026 (novo, fora do grupo INOVA)
 
-### 5.5 Perfil (visão individual) vs Segurança (edição)
-- Em Perfil: somente visualização do próprio usuário.
-- Em Segurança: edição de qualquer dado (inclusive equipe).
+Base: `Instituições_e_Rotas_-_Doc_Vinculado_ao_Plano_de_Trabalho.xlsx` (12 rotas, 20 organizações).
 
-### 5.6 Equipe
-- Mantém como "vitrine" (somente leitura em Configurações → Equipe). Edição fica em Segurança.
+- **Rotas** — tabela editável com rota, comunidade, município/UF, dias de atuação, modal de acesso, tipo de comunidade, notas logísticas.
+- **Calendário 2026** — grade de 12 meses. Cada evento: título, data, tipo (Visita técnica / Prazo / Logística / Reunião), rota, comunidade vinculada, responsável, observações. CRUD completo.
 
-### 5.7 Categorias
-- Avaliar necessidade. Manter por ora, mas dentro de um accordion recolhido — nota TODO para remover se não usada.
+## 5. Diagnóstico — ajustes
 
-### 5.8 Organização
-- **Remover** da navegação de Configurações.
-
-## 6. Sistema de auditoria (transversal)
-Criar `src/app/auth/authStore.tsx` (contexto de sessão) e `src/app/audit/auditStore.tsx` (log). Todas as chamadas de mutação nos stores existentes chamam `logAction`. Perfil e Segurança leem esse log.
+- **Vincular à Comunidade** (select de comunidades) no lugar de "Título".
+- **Projeto** (select filtrado pela comunidade) no lugar de "Organização".
+- **Índice de Maturidade em 3 rodadas** (R1 / R2 / R3), cada rodada é um snapshot independente com gráfico comparativo.
+- Antes de iniciar/editar uma rodada exige **login do avaliador** + **data de realização** (obrigatórios).
+- Rodada marcada como **Finalizada** só pode ser alterada com **senha do administrador** (reutiliza `AdminUnlockDialog`).
+- Restante do diagnóstico (perguntas, cesta de produtos, resumo) permanece.
 
 ## Detalhes técnicos
 
-- Stack: React 19 + TanStack Start (mesmo do template). Sem backend — persistência via `localStorage` (já é o padrão do projeto enviado).
-- Roteamento: mantemos a rota única `/` + `AppShell` interno, adicionando gate de login antes do `AppShell`.
-- Códigos internos: função `generateInternalCode(projects)` calcula `NN` = quantidade de projetos criados no ano + 1, ano = ano atual.
-- Vinculação atividade↔meta: adicionar `goalId: string` em `Activity` no `mockData.ts`/tipos.
-- Auditoria: shape `{ id, userLogin, timestamp, area, action, detail }`; ganchos nos stores.
-- Índice de maturidade protegido: modal `AdminUnlockDialog` reutilizável.
-- Financeiro scroll: `<ScrollArea className="max-h-[420px]">`.
+- `src/app/data/comunidades.ts` (seed com 20 registros) e `src/app/data/rotas.ts` (seed com 12 rotas e organizações).
+- `src/app/store.tsx`: acrescentar `communities`, `routes`, `calendarEvents` (CRUD + auditoria). Projeto ganha `communityId`.
+- Novos componentes: `ComunidadesPage.tsx`, `ComunidadeView.tsx`, `CronogramaPage.tsx`.
+- `ProjectView.tsx`: remover aba Monitoramento; `TabCadastro.tsx` reescrito com os accordions dos tópicos.
+- `Dashboard.tsx`: absorver o resumo do monitoramento.
+- `Sidebar.tsx`: grupo colapsável "INOVA FAS/FUNBIO".
+- `DiagnosticoPage.tsx` + `diagnostic/store.tsx`: modelo de 3 rodadas + gate de login/data + gate admin para editar rodada finalizada.
 
-## Fora de escopo (não farei agora)
-- Envio real de e-mails de notificação (fica só o mock/UI).
-- Backend/Cloud (o usuário disse que é para navegar e testar).
-- Cadastro público de usuários — os dois logins são fixos.
+## Fora de escopo
+
+- Parse dos PDFs de plano de trabalho (o nome do arquivo aparece como referência textual).
+- Backend — segue tudo em `localStorage`.
