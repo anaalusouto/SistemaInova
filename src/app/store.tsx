@@ -9,14 +9,56 @@ import {
   type Evidence,
   type ActivityStatus,
 } from './data/mockData';
+import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
+import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 
-const STORAGE_KEY = 'pp-portfolio-v2';
+const STORAGE_KEY = 'pp-portfolio-v3';
+
+/** Campos extras do plano de trabalho (todos opcionais e editáveis). */
+export interface PlanoTrabalho {
+  problematica?: string;
+  justificativa?: string;
+  localizacaoAbrangencia?: string;
+  diversidade?: string;
+  saberesLocais?: string;
+  experienciaPrevia?: string;
+  capacidadeTecnica?: string;
+  estrategia?: string;
+  cronogramaFisico?: string;
+  detalhamentoRecursos?: string;
+  contrapartida?: string;
+  justificativaContrapartida?: string;
+  resultadosImpactos?: string;
+  publicoAlvo?: string;
+  beneficiadosDiretos?: number;
+  beneficiadosIndiretos?: number;
+  formaAcompanhamento?: string;
+  potencialReplicabilidade?: string;
+  potencialAmpliacao?: string;
+  // extras da planilha
+  pilares?: string;
+  metasTexto?: string;
+  detalhamentoPlano?: string;
+  compradores?: string;
+  garantiaVenda?: string;
+  destinacao?: string;
+  ativacoes?: string;
+  oportunidades?: string;
+  receitaFaixa?: string;
+  valorRepasse?: string;
+  formaRepasse?: string;
+  statusRepasse?: string;
+  dataRepasse?: string;
+  observacoes?: string;
+  planoArquivo?: string;
+}
+export type ProjectExt = Project & { communityId?: number | null; plano?: PlanoTrabalho };
 
 type Ctx = {
-  projects: Project[];
-  getProject: (id: number) => Project | undefined;
-  addProject: (p: Omit<Project, 'id' | 'goals' | 'financialItems' | 'risks' | 'changes' | 'evidences' | 'contrapartidas' | 'team'> & { team?: string[] }) => Project;
-  updateProject: (id: number, patch: Partial<Project>) => void;
+  projects: ProjectExt[];
+  getProject: (id: number) => ProjectExt | undefined;
+  addProject: (p: Omit<ProjectExt, 'id' | 'goals' | 'financialItems' | 'risks' | 'changes' | 'evidences' | 'contrapartidas' | 'team'> & { team?: string[] }) => ProjectExt;
+  updateProject: (id: number, patch: Partial<ProjectExt>) => void;
   deleteProject: (id: number) => void;
 
   addRisk: (projectId: number, r: Omit<Risk, 'id' | 'severity'>) => void;
@@ -38,25 +80,51 @@ type Ctx = {
 
   updateActivityStatus: (projectId: number, activityId: number, status: ActivityStatus, progress?: number) => void;
 
+  // Comunidades
+  communities: Comunidade[];
+  getCommunity: (id: number) => Comunidade | undefined;
+  updateCommunity: (id: number, patch: Partial<Comunidade>) => void;
+
+  // Rotas / Calendário
+  routes: RotaItem[];
+  updateRoute: (id: number, patch: Partial<RotaItem>) => void;
+  addRoute: (r: Omit<RotaItem, 'id'>) => void;
+  deleteRoute: (id: number) => void;
+
+  events: CalendarEvent[];
+  addEvent: (e: Omit<CalendarEvent, 'id'>) => void;
+  updateEvent: (id: number, patch: Partial<CalendarEvent>) => void;
+  deleteEvent: (id: number) => void;
+
   resetToSeed: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
 
-function loadInitial(): Project[] {
-  if (typeof window === 'undefined') return seedProjects;
+type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[] };
+
+function loadInitial(): Persisted {
+  const fallback: Persisted = {
+    projects: seedProjects as ProjectExt[],
+    communities: seedComunidades,
+    routes: seedRotas,
+    events: calendarSeed,
+  };
+  if (typeof window === 'undefined') return fallback;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return seedProjects;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed as Project[];
-  } catch {
-    // ignore
-  }
-  return seedProjects;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as Partial<Persisted>;
+    return {
+      projects: parsed.projects?.length ? parsed.projects : fallback.projects,
+      communities: parsed.communities?.length ? parsed.communities : fallback.communities,
+      routes: parsed.routes?.length ? parsed.routes : fallback.routes,
+      events: parsed.events?.length ? parsed.events : fallback.events,
+    };
+  } catch { return fallback; }
 }
 
-function recalcProject(p: Project): Project {
+function recalcProject(p: ProjectExt): ProjectExt {
   const allActivities = p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
   const progress = allActivities.length
     ? Math.round(allActivities.reduce((a, x) => a + x.progress, 0) / allActivities.length)
@@ -68,37 +136,36 @@ function recalcProject(p: Project): Project {
 }
 
 export function ProjectsProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>(seedProjects);
+  const [projects, setProjects] = useState<ProjectExt[]>(seedProjects as ProjectExt[]);
+  const [communities, setCommunities] = useState<Comunidade[]>(seedComunidades);
+  const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
+  const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setProjects(loadInitial());
+    const p = loadInitial();
+    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events);
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-    } catch {
-      // ignore
-    }
-  }, [projects, hydrated]);
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events } as Persisted)); } catch { /* ignore */ }
+  }, [projects, communities, routes, events, hydrated]);
 
-  const patch = useCallback((id: number, fn: (p: Project) => Project) => {
+  const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
     setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
   }, []);
 
   const value = useMemo<Ctx>(() => ({
     projects,
     getProject: (id) => projects.find(p => p.id === id),
-
     addProject: (data) => {
       const nextId = projects.reduce((m, p) => Math.max(m, p.id), 0) + 1;
       const year = new Date().getFullYear();
       const seq = projects.filter(p => (p.code ?? '').endsWith(`-${year}`)).length + 1;
       const internalCode = `${String(seq).padStart(2, '0')}-${year}`;
-      const p: Project = {
+      const p: ProjectExt = {
         id: nextId,
         team: data.team ?? [],
         goals: [],
@@ -109,115 +176,98 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         evidences: [],
         ...data,
         code: internalCode,
-      } as Project;
+      } as ProjectExt;
       setProjects(prev => [...prev, p]);
       return p;
     },
-
     updateProject: (id, patchData) => {
       setProjects(prev => prev.map(p => (p.id === id ? recalcProject({ ...p, ...patchData }) : p)));
     },
+    deleteProject: (id) => setProjects(prev => prev.filter(p => p.id !== id)),
 
-    deleteProject: (id) => {
-      setProjects(prev => prev.filter(p => p.id !== id));
-    },
+    addRisk: (projectId, r) => patch(projectId, p => {
+      const nextId = p.risks.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, risks: [...p.risks, { ...r, id: nextId, severity: r.probability * r.impact }] };
+    }),
+    deleteRisk: (projectId, riskId) => patch(projectId, p => ({ ...p, risks: p.risks.filter(r => r.id !== riskId) })),
 
-    addRisk: (projectId, r) => {
-      patch(projectId, p => {
-        const nextId = p.risks.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-        return { ...p, risks: [...p.risks, { ...r, id: nextId, severity: r.probability * r.impact }] };
-      });
-    },
-    deleteRisk: (projectId, riskId) => {
-      patch(projectId, p => ({ ...p, risks: p.risks.filter(r => r.id !== riskId) }));
-    },
+    addChange: (projectId, c) => patch(projectId, p => {
+      const nextId = p.changes.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, changes: [...p.changes, { ...c, id: nextId }] };
+    }),
+    updateChangeApproval: (projectId, changeId, approval) =>
+      patch(projectId, p => ({ ...p, changes: p.changes.map(c => (c.id === changeId ? { ...c, approval } : c)) })),
+    deleteChange: (projectId, changeId) => patch(projectId, p => ({ ...p, changes: p.changes.filter(c => c.id !== changeId) })),
 
-    addChange: (projectId, c) => {
-      patch(projectId, p => {
-        const nextId = p.changes.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-        return { ...p, changes: [...p.changes, { ...c, id: nextId }] };
-      });
-    },
-    updateChangeApproval: (projectId, changeId, approval) => {
-      patch(projectId, p => ({
-        ...p,
-        changes: p.changes.map(c => (c.id === changeId ? { ...c, approval } : c)),
-      }));
-    },
-    deleteChange: (projectId, changeId) => {
-      patch(projectId, p => ({ ...p, changes: p.changes.filter(c => c.id !== changeId) }));
-    },
-
-    addFinancial: (projectId, f) => {
-      patch(projectId, p => {
-        const nextId = p.financialItems.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-        return { ...p, financialItems: [...p.financialItems, { ...f, id: nextId }] };
-      });
-    },
-    updateFinancialExecuted: (projectId, itemId, executedValue, date, supplier, document) => {
+    addFinancial: (projectId, f) => patch(projectId, p => {
+      const nextId = p.financialItems.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, financialItems: [...p.financialItems, { ...f, id: nextId }] };
+    }),
+    updateFinancialExecuted: (projectId, itemId, executedValue, date, supplier, document) =>
       patch(projectId, p => ({
         ...p,
         financialItems: p.financialItems.map(i => i.id === itemId ? {
-          ...i,
-          executedValue,
+          ...i, executedValue,
           date: date ?? i.date,
           supplier: supplier ?? i.supplier,
           document: document ?? i.document,
         } : i),
-      }));
-    },
-    deleteFinancial: (projectId, itemId) => {
-      patch(projectId, p => ({ ...p, financialItems: p.financialItems.filter(i => i.id !== itemId) }));
-    },
+      })),
+    deleteFinancial: (projectId, itemId) => patch(projectId, p => ({ ...p, financialItems: p.financialItems.filter(i => i.id !== itemId) })),
 
-    addContrapartida: (projectId, c) => {
-      patch(projectId, p => {
-        const list = p.contrapartidas ?? [];
-        const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-        return { ...p, contrapartidas: [...list, { ...c, id: nextId }] };
-      });
-    },
-    deleteContrapartida: (projectId, itemId) => {
-      patch(projectId, p => ({ ...p, contrapartidas: (p.contrapartidas ?? []).filter(i => i.id !== itemId) }));
-    },
+    addContrapartida: (projectId, c) => patch(projectId, p => {
+      const list = p.contrapartidas ?? [];
+      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, contrapartidas: [...list, { ...c, id: nextId }] };
+    }),
+    deleteContrapartida: (projectId, itemId) => patch(projectId, p => ({ ...p, contrapartidas: (p.contrapartidas ?? []).filter(i => i.id !== itemId) })),
 
-    addEvidence: (projectId, e) => {
-      patch(projectId, p => {
-        const nextId = p.evidences.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-        return { ...p, evidences: [...p.evidences, { ...e, id: nextId }] };
-      });
-    },
-    deleteEvidence: (projectId, evId) => {
-      patch(projectId, p => ({ ...p, evidences: p.evidences.filter(e => e.id !== evId) }));
-    },
+    addEvidence: (projectId, e) => patch(projectId, p => {
+      const nextId = p.evidences.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, evidences: [...p.evidences, { ...e, id: nextId }] };
+    }),
+    deleteEvidence: (projectId, evId) => patch(projectId, p => ({ ...p, evidences: p.evidences.filter(e => e.id !== evId) })),
 
-    updateActivityStatus: (projectId, activityId, status, progress) => {
-      patch(projectId, p => ({
-        ...p,
-        goals: p.goals.map(g => ({
-          ...g,
-          deliverables: g.deliverables.map(d => ({
-            ...d,
-            activities: d.activities.map(a =>
-              a.id === activityId
-                ? {
-                    ...a,
-                    status,
-                    progress: progress ?? (status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress),
-                    conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
-                  }
-                : a,
-            ),
-          })),
+    updateActivityStatus: (projectId, activityId, status, progress) => patch(projectId, p => ({
+      ...p,
+      goals: p.goals.map(g => ({
+        ...g,
+        deliverables: g.deliverables.map(d => ({
+          ...d,
+          activities: d.activities.map(a => a.id === activityId ? {
+            ...a, status,
+            progress: progress ?? (status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress),
+            conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
+          } : a),
         })),
-      }));
-    },
+      })),
+    })),
+
+    // Comunidades
+    communities,
+    getCommunity: (id) => communities.find(c => c.id === id),
+    updateCommunity: (id, p) => setCommunities(prev => prev.map(c => (c.id === id ? { ...c, ...p } : c))),
+
+    // Rotas
+    routes,
+    updateRoute: (id, p) => setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...p } : r))),
+    addRoute: (r) => setRoutes(prev => [...prev, { ...r, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
+    deleteRoute: (id) => setRoutes(prev => prev.filter(r => r.id !== id)),
+
+    // Eventos
+    events,
+    addEvent: (e) => setEvents(prev => [...prev, { ...e, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
+    updateEvent: (id, p) => setEvents(prev => prev.map(e => (e.id === id ? { ...e, ...p } : e))),
+    deleteEvent: (id) => setEvents(prev => prev.filter(e => e.id !== id)),
 
     resetToSeed: () => {
-      setProjects(seedProjects);
+      setProjects(seedProjects as ProjectExt[]);
+      setCommunities(seedComunidades);
+      setRoutes(seedRotas);
+      setEvents(calendarSeed);
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     },
-  }), [projects, patch]);
+  }), [projects, communities, routes, events, patch]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
