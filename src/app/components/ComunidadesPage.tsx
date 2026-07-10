@@ -168,7 +168,7 @@ function ComunidadeDetail({ comunidade, onBack, onOpenProject, projects }: {
               { key: 'papel', label: 'Papel', width: '25%', type: 'select', options: ['Fornecedor', 'Comprador'] },
               { key: 'detalhe', label: 'Detalhe', width: '35%' },
             ]}
-            makeNew={() => ({ nome: '', papel: 'Fornecedor', detalhe: '' })}
+            makeNew={() => ({ nome: '', papel: 'Fornecedor' as const, detalhe: '' })}
           />
         </Accordion>
 
@@ -181,7 +181,7 @@ function ComunidadeDetail({ comunidade, onBack, onOpenProject, projects }: {
               { key: 'publico', label: 'Público', width: '30%' },
               { key: 'status', label: 'Status', width: '30%', type: 'select', options: ['Prevista', 'Em curso', 'Concluída'] },
             ]}
-            makeNew={() => ({ tema: '', publico: '', status: 'Prevista' })}
+            makeNew={() => ({ tema: '', publico: '', status: 'Prevista' as const })}
           />
         </Accordion>
 
