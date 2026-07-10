@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   LayoutGrid,
   ClipboardList,
-  TrendingUp,
   DollarSign,
   ShieldAlert,
   GitBranch,
@@ -13,17 +12,15 @@ import {
 import { type Project } from '../data/mockData';
 import { useStore } from '../store';
 import { TabCadastro } from './project-tabs/TabCadastro';
-import { TabMonitoramento } from './project-tabs/TabMonitoramento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
 import { TabEvidencias } from './project-tabs/TabEvidencias';
 
-type TabId = 'cadastro' | 'monitoramento' | 'financeiro' | 'riscos' | 'mudancas' | 'evidencias';
+type TabId = 'cadastro' | 'financeiro' | 'riscos' | 'mudancas' | 'evidencias';
 
 const tabs: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
   { id: 'cadastro',      label: 'Cadastro',                 icon: ClipboardList },
-  { id: 'monitoramento', label: 'Monitoramento',            icon: TrendingUp },
   { id: 'financeiro',    label: 'Financeiro',               icon: DollarSign },
   { id: 'riscos',        label: 'Gestão de Riscos',         icon: ShieldAlert },
   { id: 'mudancas',      label: 'Gestão de Mudanças',       icon: GitBranch },
@@ -51,7 +48,6 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const renderTab = () => {
     switch (activeTab) {
       case 'cadastro':      return <TabCadastro project={project} />;
-      case 'monitoramento': return <TabMonitoramento project={project} />;
       case 'financeiro':    return <TabFinanceiro project={project} />;
       case 'riscos':        return <TabRiscos project={project} />;
       case 'mudancas':      return <TabMudancas project={project} />;
