@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Search, Plus, Trash2, X, ClipboardList, ChevronRight, ArrowLeft, Save,
-  FileText, Building2, Link2, Package, TrendingUp, Download,
+  FileText, Building2, Link2, Package, TrendingUp, Download, Lock, CheckCircle2,
 } from 'lucide-react';
-import { useDiagnostics, type Diagnostic, type DiagnosticStatus } from '../diagnostic/store';
+import { useDiagnostics, type Diagnostic, type DiagnosticStatus, type RoundId } from '../diagnostic/store';
 import { sections, maturityAxes, type Question } from '../diagnostic/schema';
 import { useStore } from '../store';
 import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
@@ -15,16 +15,20 @@ const statusColor: Record<DiagnosticStatus, { bg: string; color: string }> = {
   'Concluído':       { bg: '#ECFDF5', color: '#059669' },
 };
 
+const ROUNDS: { id: RoundId; label: string }[] = [
+  { id: 'r1', label: 'Rodada 1' },
+  { id: 'r2', label: 'Rodada 2' },
+  { id: 'r3', label: 'Rodada 3' },
+];
+
 export function DiagnosticoPage() {
   const { diagnostics, createDiagnostic, deleteDiagnostic } = useDiagnostics();
-  const { projects } = useStore();
+  const { projects, communities } = useStore();
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // new form state
-  const [nfTitle, setNfTitle] = useState('');
-  const [nfOrg, setNfOrg] = useState('');
+  const [nfCommunity, setNfCommunity] = useState<string>('');
   const [nfProject, setNfProject] = useState<string>('');
 
   const filtered = useMemo(() =>
@@ -33,20 +37,29 @@ export function DiagnosticoPage() {
       return !q || d.title.toLowerCase().includes(q) || d.organizationName.toLowerCase().includes(q);
     }), [diagnostics, search]);
 
+  const projectsForCommunity = useMemo(() => {
+    if (!nfCommunity) return projects;
+    const cid = Number(nfCommunity);
+    return projects.filter(p => (p as unknown as { communityId?: number | null }).communityId === cid);
+  }, [projects, nfCommunity]);
+
   if (editingId != null) {
     const d = diagnostics.find(x => x.id === editingId);
     if (d) return <DiagnosticEditor diagnostic={d} onBack={() => setEditingId(null)} />;
   }
 
   const handleCreate = () => {
-    if (!nfTitle.trim() || !nfOrg.trim()) { toast.error('Informe título e organização'); return; }
+    if (!nfCommunity) { toast.error('Selecione a comunidade'); return; }
+    const community = communities.find(c => c.id === Number(nfCommunity));
+    const project = projects.find(p => p.id === Number(nfProject));
     const created = createDiagnostic({
-      title: nfTitle.trim(),
-      organizationName: nfOrg.trim(),
-      projectId: nfProject ? Number(nfProject) : null,
+      title: community?.nome ?? '—',
+      organizationName: project?.name ?? '',
+      communityId: community?.id ?? null,
+      projectId: project?.id ?? null,
     });
     toast.success('Diagnóstico criado');
-    setShowNew(false); setNfTitle(''); setNfOrg(''); setNfProject('');
+    setShowNew(false); setNfCommunity(''); setNfProject('');
     setEditingId(created.id);
   };
 
@@ -56,13 +69,11 @@ export function DiagnosticoPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="mb-1">Diagnóstico</h1>
-            <p className="text-sm text-muted-foreground">Diagnóstico institucional e produtivo de bionegócios</p>
+            <p className="text-sm text-muted-foreground">Diagnóstico institucional e produtivo — 3 rodadas de maturidade</p>
           </div>
-          <button
-            onClick={() => setShowNew(true)}
+          <button onClick={() => setShowNew(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white"
-            style={{ background: 'var(--primary)' }}
-          >
+            style={{ background: 'var(--primary)' }}>
             <Plus size={16} /> Novo diagnóstico
           </button>
         </div>
@@ -70,19 +81,17 @@ export function DiagnosticoPage() {
         <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por título ou organização..."
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar por comunidade ou projeto..."
               className="w-full pl-9 pr-3 py-2 rounded-md text-sm"
-              style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }}
-            />
+              style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }} />
           </div>
         </div>
 
         {filtered.length === 0 ? (
           <div className="rounded-lg border border-dashed p-12 text-center" style={{ background: 'var(--card)' }}>
             <ClipboardList size={40} className="mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mb-4">Nenhum diagnóstico cadastrado. Comece criando um novo.</p>
+            <p className="text-sm text-muted-foreground mb-4">Nenhum diagnóstico cadastrado.</p>
             <button onClick={() => setShowNew(true)} className="text-sm px-4 py-2 rounded-md text-white" style={{ background: 'var(--primary)' }}>
               Criar primeiro diagnóstico
             </button>
@@ -96,12 +105,11 @@ export function DiagnosticoPage() {
                 const v = d.answers[k]; return v !== '' && v !== undefined && !(Array.isArray(v) && v.length === 0);
               }).length;
               const pct = Math.round((answered / totalQs) * 100);
+              const finalized = ROUNDS.filter(r => d.rounds[r.id]?.finalized).length;
               return (
-                <div key={d.id}
-                  onClick={() => setEditingId(d.id)}
+                <div key={d.id} onClick={() => setEditingId(d.id)}
                   className="rounded-lg p-5 cursor-pointer hover:shadow-md transition-shadow"
-                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-                >
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -115,10 +123,13 @@ export function DiagnosticoPage() {
                             <Link2 size={10} /> {proj.code}
                           </span>
                         )}
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#B45309' }}>
+                          Rodadas: {finalized}/3
+                        </span>
                       </div>
                       <h3 className="mb-0.5">{d.title}</h3>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Building2 size={12} />{d.organizationName}</span>
+                        <span className="flex items-center gap-1"><Building2 size={12} />{d.organizationName || '—'}</span>
                         <span>Atualizado em {new Date(d.updatedAt).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>
@@ -127,11 +138,8 @@ export function DiagnosticoPage() {
                         <div className="text-xs text-muted-foreground mb-1">Preenchimento</div>
                         <div className="text-sm font-semibold">{pct}%</div>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Excluir "${d.title}"?`)) { deleteDiagnostic(d.id); toast.success('Diagnóstico excluído'); }}}
-                        className="p-2 rounded-md hover:bg-red-50"
-                        title="Excluir"
-                      >
+                      <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`Excluir "${d.title}"?`)) { deleteDiagnostic(d.id); toast.success('Diagnóstico excluído'); }}}
+                        className="p-2 rounded-md hover:bg-red-50" title="Excluir">
                         <Trash2 size={14} className="text-red-500" />
                       </button>
                       <ChevronRight size={16} className="text-muted-foreground" />
@@ -156,32 +164,26 @@ export function DiagnosticoPage() {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium block mb-1">Título</label>
-                <input value={nfTitle} onChange={e => setNfTitle(e.target.value)}
+                <label className="text-xs font-medium block mb-1">Comunidade</label>
+                <select value={nfCommunity} onChange={e => { setNfCommunity(e.target.value); setNfProject(''); }}
                   className="w-full px-3 py-2 rounded-md text-sm"
-                  style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }}
-                  placeholder="Ex: Diagnóstico Comunidade Tauari 2026" />
+                  style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }}>
+                  <option value="">— Selecione a comunidade —</option>
+                  {communities.map(c => <option key={c.id} value={c.id}>{c.code} · {c.nome}</option>)}
+                </select>
               </div>
               <div>
-                <label className="text-xs font-medium block mb-1">Organização</label>
-                <input value={nfOrg} onChange={e => setNfOrg(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md text-sm"
-                  style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }}
-                  placeholder="Nome da organização" />
-              </div>
-              <div>
-                <label className="text-xs font-medium block mb-1">Vincular a projeto (opcional)</label>
+                <label className="text-xs font-medium block mb-1">Projeto</label>
                 <select value={nfProject} onChange={e => setNfProject(e.target.value)}
                   className="w-full px-3 py-2 rounded-md text-sm"
                   style={{ background: 'var(--input-background)', border: '1px solid var(--border)' }}>
                   <option value="">— Sem vínculo —</option>
-                  {projects.map(p => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
+                  {projectsForCommunity.map(p => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
                 </select>
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-5">
-              <button onClick={() => setShowNew(false)} className="px-4 py-2 text-sm rounded-md"
-                style={{ border: '1px solid var(--border)' }}>Cancelar</button>
+              <button onClick={() => setShowNew(false)} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
               <button onClick={handleCreate} className="px-4 py-2 text-sm text-white rounded-md" style={{ background: 'var(--primary)' }}>Criar</button>
             </div>
           </div>
@@ -194,27 +196,16 @@ export function DiagnosticoPage() {
 // -------- Editor --------
 
 function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBack: () => void }) {
-  const { setAnswer, setMaturity, updateDiagnostic, addProduct, deleteProduct } = useDiagnostics();
-  const { projects } = useStore();
+  const { setAnswer, setMaturity, setRound, updateDiagnostic, addProduct, deleteProduct } = useDiagnostics();
+  const { projects, communities } = useStore();
   const [tab, setTab] = useState<'questoes' | 'maturidade' | 'produtos' | 'resumo'>('questoes');
   const [activeSection, setActiveSection] = useState(sections[0].id);
+  const [activeRound, setActiveRound] = useState<RoundId>('r1');
   const [pendingMaturity, setPendingMaturity] = useState<{ key: string; value: number } | null>(null);
-
-  const requestMaturity = (key: string, value: number) => {
-    // Antes do diagnóstico ser concluído, o índice pode ser marcado/alterado livremente
-    // (inclusive para desfazer a escolha). Após concluído (100%), qualquer alteração
-    // exige autenticação administrativa, pois decisões já foram tomadas a partir dele.
-    if (diagnostic.status === 'Concluído') {
-      setPendingMaturity({ key, value });
-    } else {
-      // toggle: clicar no mesmo valor volta para 0 (desfaz)
-      const current = diagnostic.maturity[key];
-      setMaturity(diagnostic.id, key, current === value ? 0 : value);
-    }
-  };
-
+  const [showRoundForm, setShowRoundForm] = useState<RoundId | null>(null);
 
   const proj = projects.find(p => p.id === diagnostic.projectId);
+  const community = communities.find(c => c.id === diagnostic.communityId);
 
   const totalQs = sections.reduce((a, s) => a + s.questions.length, 0);
   const answered = Object.keys(diagnostic.answers).filter(k => {
@@ -222,11 +213,22 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
   }).length;
   const pct = Math.round((answered / totalQs) * 100);
 
+  const roundMeta = diagnostic.rounds[activeRound];
+  const roundReady = !!(roundMeta && roundMeta.evaluator && roundMeta.date);
+  const roundLocked = !!roundMeta?.finalized;
+
+  const requestMaturity = (key: string, value: number) => {
+    if (!roundReady) { toast.error('Preencha avaliador e data da rodada antes.'); setShowRoundForm(activeRound); return; }
+    if (roundLocked) { setPendingMaturity({ key, value }); return; }
+    const current = diagnostic.maturity[key];
+    setMaturity(diagnostic.id, key, current === value ? 0 : value);
+  };
+
   const handleExport = () => {
     const lines: string[] = [];
     lines.push(`Diagnóstico,${diagnostic.title}`);
-    lines.push(`Organização,${diagnostic.organizationName}`);
-    lines.push(`Projeto,${proj?.code ?? '-'}`);
+    lines.push(`Comunidade,${community?.nome ?? '-'}`);
+    lines.push(`Projeto,${proj?.name ?? '-'}`);
     lines.push('');
     lines.push('Seção,Pergunta,Resposta');
     sections.forEach(s => s.questions.forEach(q => {
@@ -235,11 +237,11 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
       lines.push(`"${s.title}","${q.label}","${val}"`);
     }));
     lines.push('');
-    lines.push('Índices de maturidade');
-    maturityAxes.forEach(ax => ax.indicators.forEach(ind => {
-      const key = `${ax.id}.${ind.id}`;
-      lines.push(`"${ax.title}","${ind.label}",${diagnostic.maturity[key] ?? ''}`);
-    }));
+    lines.push('Índices de maturidade (por rodada)');
+    ROUNDS.forEach(r => maturityAxes.forEach(ax => ax.indicators.forEach(ind => {
+      const key = `${r.id}.${ax.id}.${ind.id}`;
+      lines.push(`"${r.label}","${ax.title}","${ind.label}",${diagnostic.maturity[key] ?? ''}`);
+    })));
     const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url;
@@ -267,13 +269,17 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                   style={{ background: statusColor[diagnostic.status].bg, color: statusColor[diagnostic.status].color }}>
                   {diagnostic.status}
                 </span>
+                {community && <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                  style={{ background: '#F0FDF4', color: '#166534' }}>
+                  <Building2 size={10} /> {community.code} · {community.nome}
+                </span>}
                 {proj && <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
                   style={{ background: '#EFF6FF', color: '#2563EB' }}>
                   <Link2 size={10} /> {proj.code} · {proj.name}
                 </span>}
               </div>
               <h2>{diagnostic.title}</h2>
-              <div className="text-xs text-muted-foreground">{diagnostic.organizationName} · {pct}% preenchido</div>
+              <div className="text-xs text-muted-foreground">{pct}% preenchido</div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-md"
@@ -327,10 +333,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                 return (
                   <button key={s.id} onClick={() => setActiveSection(s.id)}
                     className="w-full text-left px-3 py-2 rounded-md text-sm transition-colors"
-                    style={{
-                      background: activeSec ? 'var(--primary)' : 'transparent',
-                      color: activeSec ? '#fff' : 'var(--foreground)',
-                    }}>
+                    style={{ background: activeSec ? 'var(--primary)' : 'transparent', color: activeSec ? '#fff' : 'var(--foreground)' }}>
                     <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>{s.chapter}</div>
                     <div className="flex items-center justify-between">
                       <span>{s.title}</span>
@@ -346,12 +349,8 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                   <h3 className="mb-4">{s.title}</h3>
                   <div className="space-y-4">
                     {s.questions.map(q => (
-                      <QuestionField
-                        key={q.id}
-                        question={q}
-                        value={diagnostic.answers[q.id]}
-                        onChange={(v) => setAnswer(diagnostic.id, q.id, v)}
-                      />
+                      <QuestionField key={q.id} question={q} value={diagnostic.answers[q.id]}
+                        onChange={(v) => setAnswer(diagnostic.id, q.id, v)} />
                     ))}
                   </div>
                 </div>
@@ -361,79 +360,173 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
         )}
 
         {tab === 'maturidade' && (
-          <div className="space-y-6">
-            {maturityAxes.map(ax => {
-              const scores = ax.indicators.map(i => diagnostic.maturity[`${ax.id}.${i.id}`]).filter((v): v is number => typeof v === 'number');
-              const avg = scores.length ? (scores.reduce((a, x) => a + x, 0) / scores.length).toFixed(1) : '-';
-              return (
-                <div key={ax.id} className="rounded-lg p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3>{ax.title}</h3>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground">Média</div>
-                      <div className="text-2xl font-semibold" style={{ color: 'var(--primary)' }}>{avg}</div>
+          <div>
+            {/* Rounds bar */}
+            <div className="flex flex-wrap items-center gap-2 mb-6 p-4 rounded-lg" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide mr-2">Rodada ativa:</span>
+              {ROUNDS.map(r => {
+                const meta = diagnostic.rounds[r.id];
+                const active = activeRound === r.id;
+                return (
+                  <button key={r.id} onClick={() => setActiveRound(r.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md"
+                    style={{ background: active ? 'var(--primary)' : 'var(--muted)', color: active ? '#fff' : 'var(--foreground)', fontWeight: active ? 600 : 400 }}>
+                    {r.label}
+                    {meta?.finalized && <Lock size={11} />}
+                    {meta && !meta.finalized && meta.evaluator && <CheckCircle2 size={11} />}
+                  </button>
+                );
+              })}
+              <div className="ml-auto flex gap-2">
+                <button onClick={() => setShowRoundForm(activeRound)}
+                  className="text-xs px-3 py-1.5 rounded-md" style={{ border: '1px solid var(--border)' }}>
+                  {roundMeta ? 'Editar rodada' : 'Iniciar rodada'}
+                </button>
+                {roundReady && !roundLocked && (
+                  <button onClick={() => setRound(diagnostic.id, activeRound, { finalized: true })}
+                    className="text-xs px-3 py-1.5 rounded-md text-white" style={{ background: '#059669' }}>
+                    Finalizar rodada
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {!roundReady && (
+              <div className="rounded-lg p-4 mb-4 text-sm" style={{ background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E' }}>
+                Informe o <b>avaliador</b> e a <b>data</b> da rodada antes de marcar índices.
+                <button onClick={() => setShowRoundForm(activeRound)} className="ml-2 underline">Preencher agora</button>
+              </div>
+            )}
+            {roundLocked && (
+              <div className="rounded-lg p-4 mb-4 text-sm flex items-center gap-2" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
+                <Lock size={14} /> Rodada finalizada — alterações requerem autenticação administrativa.
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {maturityAxes.map(ax => {
+                const scores = ax.indicators.map(i => diagnostic.maturity[`${activeRound}.${ax.id}.${i.id}`]).filter((v): v is number => typeof v === 'number' && v > 0);
+                const avg = scores.length ? (scores.reduce((a, x) => a + x, 0) / scores.length).toFixed(1) : '-';
+                return (
+                  <div key={ax.id} className="rounded-lg p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3>{ax.title}</h3>
+                      <div className="text-right">
+                        <div className="text-xs text-muted-foreground">Média — {ROUNDS.find(r => r.id === activeRound)?.label}</div>
+                        <div className="text-2xl font-semibold" style={{ color: 'var(--primary)' }}>{avg}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      {ax.indicators.map(ind => {
+                        const key = `${activeRound}.${ax.id}.${ind.id}`;
+                        const val = diagnostic.maturity[key] ?? 0;
+                        // Comparativo entre rodadas
+                        const comparative = ROUNDS.map(r => diagnostic.maturity[`${r.id}.${ax.id}.${ind.id}`] ?? 0);
+                        return (
+                          <div key={ind.id}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div>
+                                <div className="text-sm font-medium">{ind.label}</div>
+                                <div className="text-xs text-muted-foreground">{ind.scale}</div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  {ROUNDS.map((r, i) => (
+                                    <span key={r.id} style={{ opacity: r.id === activeRound ? 1 : 0.5 }}>
+                                      {r.label.slice(-2)}:<b>{comparative[i] || '-'}</b>
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="text-sm font-semibold">{val || '-'}</div>
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(n => (
+                                <button key={n} onClick={() => requestMaturity(key, n)}
+                                  className="flex-1 h-8 rounded text-xs font-medium transition-colors"
+                                  style={{ background: val >= n ? 'var(--primary)' : 'var(--muted)', color: val >= n ? '#fff' : 'var(--muted-foreground)' }}>
+                                  {n}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    {ax.indicators.map(ind => {
-                      const key = `${ax.id}.${ind.id}`;
-                      const val = diagnostic.maturity[key] ?? 0;
-                      return (
-                        <div key={ind.id}>
-                          <div className="flex items-center justify-between mb-1">
-                            <div>
-                              <div className="text-sm font-medium">{ind.label}</div>
-                              <div className="text-xs text-muted-foreground">{ind.scale}</div>
-                            </div>
-                            <div className="text-sm font-semibold">{val || '-'}</div>
-                          </div>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(n => (
-                              <button key={n}
-                                onClick={() => requestMaturity(key, n)}
-                                className="flex-1 h-8 rounded text-xs font-medium transition-colors"
-                                style={{
-                                  background: val >= n ? 'var(--primary)' : 'var(--muted)',
-                                  color: val >= n ? '#fff' : 'var(--muted-foreground)',
-                                }}>
-                                {n}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
 
         {tab === 'produtos' && (
-          <ProdutosTab
-            diagnostic={diagnostic}
+          <ProdutosTab diagnostic={diagnostic}
             onAdd={(p) => addProduct(diagnostic.id, p)}
-            onDelete={(pid) => deleteProduct(diagnostic.id, pid)}
-          />
+            onDelete={(pid) => deleteProduct(diagnostic.id, pid)} />
         )}
 
-        {tab === 'resumo' && (
-          <ResumoTab diagnostic={diagnostic} />
-        )}
+        {tab === 'resumo' && <ResumoTab diagnostic={diagnostic} />}
       </div>
 
       {pendingMaturity && (
         <AdminUnlockDialog
-          title="Alterar Índice de Maturidade"
-          description="Marcar, alterar ou desfazer o índice de maturidade requer autenticação administrativa."
+          title="Alterar rodada finalizada"
+          description="Esta rodada foi finalizada. Alterar índices requer autenticação administrativa."
           onSuccess={() => {
             setMaturity(diagnostic.id, pendingMaturity.key, pendingMaturity.value);
-            toast.success('Índice de maturidade atualizado.');
+            toast.success('Índice atualizado.');
           }}
           onClose={() => setPendingMaturity(null)}
         />
       )}
+
+      {showRoundForm && (
+        <RoundForm
+          round={showRoundForm}
+          meta={diagnostic.rounds[showRoundForm]}
+          onClose={() => setShowRoundForm(null)}
+          onSave={(m) => { setRound(diagnostic.id, showRoundForm, m); toast.success('Rodada atualizada.'); setShowRoundForm(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RoundForm({ round, meta, onSave, onClose }: {
+  round: RoundId; meta?: { evaluator: string; date: string; finalized: boolean };
+  onSave: (m: { evaluator: string; date: string }) => void; onClose: () => void;
+}) {
+  const [evaluator, setEvaluator] = useState(meta?.evaluator ?? '');
+  const [date, setDate] = useState(meta?.date ?? new Date().toISOString().slice(0, 10));
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3>{ROUNDS.find(r => r.id === round)?.label}</h3>
+          <button onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium block mb-1">Avaliador (login)</label>
+            <input value={evaluator} onChange={e => setEvaluator(e.target.value)}
+              placeholder="Nome ou login do avaliador"
+              className="w-full px-3 py-2 rounded-md text-sm"
+              style={{ border: '1px solid var(--border)' }} />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Data de realização</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-md text-sm"
+              style={{ border: '1px solid var(--border)' }} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
+          <button onClick={() => { if (!evaluator || !date) { toast.error('Preencha avaliador e data.'); return; } onSave({ evaluator, date }); }}
+            className="px-4 py-2 text-sm text-white rounded-md" style={{ background: 'var(--primary)' }}>Salvar</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -473,14 +566,9 @@ function QuestionField({ question: q, value, onChange }: {
             const arr = (Array.isArray(value) ? value : []) as string[];
             const checked = arr.includes(o);
             return (
-              <button key={o} type="button"
-                onClick={() => onChange(checked ? arr.filter(x => x !== o) : [...arr, o])}
+              <button key={o} type="button" onClick={() => onChange(checked ? arr.filter(x => x !== o) : [...arr, o])}
                 className="px-3 py-1.5 text-xs rounded-full transition-colors"
-                style={{
-                  background: checked ? 'var(--primary)' : 'var(--muted)',
-                  color: checked ? '#fff' : 'var(--foreground)',
-                  border: '1px solid var(--border)',
-                }}>
+                style={{ background: checked ? 'var(--primary)' : 'var(--muted)', color: checked ? '#fff' : 'var(--foreground)', border: '1px solid var(--border)' }}>
                 {o}
               </button>
             );
@@ -596,40 +684,37 @@ function ResumoTab({ diagnostic }: { diagnostic: Diagnostic }) {
           <div className="text-xs text-muted-foreground">Produtos na cesta</div>
           <div className="text-2xl font-semibold">{diagnostic.products.length}</div>
         </div>
-        {maturityAxes.map(ax => {
-          const scores = ax.indicators.map(i => diagnostic.maturity[`${ax.id}.${i.id}`]).filter((v): v is number => typeof v === 'number');
-          const avg = scores.length ? (scores.reduce((a, x) => a + x, 0) / scores.length) : 0;
-          return (
-            <div key={ax.id} className="rounded-lg p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div className="text-xs text-muted-foreground">{ax.title}</div>
-              <div className="text-2xl font-semibold" style={{ color: 'var(--primary)' }}>{avg ? avg.toFixed(1) : '-'}</div>
-            </div>
-          );
-        })}
+        <div className="rounded-lg p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <div className="text-xs text-muted-foreground">Rodadas finalizadas</div>
+          <div className="text-2xl font-semibold">{ROUNDS.filter(r => diagnostic.rounds[r.id]?.finalized).length}/3</div>
+        </div>
       </div>
 
+      {/* Comparativo por rodada */}
       <div className="rounded-lg p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <h3 className="mb-4">Respostas por seção</h3>
-        <div className="space-y-4">
-          {sections.map(s => {
-            const answers = s.questions.map(q => ({ q, v: diagnostic.answers[q.id] }))
-              .filter(x => x.v !== undefined && x.v !== '' && !(Array.isArray(x.v) && x.v.length === 0));
-            if (answers.length === 0) return null;
-            return (
-              <div key={s.id}>
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{s.title}</div>
-                <div className="grid md:grid-cols-2 gap-x-6 gap-y-2">
-                  {answers.map(a => (
-                    <div key={a.q.id} className="text-sm flex gap-2">
-                      <span className="text-muted-foreground">{a.q.label}:</span>
-                      <span className="font-medium">{Array.isArray(a.v) ? a.v.join(', ') : String(a.v)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <h3 className="mb-4">Comparativo — Índices de Maturidade</h3>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-muted-foreground border-b" style={{ borderColor: 'var(--border)' }}>
+              <th className="py-2">Eixo</th>
+              {ROUNDS.map(r => <th key={r.id} className="py-2 text-right">{r.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {maturityAxes.map(ax => {
+              const avgs = ROUNDS.map(r => {
+                const scores = ax.indicators.map(i => diagnostic.maturity[`${r.id}.${ax.id}.${i.id}`]).filter((v): v is number => typeof v === 'number' && v > 0);
+                return scores.length ? (scores.reduce((a, x) => a + x, 0) / scores.length) : 0;
+              });
+              return (
+                <tr key={ax.id} className="border-b" style={{ borderColor: 'var(--border)' }}>
+                  <td className="py-2 font-medium">{ax.title}</td>
+                  {avgs.map((a, i) => <td key={i} className="py-2 text-right font-mono">{a ? a.toFixed(1) : '-'}</td>)}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
