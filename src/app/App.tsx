@@ -7,6 +7,8 @@ import { ProjectView } from './components/ProjectView';
 import { ReportsPage } from './components/ReportsPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
+import { ComunidadesPage } from './components/ComunidadesPage';
+import { CronogramaPage } from './components/CronogramaPage';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
@@ -20,7 +22,6 @@ function AppShell() {
   const { user } = useAuth();
   const { log } = useAudit();
 
-  // Registra a área navegada
   useEffect(() => {
     if (!user) return;
     log({ userLogin: user.login, area: activeNav, action: 'view' });
@@ -41,16 +42,18 @@ function AppShell() {
   const renderMain = () => {
     if (activeNav === 'projects' && selectedProjectId != null) {
       const project = getProject(selectedProjectId);
-      if (project) {
-        return <ProjectView project={project} onBack={handleBackToProjects} />;
-      }
+      if (project) return <ProjectView project={project} onBack={handleBackToProjects} />;
     }
 
     switch (activeNav) {
       case 'dashboard':
         return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
+      case 'communities':
+        return <ComunidadesPage onOpenProject={(p) => handleSelectProject(p.id)} />;
       case 'projects':
         return <ProjectsPage onSelectProject={(p) => handleSelectProject(p.id)} />;
+      case 'schedule':
+        return <CronogramaPage />;
       case 'diagnostics':
         return <DiagnosticoPage />;
       case 'reports':
@@ -75,7 +78,6 @@ function Gated() {
   const { user, signIn } = useAuth();
   const { log } = useAudit();
 
-  // Registra o acesso quando o usuário entra
   useEffect(() => {
     if (user) log({ userLogin: user.login, area: 'sessão', action: 'login', detail: user.displayName });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,7 +88,6 @@ function Gated() {
       <>
         <LoginScreen />
         <Toaster position="top-right" richColors closeButton />
-        {/* signIn is used by LoginScreen via context */}
         <span hidden data-noop={typeof signIn === 'function' ? '1' : '0'} />
       </>
     );
