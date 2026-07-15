@@ -45,12 +45,15 @@ export interface CalendarEvent {
   id: number;
   title: string;
   date: string;              // YYYY-MM-DD
+  startTime?: string;        // HH:MM
+  endTime?: string;          // HH:MM
   type: CalendarEventType;
   rotaId?: number | null;
   comunidadeId?: number | null;
   responsavel?: string;
   observacoes?: string;
 }
+
 
 export const calendarSeed: CalendarEvent[] = [
   { id: 1, title: 'Kickoff INOVA FAS/FUNBIO 2026',       date: '2026-01-15', type: 'Reunião',       rotaId: null, comunidadeId: null, responsavel: 'Coordenação CRIA' },
