@@ -18,7 +18,7 @@ const seedProjects = inovaProjetos;
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v3';
+const STORAGE_KEY = 'pp-portfolio-v4';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
