@@ -4,7 +4,7 @@ import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, C
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useStore } from '../store';
-import type { CalendarEventType, RotaItem, CalendarEvent } from '../data/rotas';
+import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
@@ -20,6 +20,8 @@ const statusColors: Record<string, string> = {
   'Atenção': '#F59E0B',
   'Crítico': '#EF4444',
 };
+const DEFAULT_TIPO_COLOR = '#64748B';
+const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 // Fix Leaflet default icon paths
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
