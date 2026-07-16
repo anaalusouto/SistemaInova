@@ -118,13 +118,21 @@ function RotasTab() {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <MapPin size={14} className="inline mr-1.5" />Mapa das Rotas — Pará
           </h3>
-          <div className="flex gap-3 text-xs">
-            {Object.entries(statusColors).map(([s, c]) => (
+          <div className="flex gap-3 text-xs flex-wrap">
+            {Object.entries(tipoComunidadeColors).map(([s, c]) => (
               <span key={s} className="flex items-center gap-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: c }} />
                 {s}
               </span>
             ))}
+            <span className="flex items-center gap-1 pl-2 ml-1 border-l" style={{ borderColor: 'var(--border)' }}>
+              {Object.entries(statusColors).map(([s, c]) => (
+                <span key={s} className="flex items-center gap-1 ml-2">
+                  <span className="inline-block w-2 h-2 rounded-full border-2" style={{ borderColor: c, background: 'transparent' }} />
+                  <span className="text-[11px] text-muted-foreground">{s}</span>
+                </span>
+              ))}
+            </span>
           </div>
         </div>
         <RotasMap routes={filtered} selectedId={selectedId} onSelect={setSelectedId} />
