@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  projects as seedProjects,
+  projects as seedProjectsLegacy,
   type Project,
   type Risk,
   type Change,
@@ -9,10 +9,16 @@ import {
   type Evidence,
   type ActivityStatus,
 } from './data/mockData';
+import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 
-const STORAGE_KEY = 'pp-portfolio-v3';
+// Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
+const seedProjects = inovaProjetos;
+void seedProjectsLegacy;
+
+
+const STORAGE_KEY = 'pp-portfolio-v4';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
