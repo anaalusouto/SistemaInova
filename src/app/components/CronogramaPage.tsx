@@ -4,7 +4,7 @@ import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, C
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useStore } from '../store';
-import type { CalendarEventType, RotaItem, CalendarEvent } from '../data/rotas';
+import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
@@ -20,6 +20,8 @@ const statusColors: Record<string, string> = {
   'Atenção': '#F59E0B',
   'Crítico': '#EF4444',
 };
+const DEFAULT_TIPO_COLOR = '#64748B';
+const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 // Fix Leaflet default icon paths
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
@@ -116,13 +118,21 @@ function RotasTab() {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <MapPin size={14} className="inline mr-1.5" />Mapa das Rotas — Pará
           </h3>
-          <div className="flex gap-3 text-xs">
-            {Object.entries(statusColors).map(([s, c]) => (
+          <div className="flex gap-3 text-xs flex-wrap">
+            {Object.entries(tipoComunidadeColors).map(([s, c]) => (
               <span key={s} className="flex items-center gap-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: c }} />
                 {s}
               </span>
             ))}
+            <span className="flex items-center gap-1 pl-2 ml-1 border-l" style={{ borderColor: 'var(--border)' }}>
+              {Object.entries(statusColors).map(([s, c]) => (
+                <span key={s} className="flex items-center gap-1 ml-2">
+                  <span className="inline-block w-2 h-2 rounded-full border-2" style={{ borderColor: c, background: 'transparent' }} />
+                  <span className="text-[11px] text-muted-foreground">{s}</span>
+                </span>
+              ))}
+            </span>
           </div>
         </div>
         <RotasMap routes={filtered} selectedId={selectedId} onSelect={setSelectedId} />
@@ -240,25 +250,27 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
       items.forEach(r => {
         bounds.push([r.lat!, r.lng!]);
         const st = statusColors[r.status ?? 'Operacional'];
+        const tipoCor = colorForTipo(r.tipoComunidade);
         const isSel = r.id === selectedId;
         const marker = L.circleMarker([r.lat!, r.lng!], {
           radius: isSel ? 12 : 8,
-          color: '#fff',
-          weight: 2,
-          fillColor: st,
+          color: st,
+          weight: isSel ? 4 : 3,
+          fillColor: tipoCor,
           fillOpacity: 0.95,
         }).addTo(layer);
         marker.bindPopup(`
-          <div style="font-family:Inter,sans-serif;min-width:200px">
+          <div style="font-family:Inter,sans-serif;min-width:220px">
             <div style="font-weight:700;color:${color};font-size:12px">${rotaName}</div>
             <div style="font-weight:600;font-size:13px;margin-top:2px">${r.organizacao}</div>
             <div style="font-size:11px;color:#6B7280;margin-top:2px">${r.municipio}/${r.uf}</div>
             <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
-              <span style="background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:10px">${r.tipoComunidade}</span>
+              <span style="background:${tipoCor};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${r.tipoComunidade}</span>
               <span style="background:${st};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${r.status ?? 'Operacional'}</span>
             </div>
             <div style="font-size:11px;margin-top:6px"><b>Modal:</b> ${r.modalAcesso}</div>
             <div style="font-size:11px"><b>Dias:</b> ${r.diasAtuacao}</div>
+            <div style="font-size:11px"><b>Coord.:</b> ${r.lat!.toFixed(4)}, ${r.lng!.toFixed(4)}</div>
             ${r.notasLogisticas ? `<div style="font-size:10.5px;color:#92400E;background:#FFFBEB;padding:4px 6px;border-radius:4px;margin-top:6px">${r.notasLogisticas}</div>` : ''}
           </div>
         `);
