@@ -12,13 +12,14 @@ import {
 import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
+import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus } from './data/cronogramaExecutivo';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
 const seedProjects = inovaProjetos;
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v5';
+const STORAGE_KEY = 'pp-portfolio-v7';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
@@ -102,12 +103,17 @@ type Ctx = {
   updateEvent: (id: number, patch: Partial<CalendarEvent>) => void;
   deleteEvent: (id: number) => void;
 
+  // Cronograma Executivo (Gantt)
+  gantt: GanttBloco[];
+  updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
+  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
+
   resetToSeed: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
 
-type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[] };
+type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[] };
 
 function loadInitial(): Persisted {
   const fallback: Persisted = {
@@ -115,6 +121,7 @@ function loadInitial(): Persisted {
     communities: seedComunidades,
     routes: seedRotas,
     events: calendarSeed,
+    gantt: cronogramaExecutivoSeed,
   };
   if (typeof window === 'undefined') return fallback;
   try {
@@ -126,6 +133,7 @@ function loadInitial(): Persisted {
       communities: parsed.communities?.length ? parsed.communities : fallback.communities,
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
+      gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
     };
   } catch { return fallback; }
 }
@@ -146,18 +154,19 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [communities, setCommunities] = useState<Comunidade[]>(seedComunidades);
   const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
   const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
+  const [gantt, setGantt] = useState<GanttBloco[]>(cronogramaExecutivoSeed);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const p = loadInitial();
-    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events);
+    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events); setGantt(p.gantt);
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events } as Persisted)); } catch { /* ignore */ }
-  }, [projects, communities, routes, events, hydrated]);
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt } as Persisted)); } catch { /* ignore */ }
+  }, [projects, communities, routes, events, gantt, hydrated]);
 
   const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
     setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
@@ -266,14 +275,39 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     updateEvent: (id, p) => setEvents(prev => prev.map(e => (e.id === id ? { ...e, ...p } : e))),
     deleteEvent: (id) => setEvents(prev => prev.filter(e => e.id !== id)),
 
+    // Gantt (cronograma executivo)
+    gantt,
+    updateGanttEntrega: (entregaId, patchData) => setGantt(prev => prev.map(b => ({
+      ...b,
+      entregas: b.entregas.map(en => en.id === entregaId ? {
+        ...en, ...patchData,
+        progress: patchData.progress ?? en.progress,
+      } : en),
+    }))),
+    updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => prev.map(b => ({
+      ...b,
+      entregas: b.entregas.map(en => {
+        const nextAtividades = en.atividades.map(a => a.id === atividadeId ? {
+          ...a, ...patchData,
+          progress: patchData.progress ?? a.progress,
+        } : a);
+        // Se a atividade pertence a essa entrega, recalcula progresso da entrega como média
+        const changed = nextAtividades.some((a, i) => a !== en.atividades[i]);
+        if (!changed) return { ...en, atividades: nextAtividades };
+        const avg = Math.round(nextAtividades.reduce((s, a) => s + a.progress, 0) / nextAtividades.length);
+        return { ...en, atividades: nextAtividades, progress: avg };
+      }),
+    }))),
+
     resetToSeed: () => {
       setProjects(seedProjects as ProjectExt[]);
       setCommunities(seedComunidades);
       setRoutes(seedRotas);
       setEvents(calendarSeed);
+      setGantt(cronogramaExecutivoSeed);
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     },
-  }), [projects, communities, routes, events, patch]);
+  }), [projects, communities, routes, events, gantt, patch]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

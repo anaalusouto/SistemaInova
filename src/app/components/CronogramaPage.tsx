@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter } from 'lucide-react';
+import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter, GanttChart, ChevronDown } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useStore } from '../store';
 import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
+import { ganttStatusColors, type GanttBloco, type GanttStatus } from '../data/cronogramaExecutivo';
+
+const GANTT_STATUS_LIST: GanttStatus[] = ['Não iniciado', 'No prazo', 'Em andamento', 'Entregue', 'Atrasado'];
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
@@ -32,17 +35,18 @@ L.Icon.Default.mergeOptions({
 });
 
 export function CronogramaPage() {
-  const [tab, setTab] = useState<'rotas' | 'calendario'>('rotas');
+  const [tab, setTab] = useState<'rotas' | 'calendario' | 'executivo'>('executivo');
   return (
     <div className="h-full overflow-y-auto p-8">
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-5">
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.4rem' }}>Cronograma 2026</h1>
-          <p className="text-sm text-muted-foreground">Rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
+          <p className="text-sm text-muted-foreground">Cronograma executivo, rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
         </div>
 
         <div className="flex gap-2 mb-5">
           {[
+            { id: 'executivo', label: 'Cronograma Executivo', icon: GanttChart },
             { id: 'rotas', label: 'Rotas', icon: RouteIcon },
             { id: 'calendario', label: 'Calendário 2026', icon: CalendarDays },
           ].map(t => {
@@ -58,11 +62,301 @@ export function CronogramaPage() {
           })}
         </div>
 
-        {tab === 'rotas' ? <RotasTab /> : <CalendarioTab />}
+        {tab === 'executivo' && <CronogramaExecutivoTab />}
+        {tab === 'rotas' && <RotasTab />}
+        {tab === 'calendario' && <CalendarioTab />}
       </div>
     </div>
   );
 }
+
+/* ============================================================
+   CRONOGRAMA EXECUTIVO — Gantt funcional
+   ============================================================ */
+function CronogramaExecutivoTab() {
+  const { gantt, updateGanttEntrega, updateGanttAtividade } = useStore();
+  const [expanded, setExpanded] = useState<Set<number>>(() => new Set(gantt.flatMap(b => b.entregas.map(e => e.id))));
+  const [editing, setEditing] = useState<{ kind: 'entrega' | 'atividade'; id: number } | null>(null);
+
+  // Timeline: menor início até maior fim (arredondado por semana)
+  const { minDate, maxDate, weeks } = useMemo(() => {
+    let min = new Date('2100-01-01'); let max = new Date('1970-01-01');
+    gantt.forEach(b => b.entregas.forEach(en => {
+      const ini = new Date(en.inicio); const fim = new Date(en.fim);
+      if (ini < min) min = ini; if (fim > max) max = fim;
+      en.atividades.forEach(a => {
+        const ai = new Date(a.inicio); const af = new Date(a.fim);
+        if (ai < min) min = ai; if (af > max) max = af;
+      });
+    }));
+    // arredonda min para segunda-feira e max para domingo
+    const start = new Date(min); start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const end = new Date(max); end.setDate(end.getDate() + (7 - end.getDay()) % 7);
+    const weekList: Date[] = [];
+    const cur = new Date(start);
+    while (cur <= end) { weekList.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
+    return { minDate: start, maxDate: end, weeks: weekList };
+  }, [gantt]);
+
+  const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / 86400000));
+  const DAY_PX = 14; // largura de 1 dia
+  const timelineWidth = totalDays * DAY_PX;
+  const LEFT_COL = 380;
+
+  const pctPos = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const days = Math.round((d.getTime() - minDate.getTime()) / 86400000);
+    return days * DAY_PX;
+  };
+  const barWidth = (ini: string, fim: string) => {
+    const days = Math.max(1, Math.round((new Date(fim).getTime() - new Date(ini).getTime()) / 86400000) + 1);
+    return days * DAY_PX;
+  };
+
+  const toggle = (id: number) => setExpanded(prev => {
+    const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+
+  // KPIs
+  const kpis = useMemo(() => {
+    const entregas = gantt.flatMap(b => b.entregas);
+    const total = entregas.length;
+    const entregues = entregas.filter(e => e.status === 'Entregue').length;
+    const atrasadas = entregas.filter(e => e.status === 'Atrasado').length;
+    const progAvg = total ? Math.round(entregas.reduce((s, e) => s + e.progress, 0) / total) : 0;
+    return { total, entregues, atrasadas, progAvg };
+  }, [gantt]);
+
+  // Marcador de hoje
+  const todayPx = (() => {
+    const t = new Date();
+    if (t < minDate || t > maxDate) return null;
+    return Math.round((t.getTime() - minDate.getTime()) / 86400000) * DAY_PX;
+  })();
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi label="Entregas totais" value={kpis.total} color="#1A5C3A" />
+        <Kpi label="Concluídas" value={kpis.entregues} color="#22C55E" />
+        <Kpi label="Em atraso" value={kpis.atrasadas} color="#EF4444" />
+        <Kpi label="Progresso médio" value={`${kpis.progAvg}%`} color="#0D6E8A" />
+      </div>
+
+      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
+            <GanttChart size={14} className="inline mr-1.5" />Cronograma Executivo — INOVA SOCIOBIO II
+          </h3>
+          <div className="flex gap-3 text-[11px] flex-wrap">
+            {GANTT_STATUS_LIST.map(s => (
+              <span key={s} className="flex items-center gap-1">
+                <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: ganttStatusColors[s] }} />
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="overflow-auto" style={{ maxHeight: '70vh' }}>
+          <div style={{ minWidth: LEFT_COL + timelineWidth }}>
+            {/* Header timeline */}
+            <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: '#F1F5F9', borderBottom: '1px solid var(--border)' }}>
+              <div className="shrink-0 px-3 py-2 font-semibold" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                Bloco / Entrega / Atividade
+              </div>
+              <div className="relative" style={{ width: timelineWidth, height: 32 }}>
+                {weeks.map((w, i) => (
+                  <div key={i} className="absolute top-0 bottom-0 flex items-center justify-start pl-1 text-slate-500"
+                    style={{ left: pctPos(fmtDate(w)), width: 7 * DAY_PX, borderLeft: '1px solid #E2E8F0' }}>
+                    {String(w.getDate()).padStart(2, '0')}/{String(w.getMonth() + 1).padStart(2, '0')}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rows */}
+            {gantt.map(b => (
+              <div key={b.id}>
+                <div className="flex" style={{ background: '#F8FAFC', borderBottom: '1px solid var(--border)' }}>
+                  <div className="px-3 py-2 text-xs font-bold text-slate-700 shrink-0" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                    {b.bloco}
+                  </div>
+                  <div style={{ width: timelineWidth }} />
+                </div>
+                {b.entregas.map(en => {
+                  const isOpen = expanded.has(en.id);
+                  return (
+                    <div key={en.id}>
+                      {/* Linha entrega */}
+                      <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid var(--border)' }}>
+                        <div className="px-3 py-2 shrink-0 flex items-start gap-1.5" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                          <button onClick={() => toggle(en.id)} className="mt-0.5 text-slate-400 hover:text-slate-700">
+                            <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 150ms' }} />
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <button onClick={() => setEditing({ kind: 'entrega', id: en.id })}
+                              className="text-[12px] font-semibold text-left leading-tight text-slate-800 hover:text-primary block">
+                              {en.entrega}
+                            </button>
+                            <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: ganttStatusColors[en.status] }} />
+                              {en.status} · {en.responsavel} · {en.progress}%
+                            </div>
+                          </div>
+                        </div>
+                        <div className="relative" style={{ width: timelineWidth, minHeight: 44 }}>
+                          {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+                          {weeks.map((w, i) => (
+                            <div key={i} className="absolute top-0 bottom-0" style={{ left: pctPos(fmtDate(w)), width: 1, background: '#F1F5F9' }} />
+                          ))}
+                          <GanttBar
+                            left={pctPos(en.inicio)}
+                            width={barWidth(en.inicio, en.fim)}
+                            color={ganttStatusColors[en.status]}
+                            progress={en.progress}
+                            label={`${new Date(en.inicio).toLocaleDateString('pt-BR')} – ${new Date(en.fim).toLocaleDateString('pt-BR')}`}
+                            bold
+                            onClick={() => setEditing({ kind: 'entrega', id: en.id })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Atividades */}
+                      {isOpen && en.atividades.map(a => (
+                        <div key={a.id} className="flex hover:bg-slate-50" style={{ borderBottom: '1px solid #F1F5F9' }}>
+                          <div className="pl-9 pr-3 py-1.5 shrink-0" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                            <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
+                              className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block">
+                              {a.atividade}
+                            </button>
+                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                              {a.responsavel} · {a.progress}%
+                            </div>
+                          </div>
+                          <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
+                            {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+                            <GanttBar
+                              left={pctPos(a.inicio)}
+                              width={barWidth(a.inicio, a.fim)}
+                              color={ganttStatusColors[a.status]}
+                              progress={a.progress}
+                              label={`${new Date(a.inicio).toLocaleDateString('pt-BR')} – ${new Date(a.fim).toLocaleDateString('pt-BR')}`}
+                              onClick={() => setEditing({ kind: 'atividade', id: a.id })}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {editing && (() => {
+        if (editing.kind === 'entrega') {
+          const en = gantt.flatMap(b => b.entregas).find(x => x.id === editing.id);
+          if (!en) return null;
+          return <GanttEditModal
+            title="Editar entrega"
+            item={{ nome: en.entrega, inicio: en.inicio, fim: en.fim, responsavel: en.responsavel, status: en.status, progress: en.progress }}
+            onClose={() => setEditing(null)}
+            onSave={(v) => { updateGanttEntrega(en.id, v); toast.success('Entrega atualizada.'); setEditing(null); }}
+          />;
+        }
+        const a = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades)).find(x => x.id === editing.id);
+        if (!a) return null;
+        return <GanttEditModal
+          title="Editar atividade"
+          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel, status: a.status, progress: a.progress }}
+          onClose={() => setEditing(null)}
+          onSave={(v) => { updateGanttAtividade(a.id, v); toast.success('Atividade atualizada.'); setEditing(null); }}
+        />;
+      })()}
+    </div>
+  );
+}
+
+function GanttBar({ left, width, color, progress, label, bold, onClick }: {
+  left: number; width: number; color: string; progress: number; label: string; bold?: boolean; onClick?: () => void;
+}) {
+  return (
+    <button onClick={onClick} title={`${label} · ${progress}%`}
+      className="absolute rounded-md overflow-hidden text-left"
+      style={{
+        left, width, top: bold ? 10 : 8, height: bold ? 22 : 16,
+        background: `${color}33`, border: `1px solid ${color}`,
+        cursor: 'pointer',
+      }}>
+      <div style={{ width: `${progress}%`, height: '100%', background: color, opacity: 0.85, transition: 'width 200ms' }} />
+      <div className="absolute inset-0 flex items-center px-1.5 text-[9px] font-semibold text-white mix-blend-luminosity" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+        {progress}%
+      </div>
+    </button>
+  );
+}
+
+function GanttEditModal({ title, item, onSave, onClose }: {
+  title: string;
+  item: { nome: string; inicio: string; fim: string; responsavel: string; status: GanttStatus; progress: number };
+  onSave: (v: { inicio: string; fim: string; responsavel: string; status: GanttStatus; progress: number }) => void;
+  onClose: () => void;
+}) {
+  const [f, setF] = useState(item);
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold">{title}</h3>
+          <button onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="mb-3 text-sm font-medium text-slate-700">{item.nome}</div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium block mb-1">Início</label>
+              <input type="date" value={f.inicio} onChange={e => setF({ ...f, inicio: e.target.value })}
+                className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Fim</label>
+              <input type="date" value={f.fim} onChange={e => setF({ ...f, fim: e.target.value })}
+                className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Responsável</label>
+            <input value={f.responsavel} onChange={e => setF({ ...f, responsavel: e.target.value })}
+              className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Status</label>
+            <select value={f.status} onChange={e => setF({ ...f, status: e.target.value as GanttStatus })}
+              className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }}>
+              {GANTT_STATUS_LIST.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Progresso: <span className="font-mono">{f.progress}%</span></label>
+            <input type="range" min={0} max={100} step={5} value={f.progress}
+              onChange={e => setF({ ...f, progress: Number(e.target.value) })} className="w-full" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-5">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
+          <button onClick={() => onSave({ inicio: f.inicio, fim: f.fim, responsavel: f.responsavel, status: f.status, progress: f.progress })}
+            className="px-4 py-2 text-sm text-white rounded-md flex items-center gap-1" style={{ background: 'var(--primary)' }}>
+            <Save size={13} /> Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 /* ============================================================
    ROTAS TAB — Interactive map + filterable table
@@ -201,7 +495,7 @@ function RotasTab() {
   );
 }
 
-function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
+function Kpi({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
     <div className="rounded-lg p-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
