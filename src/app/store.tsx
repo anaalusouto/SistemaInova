@@ -154,18 +154,19 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [communities, setCommunities] = useState<Comunidade[]>(seedComunidades);
   const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
   const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
+  const [gantt, setGantt] = useState<GanttBloco[]>(cronogramaExecutivoSeed);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const p = loadInitial();
-    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events);
+    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events); setGantt(p.gantt);
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events } as Persisted)); } catch { /* ignore */ }
-  }, [projects, communities, routes, events, hydrated]);
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt } as Persisted)); } catch { /* ignore */ }
+  }, [projects, communities, routes, events, gantt, hydrated]);
 
   const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
     setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
