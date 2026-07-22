@@ -121,6 +121,7 @@ function loadInitial(): Persisted {
     communities: seedComunidades,
     routes: seedRotas,
     events: calendarSeed,
+    gantt: cronogramaExecutivoSeed,
   };
   if (typeof window === 'undefined') return fallback;
   try {
@@ -132,6 +133,7 @@ function loadInitial(): Persisted {
       communities: parsed.communities?.length ? parsed.communities : fallback.communities,
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
+      gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
     };
   } catch { return fallback; }
 }
