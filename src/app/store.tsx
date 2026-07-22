@@ -103,12 +103,17 @@ type Ctx = {
   updateEvent: (id: number, patch: Partial<CalendarEvent>) => void;
   deleteEvent: (id: number) => void;
 
+  // Cronograma Executivo (Gantt)
+  gantt: GanttBloco[];
+  updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
+  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
+
   resetToSeed: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
 
-type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[] };
+type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[] };
 
 function loadInitial(): Persisted {
   const fallback: Persisted = {
