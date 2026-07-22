@@ -495,7 +495,7 @@ function RotasTab() {
   );
 }
 
-function Kpi({ label, value, color }: { label: string; value: number; color: string }) {
+function Kpi({ label, value, color }: { label: string; value: number | string; color: string }) {
   return (
     <div className="rounded-lg p-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
