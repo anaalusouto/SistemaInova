@@ -40,6 +40,8 @@ export interface GanttEntrega {
   responsavel: string;
   status: GanttStatus;
   progress: number;
+  comentario?: string;
+
   atividades: GanttActivity[];
 }
 
