@@ -64,7 +64,8 @@ function AppShell() {
       case 'reports':
         return <ReportsPage />;
       case 'settings':
-        return <ConfiguracoesPage />;
+        return isAdmin ? <ConfiguracoesPage /> : <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
+
       default:
         return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
     }
