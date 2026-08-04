@@ -74,9 +74,19 @@ export function CronogramaPage() {
    CRONOGRAMA EXECUTIVO — Gantt funcional
    ============================================================ */
 function CronogramaExecutivoTab() {
-  const { gantt, updateGanttEntrega, updateGanttAtividade } = useStore();
+  const {
+    gantt, updateGanttEntrega, updateGanttAtividade,
+    addGanttAtividade, deleteGanttAtividade, restoreGanttAtividade,
+  } = useStore();
+  const { user, isAdmin } = useAuth();
+  const { log } = useAudit();
   const [expanded, setExpanded] = useState<Set<number>>(() => new Set(gantt.flatMap(b => b.entregas.map(e => e.id))));
   const [editing, setEditing] = useState<{ kind: 'entrega' | 'atividade'; id: number } | null>(null);
+  const [addingTo, setAddingTo] = useState<number | null>(null);
+  const [novaAtividade, setNovaAtividade] = useState('');
+
+  const audit = (action: string, detail: string) =>
+    log({ userLogin: user?.login ?? '—', area: 'cronograma executivo', action, detail });
 
   // Timeline: menor início até maior fim (arredondado por semana)
   const { minDate, maxDate, weeks } = useMemo(() => {
@@ -101,7 +111,7 @@ function CronogramaExecutivoTab() {
   const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / 86400000));
   const DAY_PX = 14; // largura de 1 dia
   const timelineWidth = totalDays * DAY_PX;
-  const LEFT_COL = 380;
+  const LEFT_COL = 420;
 
   const pctPos = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -134,6 +144,38 @@ function CronogramaExecutivoTab() {
     return Math.round((t.getTime() - minDate.getTime()) / 86400000) * DAY_PX;
   })();
 
+  const handleToggleDone = (a: { id: number; atividade: string; status: GanttStatus }) => {
+    const done = a.status === 'Entregue';
+    updateGanttAtividade(a.id, { status: done ? 'Não iniciado' : 'Entregue', progress: done ? 0 : 100 });
+    audit(done ? 'desmarcar atividade' : 'concluir atividade', a.atividade);
+  };
+
+  const handleDelete = (a: { id: number; atividade: string }) => {
+    const removed = deleteGanttAtividade(a.id);
+    if (!removed) return;
+    audit('remover atividade', a.atividade);
+    toast.error(`Atividade removida: ${a.atividade}`, {
+      duration: 6000,
+      action: {
+        label: 'Desfazer',
+        onClick: () => {
+          restoreGanttAtividade(removed.entregaId, removed.index, removed.atividade);
+          audit('desfazer remoção', a.atividade);
+        },
+      },
+    });
+  };
+
+  const handleAdd = (entregaId: number) => {
+    const nome = novaAtividade.trim();
+    if (!nome) return;
+    addGanttAtividade(entregaId, nome);
+    audit('adicionar atividade', nome);
+    toast.success('Atividade adicionada.');
+    setNovaAtividade('');
+    setAddingTo(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -141,6 +183,12 @@ function CronogramaExecutivoTab() {
         <Kpi label="Concluídas" value={kpis.entregues} color="#22C55E" />
         <Kpi label="Em atraso" value={kpis.atrasadas} color="#EF4444" />
         <Kpi label="Progresso médio" value={`${kpis.progAvg}%`} color="#0D6E8A" />
+      </div>
+
+      <div className="text-[11px] text-muted-foreground">
+        {isAdmin
+          ? 'Perfil administrativo: você pode adicionar, editar e remover atividades.'
+          : 'Perfil estagiário: você pode editar as entregas e marcar/desmarcar as atividades como concluídas.'}
       </div>
 
       <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -202,7 +250,25 @@ function CronogramaExecutivoTab() {
                             <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
                               <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: ganttStatusColors[en.status] }} />
                               {en.status} · {en.responsavel} · {en.progress}%
+                              {en.comentario && <MessageSquare size={10} className="text-slate-400" />}
                             </div>
+                            {isAdmin && (
+                              addingTo === en.id ? (
+                                <div className="flex items-center gap-1 mt-1.5">
+                                  <input autoFocus value={novaAtividade} onChange={e => setNovaAtividade(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleAdd(en.id); if (e.key === 'Escape') { setAddingTo(null); setNovaAtividade(''); } }}
+                                    placeholder="Nome da atividade"
+                                    className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
+                                  <button onClick={() => handleAdd(en.id)} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                                  <button onClick={() => { setAddingTo(null); setNovaAtividade(''); }} className="text-[10px] px-1.5 py-1 text-slate-500">Cancelar</button>
+                                </div>
+                              ) : (
+                                <button onClick={() => { setAddingTo(en.id); setExpanded(prev => new Set(prev).add(en.id)); }}
+                                  className="mt-1 text-[10px] text-slate-500 hover:text-primary flex items-center gap-1">
+                                  <Plus size={10} /> Atividade
+                                </button>
+                              )
+                            )}
                           </div>
                         </div>
                         <div className="relative" style={{ width: timelineWidth, minHeight: 44 }}>
@@ -223,30 +289,51 @@ function CronogramaExecutivoTab() {
                       </div>
 
                       {/* Atividades */}
-                      {isOpen && en.atividades.map(a => (
-                        <div key={a.id} className="flex hover:bg-slate-50" style={{ borderBottom: '1px solid #F1F5F9' }}>
-                          <div className="pl-9 pr-3 py-1.5 shrink-0" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
-                            <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
-                              className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block">
-                              {a.atividade}
-                            </button>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                              {a.responsavel} · {a.progress}%
+                      {isOpen && en.atividades.map(a => {
+                        const done = a.status === 'Entregue';
+                        return (
+                          <div key={a.id} className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <div className="pl-9 pr-3 py-1.5 shrink-0 flex items-start gap-2" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                              <input type="checkbox" checked={done} onChange={() => handleToggleDone(a)}
+                                title={done ? 'Desmarcar como concluída' : 'Marcar como concluída'} className="mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                {isAdmin ? (
+                                  <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
+                                    className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block"
+                                    style={{ textDecoration: done ? 'line-through' : 'none' }}>
+                                    {a.atividade}
+                                  </button>
+                                ) : (
+                                  <span className="text-[11px] leading-tight text-slate-700 block" style={{ textDecoration: done ? 'line-through' : 'none' }}>
+                                    {a.atividade}
+                                  </span>
+                                )}
+                                <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                                  {a.responsavel} · {a.progress}%
+                                  {a.comentario && <MessageSquare size={10} className="text-slate-400" />}
+                                </div>
+                              </div>
+                              {isAdmin && (
+                                <button onClick={() => handleDelete(a)} title="Remover atividade"
+                                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 mt-0.5">
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
+                            <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
+                              {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+                              <GanttBar
+                                left={pctPos(a.inicio)}
+                                width={barWidth(a.inicio, a.fim)}
+                                color={ganttStatusColors[a.status]}
+                                progress={a.progress}
+                                label={`${new Date(a.inicio).toLocaleDateString('pt-BR')} – ${new Date(a.fim).toLocaleDateString('pt-BR')}`}
+                                onClick={() => isAdmin && setEditing({ kind: 'atividade', id: a.id })}
+                              />
                             </div>
                           </div>
-                          <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
-                            {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
-                            <GanttBar
-                              left={pctPos(a.inicio)}
-                              width={barWidth(a.inicio, a.fim)}
-                              color={ganttStatusColors[a.status]}
-                              progress={a.progress}
-                              label={`${new Date(a.inicio).toLocaleDateString('pt-BR')} – ${new Date(a.fim).toLocaleDateString('pt-BR')}`}
-                              onClick={() => setEditing({ kind: 'atividade', id: a.id })}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   );
                 })}
@@ -262,18 +349,30 @@ function CronogramaExecutivoTab() {
           if (!en) return null;
           return <GanttEditModal
             title="Editar entrega"
-            item={{ nome: en.entrega, inicio: en.inicio, fim: en.fim, responsavel: en.responsavel, status: en.status, progress: en.progress }}
+            canRename={isAdmin}
+            item={{ nome: en.entrega, inicio: en.inicio, fim: en.fim, responsavel: en.responsavel, status: en.status, progress: en.progress, comentario: en.comentario ?? '' }}
             onClose={() => setEditing(null)}
-            onSave={(v) => { updateGanttEntrega(en.id, v); toast.success('Entrega atualizada.'); setEditing(null); }}
+            onSave={(v) => {
+              updateGanttEntrega(en.id, isAdmin ? { ...v, entrega: v.nome } : v);
+              audit('editar entrega', en.entrega);
+              toast.success('Entrega atualizada.');
+              setEditing(null);
+            }}
           />;
         }
         const a = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades)).find(x => x.id === editing.id);
         if (!a) return null;
         return <GanttEditModal
           title="Editar atividade"
-          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel, status: a.status, progress: a.progress }}
+          canRename={isAdmin}
+          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel, status: a.status, progress: a.progress, comentario: a.comentario ?? '' }}
           onClose={() => setEditing(null)}
-          onSave={(v) => { updateGanttAtividade(a.id, v); toast.success('Atividade atualizada.'); setEditing(null); }}
+          onSave={(v) => {
+            updateGanttAtividade(a.id, isAdmin ? { ...v, atividade: v.nome } : v);
+            audit('editar atividade', a.atividade);
+            toast.success('Atividade atualizada.');
+            setEditing(null);
+          }}
         />;
       })()}
     </div>
@@ -299,22 +398,41 @@ function GanttBar({ left, width, color, progress, label, bold, onClick }: {
   );
 }
 
-function GanttEditModal({ title, item, onSave, onClose }: {
+interface GanttFormValue {
+  nome: string; inicio: string; fim: string; responsavel: string; status: GanttStatus; progress: number; comentario: string;
+}
+
+function GanttEditModal({ title, item, canRename, onSave, onClose }: {
   title: string;
-  item: { nome: string; inicio: string; fim: string; responsavel: string; status: GanttStatus; progress: number };
-  onSave: (v: { inicio: string; fim: string; responsavel: string; status: GanttStatus; progress: number }) => void;
+  item: GanttFormValue;
+  canRename: boolean;
+  onSave: (v: GanttFormValue) => void;
   onClose: () => void;
 }) {
   const [f, setF] = useState(item);
+  const responsaveis = useMemo(() => {
+    const base = APP_PEOPLE.map(p => p.name);
+    return Array.from(new Set([...base, 'CESUPA', 'SEMAS', item.responsavel].filter(Boolean)));
+  }, [item.responsavel]);
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">{title}</h3>
           <button onClick={onClose}><X size={18} /></button>
         </div>
-        <div className="mb-3 text-sm font-medium text-slate-700">{item.nome}</div>
+
         <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium block mb-1">Nome</label>
+            {canRename ? (
+              <textarea value={f.nome} onChange={e => setF({ ...f, nome: e.target.value })} rows={2}
+                className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+            ) : (
+              <div className="text-sm text-slate-700">{f.nome}</div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium block mb-1">Início</label>
@@ -329,8 +447,10 @@ function GanttEditModal({ title, item, onSave, onClose }: {
           </div>
           <div>
             <label className="text-xs font-medium block mb-1">Responsável</label>
-            <input value={f.responsavel} onChange={e => setF({ ...f, responsavel: e.target.value })}
-              className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+            <select value={f.responsavel} onChange={e => setF({ ...f, responsavel: e.target.value })}
+              className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }}>
+              {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
           </div>
           <div>
             <label className="text-xs font-medium block mb-1">Status</label>
@@ -344,10 +464,16 @@ function GanttEditModal({ title, item, onSave, onClose }: {
             <input type="range" min={0} max={100} step={5} value={f.progress}
               onChange={e => setF({ ...f, progress: Number(e.target.value) })} className="w-full" />
           </div>
+          <div>
+            <label className="text-xs font-medium block mb-1 flex items-center gap-1"><MessageSquare size={12} /> Comentários</label>
+            <textarea value={f.comentario} onChange={e => setF({ ...f, comentario: e.target.value })} rows={3}
+              placeholder="Observações, pendências, encaminhamentos…"
+              className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+          </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
-          <button onClick={() => onSave({ inicio: f.inicio, fim: f.fim, responsavel: f.responsavel, status: f.status, progress: f.progress })}
+          <button onClick={() => onSave(f)}
             className="px-4 py-2 text-sm text-white rounded-md flex items-center gap-1" style={{ background: 'var(--primary)' }}>
             <Save size={13} /> Salvar
           </button>
@@ -356,6 +482,7 @@ function GanttEditModal({ title, item, onSave, onClose }: {
     </div>
   );
 }
+
 
 
 /* ============================================================
