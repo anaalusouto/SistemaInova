@@ -302,6 +302,44 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         return { ...en, atividades: nextAtividades, progress: avg };
       }),
     }))),
+    addGanttAtividade: (entregaId, atividade) => setGantt(prev => {
+      const allIds = prev.flatMap(b => b.entregas.flatMap(e => e.atividades.map(a => a.id)));
+      const nextId = allIds.reduce((m, x) => Math.max(m, x), 0) + 1;
+      return prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => en.id !== entregaId ? en : {
+          ...en,
+          atividades: [...en.atividades, {
+            id: nextId, atividade, inicio: en.inicio, fim: en.fim,
+            responsavel: en.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
+          }],
+        }),
+      }));
+    }),
+    deleteGanttAtividade: (atividadeId) => {
+      let found: { entregaId: number; index: number; atividade: GanttActivity } | null = null;
+      gantt.forEach(b => b.entregas.forEach(en => {
+        const idx = en.atividades.findIndex(a => a.id === atividadeId);
+        if (idx >= 0) found = { entregaId: en.id, index: idx, atividade: en.atividades[idx] };
+      }));
+      if (!found) return null;
+      setGantt(prev => prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => ({ ...en, atividades: en.atividades.filter(a => a.id !== atividadeId) })),
+      })));
+      return found;
+    },
+    restoreGanttAtividade: (entregaId, index, atividade) => setGantt(prev => prev.map(b => ({
+      ...b,
+      entregas: b.entregas.map(en => {
+        if (en.id !== entregaId) return en;
+        const list = [...en.atividades];
+        list.splice(Math.min(index, list.length), 0, atividade);
+        return { ...en, atividades: list };
+      }),
+    }))),
+
+
 
     resetToSeed: () => {
       setProjects(seedProjects as ProjectExt[]);
