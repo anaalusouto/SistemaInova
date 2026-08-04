@@ -8,11 +8,12 @@ import {
   Settings,
   ChevronRight,
   ChevronDown,
-  Bell,
   Search,
   ClipboardList,
   Layers,
+  LogOut,
 } from 'lucide-react';
+import { useAuth } from '../auth/authStore';
 
 export type NavItem =
   | 'dashboard'
@@ -41,11 +42,19 @@ const bottomItems = [
   { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
-  { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
+  { id: 'settings' as NavItem, label: 'Configurações', icon: Settings, adminOnly: true },
 ];
 
 export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   const [inovaOpen, setInovaOpen] = useState(true);
+  const { user, isAdmin, signOut } = useAuth();
+
+  const initials = (user?.displayName ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase())
+    .join('') || 'US';
 
   const renderBtn = (item: { id: NavItem; label: string; icon: typeof LayoutDashboard }, indent = false) => {
     const Icon = item.icon;
@@ -73,16 +82,16 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
 
   return (
     <aside className="flex flex-col h-full w-60 flex-shrink-0" style={{ background: 'var(--sidebar)' }}>
-      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
+      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)', background: '#FFFFFF' }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sidebar-primary)' }}>
           <LayoutDashboard size={16} color="#fff" />
         </div>
         <div>
-          <div style={{ color: '#F1F5F9', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
+          <div style={{ color: '#000000', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
             INOVA CRIA
           </div>
-          <div style={{ color: 'var(--sidebar-foreground)', fontSize: '0.7rem', opacity: 0.6 }}>
-            Gestão de Portfólio
+          <div style={{ color: '#000000', fontSize: '0.7rem', opacity: 0.7 }}>
+            Gestão de Projetos
           </div>
         </div>
       </div>
@@ -112,20 +121,24 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
         {inovaOpen && inovaChildren.map(i => renderBtn(i, true))}
 
         <div className="mt-2">
-          {bottomItems.map(i => renderBtn(i))}
+          {bottomItems.filter(i => !i.adminOnly || isAdmin).map(i => renderBtn(i))}
         </div>
       </nav>
 
       <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-3 px-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: 'var(--sidebar-primary)', color: '#fff' }}>
-            CR
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div style={{ color: '#E2E8F0', fontSize: '0.78rem', fontWeight: 500 }}>CRIA</div>
-            <div style={{ color: 'rgba(203,213,225,0.45)', fontSize: '0.68rem' }}>INOVA FAS/FUNBIO</div>
+            <div className="truncate" style={{ color: '#E2E8F0', fontSize: '0.78rem', fontWeight: 500 }}>{user?.displayName ?? '—'}</div>
+            <div style={{ color: 'rgba(203,213,225,0.45)', fontSize: '0.68rem' }}>
+              {isAdmin ? 'Administrador' : 'Estagiário'}
+            </div>
           </div>
-          <Bell size={14} style={{ color: 'rgba(203,213,225,0.5)', flexShrink: 0 }} />
+          <button onClick={signOut} title="Sair" className="flex-shrink-0">
+            <LogOut size={14} style={{ color: 'rgba(203,213,225,0.5)' }} />
+          </button>
         </div>
       </div>
     </aside>

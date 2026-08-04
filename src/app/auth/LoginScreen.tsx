@@ -6,12 +6,13 @@ export function LoginScreen() {
   const { signIn } = useAuth();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const user = signIn(login, password);
-    if (!user) setError('Login ou senha inválidos.');
+    const user = signIn(login, password, remember);
+    if (!user) setError('E-mail ou senha inválidos.');
   };
 
   return (
@@ -26,7 +27,7 @@ export function LoginScreen() {
           </div>
           <div className="text-center">
             <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: '#0F172A' }}>
-              GestorPro
+              INOVA CRIA
             </h1>
             <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 3 }}>
               Acesse o portfólio de projetos institucionais
@@ -36,13 +37,14 @@ export function LoginScreen() {
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1.5">
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Login</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</span>
             <input
               className="ci"
               value={login}
               onChange={e => setLogin(e.target.value)}
               autoFocus
               autoComplete="username"
+              placeholder="nome@cesupa.br"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -55,6 +57,12 @@ export function LoginScreen() {
               autoComplete="current-password"
             />
           </label>
+
+          <label className="flex items-center gap-2 mt-0.5" style={{ fontSize: '0.75rem', color: '#475569' }}>
+            <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
+            Lembrar de mim neste computador
+          </label>
+
           {error && (
             <div style={{ fontSize: '0.75rem', color: '#DC2626', background: '#FEF2F2', padding: '8px 10px', borderRadius: 8 }}>
               {error}
@@ -70,7 +78,7 @@ export function LoginScreen() {
         </form>
 
         <div style={{ fontSize: '0.7rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.6 }}>
-          Login de apresentação: <b>CRIA</b> / senha <b>INOVA</b>
+          Acesso restrito · Todos os acessos são registrados
         </div>
 
         <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}

@@ -12,7 +12,7 @@ import {
 import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
-import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus } from './data/cronogramaExecutivo';
+import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
 const seedProjects = inovaProjetos;
@@ -105,8 +105,12 @@ type Ctx = {
 
   // Cronograma Executivo (Gantt)
   gantt: GanttBloco[];
-  updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
-  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string }) => void;
+  updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; entrega?: string; comentario?: string }) => void;
+  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string }) => void;
+  addGanttAtividade: (entregaId: number, atividade: string) => void;
+  deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity } | null;
+  restoreGanttAtividade: (entregaId: number, index: number, atividade: GanttActivity) => void;
+
 
   resetToSeed: () => void;
 };
@@ -298,6 +302,44 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         return { ...en, atividades: nextAtividades, progress: avg };
       }),
     }))),
+    addGanttAtividade: (entregaId, atividade) => setGantt(prev => {
+      const allIds = prev.flatMap(b => b.entregas.flatMap(e => e.atividades.map(a => a.id)));
+      const nextId = allIds.reduce((m, x) => Math.max(m, x), 0) + 1;
+      return prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => en.id !== entregaId ? en : {
+          ...en,
+          atividades: [...en.atividades, {
+            id: nextId, atividade, inicio: en.inicio, fim: en.fim,
+            responsavel: en.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
+          }],
+        }),
+      }));
+    }),
+    deleteGanttAtividade: (atividadeId) => {
+      let found: { entregaId: number; index: number; atividade: GanttActivity } | null = null;
+      gantt.forEach(b => b.entregas.forEach(en => {
+        const idx = en.atividades.findIndex(a => a.id === atividadeId);
+        if (idx >= 0) found = { entregaId: en.id, index: idx, atividade: en.atividades[idx] };
+      }));
+      if (!found) return null;
+      setGantt(prev => prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => ({ ...en, atividades: en.atividades.filter(a => a.id !== atividadeId) })),
+      })));
+      return found;
+    },
+    restoreGanttAtividade: (entregaId, index, atividade) => setGantt(prev => prev.map(b => ({
+      ...b,
+      entregas: b.entregas.map(en => {
+        if (en.id !== entregaId) return en;
+        const list = [...en.atividades];
+        list.splice(Math.min(index, list.length), 0, atividade);
+        return { ...en, atividades: list };
+      }),
+    }))),
+
+
 
     resetToSeed: () => {
       setProjects(seedProjects as ProjectExt[]);

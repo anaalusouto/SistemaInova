@@ -19,8 +19,13 @@ function AppShell() {
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const { getProject } = useStore();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { log } = useAudit();
+
+  useEffect(() => {
+    if (!isAdmin && activeNav === 'settings') setActiveNav('dashboard');
+  }, [isAdmin, activeNav]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -59,7 +64,8 @@ function AppShell() {
       case 'reports':
         return <ReportsPage />;
       case 'settings':
-        return <ConfiguracoesPage />;
+        return isAdmin ? <ConfiguracoesPage /> : <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
+
       default:
         return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
     }

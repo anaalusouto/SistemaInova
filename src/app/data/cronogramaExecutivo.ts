@@ -28,6 +28,8 @@ export interface GanttActivity {
   responsavel: string;
   status: GanttStatus;
   progress: number; // 0-100
+  comentario?: string;
+
 }
 
 export interface GanttEntrega {
@@ -38,6 +40,8 @@ export interface GanttEntrega {
   responsavel: string;
   status: GanttStatus;
   progress: number;
+  comentario?: string;
+
   atividades: GanttActivity[];
 }
 
