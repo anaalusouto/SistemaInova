@@ -12,7 +12,7 @@ import {
 import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
-import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus } from './data/cronogramaExecutivo';
+import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
 const seedProjects = inovaProjetos;
