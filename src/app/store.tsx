@@ -208,10 +208,11 @@ function applyMetaEdit(p: ProjectExt, edit: MetaEdit): ProjectExt {
               if (a.id !== edit.targetId) return a;
               if (edit.field === 'status') {
                 const status = edit.to as ActivityStatus;
+                const done = status === 'Concluído';
                 return {
                   ...a, status,
-                  progress: status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress,
-                  conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
+                  progress: done ? 100 : status === 'Não iniciado' ? 0 : (a.progress >= 100 ? 0 : a.progress),
+                  conclusionDate: done ? new Date().toLocaleDateString('pt-BR') : null,
                 };
               }
               return { ...a, name: edit.to };
