@@ -106,6 +106,18 @@ type Ctx = {
 
   updateActivityStatus: (projectId: number, activityId: number, status: ActivityStatus, progress?: number) => void;
 
+  // Contatos do projeto
+  addContact: (projectId: number, c: Omit<Contact, 'id'>) => void;
+  updateContact: (projectId: number, id: number, patch: Partial<Contact>) => void;
+  deleteContact: (projectId: number, id: number) => void;
+
+  // Metas: edição com registro e validação de administrador
+  submitMetaEdit: (projectId: number, edit: MetaEdit, author: EditAuthor) => 'aplicado' | 'pendente';
+  approveMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
+  rejectMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
+
+
+
   // Comunidades
   communities: Comunidade[];
   getCommunity: (id: number) => Comunidade | undefined;
