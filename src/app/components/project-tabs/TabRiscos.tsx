@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Plus, ShieldAlert, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { type Project, type RiskStatus } from '../../data/mockData';
+import { type Project, type RiskStatus, type Goal } from '../../data/mockData';
+import { APP_PEOPLE } from '../../auth/authStore';
 import { useStore } from '../../store';
 
 const statusConfig: Record<RiskStatus, { color: string; bg: string }> = {
@@ -52,6 +53,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
         </button>
         {showForm && (
           <RiskForm
+            goals={project.goals}
             onClose={() => setShowForm(false)}
             onSave={(r) => {
               addRisk(project.id, r);
@@ -285,6 +287,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
       {showForm && (
         <RiskForm
+          goals={project.goals}
           onClose={() => setShowForm(false)}
           onSave={(r) => {
             addRisk(project.id, r);
@@ -298,9 +301,11 @@ export function TabRiscos({ project }: TabRiscosProps) {
 }
 
 function RiskForm({
+  goals,
   onClose,
   onSave,
 }: {
+  goals: Goal[];
   onClose: () => void;
   onSave: (r: {
     description: string;
@@ -310,15 +315,17 @@ function RiskForm({
     responseStrategy: string;
     responsible: string;
     status: RiskStatus;
+    goalId: number;
   }) => void;
 }) {
   const [f, setF] = useState({
+    goalId: goals[0]?.id ?? 0,
     description: '',
     category: 'Operacional',
     probability: 3,
     impact: 3,
     responseStrategy: '',
-    responsible: '',
+    responsible: APP_PEOPLE[0]?.name ?? '',
     status: 'Aberto' as RiskStatus,
   });
 
@@ -326,6 +333,10 @@ function RiskForm({
     e.preventDefault();
     if (!f.description.trim()) {
       toast.error('Descreva o risco.');
+      return;
+    }
+    if (!f.goalId) {
+      toast.error('Vincule o risco a uma meta.');
       return;
     }
     onSave(f);
@@ -339,13 +350,23 @@ function RiskForm({
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
+          <L label="Meta vinculada *" full>
+            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: Number(e.target.value) })}>
+              {goals.length === 0 && <option value={0}>Nenhuma meta cadastrada</option>}
+              {goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name}`}</option>)}
+            </select>
+          </L>
           <L label="Descrição *" full><textarea className="ipt min-h-[60px]" value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></L>
           <L label="Categoria">
             <select className="ipt" value={f.category} onChange={e => setF({ ...f, category: e.target.value })}>
               {['Operacional', 'Técnico', 'Financeiro', 'Externo', 'Estratégico'].map(o => <option key={o}>{o}</option>)}
             </select>
           </L>
-          <L label="Responsável"><input className="ipt" value={f.responsible} onChange={e => setF({ ...f, responsible: e.target.value })} /></L>
+          <L label="Responsável">
+            <select className="ipt" value={f.responsible} onChange={e => setF({ ...f, responsible: e.target.value })}>
+              {APP_PEOPLE.map(p => <option key={p.login} value={p.name}>{`${p.name} (${p.role})`}</option>)}
+            </select>
+          </L>
           <L label="Probabilidade (1-5)"><input type="number" min={1} max={5} className="ipt" value={f.probability} onChange={e => setF({ ...f, probability: Number(e.target.value) })} /></L>
           <L label="Impacto (1-5)"><input type="number" min={1} max={5} className="ipt" value={f.impact} onChange={e => setF({ ...f, impact: Number(e.target.value) })} /></L>
           <L label="Estratégia de resposta" full><textarea className="ipt min-h-[50px]" value={f.responseStrategy} onChange={e => setF({ ...f, responseStrategy: e.target.value })} /></L>

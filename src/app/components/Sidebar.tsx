@@ -108,14 +108,14 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
       <nav className="flex-1 px-3 py-2 overflow-y-auto">
         {topItems.map(i => renderBtn(i))}
 
-        {/* Grupo INOVA FAS/FUNBIO */}
+        {/* Grupo INSTITUIÇÕES */}
         <button
           onClick={() => setInovaOpen(v => !v)}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-md mb-0.5 text-left mt-2"
           style={{ color: 'var(--sidebar-foreground)', opacity: 0.9 }}
         >
           <Layers size={15} />
-          <span style={{ fontSize: '0.825rem', fontWeight: 600 }}>INOVA FAS/FUNBIO</span>
+          <span style={{ fontSize: '0.825rem', fontWeight: 600 }}>INSTITUIÇÕES</span>
           {inovaOpen ? <ChevronDown size={12} className="ml-auto" /> : <ChevronRight size={12} className="ml-auto" />}
         </button>
         {inovaOpen && inovaChildren.map(i => renderBtn(i, true))}

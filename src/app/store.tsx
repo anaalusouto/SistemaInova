@@ -13,13 +13,14 @@ import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
+import type { Contact, MetaChangeLog, MetaNodeKind, PendingApproval } from './data/projectExtras';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
 const seedProjects = inovaProjetos;
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v7';
+const STORAGE_KEY = 'pp-portfolio-v8';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
@@ -59,7 +60,25 @@ export interface PlanoTrabalho {
   observacoes?: string;
   planoArquivo?: string;
 }
-export type ProjectExt = Project & { communityId?: number | null; plano?: PlanoTrabalho };
+export type ProjectExt = Project & {
+  communityId?: number | null;
+  plano?: PlanoTrabalho;
+  /** Link do Google Drive com o Plano de Trabalho mais atualizado. */
+  driveLink?: string;
+  contacts?: Contact[];
+  metaLog?: MetaChangeLog[];
+  approvals?: PendingApproval[];
+};
+
+export interface MetaEdit {
+  kind: MetaNodeKind;
+  targetId: number;
+  targetPath: string;
+  field: string;
+  from: string;
+  to: string;
+}
+export interface EditAuthor { name: string; role: string; isAdmin: boolean }
 
 type Ctx = {
   projects: ProjectExt[];
@@ -86,6 +105,18 @@ type Ctx = {
   deleteEvidence: (projectId: number, evId: number) => void;
 
   updateActivityStatus: (projectId: number, activityId: number, status: ActivityStatus, progress?: number) => void;
+
+  // Contatos do projeto
+  addContact: (projectId: number, c: Omit<Contact, 'id'>) => void;
+  updateContact: (projectId: number, id: number, patch: Partial<Contact>) => void;
+  deleteContact: (projectId: number, id: number) => void;
+
+  // Metas: edição com registro e validação de administrador
+  submitMetaEdit: (projectId: number, edit: MetaEdit, author: EditAuthor) => 'aplicado' | 'pendente';
+  approveMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
+  rejectMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
+
+
 
   // Comunidades
   communities: Comunidade[];
@@ -152,6 +183,54 @@ function recalcProject(p: ProjectExt): ProjectExt {
     : p.budgetExecuted;
   return { ...p, progress, budgetExecuted };
 }
+
+/** Aplica a alteração solicitada na estrutura de metas/etapas/especializações. */
+function applyMetaEdit(p: ProjectExt, edit: MetaEdit): ProjectExt {
+  return {
+    ...p,
+    goals: p.goals.map(g => {
+      if (edit.kind === 'meta') {
+        return g.id === edit.targetId ? { ...g, name: edit.to } : g;
+      }
+      return {
+        ...g,
+        deliverables: g.deliverables.map(d => {
+          if (edit.kind === 'etapa') {
+            return d.id === edit.targetId ? { ...d, name: edit.to } : d;
+          }
+          return {
+            ...d,
+            activities: d.activities.map(a => {
+              if (a.id !== edit.targetId) return a;
+              if (edit.field === 'status') {
+                const status = edit.to as ActivityStatus;
+                return {
+                  ...a, status,
+                  progress: status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress,
+                  conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
+                };
+              }
+              return { ...a, name: edit.to };
+            }),
+          };
+        }),
+      };
+    }),
+  };
+}
+
+function appendLog(p: ProjectExt, edit: MetaEdit, author: string, authorRole: string, approvedBy: string | null): ProjectExt {
+  const list = p.metaLog ?? [];
+  const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+  const entry: MetaChangeLog = {
+    id: nextId, kind: edit.kind, targetId: edit.targetId, targetPath: edit.targetPath,
+    field: edit.field, from: edit.from, to: edit.to,
+    author, authorRole, date: new Date().toISOString(), approvedBy,
+  };
+  return { ...p, metaLog: [entry, ...list] };
+}
+
+
 
 export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<ProjectExt[]>(seedProjects as ProjectExt[]);
@@ -261,6 +340,54 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         })),
       })),
     })),
+
+    addContact: (projectId, c) => patch(projectId, p => {
+      const list = p.contacts ?? [];
+      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, contacts: [...list, { ...c, id: nextId }] };
+    }),
+    updateContact: (projectId, id, patchData) => patch(projectId, p => ({
+      ...p, contacts: (p.contacts ?? []).map(c => (c.id === id ? { ...c, ...patchData } : c)),
+    })),
+    deleteContact: (projectId, id) => patch(projectId, p => ({
+      ...p, contacts: (p.contacts ?? []).filter(c => c.id !== id),
+    })),
+
+    submitMetaEdit: (projectId, edit, author) => {
+      const needsApproval = !author.isAdmin;
+      patch(projectId, p => {
+        if (needsApproval) {
+          const list = p.approvals ?? [];
+          const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+          return {
+            ...p,
+            approvals: [{
+              id: nextId, ...edit,
+              author: author.name, authorRole: author.role,
+              date: new Date().toISOString(), status: 'Pendente' as const, reviewedBy: null,
+            }, ...list],
+          };
+        }
+        return appendLog(applyMetaEdit(p, edit), edit, author.name, author.role, author.name);
+      });
+      return needsApproval ? 'pendente' : 'aplicado';
+    },
+    approveMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => {
+      const req = (p.approvals ?? []).find(a => a.id === approvalId);
+      if (!req) return p;
+      const applied = applyMetaEdit(p, req);
+      const logged = appendLog(applied, req, req.author, req.authorRole, adminName);
+      return {
+        ...logged,
+        approvals: (logged.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Aprovado' as const, reviewedBy: adminName } : a),
+      };
+    }),
+    rejectMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => ({
+      ...p,
+      approvals: (p.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Recusado' as const, reviewedBy: adminName } : a),
+    })),
+
+
 
     // Comunidades
     communities,
