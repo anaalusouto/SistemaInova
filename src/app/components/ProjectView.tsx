@@ -1,30 +1,34 @@
 import { useState } from 'react';
 import {
   LayoutGrid,
-  ClipboardList,
+  Target,
   DollarSign,
   ShieldAlert,
   GitBranch,
-  Paperclip,
+  Users,
   ArrowLeft,
   ChevronRight,
+  ExternalLink,
+  Link2,
+  X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { type Project } from '../data/mockData';
 import { useStore } from '../store';
-import { TabCadastro } from './project-tabs/TabCadastro';
+import { TabResumo } from './project-tabs/TabResumo';
+import { TabMetas } from './project-tabs/TabMetas';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
+import { TabContatos } from './project-tabs/TabContatos';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
-import { TabEvidencias } from './project-tabs/TabEvidencias';
 
-type TabId = 'cadastro' | 'financeiro' | 'riscos' | 'mudancas' | 'evidencias';
+type TabId = 'resumo' | 'metas' | 'financeiro' | 'contatos';
 
 const tabs: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
-  { id: 'cadastro',      label: 'Cadastro',                 icon: ClipboardList },
-  { id: 'financeiro',    label: 'Financeiro',               icon: DollarSign },
-  { id: 'riscos',        label: 'Gestão de Riscos',         icon: ShieldAlert },
-  { id: 'mudancas',      label: 'Gestão de Mudanças',       icon: GitBranch },
-  { id: 'evidencias',    label: 'Evidências e Relatório',   icon: Paperclip },
+  { id: 'resumo',      label: 'Dashboard',              icon: LayoutGrid },
+  { id: 'metas',       label: 'Monitoramento de Metas', icon: Target },
+  { id: 'financeiro',  label: 'Financeiro',             icon: DollarSign },
+  { id: 'contatos',    label: 'Contatos',               icon: Users },
 ];
 
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
@@ -40,19 +44,21 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('cadastro');
-  const { getProject } = useStore();
+  const [activeTab, setActiveTab] = useState<TabId>('resumo');
+  const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
+  const [editLink, setEditLink] = useState<string | null>(null);
+  const { getProject, updateProject } = useStore();
   const project = getProject(initial.id) ?? initial;
+  const driveLink = (project as { driveLink?: string }).driveLink ?? '';
   const cfg = statusConfig[project.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
 
   const renderTab = () => {
     switch (activeTab) {
-      case 'cadastro':      return <TabCadastro project={project} />;
-      case 'financeiro':    return <TabFinanceiro project={project} />;
-      case 'riscos':        return <TabRiscos project={project} />;
-      case 'mudancas':      return <TabMudancas project={project} />;
-      case 'evidencias':    return <TabEvidencias project={project} />;
-      default:              return null;
+      case 'resumo':      return <TabResumo project={project} />;
+      case 'metas':       return <TabMetas project={project} />;
+      case 'financeiro':  return <TabFinanceiro project={project} />;
+      case 'contatos':    return <TabContatos project={project} />;
+      default:            return null;
     }
   };
 
@@ -79,10 +85,10 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         </div>
 
         {/* Project title row */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-4 gap-4">
           <div className="flex items-start gap-3">
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h1
                   style={{
                     fontFamily: 'var(--font-heading)',
@@ -101,6 +107,26 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
                   {project.status}
                 </span>
+
+                {/* Link do Plano de Trabalho no Drive */}
+                {driveLink ? (
+                  <a
+                    href={driveLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ color: '#0F766E', background: '#ECFDF5' }}
+                  >
+                    <ExternalLink size={11} /> Plano de Trabalho (Drive)
+                  </a>
+                ) : null}
+                <button
+                  onClick={() => setEditLink(driveLink)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                >
+                  <Link2 size={11} /> {driveLink ? 'Editar link' : 'Adicionar link do Drive'}
+                </button>
               </div>
               <div className="flex items-center gap-3 mt-1">
                 <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
@@ -118,10 +144,24 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
             </div>
           </div>
 
-          {/* Progress mini */}
-          <div className="flex items-center gap-4">
+          {/* Registros + progresso */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button
+              onClick={() => setPanel('riscos')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+              style={{ borderColor: '#FECACA', color: '#DC2626', background: '#FEF2F2' }}
+            >
+              <ShieldAlert size={13} /> Riscos ({project.risks.length})
+            </button>
+            <button
+              onClick={() => setPanel('mudancas')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+              style={{ borderColor: '#BFDBFE', color: '#2563EB', background: '#EFF6FF' }}
+            >
+              <GitBranch size={13} /> Mudanças ({project.changes.length})
+            </button>
             <div className="flex items-center gap-2">
-              <div className="w-32 h-2 rounded-full" style={{ background: '#E2E8F0' }}>
+              <div className="w-28 h-2 rounded-full" style={{ background: '#E2E8F0' }}>
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -173,6 +213,57 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       <div className="flex-1 overflow-hidden" style={{ background: 'var(--background)' }}>
         {renderTab()}
       </div>
+
+      {/* Painel Riscos / Mudanças */}
+      {panel && (
+        <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setPanel(null)}>
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white h-full w-full max-w-4xl flex flex-col"
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem' }}>
+                {panel === 'riscos' ? 'Registro de Riscos' : 'Registro de Mudanças'}
+              </span>
+              <button onClick={() => setPanel(null)}><X size={16} /></button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {panel === 'riscos' ? <TabRiscos project={project} /> : <TabMudancas project={project} />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do link do Drive */}
+      {editLink !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
+          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
+              Plano de Trabalho no Drive
+            </h3>
+            <input
+              autoFocus
+              className="w-full border rounded-lg px-3 py-2 text-[13px]"
+              style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}
+              placeholder="https://drive.google.com/..."
+              value={editLink}
+              onChange={e => setEditLink(e.target.value)}
+            />
+            <div className="flex items-center justify-end gap-2 mt-4">
+              <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+              <button
+                onClick={() => {
+                  updateProject(project.id, { driveLink: editLink.trim() });
+                  toast.success('Link do Plano de Trabalho atualizado.');
+                  setEditLink(null);
+                }}
+                className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white"
+                style={{ background: 'var(--primary)' }}
+              >Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
