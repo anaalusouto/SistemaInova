@@ -317,6 +317,49 @@ export const metasProjetos: Record<number, Goal[]> = {
     ] },
   ],
   6: [
+    { id: 6001, name: `1. Valorização cultural e saberes tradicionais`, deliverables: [
+      { id: 600101, name: `1.1 3 (três) oficinas de conhecimentos do território ofertada pelas lideranças comunitárias quilombola`, expectedResult: `De 2-3 oficinas (8-16h). Capacitação Oficinas 3 mês 1/ano 1, mês 10/10 Relatório, foto, mês 5/ano 1, frequência, materiais e os anciãos. mês 8/ano 1 para oficina O objetivo da capacitação será : Fortalecer a identidade quilombola, através da cultura do bem viver com a natureza. Reconhecer e valorizar os saberes e práticas tradicionais como o cuidado com os castanhais, exploração racional das essências florestais. Fazer o zoneamento do território sob a perspectiva da comunidade. Promover a educação patrimonial, ambiental e cultural. Apoiar processos de regularização fundiária e organização comunitária.`, activities: [
+        { id: 6001011, name: `Especificação — De 2-3 oficinas (8-16h). Capacitação Oficinas 3 mês 1/ano 1, mês 10/10 Relatório, foto, mê…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600102, name: `1.2 (confecção da cartilha) registrar práticas tradicionais em Registrar práticas tradicionais em cartilhas medici…`, expectedResult: `Cartilhas 150 mês 10/ano 1 mês 10/ano 1 Impressão das cartilhas, cartilha em conjunto com os jovens da fotos . comunidade que estão na universidade. objetivo da cartilha é fazer um memorial sobre práticas tradicionais de espécies nativas extrativista e com valor`, activities: [
+        { id: 6001021, name: `Especificação — Cartilhas 150 mês 10/ano 1 mês 10/ano 1 Impressão das cartilhas, cartilha em conjunto com…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 6002, name: `2. Capacitação comunitária comunidades sobre espécies nativa (identificação, coleta, ciclo participantes para reconhecer, coletar e de vida) co…`, deliverables: [
+      { id: 600201, name: `2.1 Intercâmbio entre as Promover a troca de experiências entre Encontros de diferentes viveiristas. Compartilhar…`, expectedResult: `03 mês 5/ano 1 mês 05/ano 1 Comprovantes de intercâmbio passagens , registro fotográfico ,vídeo depoimento e relatório descritivo. 01 oficina mês 2/ano 1 mês 3/ano 1 Lista de em 2 dias presença,registro fotográficos, depoimentos e relatório da oficina 01 mês 3/ano 1 mês 3/ano 1 Lista de presença,registro fotográficos, depoimentos e relatório da oficina`, activities: [
+        { id: 6002011, name: `Especificação — 03 mês 5/ano 1 mês 05/ano 1 Comprovantes de intercâmbio passagens , registro fotográfico ,…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 6003, name: `3. Infraestrutura do viveiro`, deliverables: [
+      { id: 600301, name: `3.1 Limpeza do espaço para a construção`, expectedResult: `Participação da comunidade através de Puxirum 01 mês 3/ano 1 mês 3/ano 1 Relatório, presença e puxirum foto Terreno limpo e organizado para iniciar a construção do viveiro. Equipe motivada e consciente da importância do cuidado com o espaço. Aproveitamento de materiais naturais para uso posterior (adubo, cobertura, proteção). Redução de riscos durante a construção (quedas, ferramentas presas, acúmulo de água`, activities: [
+        { id: 6003011, name: `Especificação — Participação da comunidade através de Puxirum 01 mês 3/ano 1 mês 3/ano 1 Relatório, presen…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600302, name: `3.2 Construção dos viveiros Viveiros comunitários montado e com mutirão (puxirum) comunidade`, expectedResult: `Viveiro 02 mês 3/ano 1 mês 4/ano 1 Viveiros prontos funcional. Fortalecimento de laços comunitários e da cultura do puxirum. Aprendizado técnico coletivo sobre viveiros e sementes. Empoderamento local para ações de reflorestamento, alimentação e cura com plantas. Continuidade no cuidado e uso do viveiro.`, activities: [
+        { id: 6003021, name: `Especificação — Viveiro 02 mês 3/ano 1 mês 4/ano 1 Viveiros prontos funcional. Fortalecimento de laços com…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 6004, name: `4. Produção de mudas`, deliverables: [
+      { id: 600401, name: `4.1 Planejamento para a Coleta das sementes na floresta`, expectedResult: `mapear as espécies nativas do Ficha de coleta 03 mês 02/ano mês 03/ano 1 Modelo de ficha de território com época de coleta e de semente 01 coleta de semente elaborar a Ficha de coleta de (frutífera, (frutífera, medicinal e sementes para impressão, medicinal e nativa) pronto considerando as espécies nativa) nativas,medicinal e frutíferas Lista de Orientações para montar um banco de sementes comunitário.`, activities: [
+        { id: 6004011, name: `Especificação — mapear as espécies nativas do Ficha de coleta 03 mês 02/ano mês 03/ano 1 Modelo de ficha d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600402, name: `4.2 Coleta das Sementes`, expectedResult: `coletar espécies nativas, frutíferas e Sementes 0 mês 04/ano 1 mês 06/ano 1 Registro de campo (lista medicinais valorizadas pela coletadas por de sementes coletas) comunidade e pelo mercado categoria com assinatura de (nativa, frutífera técnico ou comunidade; e medicinal) fotos datadas, fichas preenchidas`, activities: [
+        { id: 6004021, name: `Especificação — coletar espécies nativas, frutíferas e Sementes 0 mês 04/ano 1 mês 06/ano 1 Registro de ca…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600403, name: `4.3 Plantio das Sementes`, expectedResult: `preparar substratos e produzir mudas Plantio 5000 por mês 5/ano 1 mês 10/ano 1 viveiro em Germinação saudável das espécies viveiro. funcionamento,ficha de coletadas ou escolhidas. coleta de sementes,lista Mudas bem identificadas e cuidadas de espécies de para o uso futuro. sementes atualizadas Participantes empoderados com o conhecimento do ciclo da vida. Organização do viveiro pronta para próximas etapas (transplante, plantio no campo)`, activities: [
+        { id: 6004031, name: `Especificação — preparar substratos e produzir mudas Plantio 5000 por mês 5/ano 1 mês 10/ano 1 viveiro em…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600404, name: `4.4 Cuidados pós plantio`, expectedResult: `Alta taxa de sobrevivência das mudas Cuidado 5000 por mês 5/ano 1 mês 10/ano 1 Registro de campo ou Mudas firmes no solo, com raiz já viveiro planilha de adaptada (raízes novas), que não monitoramento (lista de tombem, nem murchem com facilidade, mudas plantadas, mesmo quando há variação no clima. número sobreviventes) Resistência a estresses do ambiente as com assinatura de mudas ficam mais preparadas para técnico ou comunidade; enfrentar sol forte, períodos secos, fotos datadas vento, variação de temperatura antes/depois comparativas`, activities: [
+        { id: 6004041, name: `Especificação — Alta taxa de sobrevivência das mudas Cuidado 5000 por mês 5/ano 1 mês 10/ano 1 Registro de…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 600405, name: `4.5 Acompanhamento do crescimento`, expectedResult: `A coordenação do projeto e as famílias das Acompanhamento 5000 por mês 5/ano 1 mês 10/ano 1 Relatórios feitos por comunidades farão o acompanhamento nos viveiro extensionistas, técnicos viveiros de acordo com seu planejamento agrícolas ou agentes locais Adaptação ao local definitivo,,sobrevivência, registrando medições, altura e diâmetros das mudas observações, evolução do crescimento.`, activities: [
+        { id: 6004051, name: `Especificação — A coordenação do projeto e as famílias das Acompanhamento 5000 por mês 5/ano 1 mês 10/ano…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 6005, name: `5. Reflorestamento e recuperação ambiental degradadas da comunidade áreas manejadas e em áreas com baixo de rios) especialmente`, deliverables: [
+      { id: 600501, name: `5.1 utilizar muda dos viveiros em áreas (roçados, capoeiras, beira potencial de castanha do Pará e cumaru`, expectedResult: `Os comunitários farão o plantio das Puxirum (mutirão) 5 mês 10/ano 1 mês 11/ano 1 Lista de presença,registro essências florestais nas áreas determinadas (com 20 fotográficos, depoimentos e pelas comunidades, sendo nas de APP, pessoas relatório da oficina cada)`, activities: [
+        { id: 6005011, name: `Especificação — Os comunitários farão o plantio das Puxirum (mutirão) 5 mês 10/ano 1 mês 11/ano 1 Lista de…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
   ],
   7: [
     { id: 7001, name: `1. Cotação e Contratação de fornecedores de produtos (materiais de construção) e serviços (arquiteto, engenheiro e outros)`, deliverables: [
