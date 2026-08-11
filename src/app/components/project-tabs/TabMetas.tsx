@@ -17,6 +17,14 @@ const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: str
 
 interface Props { project: Project }
 
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-2" style={{ fontSize: '0.68rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+      {children}
+    </div>
+  );
+}
+
 export function TabMetas({ project }: Props) {
   const { submitMetaEdit, approveMetaEdit, rejectMetaEdit, getProject } = useStore();
   const { user } = useAuth();
