@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   ChevronDown, ChevronRight, Info, Target, Pencil, Check, X,
   History, ShieldCheck, Clock,
