@@ -14,13 +14,17 @@ import { comunidades as seedComunidades, type Comunidade } from './data/comunida
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
 import type { Contact, MetaChangeLog, MetaNodeKind, PendingApproval } from './data/projectExtras';
+import { metasProjetos } from './data/metasProjetos';
 
-// Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
-const seedProjects = inovaProjetos;
+// Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
+const seedProjects = inovaProjetos.map(p => ({
+  ...p,
+  goals: p.goals?.length ? p.goals : (metasProjetos[p.id] ?? []),
+}));
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v8';
+const STORAGE_KEY = 'pp-portfolio-v9';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
