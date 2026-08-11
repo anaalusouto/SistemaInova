@@ -293,6 +293,54 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       })),
     })),
 
+    addContact: (projectId, c) => patch(projectId, p => {
+      const list = p.contacts ?? [];
+      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, contacts: [...list, { ...c, id: nextId }] };
+    }),
+    updateContact: (projectId, id, patchData) => patch(projectId, p => ({
+      ...p, contacts: (p.contacts ?? []).map(c => (c.id === id ? { ...c, ...patchData } : c)),
+    })),
+    deleteContact: (projectId, id) => patch(projectId, p => ({
+      ...p, contacts: (p.contacts ?? []).filter(c => c.id !== id),
+    })),
+
+    submitMetaEdit: (projectId, edit, author) => {
+      const needsApproval = !author.isAdmin;
+      patch(projectId, p => {
+        if (needsApproval) {
+          const list = p.approvals ?? [];
+          const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+          return {
+            ...p,
+            approvals: [{
+              id: nextId, ...edit,
+              author: author.name, authorRole: author.role,
+              date: new Date().toISOString(), status: 'Pendente' as const, reviewedBy: null,
+            }, ...list],
+          };
+        }
+        return appendLog(applyMetaEdit(p, edit), edit, author.name, author.role, author.name);
+      });
+      return needsApproval ? 'pendente' : 'aplicado';
+    },
+    approveMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => {
+      const req = (p.approvals ?? []).find(a => a.id === approvalId);
+      if (!req) return p;
+      const applied = applyMetaEdit(p, req);
+      const logged = appendLog(applied, req, req.author, req.authorRole, adminName);
+      return {
+        ...logged,
+        approvals: (logged.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Aprovado' as const, reviewedBy: adminName } : a),
+      };
+    }),
+    rejectMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => ({
+      ...p,
+      approvals: (p.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Recusado' as const, reviewedBy: adminName } : a),
+    })),
+
+
+
     // Comunidades
     communities,
     getCommunity: (id) => communities.find(c => c.id === id),
