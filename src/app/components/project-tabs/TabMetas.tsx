@@ -227,56 +227,86 @@ export function TabMetas({ project }: Props) {
                       </div>
 
                       {stepOpen && (
-                        <div className="border-t px-4 py-2 flex flex-col" style={{ borderColor: 'var(--border)' }}>
-                          {acts.length === 0 && (
-                            <span className="py-2" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>Sem especializações cadastradas.</span>
+                        <div className="border-t" style={{ borderColor: 'var(--border)' }}>
+                          {acts.length === 0 ? (
+                            <div className="px-4 py-3" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>Sem especializações cadastradas.</div>
+                          ) : (
+                            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                              <thead>
+                                <tr style={{ background: '#F8FAFC' }}>
+                                  {['', 'Especialização', 'Responsável', 'Início', 'Conclusão', 'Progresso', 'Status', ''].map((h, i) => (
+                                    <th key={i} className="px-3 py-2 text-left" style={{ fontSize: '0.64rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {acts.map((a, ai) => {
+                                  const cfg = statusConfig[a.status];
+                                  const aKey = `esp-${a.id}`;
+                                  const done = a.status === 'Concluído';
+                                  const path = `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1} › Esp. ${ai + 1}`;
+                                  return (
+                                    <tr key={a.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                      <td className="px-3 py-2 w-8">
+                                        <input
+                                          type="checkbox"
+                                          checked={done}
+                                          onChange={() => submit({
+                                            kind: 'especializacao', targetId: a.id, targetPath: path, field: 'status',
+                                            from: a.status, to: done ? 'Em andamento' : 'Concluído',
+                                          })}
+                                        />
+                                      </td>
+                                      <td className="px-3 py-2">
+                                        {editing?.key === aKey ? (
+                                          <div className="flex items-center gap-1.5">
+                                            <input
+                                              autoFocus
+                                              className="flex-1 border rounded-md px-2 py-1 text-[12px]"
+                                              style={{ borderColor: 'var(--border)' }}
+                                              value={editing.value}
+                                              onChange={e => setEditing({ key: aKey, value: e.target.value })}
+                                            />
+                                            <button onClick={() => submit({ kind: 'especializacao', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value })}>
+                                              <Check size={13} color="#059669" />
+                                            </button>
+                                            <button onClick={() => setEditing(null)}><X size={13} color="#DC2626" /></button>
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center gap-1.5">
+                                            <span style={{ fontSize: '0.76rem', color: '#334155', textDecoration: done ? 'line-through' : 'none' }}>
+                                              <span style={{ fontFamily: 'var(--font-mono)', color: '#94A3B8', marginRight: 6 }}>{gi + 1}.{di + 1}.{ai + 1}</span>
+                                              {a.name}
+                                            </span>
+                                            <button onClick={() => setEditing({ key: aKey, value: a.name })} title="Editar especialização">
+                                              <Pencil size={11} color="#CBD5E1" />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </td>
+                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B' }}>{a.responsible || '—'}</td>
+                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{a.startDate || '—'}</td>
+                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{a.conclusionDate || '—'}</td>
+                                      <td className="px-3 py-2 w-28">
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex-1 h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
+                                            <div className="h-full rounded-full" style={{ width: `${a.progress}%`, background: cfg.dot }} />
+                                          </div>
+                                          <span style={{ fontSize: '0.66rem', fontFamily: 'var(--font-mono)', color: '#64748B' }}>{a.progress}%</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-3 py-2">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ color: cfg.color, background: cfg.bg }}>
+                                          {a.status}
+                                        </span>
+                                      </td>
+                                      <td className="px-3 py-2" style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{a.observations || ''}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
                           )}
-                          {acts.map((a, ai) => {
-                            const cfg = statusConfig[a.status];
-                            const aKey = `esp-${a.id}`;
-                            const done = a.status === 'Concluído';
-                            const path = `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1} › Esp. ${ai + 1}`;
-                            return (
-                              <div key={a.id} className="flex items-center gap-2 py-1.5 border-b last:border-b-0" style={{ borderColor: '#F1F5F9' }}>
-                                <input
-                                  type="checkbox"
-                                  checked={done}
-                                  onChange={() => submit({
-                                    kind: 'especializacao', targetId: a.id, targetPath: path, field: 'status',
-                                    from: a.status, to: done ? 'Em andamento' : 'Concluído',
-                                  })}
-                                />
-                                {editing?.key === aKey ? (
-                                  <div className="flex items-center gap-1.5 flex-1">
-                                    <input
-                                      autoFocus
-                                      className="flex-1 border rounded-md px-2 py-1 text-[12px]"
-                                      style={{ borderColor: 'var(--border)' }}
-                                      value={editing.value}
-                                      onChange={e => setEditing({ key: aKey, value: e.target.value })}
-                                    />
-                                    <button onClick={() => submit({ kind: 'especializacao', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value })}>
-                                      <Check size={13} color="#059669" />
-                                    </button>
-                                    <button onClick={() => setEditing(null)}><X size={13} color="#DC2626" /></button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <span className="flex-1" style={{ fontSize: '0.76rem', color: '#334155', textDecoration: done ? 'line-through' : 'none' }}>
-                                      {a.name}
-                                    </span>
-                                    <button onClick={() => setEditing({ key: aKey, value: a.name })} title="Editar especialização">
-                                      <Pencil size={11} color="#CBD5E1" />
-                                    </button>
-                                  </>
-                                )}
-                                <span style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{a.responsible}</span>
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ color: cfg.color, background: cfg.bg }}>
-                                  {a.status}
-                                </span>
-                              </div>
-                            );
-                          })}
                         </div>
                       )}
                     </div>
