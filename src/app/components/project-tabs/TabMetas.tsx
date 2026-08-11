@@ -17,7 +17,7 @@ const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: str
 
 interface Props { project: Project }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <div className="mb-2" style={{ fontSize: '0.68rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '.06em' }}>
       {children}
