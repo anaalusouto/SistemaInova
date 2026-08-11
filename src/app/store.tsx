@@ -60,7 +60,25 @@ export interface PlanoTrabalho {
   observacoes?: string;
   planoArquivo?: string;
 }
-export type ProjectExt = Project & { communityId?: number | null; plano?: PlanoTrabalho };
+export type ProjectExt = Project & {
+  communityId?: number | null;
+  plano?: PlanoTrabalho;
+  /** Link do Google Drive com o Plano de Trabalho mais atualizado. */
+  driveLink?: string;
+  contacts?: Contact[];
+  metaLog?: MetaChangeLog[];
+  approvals?: PendingApproval[];
+};
+
+export interface MetaEdit {
+  kind: MetaNodeKind;
+  targetId: number;
+  targetPath: string;
+  field: string;
+  from: string;
+  to: string;
+}
+export interface EditAuthor { name: string; role: string; isAdmin: boolean }
 
 type Ctx = {
   projects: ProjectExt[];
