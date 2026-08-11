@@ -325,42 +325,100 @@ export function TabMetas({ project }: Props) {
         const acts = g.deliverables.flatMap(d => d.activities);
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setInfoGoal(null)}>
-            <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>{g.name}</h3>
+            <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border w-full max-w-4xl max-h-[85vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex items-start justify-between gap-4 px-6 py-4 border-b sticky top-0 bg-white" style={{ borderColor: 'var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '.06em' }}>Informações da meta</div>
+                  <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>{g.name}</h3>
+                </div>
                 <button onClick={() => setInfoGoal(null)}><X size={16} /></button>
               </div>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {[
-                  { label: 'Etapas', value: String(g.deliverables.length) },
-                  { label: 'Especializações', value: String(acts.length) },
-                  { label: 'Progresso', value: `${goalProgress[g.id] ?? 0}%` },
-                ].map(kv => (
-                  <div key={kv.label} className="rounded-lg p-3 border" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-                    <div style={{ fontSize: '0.66rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase' }}>{kv.label}</div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A' }}>{kv.value}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col gap-3">
-                {g.deliverables.map(d => (
-                  <div key={d.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--border)' }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>{d.name}</div>
-                    {d.expectedResult && (
-                      <div style={{ fontSize: '0.73rem', color: '#64748B', marginTop: 3 }}>
-                        <strong>Resultado esperado:</strong> {d.expectedResult}
+
+              <div className="p-6 flex flex-col gap-5">
+                {/* Indicadores */}
+                <section>
+                  <SectionTitle>Indicadores gerais</SectionTitle>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: 'Etapas', value: String(g.deliverables.length) },
+                      { label: 'Especializações', value: String(acts.length) },
+                      { label: 'Concluídas', value: `${acts.filter(a => a.status === 'Concluído').length}/${acts.length}` },
+                      { label: 'Progresso', value: `${goalProgress[g.id] ?? 0}%` },
+                    ].map(kv => (
+                      <div key={kv.label} className="rounded-lg p-3 border" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+                        <div style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em' }}>{kv.label}</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', marginTop: 2 }}>{kv.value}</div>
                       </div>
-                    )}
-                    <div className="mt-2 flex flex-col gap-1">
-                      {d.activities.map(a => (
-                        <div key={a.id} style={{ fontSize: '0.72rem', color: '#475569' }}>
-                          • {a.name} — {a.responsible || 'sem responsável'} · previsto: {a.plannedDate || '—'} · início: {a.startDate || '—'} · conclusão: {a.conclusionDate || '—'}
-                          {a.observations ? ` · obs.: ${a.observations}` : ''}
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </section>
+
+                {/* Etapas em planilha */}
+                <section>
+                  <SectionTitle>Etapas da meta</SectionTitle>
+                  <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                    <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#F8FAFC' }}>
+                          {['#', 'Etapa', 'Resultado esperado', 'Especializações', 'Progresso'].map(h => (
+                            <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {g.deliverables.map((d, di) => {
+                          const dActs = d.activities;
+                          const dp = dActs.length ? Math.round(dActs.reduce((s, a) => s + a.progress, 0) / dActs.length) : 0;
+                          return (
+                            <tr key={d.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#94A3B8' }}>{di + 1}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.75rem', color: '#0F172A', fontWeight: 500 }}>{d.name}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.72rem', color: '#64748B' }}>{d.expectedResult || '—'}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.72rem', color: '#64748B' }}>{dActs.length}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#2563EB', fontWeight: 600 }}>{dp}%</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* Especializações em planilha */}
+                <section>
+                  <SectionTitle>Especializações / cronograma físico</SectionTitle>
+                  <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                    <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#F8FAFC' }}>
+                          {['Cód.', 'Especialização', 'Etapa', 'Responsável', 'Previsto', 'Início', 'Conclusão', 'Status', 'Observações'].map(h => (
+                            <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {g.deliverables.flatMap((d, di) => d.activities.map((a, ai) => {
+                          const cfg = statusConfig[a.status];
+                          return (
+                            <tr key={a.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                              <td className="px-3 py-2" style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', color: '#94A3B8' }}>{di + 1}.{ai + 1}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.73rem', color: '#0F172A' }}>{a.name}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B' }}>{d.name}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B' }}>{a.responsible || '—'}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#64748B' }}>{a.plannedDate || '—'}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#64748B' }}>{a.startDate || '—'}</td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: '#64748B' }}>{a.conclusionDate || '—'}</td>
+                              <td className="px-3 py-2">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ color: cfg.color, background: cfg.bg }}>{a.status}</span>
+                              </td>
+                              <td className="px-3 py-2" style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{a.observations || '—'}</td>
+                            </tr>
+                          );
+                        }))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
             </div>
           </div>
