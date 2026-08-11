@@ -74,6 +74,8 @@ export interface ContrapartidaItem {
   valorUnitario: number;
 }
 
+export type ChangeNature = 'Radical' | 'Adaptação' | 'Exclusão';
+
 export interface Risk {
   id: number;
   description: string;
@@ -84,6 +86,8 @@ export interface Risk {
   responseStrategy: string;
   responsible: string;
   status: RiskStatus;
+  /** Meta (Goal) à qual o risco está vinculado — obrigatório nos novos registros. */
+  goalId?: number;
 }
 
 export interface Change {
@@ -94,6 +98,10 @@ export interface Change {
   justification: string;
   approval: ApprovalStatus;
   responsible: string;
+  /** Meta (Goal) à qual a mudança está vinculada — obrigatório nos novos registros. */
+  goalId?: number;
+  /** Natureza da mudança em relação à meta. */
+  nature?: ChangeNature;
 }
 
 export interface Evidence {
