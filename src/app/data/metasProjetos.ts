@@ -72,19 +72,22 @@ export const metasProjetos: Record<number, Goal[]> = {
       ] },
     ] },
     { id: 2003, name: `3. Contratação de empresa para construção da agroindústria;`, deliverables: [
-      { id: 200301, name: `3.1 Seleção da PJ para Envio de carta convite para execução da infraestrutura seleção da empresa para executar da…`, expectedResult: `Contrato Contrato`, activities: [
-        { id: 2003011, name: `Especificação — Contrato Contrato`, responsible: ``, plannedDate: `Mês/01–Mês/01`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Disponibilização da carta convite enviada às empresas convidadas. Disponibilização do` },
+      { id: 200301, name: `3.1 Seleção da PJ para Envio de carta convite para execução da infraestrutura seleção da empresa para executar da…`, expectedResult: `Contrato`, activities: [
+        { id: 2003011, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/01–Mês/01`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Disponibilização da carta convite enviada às empresas convidadas.` },
       ] },
-      { id: 200302, name: `3.3 Contratação do PJ Assinatura do contrato`, expectedResult: `Contrato`, activities: [
-        { id: 2003021, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 200302, name: `3.2 Elaboração de contrato Oficializar a assinatura do com a PJ; contrato e definir as parcelas de desembolso.`, expectedResult: `Contrato`, activities: [
+        { id: 2003021, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Disponibilização do` },
       ] },
-      { id: 200303, name: `3.4 Construção da estrutura Atividade de mão de obra pela da agroindústria PJ contratada. 30 dias de mão de obra.`, expectedResult: `Contrato`, activities: [
-        { id: 2003031, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/03–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 200303, name: `3.3 Contratação do PJ Assinatura do contrato`, expectedResult: `Contrato`, activities: [
+        { id: 2003031, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 200304, name: `3.4 Construção da estrutura Atividade de mão de obra pela da agroindústria PJ contratada. 30 dias de mão de obra.`, expectedResult: `Contrato`, activities: [
+        { id: 2003041, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/03–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
     { id: 2004, name: `4. Compra de material para construção da infraestrutura.`, deliverables: [
-      { id: 200401, name: `4.1 Cotação de preços Análise financeira dos custo benefício técnica para otimizar os recursos do orçamento.`, expectedResult: `pela coordenação Avaliação`, activities: [
-        { id: 2004011, name: `Especificação — pela coordenação Avaliação`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 200401, name: `4.1 Cotação de preços Análise pela financeira dos custo benefício técnica para otimizar os recursos do orçamento.`, expectedResult: `coordenação Avaliação`, activities: [
+        { id: 2004011, name: `Especificação — coordenação Avaliação`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
       { id: 200402, name: `4.2 Escolha do orçamento A decisão se dará pelo custo Orçamento benefício para otimizar o recurso.`, expectedResult: `Escolha do orçamento A decisão se dará pelo custo Orçamento benefício para otimizar o recurso.`, activities: [
         { id: 2004021, name: `Especificação — Escolha do orçamento A decisão se dará pelo custo Orçamento benefício para otimizar o recu…`, responsible: ``, plannedDate: `Mês/02–Mês/02`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
@@ -97,30 +100,33 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 200501, name: `5.1 Cotação dos preços dos Fazer cotação em três empresas Orçamento equipamentos. diferentes os valores dos equipa…`, expectedResult: `Cotação dos preços dos Fazer cotação em três empresas Orçamento equipamentos. diferentes os valores dos equipamentos.`, activities: [
         { id: 2005011, name: `Especificação — Cotação dos preços dos Fazer cotação em três empresas Orçamento equipamentos. diferentes o…`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Orçamentos da cotação` },
       ] },
-      { id: 200502, name: `5.2 Escolha do orçamento Análise financeira dos custo benefício técnica para otimizar os recursos do orçamento.`, expectedResult: `pela coordenação Avaliação`, activities: [
-        { id: 2005021, name: `Especificação — pela coordenação Avaliação`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 200502, name: `5.2 Escolha do orçamento Análise pela financeira dos custo benefício técnica para otimizar os recursos do orçament…`, expectedResult: `coordenação Avaliação`, activities: [
+        { id: 2005021, name: `Especificação — coordenação Avaliação`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
       { id: 200503, name: `5.3 Compra dos Duas pessoas realizarão a compra Equipamentos equipamentos dos materiais.`, expectedResult: `Compra dos Duas pessoas realizarão a compra Equipamentos equipamentos dos materiais.`, activities: [
         { id: 2005031, name: `Especificação — Compra dos Duas pessoas realizarão a compra Equipamentos equipamentos dos materiais.`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 2006, name: `6. Instalação dos equipamentos 7. Formação técnica`, deliverables: [
+    { id: 2006, name: `6. Instalação dos equipamentos`, deliverables: [
       { id: 200601, name: `6.1 Cotação de PJ Fazer cotação em três empresas diferentes os valores dos equipamentos.`, expectedResult: `Orçamento`, activities: [
         { id: 2006011, name: `Especificação — Orçamento`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 200602, name: `6.2 Escolha do orçamento Análise coordenação financeira dos custo benefício para otimizar os recursos do orçamento…`, expectedResult: `e seleção pela Orçamento`, activities: [
-        { id: 2006021, name: `Especificação — e seleção pela Orçamento`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `orçamento selecionado.` },
+      { id: 200602, name: `6.2 Escolha do orçamento Análise e seleção coordenação financeira dos custo benefício para otimizar os recursos do…`, expectedResult: `pela Orçamento`, activities: [
+        { id: 2006021, name: `Especificação — pela Orçamento`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `orçamento selecionado.` },
       ] },
-      { id: 200603, name: `6.3 Contratação do PJ e Assinatura do contrato assinatura do contrato. Contratação de um Formação que irá abranger…`, expectedResult: `Contrato Assessoria`, activities: [
-        { id: 2006031, name: `Especificação — Contrato Assessoria`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `assinado` },
+      { id: 200603, name: `6.3 Contratação do PJ e Assinatura do contrato assinatura do contrato.`, expectedResult: `Contrato`, activities: [
+        { id: 2006031, name: `Especificação — Contrato`, responsible: ``, plannedDate: `Mês/04–Mês/04`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `assinado` },
       ] },
     ] },
-    { id: 2007, name: `7. Meta 7`, deliverables: [
-      { id: 200701, name: `7.2 Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mulheres, 15 jovens e 1…`, expectedResult: `Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mulheres, 15 jovens e 15 homens adultos.`, activities: [
-        { id: 2007011, name: `Especificação — Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mul…`, responsible: ``, plannedDate: `Mês/05–Mês/06`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 2007, name: `7. Formação técnica`, deliverables: [
+      { id: 200701, name: `7.1 Contratação de um Formação que irá abranger 30 técnico especialista em pessoas de cada uma das duas manejo agr…`, expectedResult: `Assessoria`, activities: [
+        { id: 2007011, name: `Especificação — Assessoria`, responsible: ``, plannedDate: `Mês/05–Mês/05`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 200702, name: `7.3 Entrega de certificados No final será entregue das capacitações executadas certificados aos participantes e e…`, expectedResult: `Certificado,`, activities: [
-        { id: 2007021, name: `Especificação — Certificado,`, responsible: ``, plannedDate: `Mês/05–Mês/06`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 200702, name: `7.2 Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mulheres, 15 jovens e 1…`, expectedResult: `Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mulheres, 15 jovens e 15 homens adultos.`, activities: [
+        { id: 2007021, name: `Especificação — Realização das Das 60 pessoas em formação, 30 Formações formações e capacitações serão mul…`, responsible: ``, plannedDate: `Mês/05–Mês/06`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 200703, name: `7.3 Entrega de certificados No final será entregue das capacitações executadas certificados aos participantes e e…`, expectedResult: `Certificado,`, activities: [
+        { id: 2007031, name: `Especificação — Certificado,`, responsible: ``, plannedDate: `Mês/05–Mês/06`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
     { id: 2008, name: `8. Prática do manejo sustentável nas áreas das famílias atendidas pelo projeto.`, deliverables: [
@@ -165,18 +171,23 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 300107, name: `1.8 Compra de a AMIG vai realizar a compra de 12 kit equipamentos e materiais artesanatos (03 para cada casa de ar…`, expectedResult: `Kits de`, activities: [
         { id: 3001071, name: `Especificação — Kits de`, responsible: ``, plannedDate: `Mês 5–Mês 7`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `entrega.` },
       ] },
-      { id: 300108, name: `1.9 Inauguração das A AMIG irá realizar a solenidade de Placas de Casas de Artesanato e inauguração da casa. Iremo…`, expectedResult: `negócios elaborado de`, activities: [
-        { id: 3001081, name: `Especificação — negócios elaborado de`, responsible: ``, plannedDate: `Mês 8–Mês 8`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `das Casas oficinas` },
+      { id: 300108, name: `1.9 Inauguração das A AMIG irá realizar a solenidade de Placas de Casas de Artesanato e inauguração da casa. Iremo…`, expectedResult: `Inauguração das A AMIG irá realizar a solenidade de Placas de Casas de Artesanato e inauguração da casa. Iremos convidar parceiros inauguração institucionais para organização e participação Sementes nas solenidades de inauguração das Casas.`, activities: [
+        { id: 3001081, name: `Especificação — Inauguração das A AMIG irá realizar a solenidade de Placas de Casas de Artesanato e inaugu…`, responsible: ``, plannedDate: `Mês 8–Mês 8`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `das Casas` },
       ] },
     ] },
-    { id: 3002, name: `3. Formação de jovens indígenas em mídias digitais`, deliverables: [
-      { id: 300201, name: `3.1 realizar 01 oficina de Será realizada uma oficina sobre mídias jovens formados mídias digitais e digitais para…`, expectedResult: `em mídias digitais`, activities: [
-        { id: 3002011, name: `Especificação — em mídias digitais`, responsible: ``, plannedDate: `Mês 10–Mês 10`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Oficina` },
+    { id: 3002, name: `2. Formações de mulheres e jovens em negócios e Plano de Negócios para a participantes e professores das Oficinas. vendas e elaboração do venda…`, deliverables: [
+      { id: 300201, name: `2.1 realizar 3 oficinas nas A AMIG vai organizar junto com os Número de 03 aldeias de formação de coordenadores do…`, expectedResult: `negócios elaborado de`, activities: [
+        { id: 3002011, name: `Especificação — negócios elaborado de`, responsible: ``, plannedDate: `Mês 9–Mês 9`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `oficinas` },
       ] },
     ] },
-    { id: 3003, name: `4. Produção do site de venda do artesanato e biojoias produzidas nas casas de artesanato`, deliverables: [
-      { id: 300301, name: `4.1 contratar empresa O projeto irá contratar um empresa de site e instagram para produção de site comunicação e p…`, expectedResult: `criados ATA das reuniões`, activities: [
-        { id: 3003011, name: `Especificação — criados ATA das reuniões`, responsible: ``, plannedDate: `Mês 7–Mês 11`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Contrato assinado com a empresa` },
+    { id: 3003, name: `3. Formação de jovens indígenas em mídias digitais`, deliverables: [
+      { id: 300301, name: `3.1 realizar 01 oficina de Será realizada uma oficina sobre mídias jovens formados mídias digitais e digitais para…`, expectedResult: `em mídias digitais`, activities: [
+        { id: 3003011, name: `Especificação — em mídias digitais`, responsible: ``, plannedDate: `Mês 10–Mês 10`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Oficina` },
+      ] },
+    ] },
+    { id: 3004, name: `4. Produção do site de venda do artesanato e biojoias produzidas nas casas de artesanato`, deliverables: [
+      { id: 300401, name: `4.1 contratar empresa O projeto irá contratar um empresa de site e instagram para produção de site comunicação e p…`, expectedResult: `criados ATA das reuniões`, activities: [
+        { id: 3004011, name: `Especificação — criados ATA das reuniões`, responsible: ``, plannedDate: `Mês 7–Mês 11`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Contrato assinado com a empresa` },
       ] },
     ] },
   ],
@@ -306,46 +317,9 @@ export const metasProjetos: Record<number, Goal[]> = {
     ] },
   ],
   6: [
-    { id: 6001, name: `1. Meta 1`, deliverables: [
-      { id: 600101, name: `1.2 (confecção da cartilha) registrar práticas tradicionais em Registrar práticas tradicionais em cartilhas medici…`, expectedResult: `Cartilhas 150 mês 10/ano 1 mês 10/ano 1 Impressão das cartilhas, cartilha em conjunto com os jovens da fotos . comunidade que estão na universidade. objetivo da cartilha é fazer um memorial sobre práticas tradicionais de espécies nativas extrativista e com valor`, activities: [
-        { id: 6001011, name: `Especificação — Cartilhas 150 mês 10/ano 1 mês 10/ano 1 Impressão das cartilhas, cartilha em conjunto com…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-    ] },
-    { id: 6002, name: `2. Capacitação comunitária comunidades 1 oficina de capacitação Contratar um profissional para realizar Oficina sobre espécies nativa (identifi…`, deliverables: [
-      { id: 600201, name: `2.1 Intercâmbio entre as Promover a troca de experiências entre Encontros de diferentes viveiristas. Compartilhar…`, expectedResult: `03 mês 5/ano 1 mês 05/ano 1 Comprovantes de intercâmbio passagens , registro fotográfico ,vídeo depoimento e relatório descritivo. 01 oficina mês 2/ano 1 mês 3/ano 1 Lista de em 2 dias presença,registro fotográficos, depoimentos e relatório da oficina 01 mês 3/ano 1 mês 3/ano 1 Lista de presença,registro fotográficos, depoimentos e relatório da oficina`, activities: [
-        { id: 6002011, name: `Especificação — 03 mês 5/ano 1 mês 05/ano 1 Comprovantes de intercâmbio passagens , registro fotográfico ,…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-    ] },
-    { id: 6003, name: `3. Infraestrutura do viveiro`, deliverables: [
-      { id: 600301, name: `3.1 Limpeza do espaço para a construção`, expectedResult: `Participação da comunidade através de Puxirum 01 mês 3/ano 1 mês 3/ano 1 Relatório, presença e puxirum foto Terreno limpo e organizado para iniciar a construção do viveiro. Equipe motivada e consciente da importância do cuidado com o espaço. Aproveitamento de materiais naturais para uso posterior (adubo, cobertura, proteção). Redução de riscos durante a construção (quedas, ferramentas presas, acúmulo de água`, activities: [
-        { id: 6003011, name: `Especificação — Participação da comunidade através de Puxirum 01 mês 3/ano 1 mês 3/ano 1 Relatório, presen…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-      { id: 600302, name: `3.2 Construção dos viveiros Viveiros comunitários montado e com mutirão (puxirum) comunidade`, expectedResult: `Viveiro 02 mês 3/ano 1 mês 4/ano 1 Viveiros prontos funcional. Fortalecimento de laços comunitários e da cultura do puxirum. Aprendizado técnico coletivo sobre viveiros e sementes. Empoderamento local para ações de reflorestamento, alimentação e cura com plantas. Continuidade no cuidado e uso do viveiro.`, activities: [
-        { id: 6003021, name: `Especificação — Viveiro 02 mês 3/ano 1 mês 4/ano 1 Viveiros prontos funcional. Fortalecimento de laços com…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-    ] },
-    { id: 6004, name: `4. Produção de mudas`, deliverables: [
-      { id: 600401, name: `4.1 Planejamento para a Coleta das sementes na floresta`, expectedResult: `mapear as espécies nativas do Ficha de coleta 03 mês 02/ano mês 03/ano 1 Modelo de ficha de território com época de coleta e de semente 01 coleta de semente elaborar a Ficha de coleta de (frutífera, (frutífera, medicinal e sementes para impressão, medicinal e nativa) pronto considerando as espécies nativa) nativas,medicinal e frutíferas Lista de Orientações para montar um banco de sementes comunitário.`, activities: [
-        { id: 6004011, name: `Especificação — mapear as espécies nativas do Ficha de coleta 03 mês 02/ano mês 03/ano 1 Modelo de ficha d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-      { id: 600402, name: `4.2 Coleta das Sementes`, expectedResult: `coletar espécies nativas, frutíferas e Sementes 0 mês 04/ano 1 mês 06/ano 1 Registro de campo (lista medicinais valorizadas pela coletadas por de sementes coletas) comunidade e pelo mercado categoria com assinatura de (nativa, frutífera técnico ou comunidade; e medicinal) fotos datadas, fichas preenchidas`, activities: [
-        { id: 6004021, name: `Especificação — coletar espécies nativas, frutíferas e Sementes 0 mês 04/ano 1 mês 06/ano 1 Registro de ca…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-      { id: 600403, name: `4.3 Plantio das Sementes Cuidados pós plantio`, expectedResult: `preparar substratos e produzir mudas Plantio 5000 por mês 5/ano 1 mês 10/ano 1 viveiro em Germinação saudável das espécies viveiro. funcionamento,ficha de coletadas ou escolhidas. coleta de sementes,lista Mudas bem identificadas e cuidadas de espécies de para o uso futuro. sementes atualizadas Participantes empoderados com o conhecimento do ciclo da vida. Organização do viveiro pronta para próximas etapas (transplante, plantio no campo) Alta taxa de sobrevivência das mudas Cuidado 5000 por mês 5/ano 1 mês 10/ano 1 Registro de campo ou Mudas firmes no solo, com raiz já viveiro planilha de adaptada (raízes novas), que não monitoramento (lista de tombem, nem murchem com facilidade, mudas plantadas, mesmo quando há variação no clima. número sobreviventes) Resistência a estresses do ambiente as com assinatura de mudas ficam mais preparadas para técnico ou comunidade; enfrentar sol forte, períodos secos, fotos datadas vento, variação de temperatura antes/depois comparativas`, activities: [
-        { id: 6004031, name: `Especificação — preparar substratos e produzir mudas Plantio 5000 por mês 5/ano 1 mês 10/ano 1 viveiro em…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-      { id: 600404, name: `4.5 Acompanhamento do crescimento`, expectedResult: `A coordenação do projeto e as famílias das Acompanhamento 5000 por mês 5/ano 1 mês 10/ano 1 Relatórios feitos por comunidades farão o acompanhamento nos viveiro extensionistas, técnicos viveiros de acordo com seu planejamento agrícolas ou agentes locais Adaptação ao local definitivo,,sobrevivência, registrando medições, altura e diâmetros das mudas observações, evolução do crescimento.`, activities: [
-        { id: 6004041, name: `Especificação — A coordenação do projeto e as famílias das Acompanhamento 5000 por mês 5/ano 1 mês 10/ano…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-    ] },
-    { id: 6005, name: `5. Reflorestamento e recuperação ambiental degradadas da comunidade áreas manejadas e em áreas com baixo de rios) especialmente`, deliverables: [
-      { id: 600501, name: `5.1 utilizar muda dos viveiros em áreas (roçados, capoeiras, beira potencial de castanha do Pará e cumaru`, expectedResult: `Os comunitários farão o plantio das Puxirum (mutirão) 5 mês 10/ano 1 mês 11/ano 1 Lista de presença,registro essências florestais nas áreas determinadas (com 20 fotográficos, depoimentos e pelas comunidades, sendo nas de APP, pessoas relatório da oficina cada)`, activities: [
-        { id: 6005011, name: `Especificação — Os comunitários farão o plantio das Puxirum (mutirão) 5 mês 10/ano 1 mês 11/ano 1 Lista de…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
-      ] },
-    ] },
   ],
   7: [
-    { id: 7001, name: `1. Cotação e Contratação de fornecedores de produtos (materiais de construção) e serviços (arquiteto, engenheiro e outros) 2. Formação da equip…`, deliverables: [
+    { id: 7001, name: `1. Cotação e Contratação de fornecedores de produtos (materiais de construção) e serviços (arquiteto, engenheiro e outros)`, deliverables: [
       { id: 700101, name: `1.1 Cotação de preços e contratação de serviços de construção`, expectedResult: `Atividade realizada pela equipe Serviço 01 01/2026 02/2026 Orçamentos recebidos técnica do projeto, em dias, considerando melhor preço e proposta.`, activities: [
         { id: 7001011, name: `Especificação — Atividade realizada pela equipe Serviço 01 01/2026 02/2026 Orçamentos recebidos técnica do…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
@@ -355,8 +329,16 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 700103, name: `1.3 Fase 2: Construção dos espaços conforme planta arquitetônica.`, expectedResult: `Construção das estruturas físicas, Serviço 01 03/2026/ 08/2026 Relatório descritivo, de acordo com a planta fotográfico e nota fiscal de serviços arquitetônica elaborada Essa atividade será realizada no período de 150 dias.`, activities: [
         { id: 7001031, name: `Especificação — Construção das estruturas físicas, Serviço 01 03/2026/ 08/2026 Relatório descritivo, de ac…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 700104, name: `1.4 Fase 3: Acabamento e reparos Prospecção de formações a serem realizadas Criar e formar equipe gestora do Centr…`, expectedResult: `Instalações elétricas, hidráulicas Serviço 01 07/2026 09/2026 Relatório descritivo, e pintura dos espaços, a ser fotográfico e nota fiscal de serviços realizado pelos profissionais contratados, no período de 60 dias Realização de diagnóstico de Serviço 01 05/2026 07/2026 Relatório descritivo, identificação de formações de fotográfico e nota fiscal de serviços interesse dos beneficiários diretos e indiretos da proposta, desenvolvido por equipe técnica responsável com o apoio de assessoria, a ser contratada. Será desenvolvido no período de 60 dias Mobilização, seleção e Capacitação 03 08/2026 10/2026 Relatório descritivo, capacitação da equipe gestora do fotográfico e nota fiscal de serviços Centro de Formação, definindo papeis e responsabilidades. Essa tarefa será realizada pela diretoria da ATAIC e equipe do Projeto, em um período de 60 dias`, activities: [
+      { id: 700104, name: `1.4 Fase 3: Acabamento e reparos`, expectedResult: `Instalações elétricas, hidráulicas Serviço 01 07/2026 09/2026 Relatório descritivo, e pintura dos espaços, a ser fotográfico e nota fiscal de serviços realizado pelos profissionais contratados, no período de 60 dias`, activities: [
         { id: 7001041, name: `Especificação — Instalações elétricas, hidráulicas Serviço 01 07/2026 09/2026 Relatório descritivo, e pint…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 7002, name: `2. Formação da equipe gestora do Centro de formação`, deliverables: [
+      { id: 700201, name: `2.1 Prospecção de formações a serem realizadas`, expectedResult: `Realização de diagnóstico de Serviço 01 05/2026 07/2026 Relatório descritivo, identificação de formações de fotográfico e nota fiscal de serviços interesse dos beneficiários diretos e indiretos da proposta, desenvolvido por equipe técnica responsável com o apoio de assessoria, a ser contratada. Será desenvolvido no período de 60 dias`, activities: [
+        { id: 7002011, name: `Especificação — Realização de diagnóstico de Serviço 01 05/2026 07/2026 Relatório descritivo, identificaçã…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 700202, name: `2.2 Criar e formar equipe gestora do Centro de formação.`, expectedResult: `Mobilização, seleção e Capacitação 03 08/2026 10/2026 Relatório descritivo, capacitação da equipe gestora do fotográfico e nota fiscal de serviços Centro de Formação, definindo papeis e responsabilidades. Essa tarefa será realizada pela diretoria da ATAIC e equipe do Projeto, em um período de 60 dias`, activities: [
+        { id: 7002021, name: `Especificação — Mobilização, seleção e Capacitação 03 08/2026 10/2026 Relatório descritivo, capacitação da…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
   ],
@@ -373,8 +355,8 @@ export const metasProjetos: Record<number, Goal[]> = {
       ] },
     ] },
     { id: 8002, name: `2. Implantar 5 hortas comunitárias com a ARQUIA em atividades profissional em horticultura; Assessor variedades de hortaliças adaptadas nas com…`, deliverables: [
-      { id: 800201, name: `2.1 Contratação profissionais para assessorar (Agrônomo ou afim), para orientação formativas na área de direitos,…`, expectedResult: `de Profissional da área de agronomia Profissionais 3 1 direitos quilombolas, contratação de profissional para mobilização de recursos .`, activities: [
-        { id: 8002011, name: `Especificação — de Profissional da área de agronomia Profissionais 3 1 direitos quilombolas, contratação d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Lista de assinatura, relatório fotográfico,` },
+      { id: 800201, name: `2.1 Contratação de Profissional da área de agronomia profissionais para assessorar (Agrônomo ou afim), para orient…`, expectedResult: `Profissionais 3 1 direitos quilombolas, contratação de profissional para mobilização de recursos .`, activities: [
+        { id: 8002011, name: `Especificação — Profissionais 3 1 direitos quilombolas, contratação de profissional para mobilização de re…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Lista de assinatura, relatório fotográfico,` },
       ] },
       { id: 800202, name: `2.2 Realização de Cinco (5) Participação de comunitários das 5 comunidades Participação de gestores 100 reuniões c…`, expectedResult: `convidados pela ARQAUIA e comunidades por reunião.`, activities: [
         { id: 8002021, name: `Especificação — convidados pela ARQAUIA e comunidades por reunião.`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Lista de assinatura, relatório fotográfico,.` },
@@ -393,20 +375,119 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 800302, name: `3.2 Etapa`, expectedResult: ``, activities: [
         { id: 8003021, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 800303, name: `3.3 definição do terreno/comunidade, preparação do espaço, compra dos materiais de profissionais/comunitários, ini…`, expectedResult: `Construção do espaço e liberação de uso Local liberado para uso 1 2 8`, activities: [
-        { id: 8003031, name: `Especificação — Construção do espaço e liberação de uso Local liberado para uso 1 2 8`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 800303, name: `3.3 Etapa`, expectedResult: ``, activities: [
+        { id: 8003031, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 8004, name: `4. abrigar atividades`, deliverables: [
-      { id: 800401, name: `4.2 Etapa`, expectedResult: ``, activities: [
-        { id: 8004011, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 8004, name: `4. Construir e equipar um espaço físico comunitário multifuncional construção, definição dos até o final do projeto, para abrigar atividades`, deliverables: [
+      { id: 800401, name: `4.1 definição do terreno/comunidade, preparação do espaço, compra dos materiais de profissionais/comunitários, ini…`, expectedResult: `Construção do espaço e liberação de uso Local liberado para uso 1 2 8`, activities: [
+        { id: 8004011, name: `Especificação — Construção do espaço e liberação de uso Local liberado para uso 1 2 8`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 800402, name: `4.3 Etapa`, expectedResult: ``, activities: [
+      { id: 800402, name: `4.2 Etapa`, expectedResult: ``, activities: [
         { id: 8004021, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 800403, name: `4.3 Etapa`, expectedResult: ``, activities: [
+        { id: 8004031, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
   ],
   9: [
+    { id: 9001, name: `1. Realizar reuniões de stakeholders; alinhamento com equipe interna e parceiros institucionais, lançamento de editais e chamadas para profissi…`, deliverables: [
+      { id: 900101, name: `1.1 Reuniões com`, expectedResult: `- 1ª semana – Reunião com a Reuniões 2 JAN JAN 2026 Fotos equipe de coordenação e 2026 Lista de execução (incluindo pontos frequência focais - diárias) Alinhamento Ata da reunião geral Nota fiscal -2ª semana – Reunião com parceiros – (EMATER, UFOPA, Associações indígenas, IFPA, OCB, SENAR etc`, activities: [
+        { id: 9001011, name: `Especificação — - 1ª semana – Reunião com a Reuniões 2 JAN JAN 2026 Fotos equipe de coordenação e 2026 Lis…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900102, name: `1.2 Publicação de edital; Lançamento do banco de talentos para quando precisarmos dos profissionais, eles já estar…`, expectedResult: `Edital para 2 JAN 2026 JAN 2026 Planilhas com talentos do projeto, chamada voluntário dados para voluntários: s e banco digitalizados de Análise curricular de de talentos inscritos no profissionais; formulário de chamada dos voluntários e para o banco de talentos. Formação de banco de talentos: Banco de 1 JAN 2026 JAN 2026 Planilhas com Essas contratações serão para talentos dados serviços pontuais como: digitalizados dos facilitação de oficinas, currículos motorista, cozinheiro etc; (por recebidos; isso trabalhamos com banco de`, activities: [
+        { id: 9001021, name: `Especificação — Edital para 2 JAN 2026 JAN 2026 Planilhas com talentos do projeto, chamada voluntário dado…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900103, name: `1.3 a serem adquiridos pelo projeto; realizadas Análise de preço, qualidade, tempo de entrega de materiais.`, expectedResult: `AN 2026 JAN 2026 Cotações emitidas por lojas ou prestadores de serviço;`, activities: [
+        { id: 9001031, name: `Especificação — AN 2026 JAN 2026 Cotações emitidas por lojas ou prestadores de serviço;`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900104, name: `1.4 Pagamento para a aquisição de materiais e serviços (equipamentos, gráfica, combustível etc) Entrega - Análise…`, expectedResult: `Compra e Aquisiçã JAN 2026 JAN 2026 Notas fiscais e entregas o das recibos de compras materiais Inventário patrimonial de materiais adquiridos pelo projeto;`, activities: [
+        { id: 9001041, name: `Especificação — Compra e Aquisiçã JAN 2026 JAN 2026 Notas fiscais e entregas o das recibos de compras mate…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9002, name: `2. 2 EXECUÇÃO DAS OFICINAS planejamento da oficina, Reunião com equipe de E com o mesmo conteúdo coordenação e execução e TREINAMENTO para ser…`, deliverables: [
+      { id: 900201, name: `2.1 Reuniões para dois territórios, recibos da gráfica.`, expectedResult: `1ª semana Reuniões 7 FEV 2026 FEV 2026 Fotos Lista de frequência Ata de reunião Elaboração de Termo de Termo de de facilitadores e suporte técnico referência e (Facilitadores deverão elaborar conteúdo programático do curso, Contrato de material didático e prático); prestação de serviço assinado 2 e 3ª Semana Termo de adesão Reunião com coordenação, ao serviço equipe técnica (voluntários) e voluntário facilitadores assinado; Análise, revisão e aprovação do material elaborado; Plano pedagógico 3ª semana Material didático Reunião entre coordenação e comunicação – Material de Aprovação da campanha de divulgação divulgação do curso (identidade visual, Lançamento das inscrições, peças, formulários divulgação e mobilização dos etc) participantes Impressão de material didático Formulário de (apostilas, cadernos etc) e inscrição preparação de material de divulgação (camisas, banners etc) Notas fiscais e`, activities: [
+        { id: 9002011, name: `Especificação — 1ª semana Reuniões 7 FEV 2026 FEV 2026 Fotos Lista de frequência Ata de reunião Elaboração…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900202, name: `2.2 na oficina; 10 mulheres e jovens no cadastro reserva Criação do grupo de whatsapp para facilitar a comunicação…`, expectedResult: `MAR MAR Ficha de inscrição 2026 2026 grupo de whatsapp Fotos e videos; Nota fiscal Lista de presença 15 certificados entregues Tapajós;`, activities: [
+        { id: 9002021, name: `Especificação — MAR MAR Ficha de inscrição 2026 2026 grupo de whatsapp Fotos e videos; Nota fiscal Lista d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900203, name: `2.3 oficinas; Quantitativos e qualitativos; ão, equipe 2ªsemana – Reunião – Coordenação, equipe executora e facili…`, expectedResult: `Reunião 1 ABRIL ABRIL Lista de com 2026 2026 frequência Coordenaç Ata de reunião Fotos executora e Relatório Geral da facilitador primeira fase es`, activities: [
+        { id: 9002031, name: `Especificação — Reunião 1 ABRIL ABRIL Lista de com 2026 2026 frequência Coordenaç Ata de reunião Fotos exe…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9003, name: `3. CICLO FORMATIVO DE planejamento da oficina; Reunião com equipe GESTÃO FINANCEIRA Execução da oficina 1ª semana – Tapajós e planalto Particip…`, deliverables: [
+      { id: 900301, name: `3.1 Reuniões para ** Obs: A mesma oficina será realizada nos dois territórios, o conteúdo é o mesmo. Só Referência…`, expectedResult: `1ª semana Reunião 1 MAIO MAIO Fotos 2026 2026 Lista de coordenação frequência Ata de reunião 1ª semana Elaboração de Termo de -Termo de de facilitadores e suporte técnico referência conteúdo programático do curso, -Contrato de material didático e prático); prestação de serviço assinado 2 e 3ª Semana -Termo de adesão Reunião com coordenação, ao serviço equipe tecnica (voluntários) e voluntário facilitadores – assinado; Analise, revisão e aprovação do material elaborado; Plano pedagógico 3ª semana Reunião entre coordenação e comunicação – formulário de Aprovação da campanha de inscrição divulgação do curso Lançamento das inscrições, divulgação e mobilização dos Notas fiscais e participantes recibos da gráfica; Impressão de material didático (apostilas, cadernos etc) e preparção de material de divulgação (camisas, banners etc)`, activities: [
+        { id: 9003011, name: `Especificação — 1ª semana Reunião 1 MAIO MAIO Fotos 2026 2026 Lista de coordenação frequência Ata de reuni…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900302, name: `3.2 30 Mulheres e jovens inscritos es na oficina de gestão financeira do tapajós e Planalto; 10 mulheres e jovens…`, expectedResult: `JUN 2026 JUN 2026 Ficha de inscrição de 30 mulheres e jovens preenchida; Ficha de inscrição de 10 mulheres e jovens preenchida para cadastro reserva; 1 grupo de whatsapp estabelecido com coordenadores, facilitadores e participantes; Fotos e videos; Nota fiscal de aluguel de barco o lancha; Nota fiscal e recibo de alimentação para os dias do evento; Termo de uso de aparelhos que serão usados na oficina 15 certificados entregues Tapajós; Fotos e videos; Nota fiscal e recibos 15 certificados entregues no Planalto.`, activities: [
+        { id: 9003021, name: `Especificação — JUN 2026 JUN 2026 Ficha de inscrição de 30 mulheres e jovens preenchida; Ficha de inscriçã…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900303, name: `3.3 Sistematização de dados das oficinas; Quantitativos e qualitativos; ão, equipe 2ªsemana – Reunião – Coordenaçã…`, expectedResult: `Reunião 1 JULHO JULHO Lista de com 2026 2026 frequência Coordenaç Ata de reunião Fotos executora e Relatório Geral da facilitador segunda fase es segunda fase do projeto; 4ªsemana – Entrega do relátorio`, activities: [
+        { id: 9003031, name: `Especificação — Reunião 1 JULHO JULHO Lista de com 2026 2026 frequência Coordenaç Ata de reunião Fotos exe…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9004, name: `4. CICLO FORMATIVO DE planejamento da oficina; Reunião com equipe PLANEJAMENT O E GÊNERO Execução da oficina de planejamento planalto e gênero;…`, deliverables: [
+      { id: 900401, name: `4.1 Reuniões para ** Obs: A mesma oficina será realizada nos dois territórios, o conteúdo é o mesmo. Só facilitado…`, expectedResult: `1ª semana Reunião 1 AGO AGO Fotos 2026 2026 Lista de coordenação e execução frequência 1ª semana Ata de reunião Elaboração de Termo de -Termo de Refrência TDR para a seleção de referência -Contrato de prestação de Reunião com coordenação, serviço assinado equipe tecnica (voluntários) e -Termo de adesão facilitadores – ao serviço Analise, revisão e aprovação do voluntário material elaborado; assinado; Plano pedagógico 3ª semana Reunião entre coordenação e comunicação – Aprovação da campanha de divulgação do curso Lançamento das inscrições, divulgação e mobilização dos participantes Impressão de material didático (apostilas, cadernos etc) e preparação de material de divulgação (camisas, banners etc)`, activities: [
+        { id: 9004011, name: `Especificação — 1ª semana Reunião 1 AGO AGO Fotos 2026 2026 Lista de coordenação e execução frequência 1ª…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900402, name: `4.2 1ª semana – Tapajós e 30 Mulheres e jovens inscritos na oficina de planejamento e gênero; 10 mulheres e jovens…`, expectedResult: `Participant 40 SET 2026 SET 2026 Ficha de inscrição es 1 grupo de whatsapp Fotos e videos; Nota fiscal de Fotos e videos Lista de presença 15 certificados entregues Tapajós;`, activities: [
+        { id: 9004021, name: `Especificação — Participant 40 SET 2026 SET 2026 Ficha de inscrição es 1 grupo de whatsapp Fotos e videos;…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900403, name: `4.3 Sistematização de dados das oficinas; Quantitativos e qualitativos; 2ªsemana – Reunião – Coordenação, equipe e…`, expectedResult: `Reunião 1 OUT OUT Lista de com 2026 2026 frequência Coordenaç Ata de reunião ão, equipe Fotos executora e Relatório Geral da facilitador terceira fase es Total:30 mulheres e jovens certificados na oficina de planejamento e gênero A SOMA DE VAGAS E PREVISÃO DE CERTIFICAÇÃO AQUI ESTABELECIDA É SUPERIOR A META DE 80 MULHERES CERTIFICADAS DO ESCOPO DO PROJETO, NO ENTANTO, A IDEIA É QUE ALGUMAS MULHERES POSSAM SE CAPACITAR EM 2 OU ATÉ 3 DOS CICLOS OFERTADOS – E MESMO QUE AS FORMAÇÕES CONTEMPLEM MULHERES 100% DIFERENTES AINDA TEMOS UMA MARGEM DE +10 MULHERES CERTIFICADAS QUE SUPERARÁ O PREVISTO;`, activities: [
+        { id: 9004031, name: `Especificação — Reunião 1 OUT OUT Lista de com 2026 2026 frequência Coordenaç Ata de reunião ão, equipe Fo…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9005, name: `5. 5-CICLO FORMATIVO INTRODUÇÃO A AGROECOLOGI ** Obs: A mesma A E PRODUÇÃO oficina será realizada ORGÂNICA Execução da introdução a agroecologi…`, deliverables: [
+      { id: 900501, name: `5.1 Reuniões para planejamento da oficina; Reunião com equipe nos dois territórios, o conteúdo é o mesmo. Só Refrê…`, expectedResult: `1ª semana Reunião 1 FEV 2026 FEV 2026 Fotos com Lista de coordenação e execução e Coordenaç frequência parcerios (EMATER, IFPA ão, equipe Ata de reunião etc) – executora Elaboração de Termo de e -Termo de referência de facilitadores e suporte es -Contrato de prestação de Reunião com coordenação, serviço assinado equipe técnica (voluntários) e -Termo de adesão facilitadores – ao serviço Análise, revisão e aprovação voluntário do material elaborado; assinado; 3ª semana Plano pedagógico Reunião entre coordenação e comunicação – Material didático Aprovação da campanha de (slides, apostilas, divulgação do curso roteiro de Lançamento das inscrições, atividades divulgação e mobilização dos práticas) Lista de frequência Ata de reunião Fotos`, activities: [
+        { id: 9005011, name: `Especificação — 1ª semana Reunião 1 FEV 2026 FEV 2026 Fotos com Lista de coordenação e execução e Coordena…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900502, name: `5.2 Realização da oficina Tapajós Participant 40 e Planalto acomodação, conversa com a comunidade, distribuição do…`, expectedResult: `MAR MAR Fotos e videos es 2026 2026 Lista de presença A LOGÍSTICA NESSE CURSO SERÁ A MESMA DO CURSO DE FERRAMENTAS DIGITAIS, POIS ELES ACONTECERÃO NO MESMO PERÍODO (UM PELA MANHÃ E OUTRO PELA TARDE) A AVALIAÇÃO GERAL TAMBÉM SERÁ REALIZADA EM CONJUNTO COM A AVALIAÇÃO DO CURSO DE FERRAMENTAS`, activities: [
+        { id: 9005021, name: `Especificação — MAR MAR Fotos e videos es 2026 2026 Lista de presença A LOGÍSTICA NESSE CURSO SERÁ A MESMA…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9006, name: `6. 6- ELABORAÇÃO DA SECRETARIA DE MULHERES DA COOPAFS`, deliverables: [
+      { id: 900601, name: `6.1 – Rodas de conversa - Mobilização de cooperadas Encontro 1 – importância da secretaria de mulheres - Levantame…`, expectedResult: `JUL – JUL – Fotos, vídeos, - Escuta ativa AGO E AGO E lista de presença; SET 2026 SET 2026 Diagnóstico de demandas das cooperadas;`, activities: [
+        { id: 9006011, name: `Especificação — JUL – JUL – Fotos, vídeos, - Escuta ativa AGO E AGO E lista de presença; SET 2026 SET 2026…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900602, name: `6.2 - Elaboração do planejamento coletivo`, expectedResult: `- Oficina de cocriação da Oficina 1 Regimento Secretaria – 2hrs interno aprovado -missão, visão e valores Missão, visão e -regimento interno valores -Estrutura mínima estabelecidos; estabelecida: coordenadora, Estrutura mínima secretaria etc estabelecida`, activities: [
+        { id: 9006021, name: `Especificação — - Oficina de cocriação da Oficina 1 Regimento Secretaria – 2hrs interno aprovado -missão,…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900603, name: `6.3 – Aprovação em assembleia`, expectedResult: `-Apresentação da proposta à Reunião 1 Secretaria de assembleia geral e diretoria da mulheres da cooperativa assembleia aprovada em AGO, ata, fotos e vídeos.`, activities: [
+        { id: 9006031, name: `Especificação — -Apresentação da proposta à Reunião 1 Secretaria de assembleia geral e diretoria da mulher…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9007, name: `7. 7- CAMPANHA DE ASSOCIAÇÃO COOPERATIVIS TA PARA MULHERES INDÍGENAS – MUNDURUKU E TAPAJÓS`, deliverables: [
+      { id: 900701, name: `7.1 - Mobilização e sensibilização`, expectedResult: `- Produção de materiais em Material 2 FEV – FEV Fotos, vídeos, linguagem acessível de SET 2026 -SET entrevistas; (cartilhas, áudios, banners marketing 2026 etc) sobre o cooperativismo e a COOPAFS - Inserção de lideranças na campanha;`, activities: [
+        { id: 9007011, name: `Especificação — - Produção de materiais em Material 2 FEV – FEV Fotos, vídeos, linguagem acessível de SET…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900702, name: `7.2 – Facilitação ao acesso à cooperativa`, expectedResult: `Abertura de 40 novas vagas Feira 1 OUT - OUT - Ficha de exclusivas para mulheres 2026 2026 demonstração de indígenas que estejam aptas e interesse; tenham interesse na Planilha com cooperativa; dados -Estande de esclarecimentos e sistematizados de diagnóstico paralelo a cada mulheres ação do projeto; indigenas Diagnóstico de CAF interessadas; Levantamento produtivo`, activities: [
+        { id: 9007021, name: `Especificação — Abertura de 40 novas vagas Feira 1 OUT - OUT - Ficha de exclusivas para mulheres 2026 2026…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900703, name: `7.3 – Aprovação de novos cooperados em Assembleia`, expectedResult: `Apresentação de mulheres Reunião 1 Out - Out - Ficha de cadastro que passaram na triagem da comunitári 2026 2026 na COOPAFS, cooperativa e estão aptas a se a fotos, videos; associar para a AGO, Contrato de Inserção de pelo menos 5 entrega de mulheres indígenas em alimentos com o programas institucionais PAA nome das e PNAE. cooperadas.`, activities: [
+        { id: 9007031, name: `Especificação — Apresentação de mulheres Reunião 1 Out - Out - Ficha de cadastro que passaram na triagem d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900704, name: `7.4 – Avaliação`, expectedResult: `Elaboração de relatórios e Relatório 1 Ago - Out - Relatório geral sistematização de dados 2026 2026 durante todo o processo`, activities: [
+        { id: 9007041, name: `Especificação — Elaboração de relatórios e Relatório 1 Ago - Out - Relatório geral sistematização de dados…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9008, name: `8. 8- 1ª FEIRA DE MULHERES INDÍGENAS DA projeto, executores, COOPAFS`, deliverables: [
+      { id: 900801, name: `8.1 – Reunião geral entre coordenação do parceiros e grupos de mulheres responsáveis Mapeamento das expositoras ra…`, expectedResult: `Criação da comissão reunião 1 OUT - OUT - Lista de presença, organizadora (100% de geral: NOV NOV fotos, vídeo; mulheres que participaram comissão 2026 2026 Termo de das oficinas) organizado compromisso assinado com a Definição de espaço, com os comissão Expositora organizadora; financeiro da feira, s definidos`, activities: [
+        { id: 9008011, name: `Especificação — Criação da comissão reunião 1 OUT - OUT - Lista de presença, organizadora (100% de geral:…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900802, name: `8.2 – Acompanhamento Grupo de apoio a comissão sistêmico do organizadora criado no planejamento para whatsapp – Me…`, expectedResult: `grupo de 1 Setembro Outubro Grupo de wpp apoio criado 2026 2026 criado no whatsapp com Relatórios coordenador Fotos e vídeos; es, parceiros e especialistas em eventos;`, activities: [
+        { id: 9008021, name: `Especificação — grupo de 1 Setembro Outubro Grupo de wpp apoio criado 2026 2026 criado no whatsapp com Rel…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 900803, name: `8.3 – DIA DA FEIRA! Mulheres expondo seus produtos Atrações culturais Encerramento oficial do projeto`, expectedResult: `Feira 1 Setembro Outubro Fotos, vídeos, realizada 2026 2026 pesquisas de satisfação, entrevistas, etc`, activities: [
+        { id: 9008031, name: `Especificação — Feira 1 Setembro Outubro Fotos, vídeos, realizada 2026 2026 pesquisas de satisfação, entre…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 9009, name: `9. 9- RELATÓRIO FINAL`, deliverables: [
+      { id: 900901, name: `9.1 Sistematização de Elaboração de relatório todos os dados`, expectedResult: `Relatório 1 Setembro Outubro Relatório FINAL final 2026 2026 Impacto gerado entregue`, activities: [
+        { id: 9009011, name: `Especificação — Relatório 1 Setembro Outubro Relatório FINAL final 2026 2026 Impacto gerado entregue`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
   ],
   10: [
     { id: 10001, name: `1. Construção da Infraestrutura Física de 100 para capitação de água com 24 M m² para abrigar os equipamentos e materiais da agroindústria Real…`, deliverables: [
@@ -501,13 +582,16 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 1000302, name: `3.2 Realizar capacitação: boas práticas habilitado para capacitar os cooperados em de colheita`, expectedResult: `Realizar contratação de profissional boas práticas de colheita de frutos da flloresta`, activities: [
         { id: 10003021, name: `Especificação — Realizar contratação de profissional boas práticas de colheita de frutos da flloresta`, responsible: ``, plannedDate: `Mês 3–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1000303, name: `3.3 Realizar capacitação: manipulação e processamento de alimentos Obter Licença de Operação`, expectedResult: `Realizar contratação de profissional habilitado para capacitar os cooperados em manipulação e processamento de alimentos. Solicitação para obter a licença junto a SEMMA municipal`, activities: [
+      { id: 1000303, name: `3.3 Realizar capacitação: manipulação e processamento de alimentos`, expectedResult: `Realizar contratação de profissional habilitado para capacitar os cooperados em manipulação e processamento de alimentos.`, activities: [
         { id: 10003031, name: `Especificação — Realizar contratação de profissional habilitado para capacitar os cooperados em manipulaçã…`, responsible: ``, plannedDate: `Mês 3–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
     { id: 10004, name: `4. Registro`, deliverables: [
-      { id: 1000401, name: `4.2 Realizar compra de material de construção / vegalhão diversos Obter registro do estabelecimento e dos produtos…`, expectedResult: `de vergalhão 3/8, vergalhão e arame recozinho. Solicitação para obter registro junto a ADEPARÁ e MAPA.`, activities: [
-        { id: 10004011, name: `Especificação — de vergalhão 3/8, vergalhão e arame recozinho. Solicitação para obter registro junto a ADE…`, responsible: ``, plannedDate: `Mês 3–Mês 10`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1000401, name: `4.1 Obter Licença de Operação`, expectedResult: `Solicitação para obter a licença junto a SEMMA municipal`, activities: [
+        { id: 10004011, name: `Especificação — Solicitação para obter a licença junto a SEMMA municipal`, responsible: ``, plannedDate: `Mês 3–Mês 3`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1000402, name: `4.2 Realizar compra de material de construção / vegalhão diversos Obter registro do estabelecimento e dos produtos…`, expectedResult: `de vergalhão 3/8, vergalhão e arame recozinho. Solicitação para obter registro junto a ADEPARÁ e MAPA.`, activities: [
+        { id: 10004021, name: `Especificação — de vergalhão 3/8, vergalhão e arame recozinho. Solicitação para obter registro junto a ADE…`, responsible: ``, plannedDate: `Mês 3–Mês 10`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
     { id: 10005, name: `5. Presatção de Contas`, deliverables: [
@@ -517,6 +601,33 @@ export const metasProjetos: Record<number, Goal[]> = {
     ] },
   ],
   11: [
+    { id: 11001, name: `1. Implantar uma casa comunitária de produtos arquitetônico em conjunto da agricultura familiar com a comunidade. indigena (dentro do proprio t…`, deliverables: [
+      { id: 1100101, name: `1.1 Elaboração do projeto`, expectedResult: `Convocação da comunidade 01 para participar da assembleia geral tendo como pauta a divulgação do projeto.`, activities: [
+        { id: 11001011, name: `Especificação — Convocação da comunidade 01 para participar da assembleia geral tendo como pauta a divulga…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `janeiro de 2026 janeiro de 2026 Edital de convocação, registros de atas, e assinaturas dos presentes` },
+      ] },
+      { id: 1100102, name: `1.2 contratação de empresa Período 01 mês para construção do espaço`, expectedResult: `01`, activities: [
+        { id: 11001021, name: `Especificação — 01`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `fevereiro fevereiro Relatórios 2026 2026 mensais ,fotos entre outros meios de verificação.` },
+      ] },
+      { id: 1100103, name: `1.3 Implantação do projeto Período de 07 meses físico: Construção Civil, por meio de serviços prestados à pessoa f…`, expectedResult: `01 Equipamento para garantir a 01 qualidade de água e de energia. Equipamentos artesanal de despolpamento e armazenamento de frutas`, activities: [
+        { id: 11001031, name: `Especificação — 01 Equipamento para garantir a 01 qualidade de água e de energia. Equipamentos artesanal d…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Março Outubro de Relatórios 2026 2026 mensais ,fotos entre outros meios de verificação. Julho 2026 Setembro Relatórios mensais ,fotos entre outros meios de verificação Outubro 2026 Notas fiscais e fotos` },
+      ] },
+    ] },
+    { id: 11002, name: `3. Formações e qualificações`, deliverables: [
+      { id: 1100201, name: `3.1 Convocação da comunidade para reunião em da comunidade, tendo como um assembleia geral`, expectedResult: `Contemplar pelo menos 50% A definir A definir público prioritário as mulheres e juventude indigena.`, activities: [
+        { id: 11002011, name: `Especificação — Contemplar pelo menos 50% A definir A definir público prioritário as mulheres e juventude…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `mensais ,fotos entre outros meios de verificação.` },
+      ] },
+      { id: 1100202, name: `3.2 Contratação de profissionais para ministrar as palestras`, expectedResult: `Contemplar pelo menos 50% de A definir A definir Fevereiro/2026 outubro de Relatórios cada público alvo`, activities: [
+        { id: 11002021, name: `Especificação — Contemplar pelo menos 50% de A definir A definir Fevereiro/2026 outubro de Relatórios cada…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `2026 mensais ,fotos entre outros meios de verificação.` },
+      ] },
+      { id: 1100203, name: `3.3 Criação de banner para divulgação das ações desenvolvidas por meio da contemplação do recurso .`, expectedResult: `Contemplar 50% de cada A definir A definir Fevereiro/2 outubro de Relatórios público alvo`, activities: [
+        { id: 11002031, name: `Especificação — Contemplar 50% de cada A definir A definir Fevereiro/2 outubro de Relatórios público alvo`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `2026 mensais ,fotos entre outros meios de verificação.` },
+      ] },
+    ] },
+    { id: 11003, name: `4. Palestras Temáticas E Oficinas Presenciais ...`, deliverables: [
+      { id: 1100301, name: `4.1 Comunidade em geral`, expectedResult: `Contemplar 50% de cada A definir A definir Março/202 outubro de Relatórios público alvo`, activities: [
+        { id: 11003011, name: `Especificação — Contemplar 50% de cada A definir A definir Março/202 outubro de Relatórios público alvo`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `mensais ,fotos entre outros meios de verificação.` },
+      ] },
+    ] },
   ],
   12: [
     { id: 12001, name: `1. Finalizar a construção da Casa de materiais da construção e dos menos 3 fornecedores, fisicamente e por mel`, deliverables: [
@@ -554,13 +665,114 @@ export const metasProjetos: Record<number, Goal[]> = {
     ] },
   ],
   13: [
+    { id: 13001, name: `1. Meta: Mobilização e Diagnóstico Participativo`, deliverables: [
+      { id: 1300101, name: `1.1 Mapeamento de áreas deRealização do mapeamento e diagnóstico das Mapeamento coleta das espécies potenciais áre…`, expectedResult: `Mapeamento de áreas deRealização do mapeamento e diagnóstico das Mapeamento coleta das espécies potenciais áreas, rastreando as espécies e potencial das áreas (Murumuru, Buriti e tucumã.). produtivo, com auxílio de profissional florestal e produtivas agronômico, no período 1 mês em parceria com a comunidade, consolidando com um mapa/rota de coleta e possível recuperação de espécies`, activities: [
+        { id: 13001011, name: `Especificação — Mapeamento de áreas deRealização do mapeamento e diagnóstico das Mapeamento coleta das esp…`, responsible: ``, plannedDate: `Mês 1–Mês 2`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Mapa de identificação de áreas e espécies. Relatório físico e visual (fotos e vídeos)` },
+      ] },
+      { id: 1300102, name: `1.2 Cadastramento das Realização de 2 reuniões de Cadastramento das Reuniões de mulheres interessadas e dos mulher…`, expectedResult: `Cadastramento das Realização de 2 reuniões de Cadastramento das Reuniões de mulheres interessadas e dos mulheres/famílias envolvidas no projeto, pela Cadastramento territórios de coleta equipe técnica do projeto, nas comunidades Quilombo CantaGalo e Foz do Urucuri`, activities: [
+        { id: 13001021, name: `Especificação — Cadastramento das Realização de 2 reuniões de Cadastramento das Reuniões de mulheres inter…`, responsible: ``, plannedDate: `Mês 1–Mês 2`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatório físico e visual (fotos e vídeos) Lista de frequência` },
+      ] },
+      { id: 1300103, name: `1.3 Planos comunitários de Realização de 1 plano de manejo comunitário de Plano de manejo sustentável das manejo s…`, expectedResult: `Planos comunitários de Realização de 1 plano de manejo comunitário de Plano de manejo sustentável das manejo sustentável das comunidades envolvidas manejo espécies nativas. pela equipe técnico do projeto (florestal e comunitário agrônomo) sustentável`, activities: [
+        { id: 13001031, name: `Especificação — Planos comunitários de Realização de 1 plano de manejo comunitário de Plano de manejo sust…`, responsible: ``, plannedDate: `Mês 3–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatório físico e visual (fotos e vídeos) Plano de manejo comunitário` },
+      ] },
+    ] },
+    { id: 13002, name: `2. Meta: Capacitação e Formação`, deliverables: [
+      { id: 1300201, name: `2.1 Oficina sobre boas Realização de 1 oficina de boas práticas de coleta, Oficina práticas de coleta, secagem e s…`, expectedResult: `Oficina sobre boas Realização de 1 oficina de boas práticas de coleta, Oficina práticas de coleta, secagem e secagem e armazenamento de sementes, pela armazenamento deequipe técnica do projeto (engenheiro florestal e sementes. agrônomo) para as mulheres da comunidade da Foz do Urucuri.`, activities: [
+        { id: 13002011, name: `Especificação — Oficina sobre boas Realização de 1 oficina de boas práticas de coleta, Oficina práticas de…`, responsible: ``, plannedDate: `Mês 3–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatório físico e visual (fotos e vídeos) Lista de frequência` },
+      ] },
+      { id: 1300202, name: `2.2 Treinamento em técnicas Realização de 2 treinamentos de extração Treinamento de extração e beneficiamento arte…`, expectedResult: `Treinamento em técnicas Realização de 2 treinamentos de extração Treinamento de extração e beneficiamento artesanal de óleo do buriti para as mulheres nas artesanal de óleo do buriti. comunidade Quilombo cantaGalo e Foz do Urucuri, pela a equipe técnica do projeto`, activities: [
+        { id: 13002021, name: `Especificação — Treinamento em técnicas Realização de 2 treinamentos de extração Treinamento de extração e…`, responsible: ``, plannedDate: `Mês 6–Mês 7`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatório físico e visual (fotos e vídeos) Lista de frequência` },
+      ] },
+      { id: 1300203, name: `2.3 Formação em gestão, Realização de 1 formação para as mulheres sobre Formação associativismo, cooperativismo, a…`, expectedResult: `Formação em gestão, Realização de 1 formação para as mulheres sobre Formação associativismo, cooperativismo, associativismo e comercialização cooperativismo epela equipe técnica da Coopasmig comercialização.`, activities: [
+        { id: 13002031, name: `Especificação — Formação em gestão, Realização de 1 formação para as mulheres sobre Formação associativism…`, responsible: ``, plannedDate: `Mês 3–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatório físico e visual (fotos e vídeos) Lista de frequência` },
+      ] },
+    ] },
+    { id: 13003, name: `3. : Implantação da Estrutura Produtiva`, deliverables: [
+      { id: 1300301, name: `3.1 Aquisição deRealização de compra de máquinas e utilitários Aquisição maquinários: despolpadeira, para o benefi…`, expectedResult: `unidade`, activities: [
+        { id: 13003011, name: `Especificação — unidade`, responsible: ``, plannedDate: `Mês 3–Mês 3`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1300302, name: `3.2 Construção unidade de Construção de unidades de estufa para secagem Construção secagem de sementes de sementes…`, expectedResult: `3 Mês 5`, activities: [
+        { id: 13003021, name: `Especificação — 3 Mês 5`, responsible: ``, plannedDate: `Mês 6–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1300303, name: `3.3 Criação de área de Construção de espaço de beneficiamento Construção produção do óleo vegetal e artesanal do b…`, expectedResult: `1 Mês 3`, activities: [
+        { id: 13003031, name: `Especificação — 1 Mês 3`, responsible: ``, plannedDate: `Mês 6–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1300304, name: `3.4 Aquisição de 3 motores Aquisição de motores de embarcação tipo rabeta, Compra para embarcação (tipo rabeta) pa…`, expectedResult: `3 Mês 1`, activities: [
+        { id: 13003041, name: `Especificação — 3 Mês 1`, responsible: ``, plannedDate: `Mês 3–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1300305, name: `3.5 Desenvolvimento de Criação de embalagens com a identidade do Treinamento/pr identidade visual e produto da bio…`, expectedResult: `1 Mês 3`, activities: [
+        { id: 13003051, name: `Especificação — 1 Mês 3`, responsible: ``, plannedDate: `Mês 5–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1300306, name: `3.6 Estabelecer parcerias com Realização de articulação com redes de Articulação de mercados consumidores mercados…`, expectedResult: `1 Mês 1`, activities: [
+        { id: 13003061, name: `Especificação — 1 Mês 1`, responsible: ``, plannedDate: `Mês 8–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 13004, name: `4. : Estruturar unidade administrativa físico administrativo para projeto de gestão e divulgação apoio da equipe técnica do do projeto`, deliverables: [
+      { id: 1300401, name: `4.1 Estrutura de um espaço Custos com operacionalização da gestão do Estruturação Comunicação e divulgação projeto`, expectedResult: `1 Mês 1`, activities: [
+        { id: 13004011, name: `Especificação — 1 Mês 1`, responsible: ``, plannedDate: `Mês 12–`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
   ],
   14: [
+    { id: 14001, name: `1. Capacitar 50 artesãos Kayapó em técnicas de produção, gestão e comercialização`, deliverables: [
+      { id: 1400101, name: `1.1 Levantamento de necessidades e planejamento das capacitações`, expectedResult: `Contratar consultores especializados em artesanato indígena e gestão de pequenos negócios. Realizar reunião com os artesãos para identificar as principais demandas de capacitação em (aprimoramento de trançados, uso de novas matérias-primas, acabamento), gestão (precificação, controle de estoque) (atendimento ao cliente, embalagem, fotografia de produtos). Elaborar o plano de capacitação com a Definição do metodologia e cronograma detalhado das oficinas.`, activities: [
+        { id: 14001011, name: `Especificação — Contratar consultores especializados em artesanato indígena e gestão de pequenos negócios.…`, responsible: ``, plannedDate: `Dez/2025–Dez/2025`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1400102, name: `1.2 Realização de oficinas de Conduzir 3 oficinas de aprimoramento aprimoramento técnico`, expectedResult: `técnico, com duração de 40 horas cada, focadas em técnicas avançadas de produção artesanal, design e inovação de produtos. Cada oficina atenderá aproximadamente totalizando oficinas incluirão aulas práticas e`, activities: [
+        { id: 14001021, name: `Especificação — técnico, com duração de 40 horas cada, focadas em técnicas avançadas de produção artesanal…`, responsible: ``, plannedDate: `Jan/2025–Mar/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `certificados de` },
+      ] },
+      { id: 1400103, name: `1.3 Realização de oficinas de Conduzir 4 oficinas de gestão e gestão e comercialização`, expectedResult: `horas cada, abordando temas como precificação justa, controle financeiro, estratégias de marketing digital, fotografia de produtos, atendimento ao capacitados em cliente e logística de vendas. As oficinas serão adaptadas à realidade comercialização cultural comunidade Kayapó.`, activities: [
+        { id: 14001031, name: `Especificação — horas cada, abordando temas como precificação justa, controle financeiro, estratégias de m…`, responsible: ``, plannedDate: `Mar/2026–Jun/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Lista de presença, certificados de participação, planos de negócios simplificados elaborados pelos artesãos, relatórios de vendas.` },
+      ] },
+    ] },
+    { id: 14002, name: `2. Construir um espaço coletivo de produção artesanal na aldeia Gorotire.`, deliverables: [
+      { id: 1400201, name: `2.1 Planejamento e projeto Realizar reunião com a comunidade Profissional arquitetônico`, expectedResult: `para definir as necessidades e características do espaço coletivo. Contratar arquiteto ou engenheiro para elaborar o projeto arquitetônico, considerando sustentabilidade e funcionalidade para as atividades artesanais. Obter as aprovações necessárias.`, activities: [
+        { id: 14002011, name: `Especificação — para definir as necessidades e características do espaço coletivo. Contratar arquiteto ou…`, responsible: ``, plannedDate: `Nov/2025–Dez/2025`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Projeto arquitetônico, contrato com o profissional` },
+      ] },
+      { id: 1400202, name: `2.2 Aquisição de materiais e Realizar compra dos materiais de definição de mão de obra`, expectedResult: `construção necessários, priorizando fornecedores sustentáveis. Definir mão de obra Seleção de mão local, com membros da comunidade Kayapó, para a construção do espaço.`, activities: [
+        { id: 14002021, name: `Especificação — construção necessários, priorizando fornecedores sustentáveis. Definir mão de obra Seleção…`, responsible: ``, plannedDate: `Jan/2026–Fev/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Notas Fiscais de compras` },
+      ] },
+      { id: 1400203, name: `2.3 Construção e equipagem Executar a construção do espaço Espaço coletivo do espaço`, expectedResult: `coletivo de produção, seguindo o de produção costura, armazenamento). inauguração do espaço com a participação da comunidade.`, activities: [
+        { id: 14002031, name: `Especificação — coletivo de produção, seguindo o de produção costura, armazenamento). inauguração do espaç…`, responsible: ``, plannedDate: `Mar/2026–Jul/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Relatórios de obra, notas fiscais de equipamentos, registro fotográfico da construção e inauguração.` },
+      ] },
+    ] },
+    { id: 14003, name: `3. Criar uma marca Para o artesanato Kayapó e desenvolver um catálogo físico e digital`, deliverables: [
+      { id: 1400301, name: `3.1 Desenvolvimento da marca`, expectedResult: `Contratar designer para criar a Contratação de identidade visual da marca, que represente a cultura Kayapó e a autenticidade dos produtos. Realizar o registro legal junto aos órgãos Marca criada e competentes. Desenvolver critérios e um manual de uso para a marca, garantindo sua aplicação correta pelos artesãos. Produzir materiais gráficos Manual de uso da marca para embalagem dos produtos.`, activities: [
+        { id: 14003011, name: `Especificação — Contratar designer para criar a Contratação de identidade visual da marca, que represente…`, responsible: ``, plannedDate: `Jan/2026–Mar/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `produzidas` },
+      ] },
+      { id: 1400302, name: `3.2 Desenvolvimento do catálogo físico e digital`, expectedResult: `Contratar equipe especializada para desenvolver um catálogo físico e digital, que permitam aos clientes visualizar os produtos em seus próprios fotografia profissional dos produtos artesanais para inclusão no catálogo.`, activities: [
+        { id: 14003021, name: `Especificação — Contratar equipe especializada para desenvolver um catálogo físico e digital, que permitam…`, responsible: ``, plannedDate: `Abr/2026–Set/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `físico` },
+      ] },
+    ] },
+    { id: 14004, name: `4. Aumentar em 40% a produção e comercialização do artesanato Kayapó`, deliverables: [
+      { id: 1400401, name: `4.1 Implementação de estratégias de comercialização`, expectedResult: `Participar de feiras de artesanato Participação em regionais e nacionais, utilizando o catálogo e a marca como diferenciais. Estabelecer parcerias com lojas de artesanato, galerias de arte e plataformas de e-commerce para estabelecidas ampliar Desenvolver material de divulgação (folders, cartões de visita) com a identidade visual da marca.`, activities: [
+        { id: 14004011, name: `Especificação — Participar de feiras de artesanato Participação em regionais e nacionais, utilizando o cat…`, responsible: ``, plannedDate: `Mar/2026–Out/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1400402, name: `4.2 Monitoramento e avaliação da produção e vendas`, expectedResult: `Implementar um sistema de registro e acompanhamento da produção e das monitoramento vendas reuniões mensais para analisar os Reuniões de resultados, identificar desafios e acompanhamento ajustar relatórios trimestrais de progresso.`, activities: [
+        { id: 14004021, name: `Especificação — Implementar um sistema de registro e acompanhamento da produção e das monitoramento vendas…`, responsible: ``, plannedDate: `Dez/2025–Out/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 14005, name: `5. Promover o manejo sustentável de recursos sustentável de naturais e fortalecer a matérias-primas identidade cultural da aldeia Gorotire`, deliverables: [
+      { id: 1400501, name: `5.1 Oficina de manejo`, expectedResult: `Realizar 2 oficinas sobre técnicas de coleta e manejo sustentável de matérias-primas da floresta (fibras, sementes, madeiras), garantindo a preservação dos recursos naturais e a continuidade das práticas artesanais. participantes As oficinas serão conduzidas por anciãos e especialistas locais.`, activities: [
+        { id: 14005011, name: `Especificação — Realizar 2 oficinas sobre técnicas de coleta e manejo sustentável de matérias-primas da fl…`, responsible: ``, plannedDate: `Jan/2025–Fev/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1400502, name: `5.2 Evento de valorização cultural`, expectedResult: `Organizar um evento cultural na aldeia Evento cultural Gorotire para celebrar e divulgar o artesanato Kayapó, com a participação de artesãos, comunidade e visitantes. visibilidade do O evento demonstrações de técnicas artesanais, apresentações culturais e rodas de conversa sobre a importância da cultura Kayapó`, activities: [
+        { id: 14005021, name: `Especificação — Organizar um evento cultural na aldeia Evento cultural Gorotire para celebrar e divulgar o…`, responsible: ``, plannedDate: `Out/2026–Out/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 14006, name: `6. Fortalecer a gestão, a comunicação e a técnica e administrativa transparência Associação Indígena Riktikô “Ronkô” Realizar assembleias comun…`, deliverables: [
+      { id: 1400601, name: `6.1 Formação da equipe da`, expectedResult: `Realizar reunião comunitária para definição responsabilidades da equipe de coordenação, logística, monitoramento e prestação de contas. Estabelecer rotinas de acompanhamento e controle interno.`, activities: [
+        { id: 14006011, name: `Especificação — Realizar reunião comunitária para definição responsabilidades da equipe de coordenação, lo…`, responsible: ``, plannedDate: `Dez/2025–Dez/2025`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1400602, name: `6.2 Comunicação comunitária e prestação de contas garantindo Assembleias realizadas`, expectedResult: `Produzir informativos comunitários e áudios em língua Kayapó sobre o andamento do projeto.`, activities: [
+        { id: 14006021, name: `Especificação — Produzir informativos comunitários e áudios em língua Kayapó sobre o andamento do projeto.`, responsible: ``, plannedDate: `Dez/2025–Out/2026`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
   ],
   15: [
     { id: 15001, name: `1. reunião geral com o público alvo do projeto aprovado e seleção das famílias whatsapp, com estimativa de 30`, deliverables: [
-      { id: 1500101, name: `1.1 apresentação do projeto Mobilizar através de convites e redes de reunião para cada ação proposta.`, expectedResult: `01 01/2026 02/2026 lista de presença, fotos, notas fiscais. pessoas, em aproximadamente 6 horas de trabalho. Será coordenada pela equipe gestora da cooperativa e do projeto.`, activities: [
-        { id: 15001011, name: `Especificação — 01 01/2026 02/2026 lista de presença, fotos, notas fiscais. pessoas, em aproximadamente 6…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1500101, name: `1.1 apresentação do projeto Mobilizar através de convites e redes de reunião para cada ação proposta. pessoas, em…`, expectedResult: `01 01/2026 02/2026 lista de presença, fotos, notas fiscais.`, activities: [
+        { id: 15001011, name: `Especificação — 01 01/2026 02/2026 lista de presença, fotos, notas fiscais.`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
       { id: 1500102, name: `1.2 Etapa`, expectedResult: ``, activities: [
         { id: 15001021, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
@@ -569,57 +781,74 @@ export const metasProjetos: Record<number, Goal[]> = {
         { id: 15001031, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 15002, name: `2. capacitações técnicas 3.produção de mudas`, deliverables: [
-      { id: 1500201, name: `2.1 implantação hortas As oficinas serão ministradas por oficina comunitária`, expectedResult: `02 03/2026 03/2026 lista de presença, fotos, técnicos contratados das comunidades notas fiscais. emissão de locais, com perfil do trabalho certificado comunitário, com carga horária de 20 horas cada oficina em 02 territórios`, activities: [
-        { id: 15002011, name: `Especificação — 02 03/2026 03/2026 lista de presença, fotos, técnicos contratados das comunidades notas fi…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 15002, name: `2. capacitações técnicas`, deliverables: [
+      { id: 1500201, name: `2.1 implantação hortas As oficinas serão ministradas por oficina comunitária técnicos contratados das comunidades…`, expectedResult: `02 03/2026 03/2026 lista de presença, fotos, notas fiscais. emissão de certificado`, activities: [
+        { id: 15002011, name: `Especificação — 02 03/2026 03/2026 lista de presença, fotos, notas fiscais. emissão de certificado`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1500202, name: `2.2 criação de aves comunitária As oficinas serão ministradas por oficina manutenção e sistemas solar A oficina se…`, expectedResult: `02 04/2026 04/2026 listas de presença, fotos, técnicos contratados das comunidades notas, emissão de locais, com perfil do trabalho certificados. comunitário, com carga horária de 20 horas cada oficina, em 02 territórios 01 05/2026 05/2026 lista de presença, fotos, profissional instalação, manutenção e notas fiscais. eletricidade, contratado, com carga horária de 20 horas N/A 01/2026 05/2026 fotos e planilha de plantadas pelos comunitários nos anotação próprios territórios (assentamentos PEAEX).`, activities: [
-        { id: 15002021, name: `Especificação — 02 04/2026 04/2026 listas de presença, fotos, técnicos contratados das comunidades notas,…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1500202, name: `2.2 criação de aves comunitária As oficinas serão ministradas por oficina técnicos contratados das comunidades loc…`, expectedResult: `02 04/2026 04/2026 listas de presença, fotos, notas, emissão de certificados.`, activities: [
+        { id: 15002021, name: `Especificação — 02 04/2026 04/2026 listas de presença, fotos, notas, emissão de certificados.`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1500203, name: `2.3 manutenção e sistemas solar A oficina será ministrada por um técnico oficina profissional instalação, manutenç…`, expectedResult: `01 05/2026 05/2026 lista de presença, fotos, notas fiscais.`, activities: [
+        { id: 15002031, name: `Especificação — 01 05/2026 05/2026 lista de presença, fotos, notas fiscais.`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 15003, name: `3. Meta 3`, deliverables: [
-      { id: 1500301, name: `3.2 crescimento, As ações serão desenvolvidas pelos N/A acompanhamento`, expectedResult: `N/A 01/2026 10/2026 fotos e planilha de próprios comunitários, com anotação acompanhamento de um técnico`, activities: [
-        { id: 15003011, name: `Especificação — N/A 01/2026 10/2026 fotos e planilha de próprios comunitários, com anotação acompanhamento…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 15003, name: `3. produção de mudas`, deliverables: [
+      { id: 1500301, name: `3.1 coleta de sementes, plantio e As sementes serão coletadas e semente germinação em viveiros plantadas pelos com…`, expectedResult: `N/A 01/2026 05/2026 fotos e planilha de anotação`, activities: [
+        { id: 15003011, name: `Especificação — N/A 01/2026 05/2026 fotos e planilha de anotação`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1500302, name: `3.3 Plantio`, expectedResult: `O plantio será feito pelos comunitários Mudas 0 10/2026 10/2026 fotos, coordenada com orientação de um técnico, geográfica da area conforme o crescimento plantada, notas fiscais (desenvolvimento) do ciclo de vida de de pagamentos por cada espécie. serviços ambientais por mudas plantadas`, activities: [
-        { id: 15003021, name: `Especificação — O plantio será feito pelos comunitários Mudas 0 10/2026 10/2026 fotos, coordenada com orie…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1500302, name: `3.2 crescimento, As ações serão desenvolvidas pelos N/A acompanhamento próprios comunitários, acompanhamento de um…`, expectedResult: `N/A 01/2026 10/2026 fotos e planilha de com anotação`, activities: [
+        { id: 15003021, name: `Especificação — N/A 01/2026 10/2026 fotos e planilha de com anotação`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1500303, name: `3.3 Plantio O plantio será feito pelos comunitários Mudas com orientação de um técnico, conforme o crescimento (de…`, expectedResult: `0 10/2026 10/2026 fotos, coordenada geográfica da area plantada, notas fiscais de pagamentos por serviços ambientais por mudas plantadas`, activities: [
+        { id: 15003031, name: `Especificação — 0 10/2026 10/2026 fotos, coordenada geográfica da area plantada, notas fiscais de pagament…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
     { id: 15004, name: `4. implantação das das hortas comunitárias 5. implantação da criação de aves 6. Compra instalação dos kit de internet 7. Compra e instalação co…`, deliverables: [
-      { id: 1500401, name: `4.1 construção e plantio`, expectedResult: `A construção e plantio será pela hortas 02 04/2026 07/2026 fotos, notas fiscais, comunidade local com orientação de lista de presença um técnico`, activities: [
-        { id: 15004011, name: `Especificação — A construção e plantio será pela hortas 02 04/2026 07/2026 fotos, notas fiscais, comunidad…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1500401, name: `4.1 construção e plantio A construção e plantio será pela comunidade local com orientação de um técnico`, expectedResult: `hortas 02 04/2026 07/2026 fotos, notas fiscais, lista de presença`, activities: [
+        { id: 15004011, name: `Especificação — hortas 02 04/2026 07/2026 fotos, notas fiscais, lista de presença`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
       { id: 1500402, name: `4.2 Etapa`, expectedResult: ``, activities: [
         { id: 15004021, name: `Especificação — Etapa`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1500403, name: `4.3 Reparo dos aviários (telagem, coberturas, piso), compra dos pintos, ração e bebedouro. compra dos kits assembl…`, expectedResult: `As atividades serão feitas pelas aviários 02 04/2026 07/2026 notas fiscais, fotos, lista famílias envolvidas, com orientação de presença técnica As compras e instalação serão feitas kit de internet 02 01/2026 04/2026 notas fiscais, fotos pela equipe responsável do projeto, conselho fiscal e logística. As compras e instalação serão feitas abastecimento 02 01/2026 05/2026 notas fiscais, fotos pela equipe responsável do projeto, de água conselho fiscal e logística As compras serão feitas pela equipe kit energia 01 01/2026 06/2026 notas fiscais, fotos responsável do projeto, conselho fiscal solar e logística, instalada por um técnico profissional. compra de materiais de construção e reforma 01 01/2026 08/2026 fotos, notas fiscais. pagamento de mao de obra A equipe gestoras enviará os prestação de 01 11/2026 11/2026 notas fiscais, documentos e fará assembleia geral contas relatório(fluxo de caixa) com os envolvidos, publicará os ,fotos, vídeos. resultados`, activities: [
-        { id: 15004031, name: `Especificação — As atividades serão feitas pelas aviários 02 04/2026 07/2026 notas fiscais, fotos, lista f…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1500403, name: `4.3 Reparo dos aviários (telagem, As atividades serão feitas pelas coberturas, piso), compra dos famílias envolvid…`, expectedResult: `aviários 02 04/2026 07/2026 notas fiscais, fotos, lista de presença 01/2026 04/2026 notas fiscais, fotos 01/2026 05/2026 notas fiscais, fotos de água 01 01/2026 06/2026 notas fiscais, fotos 01 01/2026 08/2026 fotos, notas fiscais. prestação de 01 11/2026 11/2026 notas fiscais, relatório(fluxo de caixa) ,fotos, vídeos.`, activities: [
+        { id: 15004031, name: `Especificação — aviários 02 04/2026 07/2026 notas fiscais, fotos, lista de presença 01/2026 04/2026 notas…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
   ],
   16: [
-    { id: 16001, name: `1. Infraestrutura 2.Equipamentos`, deliverables: [
-      { id: 1600101, name: `1.1 Construção; 1 Agroindústria Construída e Agroindústria`, expectedResult: `adequada às normas da UNIDADE Jan 2026 Mar 2026 RECIBOS;`, activities: [
-        { id: 16001011, name: `Especificação — adequada às normas da UNIDADE Jan 2026 Mar 2026 RECIBOS;`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 16001, name: `1. Infraestrutura`, deliverables: [
+      { id: 1600101, name: `1.1 Construção; 1 Agroindústria Construída e Agroindústria adequada às normas da`, expectedResult: `UNIDADE Jan 2026 Mar 2026 RECIBOS;`, activities: [
+        { id: 16001011, name: `Especificação — UNIDADE Jan 2026 Mar 2026 RECIBOS;`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
       { id: 1600102, name: `1.2 Adequação Elétrica e hidráulica/sanitária`, expectedResult: `ADEPARÁ 1 NOTAS FISCAIS; REGISTROS`, activities: [
         { id: 16001021, name: `Especificação — ADEPARÁ 1 NOTAS FISCAIS; REGISTROS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1600103, name: `1.3 Pintura e Acabamento Aquisição e instalação do forno elétrico`, expectedResult: `FOTOGRÁFICOS 1 Agroindústria equipada RECIBOS; com 7 equipamentos UNIDADE 1 Mar 2026 Abr 2026 NOTAS FISCAIS;`, activities: [
-        { id: 16001031, name: `Especificação — FOTOGRÁFICOS 1 Agroindústria equipada RECIBOS; com 7 equipamentos UNIDADE 1 Mar 2026 Abr 2…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1600103, name: `1.3 Pintura e Acabamento`, expectedResult: `FOTOGRÁFICOS`, activities: [
+        { id: 16001031, name: `Especificação — FOTOGRÁFICOS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 16002, name: `2. Meta 2`, deliverables: [
-      { id: 1600201, name: `2.2 Prensa, descascador; balança. Seladora, freezers,mesas inox.`, expectedResult: `essenciais. REGISTROS FOTOGRÁFICOS`, activities: [
-        { id: 16002011, name: `Especificação — essenciais. REGISTROS FOTOGRÁFICOS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+    { id: 16002, name: `2. Equipamentos`, deliverables: [
+      { id: 1600201, name: `2.1 Aquisição e instalação do forno 1 Agroindústria equipada elétrico com 7 equipamentos`, expectedResult: `RECIBOS; UNIDADE 1 Mar 2026 Abr 2026 NOTAS FISCAIS;`, activities: [
+        { id: 16002011, name: `Especificação — RECIBOS; UNIDADE 1 Mar 2026 Abr 2026 NOTAS FISCAIS;`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1600202, name: `2.2 Prensa, descascador; balança.`, expectedResult: `essenciais. REGISTROS`, activities: [
+        { id: 16002021, name: `Especificação — essenciais. REGISTROS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+      { id: 1600203, name: `2.3 Seladora, freezers,mesas inox.`, expectedResult: `FOTOGRÁFICOS`, activities: [
+        { id: 16002031, name: `Especificação — FOTOGRÁFICOS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
-    { id: 16003, name: `3. Capacitações 4.Certificação Consultoria especializada e acompanhamento para obtenção de certificado ADEPARÁ 5.Serviço de 5,1 Serviços contáb…`, deliverables: [
+    { id: 16003, name: `3. Capacitações`, deliverables: [
       { id: 1600301, name: `3.1 Realização de 4 cursos`, expectedResult: `Realização de 4 cursos`, activities: [
         { id: 16003011, name: `Especificação — Realização de 4 cursos`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
-      { id: 1600302, name: `3.2 Boas práticas de 20 Mulheres capacitadas em PESSOAS fabricação, gestão de negócios Certificação sanitária unid…`, expectedResult: `20 Abr 2026 Jul 2026 LISTA DE 4 cursos ( total de 160h) PRESENÇA; CERTIFICADOS; RELATÓRIOS UNIDADE 1 Jul 2026 Set 2026 Certificado da ADEPARÁ ADEPARÁ Recibos e UNIDADE 1 set 2026 Dez 2026 Extratos bancários`, activities: [
-        { id: 16003021, name: `Especificação — 20 Abr 2026 Jul 2026 LISTA DE 4 cursos ( total de 160h) PRESENÇA; CERTIFICADOS; RELATÓRIOS…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      { id: 1600302, name: `3.2 Boas práticas de 20 Mulheres capacitadas em PESSOAS fabricação, gestão de 4 cursos ( total de 160h) negócios`, expectedResult: `20 Abr 2026 Jul 2026 LISTA DE PRESENÇA; CERTIFICADOS; RELATÓRIOS`, activities: [
+        { id: 16003021, name: `Especificação — 20 Abr 2026 Jul 2026 LISTA DE PRESENÇA; CERTIFICADOS; RELATÓRIOS`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
+      ] },
+    ] },
+    { id: 16004, name: `4. Certificação especializada e acompanhamento para obtenção de certificado ADEPARÁ 5.Serviço de 5,1 Serviços contábeis, terceiros prestação de…`, deliverables: [
+      { id: 1600401, name: `4.1 Consultoria Certificação sanitária unidade emitida pela ADEPARÁ Prestação de contas e consultorias.`, expectedResult: `UNIDADE 1 Jul 2026 Set 2026 Certificado da ADEPARÁ Recibos e UNIDADE 1 set 2026 Dez 2026 Extratos bancários`, activities: [
+        { id: 16004011, name: `Especificação — UNIDADE 1 Jul 2026 Set 2026 Certificado da ADEPARÁ Recibos e UNIDADE 1 set 2026 Dez 2026 E…`, responsible: ``, plannedDate: ``, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `` },
       ] },
     ] },
   ],
@@ -679,11 +908,17 @@ export const metasProjetos: Record<number, Goal[]> = {
       { id: 1900101, name: `1.1 Licença de instalação`, expectedResult: `Ir na Secretaria de Agricultura/Secretaria de Atividade Meio Ambiente para buscar orientações para a obtenção da licença.`, activities: [
         { id: 19001011, name: `Especificação — Ir na Secretaria de Agricultura/Secretaria de Atividade Meio Ambiente para buscar orientaç…`, responsible: ``, plannedDate: `Mês 1–Mês 3`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Licença/Dispensa de Instalação` },
       ] },
-      { id: 1900102, name: `1.2 Elaborar projetos estruturais. Levantamento de orçamentos de materiais da obra. Levantamento de A diretoria pe…`, expectedResult: `Contratação do responsável técnico para Contrato elaborar a planta do projeto. A diretoria pesquisar por três orçamentos a fim Orçamentos de encontrar os melhores preços`, activities: [
-        { id: 19001021, name: `Especificação — Contratação do responsável técnico para Contrato elaborar a planta do projeto. A diretoria…`, responsible: ``, plannedDate: `Mês 1–Mês 3`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Contrato e comprovantes de pagamento Documento de cada orçamento cotado Documento de cada orçamento cotado` },
+      { id: 1900102, name: `1.2 Elaborar projetos estruturais.`, expectedResult: `Contratação do responsável técnico para Contrato elaborar a planta do projeto.`, activities: [
+        { id: 19001021, name: `Especificação — Contratação do responsável técnico para Contrato elaborar a planta do projeto.`, responsible: ``, plannedDate: `Mês 1–Mês 3`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Contrato e comprovantes de pagamento` },
       ] },
-      { id: 1900103, name: `1.5 Execução da obra Construção da agroindústria`, expectedResult: `Fotos / Notas fiscais e/ou recibos`, activities: [
-        { id: 19001031, name: `Especificação — Fotos / Notas fiscais e/ou recibos`, responsible: ``, plannedDate: `Mês 4–Mês 8`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Fotos, notas fiscais e/ou recibos` },
+      { id: 1900103, name: `1.3 Levantamento de orçamentos de materiais da obra.`, expectedResult: `A diretoria pesquisar por três orçamentos a fim Orçamentos de encontrar os melhores preços`, activities: [
+        { id: 19001031, name: `Especificação — A diretoria pesquisar por três orçamentos a fim Orçamentos de encontrar os melhores preços`, responsible: ``, plannedDate: `Mês 1–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Documento de cada orçamento cotado` },
+      ] },
+      { id: 1900104, name: `1.4 Levantamento de A diretoria pesquisar por três orçamentos a fim Orçamentos orçamentos de mão de obra de encont…`, expectedResult: `Levantamento de A diretoria pesquisar por três orçamentos a fim Orçamentos orçamentos de mão de obra de encontrar os melhores preços e serviços de qualidade`, activities: [
+        { id: 19001041, name: `Especificação — Levantamento de A diretoria pesquisar por três orçamentos a fim Orçamentos orçamentos de m…`, responsible: ``, plannedDate: `Mês 1–Mês 4`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Documento de cada orçamento cotado` },
+      ] },
+      { id: 1900105, name: `1.5 Execução da obra Construção da agroindústria`, expectedResult: `Fotos / Notas fiscais e/ou recibos`, activities: [
+        { id: 19001051, name: `Especificação — Fotos / Notas fiscais e/ou recibos`, responsible: ``, plannedDate: `Mês 4–Mês 8`, startDate: null, conclusionDate: null, progress: 0, status: `Não iniciado`, observations: `Fotos, notas fiscais e/ou recibos` },
       ] },
     ] },
     { id: 19002, name: `2. Aquisição de Equipamentos`, deliverables: [
