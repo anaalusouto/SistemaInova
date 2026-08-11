@@ -184,6 +184,54 @@ function recalcProject(p: ProjectExt): ProjectExt {
   return { ...p, progress, budgetExecuted };
 }
 
+/** Aplica a alteração solicitada na estrutura de metas/etapas/especializações. */
+function applyMetaEdit(p: ProjectExt, edit: MetaEdit): ProjectExt {
+  return {
+    ...p,
+    goals: p.goals.map(g => {
+      if (edit.kind === 'meta') {
+        return g.id === edit.targetId ? { ...g, name: edit.to } : g;
+      }
+      return {
+        ...g,
+        deliverables: g.deliverables.map(d => {
+          if (edit.kind === 'etapa') {
+            return d.id === edit.targetId ? { ...d, name: edit.to } : d;
+          }
+          return {
+            ...d,
+            activities: d.activities.map(a => {
+              if (a.id !== edit.targetId) return a;
+              if (edit.field === 'status') {
+                const status = edit.to as ActivityStatus;
+                return {
+                  ...a, status,
+                  progress: status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress,
+                  conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
+                };
+              }
+              return { ...a, name: edit.to };
+            }),
+          };
+        }),
+      };
+    }),
+  };
+}
+
+function appendLog(p: ProjectExt, edit: MetaEdit, author: string, authorRole: string, approvedBy: string | null): ProjectExt {
+  const list = p.metaLog ?? [];
+  const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+  const entry: MetaChangeLog = {
+    id: nextId, kind: edit.kind, targetId: edit.targetId, targetPath: edit.targetPath,
+    field: edit.field, from: edit.from, to: edit.to,
+    author, authorRole, date: new Date().toISOString(), approvedBy,
+  };
+  return { ...p, metaLog: [entry, ...list] };
+}
+
+
+
 export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<ProjectExt[]>(seedProjects as ProjectExt[]);
   const [communities, setCommunities] = useState<Comunidade[]>(seedComunidades);
