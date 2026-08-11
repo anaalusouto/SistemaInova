@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Plus, GitBranch, CheckCircle2, Clock, XCircle, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { type Project, type ApprovalStatus, type ChangeType } from '../../data/mockData';
+import { type Project, type ApprovalStatus, type ChangeType, type ChangeNature, type Goal } from '../../data/mockData';
+import { APP_PEOPLE } from '../../auth/authStore';
 import { useStore } from '../../store';
 
 const approvalConfig: Record<ApprovalStatus, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
@@ -151,6 +152,7 @@ export function TabMudancas({ project }: Props) {
 
       {showForm && (
         <ChangeForm
+          goals={project.goals}
           onClose={() => setShowForm(false)}
           onSave={(c) => {
             addChange(project.id, c);
@@ -163,9 +165,10 @@ export function TabMudancas({ project }: Props) {
   );
 }
 
-function ChangeForm({ onClose, onSave }: {
+function ChangeForm({ goals, onClose, onSave }: {
+  goals: Goal[];
   onClose: () => void;
-  onSave: (c: { description: string; type: ChangeType; date: string; justification: string; approval: ApprovalStatus; responsible: string }) => void;
+  onSave: (c: { description: string; type: ChangeType; date: string; justification: string; approval: ApprovalStatus; responsible: string; goalId: number; nature: ChangeNature }) => void;
 }) {
   const [f, setF] = useState({
     description: '',
@@ -173,11 +176,14 @@ function ChangeForm({ onClose, onSave }: {
     date: new Date().toLocaleDateString('pt-BR'),
     justification: '',
     approval: 'Pendente' as ApprovalStatus,
-    responsible: '',
+    responsible: APP_PEOPLE[0]?.name ?? '',
+    goalId: goals[0]?.id ?? 0,
+    nature: 'Adaptação' as ChangeNature,
   });
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!f.description.trim()) { toast.error('Descreva a mudança.'); return; }
+    if (!f.goalId) { toast.error('Vincule a mudança a uma meta.'); return; }
     onSave(f);
   };
   return (
@@ -188,6 +194,19 @@ function ChangeForm({ onClose, onSave }: {
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
+          <L label="Meta vinculada *" full>
+            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: Number(e.target.value) })}>
+              {goals.length === 0 && <option value={0}>Nenhuma meta cadastrada</option>}
+              {goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name}`}</option>)}
+            </select>
+          </L>
+          <L label="É uma mudança *">
+            <select className="ipt" value={f.nature} onChange={e => setF({ ...f, nature: e.target.value as ChangeNature })}>
+              <option value="Radical">Radical — a meta foi completamente alterada</option>
+              <option value="Adaptação">Adaptação — a meta foi adaptada a outro contexto</option>
+              <option value="Exclusão">Exclusão — a meta não faz mais sentido</option>
+            </select>
+          </L>
           <L label="Descrição *" full><input className="ipt" value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></L>
           <L label="Tipo">
             <select className="ipt" value={f.type} onChange={e => setF({ ...f, type: e.target.value as ChangeType })}>
@@ -195,7 +214,11 @@ function ChangeForm({ onClose, onSave }: {
             </select>
           </L>
           <L label="Data"><input className="ipt" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} /></L>
-          <L label="Responsável" full><input className="ipt" value={f.responsible} onChange={e => setF({ ...f, responsible: e.target.value })} /></L>
+          <L label="Responsável" full>
+            <select className="ipt" value={f.responsible} onChange={e => setF({ ...f, responsible: e.target.value })}>
+              {APP_PEOPLE.map(p => <option key={p.login} value={p.name}>{`${p.name} (${p.role})`}</option>)}
+            </select>
+          </L>
           <L label="Justificativa" full><textarea className="ipt min-h-[70px]" value={f.justification} onChange={e => setF({ ...f, justification: e.target.value })} /></L>
         </div>
         <div className="flex items-center justify-end gap-2 mt-5">
