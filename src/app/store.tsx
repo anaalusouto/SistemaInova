@@ -13,13 +13,14 @@ import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
+import type { Contact, MetaChangeLog, MetaNodeKind, PendingApproval } from './data/projectExtras';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos).
 const seedProjects = inovaProjetos;
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v7';
+const STORAGE_KEY = 'pp-portfolio-v8';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
