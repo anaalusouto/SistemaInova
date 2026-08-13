@@ -283,9 +283,6 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
             </div>
           </div>
         </div>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
