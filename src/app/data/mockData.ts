@@ -45,6 +45,30 @@ export const BUDGET_CATEGORIES: BudgetCategory[] = [
   'Custos administrativos',
 ];
 
+/** Valor executado: Sim = igual ao previsto, Não = nada executado, Parcial = valor digitado. */
+export type ExecutedFlag = 'Não' | 'Sim' | 'Parcial';
+
+export type AccountabilityStatus =
+  | 'Não enviado'
+  | 'Enviado'
+  | 'Aprovado pela FAS'
+  | 'Devolvido para ajuste'
+  | 'Reprovado';
+
+export const ACCOUNTABILITY_STATUSES: AccountabilityStatus[] = [
+  'Não enviado', 'Enviado', 'Aprovado pela FAS', 'Devolvido para ajuste', 'Reprovado',
+];
+
+export type ChangeRecord =
+  | 'Conforme planejado'
+  | 'Alterado parcialmente'
+  | 'Alterado totalmente'
+  | 'Novo item';
+
+export const CHANGE_RECORDS: ChangeRecord[] = [
+  'Conforme planejado', 'Alterado parcialmente', 'Alterado totalmente', 'Novo item',
+];
+
 export interface FinancialItem {
   id: number;
   meta: string;               // Ex: "Meta 1"
@@ -60,7 +84,14 @@ export interface FinancialItem {
   date: string;
   supplier: string;
   document: string;
+  /** Foi executado? Sim / Não / Parcial */
+  executedFlag?: ExecutedFlag;
+  /** Status da prestação de contas */
+  accountability?: AccountabilityStatus;
+  /** Registro de alterações da linha */
+  changeRecord?: ChangeRecord;
 }
+
 
 export type ContrapartidaTipo = 'Financeira' | 'Econômica';
 

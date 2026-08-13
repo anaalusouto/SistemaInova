@@ -13,7 +13,8 @@ import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
-import type { Contact, MetaChangeLog, MetaNodeKind, PendingApproval } from './data/projectExtras';
+import type { Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
+import { applyOp } from './data/projectOps';
 import { metasProjetos } from './data/metasProjetos';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
@@ -74,14 +75,8 @@ export type ProjectExt = Project & {
   approvals?: PendingApproval[];
 };
 
-export interface MetaEdit {
-  kind: MetaNodeKind;
-  targetId: number;
-  targetPath: string;
-  field: string;
-  from: string;
-  to: string;
-}
+/** Operação sujeita a registro e (para estagiários) validação de administrador. */
+export type MetaEdit = ProjectOp;
 export interface EditAuthor { name: string; role: string; isAdmin: boolean }
 
 type Ctx = {
@@ -188,48 +183,14 @@ function recalcProject(p: ProjectExt): ProjectExt {
   return { ...p, progress, budgetExecuted };
 }
 
-/** Aplica a alteração solicitada na estrutura de metas/etapas/especializações. */
-function applyMetaEdit(p: ProjectExt, edit: MetaEdit): ProjectExt {
-  return {
-    ...p,
-    goals: p.goals.map(g => {
-      if (edit.kind === 'meta') {
-        return g.id === edit.targetId ? { ...g, name: edit.to } : g;
-      }
-      return {
-        ...g,
-        deliverables: g.deliverables.map(d => {
-          if (edit.kind === 'etapa') {
-            return d.id === edit.targetId ? { ...d, name: edit.to } : d;
-          }
-          return {
-            ...d,
-            activities: d.activities.map(a => {
-              if (a.id !== edit.targetId) return a;
-              if (edit.field === 'status') {
-                const status = edit.to as ActivityStatus;
-                const done = status === 'Concluído';
-                return {
-                  ...a, status,
-                  progress: done ? 100 : status === 'Não iniciado' ? 0 : (a.progress >= 100 ? 0 : a.progress),
-                  conclusionDate: done ? new Date().toLocaleDateString('pt-BR') : null,
-                };
-              }
-              return { ...a, name: edit.to };
-            }),
-          };
-        }),
-      };
-    }),
-  };
-}
+const applyMetaEdit = (p: ProjectExt, edit: MetaEdit): ProjectExt => applyOp(p, edit);
 
 function appendLog(p: ProjectExt, edit: MetaEdit, author: string, authorRole: string, approvedBy: string | null): ProjectExt {
   const list = p.metaLog ?? [];
   const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
   const entry: MetaChangeLog = {
-    id: nextId, kind: edit.kind, targetId: edit.targetId, targetPath: edit.targetPath,
-    field: edit.field, from: edit.from, to: edit.to,
+    id: nextId,
+    ...edit,
     author, authorRole, date: new Date().toISOString(), approvedBy,
   };
   return { ...p, metaLog: [entry, ...list] };

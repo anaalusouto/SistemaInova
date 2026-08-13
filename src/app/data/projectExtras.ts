@@ -10,35 +10,48 @@ export interface Contact {
   notes: string;
 }
 
-export type MetaNodeKind = 'meta' | 'etapa' | 'especializacao';
+/** Entidade alvo de uma operação sujeita a registro/validação. */
+export type OpEntity = 'meta' | 'etapa' | 'especificacao' | 'risco' | 'mudanca' | 'financeiro';
+export type OpAction = 'criar' | 'editar' | 'excluir';
 
-/** Registro imutável de "de X para Y" nas metas/etapas/especializações. */
-export interface MetaChangeLog {
+/** Compat: kinds antigos usados no monitoramento de metas. */
+export type MetaNodeKind = 'meta' | 'etapa' | 'especializacao' | 'especificacao';
+
+export interface ProjectOp {
+  entity: OpEntity;
+  action: OpAction;
+  /** id do item alvo (editar/excluir) */
+  targetId?: number;
+  /** id do pai: meta (para etapa) ou etapa (para especificação) */
+  parentId?: number;
+  /** caminho legível, ex.: "Meta 1 › Etapa 1.2" */
+  targetPath: string;
+  field?: string;
+  from?: string;
+  to?: string;
+  /** dados para criação */
+  payload?: Record<string, unknown>;
+}
+
+/** Registro imutável de "de X para Y". */
+export interface MetaChangeLog extends ProjectOp {
   id: number;
-  kind: MetaNodeKind;
-  targetId: number;
-  targetPath: string;   // ex.: "Meta 1 › Etapa 2"
-  field: string;        // "nome", "status", ...
-  from: string;
-  to: string;
   author: string;
   authorRole: string;
   date: string;         // ISO
   approvedBy?: string | null;
+  /** legado */
+  kind?: MetaNodeKind;
 }
 
-/** Solicitação de alteração feita por estagiário, aguardando validação de admin. */
-export interface PendingApproval {
+/** Solicitação feita por estagiário, aguardando validação de admin. */
+export interface PendingApproval extends ProjectOp {
   id: number;
-  kind: MetaNodeKind;
-  targetId: number;
-  targetPath: string;
-  field: string;
-  from: string;
-  to: string;
   author: string;
   authorRole: string;
   date: string;
   status: 'Pendente' | 'Aprovado' | 'Recusado';
   reviewedBy?: string | null;
+  /** legado */
+  kind?: MetaNodeKind;
 }

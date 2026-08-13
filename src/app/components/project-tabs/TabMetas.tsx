@@ -1,12 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
-  ChevronDown, ChevronRight, Info, Target, Pencil, Check, X,
-  History, ShieldCheck, Clock,
+  ChevronDown, ChevronRight, Info, Target, Pencil, Check, X, Plus, Trash2,
+  History, ShieldCheck, Minus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type ActivityStatus } from '../../data/mockData';
 import { useStore, type MetaEdit } from '../../store';
-import { useAuth, hasAdminPowers } from '../../auth/authStore';
+import { APP_PEOPLE } from '../../auth/authStore';
+import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
 const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: string }> = {
   'Não iniciado': { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' },
@@ -14,6 +15,10 @@ const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: str
   'Concluído':    { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
   'Atrasado':     { color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
 };
+
+/** Ciclo do check: Não iniciado → Em andamento → Concluído → Não iniciado. */
+const nextStatus = (s: ActivityStatus): ActivityStatus =>
+  s === 'Concluído' ? 'Não iniciado' : s === 'Em andamento' ? 'Concluído' : 'Em andamento';
 
 interface Props { project: Project }
 
@@ -25,10 +30,28 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
+/** Campo de texto editável em linha (salva no blur / Enter). */
+function CellInput({ value, onSave, placeholder, mono }: { value: string; onSave: (v: string) => void; placeholder?: string; mono?: boolean }) {
+  const [v, setV] = useState(value);
+  const [focused, setFocused] = useState(false);
+  if (!focused && v !== value) setV(value);
+  return (
+    <input
+      value={v}
+      placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onChange={e => setV(e.target.value)}
+      onBlur={() => { setFocused(false); if (v !== value) onSave(v); }}
+      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+      className="w-full bg-transparent rounded px-1.5 py-1 border border-transparent hover:border-slate-200 focus:border-blue-300 focus:bg-white outline-none"
+      style={{ fontSize: '0.7rem', color: '#475569', fontFamily: mono ? 'var(--font-mono)' : undefined }}
+    />
+  );
+}
+
 export function TabMetas({ project }: Props) {
-  const { submitMetaEdit, approveMetaEdit, rejectMetaEdit, getProject } = useStore();
-  const { user } = useAuth();
-  const isAdmin = hasAdminPowers(user);
+  const { submitMetaEdit, getProject } = useStore();
+  const { author, isAdmin } = useOpAuthor();
   const p = getProject(project.id) ?? (project as never);
   const [open, setOpen] = useState<number[]>(project.goals.map(g => g.id));
   const [openStep, setOpenStep] = useState<number[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
@@ -36,21 +59,30 @@ export function TabMetas({ project }: Props) {
   const [editing, setEditing] = useState<{ key: string; value: string } | null>(null);
   const [showLog, setShowLog] = useState(false);
 
-  const pending = (p.approvals ?? []).filter(a => a.status === 'Pendente');
   const log = p.metaLog ?? [];
 
-  const author = {
-    name: user?.displayName ?? 'Desconhecido',
-    role: user?.role ?? 'estagiario',
-    isAdmin,
-  };
-
-  const submit = (edit: MetaEdit) => {
-    if (!edit.to.trim() || edit.to === edit.from) { setEditing(null); return; }
+  const submit = (edit: MetaEdit, silent = false) => {
     const result = submitMetaEdit(project.id, edit, author);
     setEditing(null);
+    if (silent) return;
     if (result === 'pendente') toast.info('Alteração enviada para validação de um administrador.');
     else toast.success('Alteração registrada.');
+  };
+
+  const submitRename = (edit: MetaEdit) => {
+    if (!edit.to?.trim() || edit.to === edit.from) { setEditing(null); return; }
+    submit(edit);
+  };
+
+  const askCreate = (label: string, base: Omit<MetaEdit, 'to' | 'action'>) => {
+    const name = window.prompt(label);
+    if (!name || !name.trim()) return;
+    submit({ ...base, action: 'criar', to: name.trim(), payload: { name: name.trim() } });
+  };
+
+  const askDelete = (label: string, base: Omit<MetaEdit, 'action'>) => {
+    if (!window.confirm(label)) return;
+    submit({ ...base, action: 'excluir' });
   };
 
   const goalProgress = useMemo(() => {
@@ -62,30 +94,19 @@ export function TabMetas({ project }: Props) {
     return map;
   }, [p.goals]);
 
-  if (p.goals.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Target size={44} color="#CBD5E1" />
-        <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>
-          Nenhuma meta cadastrada. Consulte o Plano de Trabalho no Drive.
+  const header = (
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          Monitoramento de Metas
+        </h2>
+        <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
+          Cronograma físico — {p.goals.length} metas ·{' '}
+          {p.goals.flatMap(g => g.deliverables).length} etapas ·{' '}
+          {p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities)).length} especificações
         </p>
       </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
-            Monitoramento de Metas
-          </h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
-            Cronograma físico — {p.goals.length} metas ·{' '}
-            {p.goals.flatMap(g => g.deliverables).length} etapas ·{' '}
-            {p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities)).length} especializações
-          </p>
-        </div>
+      <div className="flex items-center gap-2">
         <button
           onClick={() => setShowLog(true)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
@@ -93,46 +114,36 @@ export function TabMetas({ project }: Props) {
         >
           <History size={13} /> Registro de alterações ({log.length})
         </button>
+        <button
+          onClick={() => askCreate('Nome da nova meta:', { entity: 'meta', targetPath: 'Nova meta' })}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
+          style={{ background: 'var(--primary)' }}
+        >
+          <Plus size={13} /> Nova meta
+        </button>
       </div>
+    </div>
+  );
 
-      {/* Aprovações pendentes */}
-      {pending.length > 0 && (
-        <div className="rounded-xl border p-4" style={{ borderColor: '#FCD34D', background: '#FFFBEB' }}>
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={14} color="#B45309" />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#B45309' }}>
-              {pending.length} alteração(ões) aguardando validação de administrador
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {pending.map(a => (
-              <div key={a.id} className="flex items-center justify-between gap-3 bg-white rounded-lg border px-3 py-2" style={{ borderColor: '#FDE68A' }}>
-                <div style={{ fontSize: '0.75rem', color: '#0F172A' }}>
-                  <strong>{a.author}</strong> · {a.targetPath} · {a.field}:{' '}
-                  <span style={{ color: '#DC2626', textDecoration: 'line-through' }}>{a.from || '—'}</span>{' → '}
-                  <span style={{ color: '#059669' }}>{a.to}</span>
-                </div>
-                {isAdmin ? (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => { approveMetaEdit(project.id, a.id, author.name); toast.success('Alteração aprovada.'); }}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-white"
-                      style={{ background: '#059669' }}
-                    ><Check size={11} /> Aprovar</button>
-                    <button
-                      onClick={() => { rejectMetaEdit(project.id, a.id, author.name); toast.error('Alteração recusada.'); }}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border"
-                      style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
-                    ><X size={11} /> Recusar</button>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '0.7rem', color: '#B45309' }}>Aguardando administrador</span>
-                )}
-              </div>
-            ))}
-          </div>
+  if (p.goals.length === 0) {
+    return (
+      <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
+        {header}
+        <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['meta', 'etapa', 'especificacao']} />
+        <div className="flex flex-col items-center justify-center gap-3 py-20">
+          <Target size={44} color="#CBD5E1" />
+          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>
+            Nenhuma meta cadastrada. Use “Nova meta” para começar.
+          </p>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
+      {header}
+      <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['meta', 'etapa', 'especificacao']} />
 
       {/* Cards de meta */}
       {p.goals.map((g, gi) => {
@@ -159,7 +170,7 @@ export function TabMetas({ project }: Props) {
                         value={editing.value}
                         onChange={e => setEditing({ key: editKey, value: e.target.value })}
                       />
-                      <button onClick={() => submit({ kind: 'meta', targetId: g.id, targetPath: `Meta ${gi + 1}`, field: 'nome', from: g.name, to: editing.value })}>
+                      <button onClick={() => submitRename({ entity: 'meta', action: 'editar', targetId: g.id, targetPath: `Meta ${gi + 1}`, field: 'nome', from: g.name, to: editing.value })}>
                         <Check size={15} color="#059669" />
                       </button>
                       <button onClick={() => setEditing(null)}><X size={15} color="#DC2626" /></button>
@@ -172,6 +183,12 @@ export function TabMetas({ project }: Props) {
                       <button onClick={() => setEditing({ key: editKey, value: g.name })} title="Editar meta">
                         <Pencil size={12} color="#94A3B8" />
                       </button>
+                      <button
+                        onClick={() => askDelete(`Excluir a Meta ${gi + 1}?`, { entity: 'meta', targetId: g.id, targetPath: `Meta ${gi + 1}`, from: g.name })}
+                        title="Excluir meta"
+                      >
+                        <Trash2 size={12} color="#DC2626" />
+                      </button>
                     </>
                   )}
                 </div>
@@ -180,11 +197,16 @@ export function TabMetas({ project }: Props) {
                     <div className="h-full rounded-full" style={{ width: `${prog}%`, background: prog === 100 ? '#10B981' : '#2563EB' }} />
                   </div>
                   <span style={{ fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{prog}%</span>
-                  <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                    {g.deliverables.length} etapas
-                  </span>
+                  <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{g.deliverables.length} etapas</span>
                 </div>
               </div>
+              <button
+                onClick={() => askCreate('Nome da nova etapa:', { entity: 'etapa', parentId: g.id, targetPath: `Meta ${gi + 1}` })}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border"
+                style={{ borderColor: 'var(--border)', color: '#475569' }}
+              >
+                <Plus size={11} /> Etapa
+              </button>
               <button onClick={() => setInfoGoal(g.id)} title="Mais informações" className="p-1 rounded-full hover:bg-blue-50">
                 <Info size={17} color="#2563EB" />
               </button>
@@ -192,11 +214,15 @@ export function TabMetas({ project }: Props) {
 
             {isOpen && (
               <div className="p-4 flex flex-col gap-3">
+                {g.deliverables.length === 0 && (
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Nenhuma etapa cadastrada nesta meta.</div>
+                )}
                 {g.deliverables.map((d, di) => {
                   const stepOpen = openStep.includes(d.id);
                   const acts = d.activities;
                   const dProg = acts.length ? Math.round(acts.reduce((s, a) => s + a.progress, 0) / acts.length) : 0;
                   const dKey = `etapa-${d.id}`;
+                  const dPath = `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1}`;
                   return (
                     <div key={d.id} className="rounded-lg border" style={{ borderColor: 'var(--border)' }}>
                       <div className="flex items-center gap-2 px-4 py-2.5">
@@ -215,7 +241,7 @@ export function TabMetas({ project }: Props) {
                               value={editing.value}
                               onChange={e => setEditing({ key: dKey, value: e.target.value })}
                             />
-                            <button onClick={() => submit({ kind: 'etapa', targetId: d.id, targetPath: `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1}`, field: 'nome', from: d.name, to: editing.value })}>
+                            <button onClick={() => submitRename({ entity: 'etapa', action: 'editar', targetId: d.id, targetPath: dPath, field: 'nome', from: d.name, to: editing.value })}>
                               <Check size={14} color="#059669" />
                             </button>
                             <button onClick={() => setEditing(null)}><X size={14} color="#DC2626" /></button>
@@ -226,8 +252,21 @@ export function TabMetas({ project }: Props) {
                             <button onClick={() => setEditing({ key: dKey, value: d.name })} title="Editar etapa">
                               <Pencil size={11} color="#94A3B8" />
                             </button>
+                            <button
+                              onClick={() => askDelete(`Excluir a Etapa ${gi + 1}.${di + 1}?`, { entity: 'etapa', targetId: d.id, targetPath: dPath, from: d.name })}
+                              title="Excluir etapa"
+                            >
+                              <Trash2 size={11} color="#DC2626" />
+                            </button>
                           </>
                         )}
+                        <button
+                          onClick={() => askCreate('Nome da nova especificação (atividade):', { entity: 'especificacao', parentId: d.id, targetPath: dPath })}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border"
+                          style={{ borderColor: 'var(--border)', color: '#475569' }}
+                        >
+                          <Plus size={10} /> Especificação
+                        </button>
                         <div className="w-24 h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
                           <div className="h-full rounded-full" style={{ width: `${dProg}%`, background: dProg === 100 ? '#10B981' : '#2563EB' }} />
                         </div>
@@ -235,14 +274,14 @@ export function TabMetas({ project }: Props) {
                       </div>
 
                       {stepOpen && (
-                        <div className="border-t" style={{ borderColor: 'var(--border)' }}>
+                        <div className="border-t overflow-x-auto" style={{ borderColor: 'var(--border)' }}>
                           {acts.length === 0 ? (
-                            <div className="px-4 py-3" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>Sem especializações cadastradas.</div>
+                            <div className="px-4 py-3" style={{ fontSize: '0.73rem', color: '#94A3B8' }}>Sem especificações cadastradas.</div>
                           ) : (
-                            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+                            <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 940 }}>
                               <thead>
                                 <tr style={{ background: '#F8FAFC' }}>
-                                  {['', 'Especialização', 'Responsável', 'Início', 'Conclusão', 'Progresso', 'Status', ''].map((h, i) => (
+                                  {['', 'Especificação', 'Responsável', 'Previsto', 'Início', 'Conclusão', 'Progresso', 'Status', 'Observações'].map((h, i) => (
                                     <th key={i} className="px-3 py-2 text-left" style={{ fontSize: '0.64rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                                   ))}
                                 </tr>
@@ -252,20 +291,29 @@ export function TabMetas({ project }: Props) {
                                   const cfg = statusConfig[a.status];
                                   const aKey = `esp-${a.id}`;
                                   const done = a.status === 'Concluído';
-                                  const path = `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1} › Esp. ${ai + 1}`;
+                                  const doing = a.status === 'Em andamento';
+                                  const path = `${dPath} › Esp. ${ai + 1}`;
+                                  const field = (f: string, from: string, to: string) =>
+                                    submit({ entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: f, from, to }, true);
                                   return (
                                     <tr key={a.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                                      <td className="px-3 py-2 w-8">
-                                        <input
-                                          type="checkbox"
-                                          checked={done}
-                                          onChange={() => submit({
-                                            kind: 'especializacao', targetId: a.id, targetPath: path, field: 'status',
-                                            from: a.status, to: done ? 'Em andamento' : 'Concluído',
+                                      <td className="px-3 py-2 w-9">
+                                        <button
+                                          title="1 clique: em andamento · 2 cliques: concluído · 3: não iniciado"
+                                          onClick={() => submit({
+                                            entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: 'status',
+                                            from: a.status, to: nextStatus(a.status),
                                           })}
-                                        />
+                                          className="w-4 h-4 rounded flex items-center justify-center border"
+                                          style={{
+                                            borderColor: done ? '#10B981' : doing ? '#2563EB' : '#CBD5E1',
+                                            background: done ? '#10B981' : doing ? '#DBEAFE' : '#fff',
+                                          }}
+                                        >
+                                          {done ? <Check size={11} color="#fff" /> : doing ? <Minus size={11} color="#2563EB" /> : null}
+                                        </button>
                                       </td>
-                                      <td className="px-3 py-2">
+                                      <td className="px-3 py-2 min-w-[240px]">
                                         {editing?.key === aKey ? (
                                           <div className="flex items-center gap-1.5">
                                             <input
@@ -275,26 +323,46 @@ export function TabMetas({ project }: Props) {
                                               value={editing.value}
                                               onChange={e => setEditing({ key: aKey, value: e.target.value })}
                                             />
-                                            <button onClick={() => submit({ kind: 'especializacao', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value })}>
+                                            <button onClick={() => submitRename({ entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value })}>
                                               <Check size={13} color="#059669" />
                                             </button>
                                             <button onClick={() => setEditing(null)}><X size={13} color="#DC2626" /></button>
                                           </div>
                                         ) : (
-                                          <div className="flex items-center gap-1.5">
+                                          <div className="flex items-start gap-1.5">
                                             <span style={{ fontSize: '0.76rem', color: '#334155', textDecoration: done ? 'line-through' : 'none' }}>
                                               <span style={{ fontFamily: 'var(--font-mono)', color: '#94A3B8', marginRight: 6 }}>{gi + 1}.{di + 1}.{ai + 1}</span>
                                               {a.name}
                                             </span>
-                                            <button onClick={() => setEditing({ key: aKey, value: a.name })} title="Editar especialização">
+                                            <button onClick={() => setEditing({ key: aKey, value: a.name })} title="Editar especificação">
                                               <Pencil size={11} color="#CBD5E1" />
                                             </button>
                                           </div>
                                         )}
                                       </td>
-                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B' }}>{a.responsible || '—'}</td>
-                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{a.startDate || '—'}</td>
-                                      <td className="px-3 py-2" style={{ fontSize: '0.7rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>{a.conclusionDate || '—'}</td>
+                                      <td className="px-2 py-2 w-40">
+                                        <select
+                                          value={a.responsible || ''}
+                                          onChange={e => field('responsável', a.responsible || '', e.target.value)}
+                                          className="w-full bg-transparent rounded px-1 py-1 border border-transparent hover:border-slate-200 focus:border-blue-300 outline-none"
+                                          style={{ fontSize: '0.7rem', color: '#475569' }}
+                                        >
+                                          <option value="">—</option>
+                                          {APP_PEOPLE.map(pp => <option key={pp.login} value={pp.name}>{pp.name}</option>)}
+                                          {a.responsible && !APP_PEOPLE.some(pp => pp.name === a.responsible) && (
+                                            <option value={a.responsible}>{a.responsible}</option>
+                                          )}
+                                        </select>
+                                      </td>
+                                      <td className="px-2 py-2 w-32">
+                                        <CellInput mono value={a.plannedDate || ''} placeholder="previsto" onSave={v => field('previsto', a.plannedDate || '', v)} />
+                                      </td>
+                                      <td className="px-2 py-2 w-28">
+                                        <CellInput mono value={a.startDate || ''} placeholder="dd/mm/aaaa" onSave={v => field('início', a.startDate || '', v)} />
+                                      </td>
+                                      <td className="px-2 py-2 w-28">
+                                        <CellInput mono value={a.conclusionDate || ''} placeholder="dd/mm/aaaa" onSave={v => field('conclusão', a.conclusionDate || '', v)} />
+                                      </td>
                                       <td className="px-3 py-2 w-28">
                                         <div className="flex items-center gap-2">
                                           <div className="flex-1 h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
@@ -308,7 +376,9 @@ export function TabMetas({ project }: Props) {
                                           {a.status}
                                         </span>
                                       </td>
-                                      <td className="px-3 py-2" style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{a.observations || ''}</td>
+                                      <td className="px-2 py-2 min-w-[140px]">
+                                        <CellInput value={a.observations || ''} placeholder="—" onSave={v => field('observações', a.observations || '', v)} />
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -325,6 +395,12 @@ export function TabMetas({ project }: Props) {
           </div>
         );
       })}
+
+      {!isAdmin && (
+        <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+          Você está como estagiário: criações, edições e exclusões só passam a valer após a aprovação de um administrador.
+        </p>
+      )}
 
       {/* Modal de informações da meta */}
       {infoGoal !== null && (() => {
@@ -343,13 +419,12 @@ export function TabMetas({ project }: Props) {
               </div>
 
               <div className="p-6 flex flex-col gap-5">
-                {/* Indicadores */}
                 <section>
                   <SectionTitle>Indicadores gerais</SectionTitle>
                   <div className="grid grid-cols-4 gap-3">
                     {[
                       { label: 'Etapas', value: String(g.deliverables.length) },
-                      { label: 'Especializações', value: String(acts.length) },
+                      { label: 'Especificações', value: String(acts.length) },
                       { label: 'Concluídas', value: `${acts.filter(a => a.status === 'Concluído').length}/${acts.length}` },
                       { label: 'Progresso', value: `${goalProgress[g.id] ?? 0}%` },
                     ].map(kv => (
@@ -361,14 +436,13 @@ export function TabMetas({ project }: Props) {
                   </div>
                 </section>
 
-                {/* Etapas em planilha */}
                 <section>
                   <SectionTitle>Etapas da meta</SectionTitle>
                   <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
                     <table className="w-full" style={{ borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ background: '#F8FAFC' }}>
-                          {['#', 'Etapa', 'Resultado esperado', 'Especializações', 'Progresso'].map(h => (
+                          {['#', 'Etapa', 'Resultado esperado', 'Especificações', 'Progresso'].map(h => (
                             <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                           ))}
                         </tr>
@@ -392,14 +466,13 @@ export function TabMetas({ project }: Props) {
                   </div>
                 </section>
 
-                {/* Especializações em planilha */}
                 <section>
-                  <SectionTitle>Especializações / cronograma físico</SectionTitle>
+                  <SectionTitle>Especificações / cronograma físico</SectionTitle>
                   <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
                     <table className="w-full" style={{ borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ background: '#F8FAFC' }}>
-                          {['Cód.', 'Especialização', 'Etapa', 'Responsável', 'Previsto', 'Início', 'Conclusão', 'Status', 'Observações'].map(h => (
+                          {['Cód.', 'Especificação', 'Etapa', 'Responsável', 'Previsto', 'Início', 'Conclusão', 'Status', 'Observações'].map(h => (
                             <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                           ))}
                         </tr>
@@ -448,8 +521,10 @@ export function TabMetas({ project }: Props) {
                 {log.map(l => (
                   <div key={l.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style={{ background: '#F1F5F9', color: '#475569' }}>{l.kind}</span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{l.targetPath} · {l.field}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style={{ background: '#F1F5F9', color: '#475569' }}>
+                        {l.action ?? 'editar'} · {l.entity ?? l.kind ?? 'meta'}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{l.targetPath}{l.field ? ` · ${l.field}` : ''}</span>
                       <span className="ml-auto" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
                         {new Date(l.date).toLocaleString('pt-BR')}
                       </span>
@@ -457,7 +532,7 @@ export function TabMetas({ project }: Props) {
                     <div style={{ fontSize: '0.76rem' }}>
                       <span style={{ color: '#DC2626', textDecoration: 'line-through' }}>{l.from || '—'}</span>
                       {' → '}
-                      <span style={{ color: '#059669' }}>{l.to}</span>
+                      <span style={{ color: '#059669' }}>{l.to || '—'}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1" style={{ fontSize: '0.7rem', color: '#64748B' }}>
                       <span>por <strong>{l.author}</strong> ({l.authorRole})</span>
