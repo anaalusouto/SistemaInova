@@ -122,11 +122,30 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                   </a>
                 ) : null}
                 <button
-                  onClick={() => setEditLink(driveLink)}
+                  onClick={() => setEditLink({ kind: 'driveLink', value: driveLink })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
                   style={{ borderColor: 'var(--border)', color: '#475569' }}
                 >
-                  <Link2 size={11} /> {driveLink ? 'Editar link' : 'Adicionar link do Drive'}
+                  <Link2 size={11} /> {driveLink ? 'Editar plano' : 'Link do Plano de Trabalho'}
+                </button>
+
+                {budgetLink ? (
+                  <a
+                    href={budgetLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ color: '#B45309', background: '#FFFBEB' }}
+                  >
+                    <ExternalLink size={11} /> Orçamento Realizado
+                  </a>
+                ) : null}
+                <button
+                  onClick={() => setEditLink({ kind: 'budgetLink', value: budgetLink })}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                >
+                  <Link2 size={11} /> {budgetLink ? 'Editar orçamento' : 'Link do Orçamento Realizado'}
                 </button>
               </div>
               <div className="flex items-center gap-3 mt-1">
