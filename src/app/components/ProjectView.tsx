@@ -254,32 +254,35 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         </div>
       )}
 
-      {/* Modal do link do Drive */}
+      {/* Modal de links do Drive */}
       {editLink !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
           <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
             <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
-              Plano de Trabalho no Drive
+              {editLink.kind === 'driveLink' ? 'Plano de Trabalho no Drive' : 'Orçamento Realizado no Drive'}
             </h3>
             <input
               autoFocus
               className="w-full border rounded-lg px-3 py-2 text-[13px]"
               style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}
               placeholder="https://drive.google.com/..."
-              value={editLink}
-              onChange={e => setEditLink(e.target.value)}
+              value={editLink.value}
+              onChange={e => setEditLink({ ...editLink, value: e.target.value })}
             />
             <div className="flex items-center justify-end gap-2 mt-4">
               <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
               <button
                 onClick={() => {
-                  updateProject(project.id, { driveLink: editLink.trim() });
-                  toast.success('Link do Plano de Trabalho atualizado.');
+                  updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<Project>);
+                  toast.success('Link atualizado.');
                   setEditLink(null);
                 }}
                 className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white"
                 style={{ background: 'var(--primary)' }}
               >Salvar</button>
+            </div>
+          </div>
+        </div>
             </div>
           </div>
         </div>
