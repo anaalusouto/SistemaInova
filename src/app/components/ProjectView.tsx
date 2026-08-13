@@ -46,10 +46,11 @@ interface ProjectViewProps {
 export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('resumo');
   const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
-  const [editLink, setEditLink] = useState<string | null>(null);
+  const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink'; value: string } | null>(null);
   const { getProject, updateProject } = useStore();
   const project = getProject(initial.id) ?? initial;
   const driveLink = (project as { driveLink?: string }).driveLink ?? '';
+  const budgetLink = (project as { budgetLink?: string }).budgetLink ?? '';
   const cfg = statusConfig[project.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
 
   const renderTab = () => {
@@ -121,11 +122,30 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                   </a>
                 ) : null}
                 <button
-                  onClick={() => setEditLink(driveLink)}
+                  onClick={() => setEditLink({ kind: 'driveLink', value: driveLink })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
                   style={{ borderColor: 'var(--border)', color: '#475569' }}
                 >
-                  <Link2 size={11} /> {driveLink ? 'Editar link' : 'Adicionar link do Drive'}
+                  <Link2 size={11} /> {driveLink ? 'Editar plano' : 'Link do Plano de Trabalho'}
+                </button>
+
+                {budgetLink ? (
+                  <a
+                    href={budgetLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ color: '#B45309', background: '#FFFBEB' }}
+                  >
+                    <ExternalLink size={11} /> Orçamento Realizado
+                  </a>
+                ) : null}
+                <button
+                  onClick={() => setEditLink({ kind: 'budgetLink', value: budgetLink })}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                >
+                  <Link2 size={11} /> {budgetLink ? 'Editar orçamento' : 'Link do Orçamento Realizado'}
                 </button>
               </div>
               <div className="flex items-center gap-3 mt-1">
@@ -234,27 +254,27 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         </div>
       )}
 
-      {/* Modal do link do Drive */}
+      {/* Modal de links do Drive */}
       {editLink !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
           <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
             <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
-              Plano de Trabalho no Drive
+              {editLink.kind === 'driveLink' ? 'Plano de Trabalho no Drive' : 'Orçamento Realizado no Drive'}
             </h3>
             <input
               autoFocus
               className="w-full border rounded-lg px-3 py-2 text-[13px]"
               style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}
               placeholder="https://drive.google.com/..."
-              value={editLink}
-              onChange={e => setEditLink(e.target.value)}
+              value={editLink.value}
+              onChange={e => setEditLink({ ...editLink, value: e.target.value })}
             />
             <div className="flex items-center justify-end gap-2 mt-4">
               <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
               <button
                 onClick={() => {
-                  updateProject(project.id, { driveLink: editLink.trim() });
-                  toast.success('Link do Plano de Trabalho atualizado.');
+                  updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<Project>);
+                  toast.success('Link atualizado.');
                   setEditLink(null);
                 }}
                 className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white"
