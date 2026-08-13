@@ -46,10 +46,11 @@ interface ProjectViewProps {
 export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('resumo');
   const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
-  const [editLink, setEditLink] = useState<string | null>(null);
+  const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink'; value: string } | null>(null);
   const { getProject, updateProject } = useStore();
   const project = getProject(initial.id) ?? initial;
   const driveLink = (project as { driveLink?: string }).driveLink ?? '';
+  const budgetLink = (project as { budgetLink?: string }).budgetLink ?? '';
   const cfg = statusConfig[project.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
 
   const renderTab = () => {
