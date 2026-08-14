@@ -70,6 +70,10 @@ export type ProjectExt = Project & {
   plano?: PlanoTrabalho;
   /** Link do Google Drive com o Plano de Trabalho mais atualizado. */
   driveLink?: string;
+  /** Link do Google Drive com o Orçamento Realizado. */
+  budgetLink?: string;
+  /** Link do Google Drive com o Termo de Fomento. */
+  termoFomentoLink?: string;
   contacts?: Contact[];
   metaLog?: MetaChangeLog[];
   approvals?: PendingApproval[];
