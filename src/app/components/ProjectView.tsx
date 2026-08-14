@@ -280,7 +280,11 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
           <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
             <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
-              {editLink.kind === 'driveLink' ? 'Plano de Trabalho no Drive' : 'Orçamento Realizado no Drive'}
+              {editLink.kind === 'driveLink'
+                ? 'Plano de Trabalho no Drive'
+                : editLink.kind === 'budgetLink'
+                  ? 'Orçamento Realizado no Drive'
+                  : 'Termo de Fomento no Drive'}
             </h3>
             <input
               autoFocus
@@ -294,7 +298,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
               <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
               <button
                 onClick={() => {
-                  updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<Project>);
+                  updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);
                   toast.success('Link atualizado.');
                   setEditLink(null);
                 }}
