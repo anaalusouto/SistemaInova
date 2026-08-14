@@ -149,6 +149,25 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 >
                   <Link2 size={11} /> {budgetLink ? 'Editar orçamento' : 'Link do Orçamento Realizado'}
                 </button>
+
+                {termoFomentoLink ? (
+                  <a
+                    href={termoFomentoLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ color: '#7C3AED', background: '#F5F3FF' }}
+                  >
+                    <ExternalLink size={11} /> Termo de Fomento
+                  </a>
+                ) : null}
+                <button
+                  onClick={() => setEditLink({ kind: 'termoFomentoLink', value: termoFomentoLink })}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                >
+                  <Link2 size={11} /> {termoFomentoLink ? 'Editar termo' : 'Link do Termo de Fomento'}
+                </button>
               </div>
               <div className="flex items-center gap-3 mt-1">
                 <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
