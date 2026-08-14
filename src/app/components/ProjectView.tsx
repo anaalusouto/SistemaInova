@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project } from '../data/mockData';
+import { type ProjectExt } from '../store';
 import { useStore } from '../store';
 import { TabResumo } from './project-tabs/TabResumo';
 import { TabMetas } from './project-tabs/TabMetas';
