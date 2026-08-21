@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { type Project, type ProjectStatus } from '../data/mockData';
+import type { ProjectExt } from '../store';
 import { useStore } from '../store';
 
 const fmt = (n: number) =>
@@ -190,6 +191,20 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
                 >
                   {p.name}
                 </h3>
+                {((p as ProjectExt).org || (p as ProjectExt).segmento) && (
+                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                    {(p as ProjectExt).org && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
+                        {(p as ProjectExt).org}
+                      </span>
+                    )}
+                    {(p as ProjectExt).segmento && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-medium" style={{ background: '#F1F5F9', color: '#475569' }}>
+                        {(p as ProjectExt).segmento}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <p style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.5, marginBottom: 14 }}>
                   {p.objective.length > 90 ? p.objective.slice(0, 90) + '…' : p.objective}
                 </p>

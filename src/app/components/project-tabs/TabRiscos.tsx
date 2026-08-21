@@ -237,6 +237,18 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
                 {isOpen && (
                   <div className="px-5 pb-4 pt-1 border-t grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
+                    {(risk.stage || risk.spec) && (
+                      <div className="col-span-2 rounded-lg border p-3 grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+                        <div>
+                          <span className="text-[10px] font-semibold uppercase" style={{ color: '#94A3B8' }}>Etapa vinculada</span>
+                          <p style={{ fontSize: '0.75rem', color: '#0F172A' }}>{risk.stage || '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold uppercase" style={{ color: '#94A3B8' }}>Especificação (métricas e resultados)</span>
+                          <p style={{ fontSize: '0.75rem', color: '#0F172A' }}>{risk.spec || '—'}</p>
+                        </div>
+                      </div>
+                    )}
                     <Field label="Descrição" full>
                       <textarea
                         defaultValue={risk.description}

@@ -119,6 +119,10 @@ export interface Risk {
   status: RiskStatus;
   /** Meta (Goal) à qual o risco está vinculado — obrigatório nos novos registros. */
   goalId?: number;
+  /** Etapa da meta em que o risco foi identificado. */
+  stage?: string;
+  /** Especificação/métrica da etapa (números e resultados esperados). */
+  spec?: string;
 }
 
 export interface Change {
