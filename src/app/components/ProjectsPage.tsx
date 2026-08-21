@@ -139,7 +139,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             placeholder="0"
           />
           <button
-            onClick={() => { setMinBudget(''); setSearch(''); setFilterStatus('Todos'); }}
+            onClick={() => { setMinBudget(''); setSearch(''); setFilterCategory('Todas'); }}
             className="text-[12px] px-2 py-1 rounded border ml-auto"
             style={{ borderColor: 'var(--border)', color: '#475569' }}
           >
