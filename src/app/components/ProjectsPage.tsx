@@ -92,7 +92,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
           <Search size={14} color="#94A3B8" />
           <input
             className="flex-1 outline-none text-[13px] bg-transparent"
-            placeholder="Buscar projeto, coordenador..."
+            placeholder="Buscar projeto, comunidade, coordenador..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ color: '#0F172A' }}
