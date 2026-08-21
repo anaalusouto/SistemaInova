@@ -41,16 +41,19 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
 
   const categories = ['Todas', 'Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
 
+  const normalized = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   const filtered = projects.filter(p => {
-    const q = search.toLowerCase();
+    const q = normalized(search);
     const matchSearch =
       !q ||
-      p.name.toLowerCase().includes(q) ||
-      (p as ProjectExt).org?.toLowerCase().includes(q) ||
-      (p as ProjectExt).segmento?.toLowerCase().includes(q) ||
-      p.coordinator.toLowerCase().includes(q) ||
-      p.financier.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q);
+      normalized(p.name).includes(q) ||
+      normalized((p as ProjectExt).org ?? '').includes(q) ||
+      normalized((p as ProjectExt).segmento ?? '').includes(q) ||
+      normalized(p.coordinator).includes(q) ||
+      normalized(p.financier).includes(q) ||
+      normalized(p.code).includes(q);
     const matchCategory = filterCategory === 'Todas' || (p as ProjectExt).segmento === filterCategory;
     const min = Number(minBudget) || 0;
     const matchBudget = p.budgetApproved >= min;
