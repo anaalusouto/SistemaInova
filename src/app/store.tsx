@@ -16,16 +16,18 @@ import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttA
 import type { Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
 import { applyOp } from './data/projectOps';
 import { metasProjetos } from './data/metasProjetos';
+import { riscosProjetos } from './data/riscosProjetos';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
 const seedProjects = inovaProjetos.map(p => ({
   ...p,
-  goals: p.goals?.length ? p.goals : (metasProjetos[p.id] ?? []),
+  goals: metasProjetos[p.id] ?? p.goals ?? [],
+  risks: p.risks?.length ? p.risks : (riscosProjetos[p.id] ?? []),
 }));
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v9';
+const STORAGE_KEY = 'pp-portfolio-v10';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
@@ -67,6 +69,10 @@ export interface PlanoTrabalho {
 }
 export type ProjectExt = Project & {
   communityId?: number | null;
+  /** Sigla padronizada da instituição executora (ex.: ARQMO, COOPAFS). */
+  org?: string;
+  /** Segmento: comunidades quilombolas, indígenas, tradicionais ou agricultura familiar. */
+  segmento?: string;
   plano?: PlanoTrabalho;
   /** Link do Google Drive com o Plano de Trabalho mais atualizado. */
   driveLink?: string;
