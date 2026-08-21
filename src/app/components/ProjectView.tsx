@@ -103,6 +103,16 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 >
                   {project.name}
                 </h1>
+                {(project as ProjectExt).org && (
+                  <span className="px-2 py-1 rounded-md text-[11px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
+                    {(project as ProjectExt).org}
+                  </span>
+                )}
+                {(project as ProjectExt).segmento && (
+                  <span className="px-2 py-1 rounded-md text-[11px] font-medium" style={{ background: '#F1F5F9', color: '#475569' }}>
+                    {(project as ProjectExt).segmento}
+                  </span>
+                )}
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
                   style={{ color: cfg.color, background: cfg.bg }}
