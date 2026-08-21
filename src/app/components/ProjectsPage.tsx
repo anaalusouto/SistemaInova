@@ -34,25 +34,27 @@ interface ProjectsPageProps {
 export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const { projects, addProject, deleteProject } = useStore();
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Todos');
+  const [filterCategory, setFilterCategory] = useState('Todas');
   const [showModal, setShowModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [minBudget, setMinBudget] = useState('');
 
-  const statuses = ['Todos', 'Em andamento', 'Atrasado', 'Concluído', 'Não iniciado'];
+  const categories = ['Todas', 'Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
 
   const filtered = projects.filter(p => {
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
       p.name.toLowerCase().includes(q) ||
+      (p as ProjectExt).org?.toLowerCase().includes(q) ||
+      (p as ProjectExt).segmento?.toLowerCase().includes(q) ||
       p.coordinator.toLowerCase().includes(q) ||
       p.financier.toLowerCase().includes(q) ||
       p.code.toLowerCase().includes(q);
-    const matchStatus = filterStatus === 'Todos' || p.status === filterStatus;
+    const matchCategory = filterCategory === 'Todas' || (p as ProjectExt).segmento === filterCategory;
     const min = Number(minBudget) || 0;
     const matchBudget = p.budgetApproved >= min;
-    return matchSearch && matchStatus && matchBudget;
+    return matchSearch && matchCategory && matchBudget;
   });
 
   const handleDelete = (e: React.MouseEvent, id: number, name: string) => {
