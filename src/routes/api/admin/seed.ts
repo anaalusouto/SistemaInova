@@ -19,7 +19,7 @@ export const Route = createFileRoute('/api/admin/seed')({
         if (token !== expected) {
           return Response.json({ ok: false, error: 'Token inválido ou ausente.' }, { status: 401 });
         }
-        const summary = {};
+        const summary: Record<string, number> = {};
         try {
           for (const c of comunidades) {
             await query(

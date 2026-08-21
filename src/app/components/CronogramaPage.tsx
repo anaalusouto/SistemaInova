@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter, GanttChart, ChevronDown, MessageSquare } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { useStore } from '../store';
 import { useAuth, APP_PEOPLE } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 import { ganttStatusColors, type GanttBloco, type GanttStatus } from '../data/cronogramaExecutivo';
-
+import 'leaflet/dist/leaflet.css';
 
 const GANTT_STATUS_LIST: GanttStatus[] = ['Não iniciado', 'No prazo', 'Em andamento', 'Entregue', 'Atrasado'];
 
@@ -29,13 +27,6 @@ const statusColors: Record<string, string> = {
 const DEFAULT_TIPO_COLOR = '#64748B';
 const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
-// Fix Leaflet default icon paths
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
 
 export function CronogramaPage() {
   const [tab, setTab] = useState<'rotas' | 'calendario' | 'executivo'>('executivo');
@@ -634,27 +625,51 @@ function Kpi({ label, value, color }: { label: string; value: number | string; c
   );
 }
 
-/* Leaflet map with route grouping */
+/* Leaflet map with route grouping — loaded only on the client */
 function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; selectedId: number | null; onSelect: (id: number) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const layerRef = useRef<L.LayerGroup | null>(null);
+  const mapRef = useRef<any>(null);
+  const layerRef = useRef<any>(null);
+  const leafletRef = useRef<any>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, { center: [-3.5, -51], zoom: 5, scrollWheelZoom: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-      maxZoom: 18,
-    }).addTo(map);
-    layerRef.current = L.layerGroup().addTo(map);
-    mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    let mounted = true;
+    let map: any = null;
+
+    import('leaflet').then((LModule) => {
+      const L = (LModule as any).default || LModule;
+      if (!mounted || !containerRef.current || mapRef.current) return;
+
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      });
+
+      map = L.map(containerRef.current, { center: [-3.5, -51], zoom: 5, scrollWheelZoom: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18,
+      }).addTo(map);
+      layerRef.current = L.layerGroup().addTo(map);
+      mapRef.current = map;
+      leafletRef.current = L;
+      setReady(true);
+    });
+
+    return () => {
+      mounted = false;
+      if (map) { map.remove(); mapRef.current = null; }
+    };
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
+    const L = leafletRef.current;
     const map = mapRef.current, layer = layerRef.current;
-    if (!map || !layer) return;
+    if (!L || !map || !layer) return;
     layer.clearLayers();
 
     // Group by rota name for polylines connecting stops
@@ -663,11 +678,11 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
 
     const palette = ['#1A5C3A', '#0D6E8A', '#F59E0B', '#EF4444', '#7C3AED', '#DB2777', '#059669', '#2563EB', '#B45309', '#0891B2', '#65A30D', '#DC2626'];
     let idx = 0;
-    const bounds: L.LatLngExpression[] = [];
+    const bounds: [number, number][] = [];
 
     Object.entries(groups).forEach(([rotaName, items]) => {
       const color = palette[idx++ % palette.length];
-      const coords: L.LatLngExpression[] = items.map(r => [r.lat!, r.lng!]);
+      const coords: [number, number][] = items.map(r => [r.lat!, r.lng!]);
       if (coords.length > 1) {
         L.polyline(coords, { color, weight: 3, opacity: 0.7, dashArray: '6 6' }).addTo(layer);
       }
@@ -703,9 +718,9 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
     });
 
     if (bounds.length > 0) {
-      map.fitBounds(bounds as L.LatLngBoundsLiteral, { padding: [40, 40], maxZoom: 8 });
+      map.fitBounds(bounds as any, { padding: [40, 40], maxZoom: 8 });
     }
-  }, [routes, selectedId, onSelect]);
+  }, [routes, selectedId, onSelect, ready]);
 
   return <div ref={containerRef} style={{ height: 460, width: '100%', zIndex: 0 }} />;
 }

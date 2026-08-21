@@ -36,8 +36,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('Todas');
   const [showModal, setShowModal] = useState(false);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [minBudget, setMinBudget] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   const categories = ['Todas', 'Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
 
@@ -55,9 +54,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       normalized(p.financier).includes(q) ||
       normalized(p.code).includes(q);
     const matchCategory = filterCategory === 'Todas' || (p as ProjectExt).segmento === filterCategory;
-    const min = Number(minBudget) || 0;
-    const matchBudget = p.budgetApproved >= min;
-    return matchSearch && matchCategory && matchBudget;
+    return matchSearch && matchCategory;
   });
 
   const handleDelete = (e: React.MouseEvent, id: number, name: string) => {
@@ -88,66 +85,59 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card flex-1 max-w-xs"
-          style={{ borderColor: 'var(--border)' }}
-        >
-          <Search size={14} color="#94A3B8" />
-          <input
-            className="flex-1 outline-none text-[13px] bg-transparent"
-            placeholder="Buscar projeto, comunidade, coordenador..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ color: '#0F172A' }}
-          />
+        <div className="flex items-center gap-2 flex-1 max-w-md">
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card flex-1"
+            style={{ borderColor: 'var(--border)' }}
+          >
+            <Search size={14} color="#94A3B8" />
+            <input
+              className="flex-1 outline-none text-[13px] bg-transparent"
+              placeholder="Buscar projeto, comunidade, coordenador..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ color: '#0F172A' }}
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[13px] font-medium"
+            style={{
+              borderColor: showFilters ? 'var(--primary)' : 'var(--border)',
+              color: showFilters ? 'var(--primary)' : '#64748B',
+              background: showFilters ? '#EFF6FF' : '#fff',
+            }}
+          >
+            <Filter size={12} /> Filtros
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-1">
-          {categories.map(c => (
-            <button
-              key={c}
-              onClick={() => setFilterCategory(c)}
-              className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
-              style={{
-                background: filterCategory === c ? 'var(--primary)' : '#fff',
-                color: filterCategory === c ? '#fff' : '#64748B',
-                border: `1px solid ${filterCategory === c ? 'var(--primary)' : 'var(--border)'}`,
-              }}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setShowAdvancedFilters(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-[12px]"
-          style={{
-            borderColor: showAdvancedFilters ? 'var(--primary)' : 'var(--border)',
-            color: showAdvancedFilters ? 'var(--primary)' : '#64748B',
-            background: showAdvancedFilters ? '#EFF6FF' : '#fff',
-          }}
-        >
-          <Filter size={12} /> Filtros
-        </button>
       </div>
 
-      {showAdvancedFilters && (
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-card" style={{ borderColor: 'var(--border)' }}>
-          <label className="text-[12px]" style={{ color: '#475569' }}>Orçamento mínimo (R$):</label>
-          <input
-            type="number"
-            value={minBudget}
-            onChange={e => setMinBudget(e.target.value)}
-            className="px-2 py-1 rounded border text-[12px] w-32 outline-none"
-            style={{ borderColor: 'var(--border)' }}
-            placeholder="0"
-          />
-          <button
-            onClick={() => { setMinBudget(''); setSearch(''); setFilterCategory('Todas'); }}
-            className="text-[12px] px-2 py-1 rounded border ml-auto"
-            style={{ borderColor: 'var(--border)', color: '#475569' }}
-          >
-            Limpar filtros
-          </button>
+      {showFilters && (
+        <div className="p-3 rounded-lg border bg-card" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-wrap items-center gap-2">
+            {categories.map(c => (
+              <button
+                key={c}
+                onClick={() => setFilterCategory(c)}
+                className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
+                style={{
+                  background: filterCategory === c ? 'var(--primary)' : '#fff',
+                  color: filterCategory === c ? '#fff' : '#64748B',
+                  border: `1px solid ${filterCategory === c ? 'var(--primary)' : 'var(--border)'}`,
+                }}
+              >
+                {c}
+              </button>
+            ))}
+            <button
+              onClick={() => { setSearch(''); setFilterCategory('Todas'); }}
+              className="text-[12px] px-2 py-1.5 rounded border ml-auto"
+              style={{ borderColor: 'var(--border)', color: '#475569' }}
+            >
+              Limpar filtros
+            </button>
+          </div>
         </div>
       )}
 
