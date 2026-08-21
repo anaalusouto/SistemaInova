@@ -34,25 +34,30 @@ interface ProjectsPageProps {
 export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const { projects, addProject, deleteProject } = useStore();
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Todos');
+  const [filterCategory, setFilterCategory] = useState('Todas');
   const [showModal, setShowModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [minBudget, setMinBudget] = useState('');
 
-  const statuses = ['Todos', 'Em andamento', 'Atrasado', 'Concluído', 'Não iniciado'];
+  const categories = ['Todas', 'Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
+
+  const normalized = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   const filtered = projects.filter(p => {
-    const q = search.toLowerCase();
+    const q = normalized(search);
     const matchSearch =
       !q ||
-      p.name.toLowerCase().includes(q) ||
-      p.coordinator.toLowerCase().includes(q) ||
-      p.financier.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q);
-    const matchStatus = filterStatus === 'Todos' || p.status === filterStatus;
+      normalized(p.name).includes(q) ||
+      normalized((p as ProjectExt).org ?? '').includes(q) ||
+      normalized((p as ProjectExt).segmento ?? '').includes(q) ||
+      normalized(p.coordinator).includes(q) ||
+      normalized(p.financier).includes(q) ||
+      normalized(p.code).includes(q);
+    const matchCategory = filterCategory === 'Todas' || (p as ProjectExt).segmento === filterCategory;
     const min = Number(minBudget) || 0;
     const matchBudget = p.budgetApproved >= min;
-    return matchSearch && matchStatus && matchBudget;
+    return matchSearch && matchCategory && matchBudget;
   });
 
   const handleDelete = (e: React.MouseEvent, id: number, name: string) => {
@@ -90,25 +95,25 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
           <Search size={14} color="#94A3B8" />
           <input
             className="flex-1 outline-none text-[13px] bg-transparent"
-            placeholder="Buscar projeto, coordenador..."
+            placeholder="Buscar projeto, comunidade, coordenador..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ color: '#0F172A' }}
           />
         </div>
-        <div className="flex items-center gap-1">
-          {statuses.map(s => (
+        <div className="flex flex-wrap items-center gap-1">
+          {categories.map(c => (
             <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
+              key={c}
+              onClick={() => setFilterCategory(c)}
               className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
               style={{
-                background: filterStatus === s ? 'var(--primary)' : '#fff',
-                color: filterStatus === s ? '#fff' : '#64748B',
-                border: `1px solid ${filterStatus === s ? 'var(--primary)' : 'var(--border)'}`,
+                background: filterCategory === c ? 'var(--primary)' : '#fff',
+                color: filterCategory === c ? '#fff' : '#64748B',
+                border: `1px solid ${filterCategory === c ? 'var(--primary)' : 'var(--border)'}`,
               }}
             >
-              {s}
+              {c}
             </button>
           ))}
         </div>
@@ -137,7 +142,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             placeholder="0"
           />
           <button
-            onClick={() => { setMinBudget(''); setSearch(''); setFilterStatus('Todos'); }}
+            onClick={() => { setMinBudget(''); setSearch(''); setFilterCategory('Todas'); }}
             className="text-[12px] px-2 py-1 rounded border ml-auto"
             style={{ borderColor: 'var(--border)', color: '#475569' }}
           >
