@@ -99,18 +99,18 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
           />
         </div>
         <div className="flex items-center gap-1">
-          {statuses.map(s => (
+          {categories.map(c => (
             <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
+              key={c}
+              onClick={() => setFilterCategory(c)}
               className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
               style={{
-                background: filterStatus === s ? 'var(--primary)' : '#fff',
-                color: filterStatus === s ? '#fff' : '#64748B',
-                border: `1px solid ${filterStatus === s ? 'var(--primary)' : 'var(--border)'}`,
+                background: filterCategory === c ? 'var(--primary)' : '#fff',
+                color: filterCategory === c ? '#fff' : '#64748B',
+                border: `1px solid ${filterCategory === c ? 'var(--primary)' : 'var(--border)'}`,
               }}
             >
-              {s}
+              {c}
             </button>
           ))}
         </div>
