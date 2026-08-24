@@ -418,18 +418,12 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     }))),
     updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => prev.map(b => ({
       ...b,
-      entregas: b.entregas.map(en => {
-        const nextAtividades = en.atividades.map(a => a.id === atividadeId ? {
-          ...a, ...patchData,
-          progress: patchData.progress ?? a.progress,
-        } : a);
-        // Se a atividade pertence a essa entrega, recalcula progresso da entrega como média
-        const changed = nextAtividades.some((a, i) => a !== en.atividades[i]);
-        if (!changed) return { ...en, atividades: nextAtividades };
-        const avg = Math.round(nextAtividades.reduce((s, a) => s + a.progress, 0) / nextAtividades.length);
-        return { ...en, atividades: nextAtividades, progress: avg };
-      }),
+      entregas: b.entregas.map(en => ({
+        ...en,
+        atividades: en.atividades.map(a => a.id === atividadeId ? { ...a, ...patchData } : a),
+      })),
     }))),
+
     addGanttAtividade: (entregaId, atividade) => setGantt(prev => {
       const allIds = prev.flatMap(b => b.entregas.flatMap(e => e.atividades.map(a => a.id)));
       const nextId = allIds.reduce((m, x) => Math.max(m, x), 0) + 1;
