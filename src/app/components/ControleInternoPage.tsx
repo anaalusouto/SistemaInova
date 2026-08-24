@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ChevronDown, ChevronRight, Plus, Trash2, Search, ListChecks } from 'lucide-react';
 import { useStore } from '../store';
-import { useAuth } from '../auth/authStore';
+import { useAuth, APP_PEOPLE } from '../auth/authStore';
 import { INTERNAL_STATUSES, internalStatusColors, type InternalStatus, type InternalSubtask } from '../data/controleInterno';
 
 interface Props {
