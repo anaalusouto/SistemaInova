@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, GanttChart, Search, ListChecks } from 'lucide-react';
+import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks } from 'lucide-react';
 import { useStore } from '../store';
 import { useAuth, APP_PEOPLE } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
@@ -21,7 +21,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const {
     projects, gantt, ganttTracking, setGanttTracking,
     updateGanttEntrega, updateGanttAtividade,
-    addGanttAtividade, deleteGanttAtividade, restoreGanttAtividade,
+    addGanttAtividade, addGanttSubatividade, deleteGanttAtividade, restoreGanttAtividade,
   } = useStore();
   const { user, isAdmin } = useAuth();
   const { log } = useAudit();
@@ -34,6 +34,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const [editing, setEditing] = useState<{ kind: 'entrega' | 'atividade'; id: number } | null>(null);
   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [novaAtividade, setNovaAtividade] = useState('');
+  const [addingSubTo, setAddingSubTo] = useState<number | null>(null);
+  const [novaSub, setNovaSub] = useState('');
 
   const activeProject = projectId ?? (filterProject === 'all' ? null : filterProject);
   const scopeProjects = activeProject != null ? projects.filter(p => p.id === activeProject) : projects;
