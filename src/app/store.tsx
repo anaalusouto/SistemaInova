@@ -208,6 +208,12 @@ function recalcProject(p: ProjectExt): ProjectExt {
   return { ...p, progress, budgetExecuted };
 }
 
+function nextGanttId(blocos: GanttBloco[]): number {
+  const ids = blocos.flatMap(b => b.entregas.flatMap(e =>
+    e.atividades.flatMap(a => [a.id, ...(a.subatividades ?? []).map(s => s.id)])));
+  return ids.reduce((m, x) => Math.max(m, x), 0) + 1;
+}
+
 const applyMetaEdit = (p: ProjectExt, edit: MetaEdit): ProjectExt => applyOp(p, edit);
 
 function appendLog(p: ProjectExt, edit: MetaEdit, author: string, authorRole: string, approvedBy: string | null): ProjectExt {
