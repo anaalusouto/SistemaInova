@@ -7,7 +7,6 @@ import { ProjectView } from './components/ProjectView';
 import { ReportsPage } from './components/ReportsPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
-import { ControleInternoPage } from './components/ControleInternoPage';
 import { CronogramaPage } from './components/CronogramaPage';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
@@ -53,8 +52,6 @@ function AppShell() {
     switch (activeNav) {
       case 'dashboard':
         return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
-      case 'internal':
-        return <ControleInternoPage />;
       case 'projects':
         return <ProjectsPage onSelectProject={(p) => handleSelectProject(p.id)} />;
       case 'schedule':
