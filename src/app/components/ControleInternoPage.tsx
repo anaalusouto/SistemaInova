@@ -241,9 +241,15 @@ function SubtaskBlock({ subtask, projects, track, onTrack, isAdmin, singleProjec
                         style={{ border: '1px solid var(--border)' }} />
                     </td>
                     <td className="px-3 py-1.5">
-                      <input value={t.responsavel ?? subtask.responsavel ?? ''} onChange={e => onTrack(subtask.id, p.id, { responsavel: e.target.value })}
-                        placeholder="Responsável" className="w-full text-[11px] px-2 py-1 rounded"
-                        style={{ border: '1px solid var(--border)' }} />
+                      <select value={t.responsavel ?? subtask.responsavel ?? ''} onChange={e => onTrack(subtask.id, p.id, { responsavel: e.target.value })}
+                        className="w-full text-[11px] px-2 py-1 rounded"
+                        style={{ border: '1px solid var(--border)', background: '#fff' }}>
+                        <option value="">—</option>
+                        {APP_PEOPLE.map(pe => <option key={pe.login} value={pe.name}>{pe.name}</option>)}
+                        {t.responsavel && !APP_PEOPLE.some(pe => pe.name === t.responsavel) && (
+                          <option value={t.responsavel}>{t.responsavel}</option>
+                        )}
+                      </select>
                     </td>
                     <td className="px-3 py-1.5">
                       <input value={t.observacao ?? ''} onChange={e => onTrack(subtask.id, p.id, { observacao: e.target.value })}
