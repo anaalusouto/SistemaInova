@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   FolderKanban,
   Users,
+  ClipboardCheck,
   CalendarDays,
   BarChart3,
   Settings,
@@ -17,7 +18,7 @@ import { useAuth } from '../auth/authStore';
 
 export type NavItem =
   | 'dashboard'
-  | 'communities'
+  | 'internal'
   | 'projects'
   | 'schedule'
   | 'diagnostics'
@@ -34,7 +35,7 @@ const topItems = [
 ];
 
 const inovaChildren = [
-  { id: 'communities' as NavItem, label: 'Comunidades', icon: Users },
+  { id: 'internal' as NavItem, label: 'Controle interno', icon: ClipboardCheck },
   { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
 ];
 
