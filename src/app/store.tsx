@@ -469,12 +469,11 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       setRoutes(seedRotas);
       setEvents(calendarSeed);
       setGantt(cronogramaExecutivoSeed);
-      setInternalTasks(internalTasksSeed);
-      setInternalSubtasks(internalSubtasksSeed);
-      setInternalTrackingState({});
+      setGanttTrackingState({});
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     },
-  }), [projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking, patch]);
+  }), [projects, communities, routes, events, gantt, ganttTracking, patch]);
+
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
