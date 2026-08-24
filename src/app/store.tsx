@@ -386,24 +386,14 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     getCommunity: (id) => communities.find(c => c.id === id),
     updateCommunity: (id, p) => setCommunities(prev => prev.map(c => (c.id === id ? { ...c, ...p } : c))),
 
-    // Controle Interno
-    internalTasks,
-    internalSubtasks,
-    internalTracking,
-    addInternalTask: (titulo, descricao) => setInternalTasks(prev => [...prev, { id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1, titulo, descricao }]),
-    updateInternalTask: (id, p) => setInternalTasks(prev => prev.map(t => (t.id === id ? { ...t, ...p } : t))),
-    deleteInternalTask: (id) => {
-      setInternalTasks(prev => prev.filter(t => t.id !== id));
-      setInternalSubtasks(prev => prev.filter(s => s.taskId !== id));
-    },
-    addInternalSubtask: (taskId, data) => setInternalSubtasks(prev => [...prev, { ...data, taskId, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
-    updateInternalSubtask: (id, p) => setInternalSubtasks(prev => prev.map(s => (s.id === id ? { ...s, ...p } : s))),
-    deleteInternalSubtask: (id) => setInternalSubtasks(prev => prev.filter(s => s.id !== id)),
-    setInternalTracking: (subtaskId, projectId, p) => setInternalTrackingState(prev => {
-      const key = `${subtaskId}:${projectId}`;
+    // Acompanhamento por projeto das atividades do cronograma
+    ganttTracking,
+    setGanttTracking: (activityId, projectId, p) => setGanttTrackingState(prev => {
+      const key = `${activityId}:${projectId}`;
       const cur = prev[key] ?? { status: 'Não iniciado' as const };
       return { ...prev, [key]: { ...cur, ...p } };
     }),
+
 
     // Rotas
     routes,
