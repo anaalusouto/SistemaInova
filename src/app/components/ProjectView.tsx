@@ -21,17 +21,17 @@ import { TabResumo } from './project-tabs/TabResumo';
 import { TabMetas } from './project-tabs/TabMetas';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabContatos } from './project-tabs/TabContatos';
-import { ControleInternoPage } from './ControleInternoPage';
+import { CronogramaExecutivoTab } from './CronogramaExecutivoTab';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
 
-type TabId = 'resumo' | 'metas' | 'financeiro' | 'interno' | 'contatos';
+type TabId = 'resumo' | 'metas' | 'financeiro' | 'cronograma' | 'contatos';
 
 const tabs: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
   { id: 'resumo',      label: 'Dashboard',              icon: LayoutGrid },
   { id: 'metas',       label: 'Monitoramento de Metas', icon: Target },
   { id: 'financeiro',  label: 'Financeiro',             icon: DollarSign },
-  { id: 'interno',     label: 'Controle interno',       icon: ClipboardCheck },
+  { id: 'cronograma',  label: 'Cronograma',             icon: ClipboardCheck },
   { id: 'contatos',    label: 'Contatos',               icon: Users },
 ];
 
@@ -63,7 +63,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       case 'resumo':      return <TabResumo project={project} />;
       case 'metas':       return <TabMetas project={project} />;
       case 'financeiro':  return <TabFinanceiro project={project} />;
-      case 'interno':     return <ControleInternoPage projectId={project.id} embedded />;
+      case 'cronograma':  return <div className="p-6"><CronogramaExecutivoTab projectId={project.id} /></div>;
       case 'contatos':    return <TabContatos project={project} />;
       default:            return null;
     }
