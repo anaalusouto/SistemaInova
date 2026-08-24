@@ -44,28 +44,61 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const track = (aid: number, pid: number) =>
     ganttTracking[`${aid}:${pid}`] ?? { status: 'Não iniciado' as GanttStatus };
 
+  /** Projetos considerados no acompanhamento de uma atividade (vinculada = só o projeto atrelado). */
+  const projectsFor = (a: GanttActivity) =>
+    a.projetoId != null ? projects.filter(p => p.id === a.projetoId) : scopeProjects;
+
+  /** Uma atividade pertence ao projeto quando está vinculada a ele (ou quando não há vínculo algum). */
+  const belongsToProject = (a: GanttActivity, pid: number): boolean => {
+    const links = [a.projetoId ?? null, ...(a.subatividades ?? []).map(s => s.projetoId ?? null)];
+    if (links.every(l => l == null)) return true;
+    return links.some(l => l === pid);
+  };
+
   /** Progresso da atividade = % de projetos com a validação concluída (Entregue). */
-  const activityProgress = (a: GanttActivity) => {
-    if (!scopeProjects.length) return 0;
-    const done = scopeProjects.filter(p => track(a.id, p.id).status === 'Entregue').length;
-    return Math.round((done / scopeProjects.length) * 100);
+  const activityProgress = (a: GanttActivity): number => {
+    const subs = a.subatividades ?? [];
+    if (subs.length) return Math.round(subs.reduce((s, x) => s + activityProgress(x), 0) / subs.length);
+    const ps = projectsFor(a);
+    if (!ps.length) return 0;
+    const done = ps.filter(p => track(a.id, p.id).status === 'Entregue').length;
+    return Math.round((done / ps.length) * 100);
   };
   const entregaProgress = (ats: GanttActivity[]) =>
     ats.length ? Math.round(ats.reduce((s, a) => s + activityProgress(a), 0) / ats.length) : 0;
 
+  const projName = (pid?: number | null) => {
+    if (pid == null) return null;
+    const p = projects.find(x => x.id === pid);
+    return p ? `${p.org ? `${p.org} · ` : ''}${p.name}` : null;
+  };
+
   const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const visibleGantt = useMemo(() => {
-    if (!search.trim()) return gantt;
-    const q = norm(search);
+    const q = search.trim() ? norm(search) : null;
+    const pid = activeProject;
     return gantt
       .map(b => ({
         ...b,
         entregas: b.entregas
-          .map(en => ({ ...en, atividades: en.atividades.filter(a => norm(`${a.grupo ?? ''} ${a.atividade}`).includes(q)) }))
-          .filter(en => en.atividades.length || norm(en.entrega).includes(q)),
+          .map(en => ({
+            ...en,
+            atividades: en.atividades
+              .filter(a => pid == null || belongsToProject(a, pid))
+              .map(a => ({
+                ...a,
+                subatividades: (a.subatividades ?? []).filter(s =>
+                  pid == null || s.projetoId == null || s.projetoId === pid),
+              }))
+              .filter(a => !q || norm(`${a.grupo ?? ''} ${a.atividade}`).includes(q)
+                || (a.subatividades ?? []).some(s => norm(s.atividade).includes(q))),
+          }))
+          .filter(en => en.atividades.length || (q ? norm(en.entrega).includes(q) : false)),
       }))
-      .filter(b => b.entregas.length || norm(b.bloco).includes(q));
-  }, [gantt, search]);
+      .filter(b => b.entregas.length || (q ? norm(b.bloco).includes(q) : false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gantt, search, activeProject]);
+
 
   // Linha do tempo (semanas) — recalculada sempre que as datas mudam
   const { minDate, maxDate, weeks } = useMemo(() => {
