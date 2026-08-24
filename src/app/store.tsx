@@ -153,10 +153,12 @@ type Ctx = {
   // Cronograma Executivo (Gantt)
   gantt: GanttBloco[];
   updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; entrega?: string; comentario?: string }) => void;
-  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string }) => void;
+  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string; projetoId?: number | null }) => void;
   addGanttAtividade: (entregaId: number, atividade: string) => void;
-  deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity } | null;
-  restoreGanttAtividade: (entregaId: number, index: number, atividade: GanttActivity) => void;
+  addGanttSubatividade: (atividadeId: number, atividade: string) => void;
+  deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null;
+  restoreGanttAtividade: (entregaId: number, index: number, atividade: GanttActivity, parentId?: number) => void;
+
 
 
   resetToSeed: () => void;
