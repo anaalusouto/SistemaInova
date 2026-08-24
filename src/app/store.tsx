@@ -202,7 +202,14 @@ function loadInitial(): Persisted {
       gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
       internalTasks: parsed.internalTasks?.length ? parsed.internalTasks : fallback.internalTasks,
       internalSubtasks: parsed.internalSubtasks?.length ? parsed.internalSubtasks : fallback.internalSubtasks,
-      internalTracking: parsed.internalTracking ?? {},
+      internalTracking: Object.fromEntries(
+        Object.entries(parsed.internalTracking ?? {}).map(([k, v]) => [
+          k,
+          (v as InternalTracking).status === ('Em andamento' as InternalTracking['status'])
+            ? { ...(v as InternalTracking), status: 'Validação pendente' as InternalTracking['status'] }
+            : (v as InternalTracking),
+        ]),
+      ),
     };
   } catch { return fallback; }
 }
