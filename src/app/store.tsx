@@ -227,24 +227,21 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
   const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
   const [gantt, setGantt] = useState<GanttBloco[]>(cronogramaExecutivoSeed);
-  const [internalTasks, setInternalTasks] = useState<InternalTask[]>(internalTasksSeed);
-  const [internalSubtasks, setInternalSubtasks] = useState<InternalSubtask[]>(internalSubtasksSeed);
-  const [internalTracking, setInternalTrackingState] = useState<Record<string, InternalTracking>>({});
+  const [ganttTracking, setGanttTrackingState] = useState<Record<string, InternalTracking>>({});
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const p = loadInitial();
     setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events); setGantt(p.gantt);
-    setInternalTasks(p.internalTasks ?? internalTasksSeed);
-    setInternalSubtasks(p.internalSubtasks ?? internalSubtasksSeed);
-    setInternalTrackingState(p.internalTracking ?? {});
+    setGanttTrackingState(p.ganttTracking ?? {});
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking } as Persisted)); } catch { /* ignore */ }
-  }, [projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking, hydrated]);
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt, ganttTracking } as Persisted)); } catch { /* ignore */ }
+  }, [projects, communities, routes, events, gantt, ganttTracking, hydrated]);
+
 
   const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
     setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
