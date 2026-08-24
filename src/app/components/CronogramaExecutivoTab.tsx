@@ -152,11 +152,11 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     const removed = deleteGanttAtividade(a.id);
     if (!removed) return;
     audit('remover atividade', a.atividade);
-    toast.error(`Atividade removida: ${a.atividade}`, {
+    toast.error(`Removido: ${a.atividade}`, {
       duration: 6000,
       action: {
         label: 'Desfazer',
-        onClick: () => { restoreGanttAtividade(removed.entregaId, removed.index, removed.atividade); audit('desfazer remoção', a.atividade); },
+        onClick: () => { restoreGanttAtividade(removed.entregaId, removed.index, removed.atividade, removed.parentId); audit('desfazer remoção', a.atividade); },
       },
     });
   };
@@ -170,6 +170,106 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     setNovaAtividade('');
     setAddingTo(null);
   };
+
+  const handleAddSub = (atividadeId: number) => {
+    const nome = novaSub.trim();
+    if (!nome) return;
+    addGanttSubatividade(atividadeId, nome);
+    audit('adicionar subatividade', nome);
+    toast.success('Subatividade adicionada.');
+    setNovaSub('');
+    setAddingSubTo(null);
+  };
+
+  const renderRow = (a: GanttActivity, depth: number) => {
+    const subs = a.subatividades ?? [];
+    const prog = activityProgress(a);
+    const isTrackOpen = openActivity === a.id;
+    const vinculo = projName(a.projetoId);
+    return (
+      <div key={a.id}>
+        <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
+          <div className={`pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+            style={{ paddingLeft: 32 + depth * 20, width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
+            {!subs.length ? (
+              <button onClick={() => setOpenActivity(isTrackOpen ? null : a.id)}
+                title="Ver acompanhamento por projeto" className="mt-0.5 text-slate-400 hover:text-slate-700">
+                <ListChecks size={12} />
+              </button>
+            ) : <span className="mt-0.5 text-slate-300"><ListChecks size={12} /></span>}
+            <div className="flex-1 min-w-0">
+              {a.grupo && <div className="text-[9px] uppercase tracking-wide text-slate-400 truncate">{a.grupo}</div>}
+              <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
+                className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block">
+                {a.atividade}
+              </button>
+              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+                {br(a.inicio)} → {br(a.fim)}{a.responsavel ? ` · ${a.responsavel}` : ''} · {prog}%
+                {a.comentario && <MessageSquare size={10} className="text-slate-400" />}
+                {vinculo && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
+                    style={{ background: '#EEF2FF', color: '#1D4ED8' }}>
+                    <Link2 size={9} />{vinculo}
+                  </span>
+                )}
+              </div>
+              {isAdmin && depth === 0 && (
+                addingSubTo === a.id ? (
+                  <div className="flex items-center gap-1 mt-1.5">
+                    <input autoFocus value={novaSub} onChange={e => setNovaSub(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddSub(a.id); if (e.key === 'Escape') { setAddingSubTo(null); setNovaSub(''); } }}
+                      placeholder="Nome da subatividade"
+                      className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
+                    <button onClick={() => handleAddSub(a.id)} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                    <button onClick={() => { setAddingSubTo(null); setNovaSub(''); }} className="text-[10px] px-1.5 py-1 text-slate-500">Cancelar</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setAddingSubTo(a.id)}
+                    className="mt-1 text-[10px] text-slate-500 hover:text-primary flex items-center gap-1">
+                    <Plus size={10} /> Subatividade
+                  </button>
+                )
+              )}
+            </div>
+            {isAdmin && projectId == null && (
+              <button onClick={() => handleDelete(a)} title="Remover"
+                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 mt-0.5">
+                <Trash2 size={12} />
+              </button>
+            )}
+          </div>
+          {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
+            {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+            <GanttBar left={pctPos(a.inicio)} width={barWidth(a.inicio, a.fim)}
+              color={ganttStatusColors[a.status]} progress={prog}
+              label={`${br(a.inicio)} – ${br(a.fim)}`}
+              onClick={() => setEditing({ kind: 'atividade', id: a.id })} />
+          </div>}
+        </div>
+
+        {subs.map(s => renderRow(s, depth + 1))}
+
+        {isTrackOpen && !subs.length && (
+          <div className="flex" style={{ borderBottom: '1px solid var(--border)', background: '#FCFDFF' }}>
+            <div className="px-3 py-3 sticky left-0" style={{ width: 'min(1100px, 100%)' }}>
+              {a.descricao && <p className="text-[11px] text-muted-foreground mb-2">{a.descricao}</p>}
+              <TrackingTable
+                activityId={a.id}
+                fallback={a}
+                projects={projectsFor(a)}
+                track={track}
+                onTrack={(pid, p) => {
+                  setGanttTracking(a.id, pid, p);
+                  audit('acompanhamento', `${a.atividade} · projeto ${pid}`);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-4">
