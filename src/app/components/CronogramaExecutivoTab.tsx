@@ -142,7 +142,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   });
 
   const kpis = useMemo(() => {
-    const ats = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades));
+    const ats = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades.flatMap(a => (a.subatividades?.length ? a.subatividades : [a]))));
     const prog = ats.length ? Math.round(ats.reduce((s, a) => s + activityProgress(a), 0) / ats.length) : 0;
     const concluidas = ats.filter(a => activityProgress(a) === 100).length;
     const atrasadas = ats.filter(a => a.fim && new Date(`${a.fim}T00:00:00`) < new Date() && activityProgress(a) < 100).length;
@@ -427,15 +427,18 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
             }}
           />;
         }
-        const a = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades)).find(x => x.id === editing.id);
+        const a = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades.flatMap(x => [x, ...(x.subatividades ?? [])]))).find(x => x.id === editing.id);
         if (!a) return null;
         return <GanttEditModal
           title="Editar atividade"
           canRename={isAdmin}
-          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel ?? '', status: a.status, comentario: a.comentario ?? '' }}
+          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel ?? '', status: a.status, comentario: a.comentario ?? '', projetoId: a.projetoId ?? null }}
+          projectOptions={projects.map(p => ({ id: p.id, label: `${p.org ? `${p.org} · ` : ''}${p.name}` }))}
           onClose={() => setEditing(null)}
           onSave={(v) => {
-            updateGanttAtividade(a.id, isAdmin ? { ...v, atividade: v.nome } : { inicio: v.inicio, fim: v.fim, responsavel: v.responsavel, status: v.status, comentario: v.comentario });
+            updateGanttAtividade(a.id, isAdmin
+              ? { ...v, atividade: v.nome }
+              : { inicio: v.inicio, fim: v.fim, responsavel: v.responsavel, status: v.status, comentario: v.comentario, projetoId: v.projetoId });
             audit('editar atividade', a.atividade);
             toast.success('Atividade atualizada.');
             setEditing(null);
@@ -527,10 +530,12 @@ function GanttBar({ left, width, color, progress, label, bold, onClick }: {
 
 interface GanttFormValue {
   nome: string; inicio: string; fim: string; responsavel: string; status: GanttStatus; comentario: string;
+  projetoId?: number | null;
 }
 
-function GanttEditModal({ title, item, canRename, onSave, onClose }: {
+function GanttEditModal({ title, item, canRename, projectOptions, onSave, onClose }: {
   title: string; item: GanttFormValue; canRename: boolean;
+  projectOptions?: { id: number; label: string }[];
   onSave: (v: GanttFormValue) => void; onClose: () => void;
 }) {
   const [f, setF] = useState(item);
@@ -581,6 +586,20 @@ function GanttEditModal({ title, item, canRename, onSave, onClose }: {
               {STATUS_LIST.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
+          {projectOptions && (
+            <div>
+              <label className="text-xs font-medium block mb-1">Projeto / Comunidade vinculada</label>
+              <select value={f.projetoId == null ? '' : String(f.projetoId)}
+                onChange={e => setF({ ...f, projetoId: e.target.value === '' ? null : Number(e.target.value) })}
+                className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }}>
+                <option value="">Sem vínculo (geral — vale para todos)</option>
+                {projectOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Ao vincular, o bloco, a entrega e esta atividade/subatividade passam a aparecer no cronograma do projeto escolhido.
+              </p>
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium mb-1 flex items-center gap-1"><MessageSquare size={12} /> Comentários</label>
             <textarea value={f.comentario} onChange={e => setF({ ...f, comentario: e.target.value })} rows={3}
