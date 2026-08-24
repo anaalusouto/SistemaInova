@@ -16,10 +16,7 @@ import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttA
 import type { Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
 import { applyOp } from './data/projectOps';
 import { metasProjetos } from './data/metasProjetos';
-import {
-  internalTasksSeed, internalSubtasksSeed,
-  type InternalTask, type InternalSubtask, type InternalTracking,
-} from './data/controleInterno';
+import type { InternalTracking } from './data/controleInterno';
 import { riscosProjetos } from './data/riscosProjetos';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
@@ -31,7 +28,8 @@ const seedProjects = inovaProjetos.map(p => ({
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v11';
+const STORAGE_KEY = 'pp-portfolio-v12';
+
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
