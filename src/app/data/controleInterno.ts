@@ -1,12 +1,12 @@
 /** Controle Interno: atividades macro (comuns a todos os projetos) e suas subtarefas. */
 
-export type InternalStatus = 'Não iniciado' | 'Em andamento' | 'No prazo' | 'Entregue' | 'Atrasado';
+export type InternalStatus = 'Não iniciado' | 'Validação pendente' | 'No prazo' | 'Entregue' | 'Atrasado';
 
-export const INTERNAL_STATUSES: InternalStatus[] = ['Não iniciado', 'Em andamento', 'No prazo', 'Entregue', 'Atrasado'];
+export const INTERNAL_STATUSES: InternalStatus[] = ['Não iniciado', 'Validação pendente', 'No prazo', 'Entregue', 'Atrasado'];
 
 export const internalStatusColors: Record<InternalStatus, { bg: string; color: string }> = {
   'Não iniciado': { bg: '#F1F5F9', color: '#475569' },
-  'Em andamento': { bg: '#EFF6FF', color: '#2563EB' },
+  'Validação pendente': { bg: '#EFF6FF', color: '#2563EB' },
   'No prazo': { bg: '#FEFCE8', color: '#A16207' },
   'Entregue': { bg: '#ECFDF5', color: '#059669' },
   'Atrasado': { bg: '#FEF2F2', color: '#DC2626' },
