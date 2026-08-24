@@ -16,6 +16,10 @@ import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttA
 import type { Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
 import { applyOp } from './data/projectOps';
 import { metasProjetos } from './data/metasProjetos';
+import {
+  internalTasksSeed, internalSubtasksSeed,
+  type InternalTask, type InternalSubtask, type InternalTracking,
+} from './data/controleInterno';
 import { riscosProjetos } from './data/riscosProjetos';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
@@ -27,7 +31,7 @@ const seedProjects = inovaProjetos.map(p => ({
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v10';
+const STORAGE_KEY = 'pp-portfolio-v11';
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
@@ -132,6 +136,18 @@ type Ctx = {
   getCommunity: (id: number) => Comunidade | undefined;
   updateCommunity: (id: number, patch: Partial<Comunidade>) => void;
 
+  // Controle Interno
+  internalTasks: InternalTask[];
+  internalSubtasks: InternalSubtask[];
+  internalTracking: Record<string, InternalTracking>;
+  addInternalTask: (titulo: string, descricao?: string) => void;
+  updateInternalTask: (id: number, patch: Partial<InternalTask>) => void;
+  deleteInternalTask: (id: number) => void;
+  addInternalSubtask: (taskId: number, s: Omit<InternalSubtask, 'id' | 'taskId'>) => void;
+  updateInternalSubtask: (id: number, patch: Partial<InternalSubtask>) => void;
+  deleteInternalSubtask: (id: number) => void;
+  setInternalTracking: (subtaskId: number, projectId: number, patch: Partial<InternalTracking>) => void;
+
   // Rotas / Calendário
   routes: RotaItem[];
   updateRoute: (id: number, patch: Partial<RotaItem>) => void;
@@ -157,7 +173,10 @@ type Ctx = {
 
 const StoreContext = createContext<Ctx | null>(null);
 
-type Persisted = { projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[] };
+type Persisted = {
+  projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[];
+  internalTasks?: InternalTask[]; internalSubtasks?: InternalSubtask[]; internalTracking?: Record<string, InternalTracking>;
+};
 
 function loadInitial(): Persisted {
   const fallback: Persisted = {
@@ -166,6 +185,9 @@ function loadInitial(): Persisted {
     routes: seedRotas,
     events: calendarSeed,
     gantt: cronogramaExecutivoSeed,
+    internalTasks: internalTasksSeed,
+    internalSubtasks: internalSubtasksSeed,
+    internalTracking: {},
   };
   if (typeof window === 'undefined') return fallback;
   try {
@@ -178,6 +200,9 @@ function loadInitial(): Persisted {
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
       gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
+      internalTasks: parsed.internalTasks?.length ? parsed.internalTasks : fallback.internalTasks,
+      internalSubtasks: parsed.internalSubtasks?.length ? parsed.internalSubtasks : fallback.internalSubtasks,
+      internalTracking: parsed.internalTracking ?? {},
     };
   } catch { return fallback; }
 }
@@ -214,18 +239,24 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
   const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
   const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
   const [gantt, setGantt] = useState<GanttBloco[]>(cronogramaExecutivoSeed);
+  const [internalTasks, setInternalTasks] = useState<InternalTask[]>(internalTasksSeed);
+  const [internalSubtasks, setInternalSubtasks] = useState<InternalSubtask[]>(internalSubtasksSeed);
+  const [internalTracking, setInternalTrackingState] = useState<Record<string, InternalTracking>>({});
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const p = loadInitial();
     setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events); setGantt(p.gantt);
+    setInternalTasks(p.internalTasks ?? internalTasksSeed);
+    setInternalSubtasks(p.internalSubtasks ?? internalSubtasksSeed);
+    setInternalTrackingState(p.internalTracking ?? {});
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt } as Persisted)); } catch { /* ignore */ }
-  }, [projects, communities, routes, events, gantt, hydrated]);
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking } as Persisted)); } catch { /* ignore */ }
+  }, [projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking, hydrated]);
 
   const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
     setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
@@ -370,6 +401,25 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     getCommunity: (id) => communities.find(c => c.id === id),
     updateCommunity: (id, p) => setCommunities(prev => prev.map(c => (c.id === id ? { ...c, ...p } : c))),
 
+    // Controle Interno
+    internalTasks,
+    internalSubtasks,
+    internalTracking,
+    addInternalTask: (titulo, descricao) => setInternalTasks(prev => [...prev, { id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1, titulo, descricao }]),
+    updateInternalTask: (id, p) => setInternalTasks(prev => prev.map(t => (t.id === id ? { ...t, ...p } : t))),
+    deleteInternalTask: (id) => {
+      setInternalTasks(prev => prev.filter(t => t.id !== id));
+      setInternalSubtasks(prev => prev.filter(s => s.taskId !== id));
+    },
+    addInternalSubtask: (taskId, data) => setInternalSubtasks(prev => [...prev, { ...data, taskId, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
+    updateInternalSubtask: (id, p) => setInternalSubtasks(prev => prev.map(s => (s.id === id ? { ...s, ...p } : s))),
+    deleteInternalSubtask: (id) => setInternalSubtasks(prev => prev.filter(s => s.id !== id)),
+    setInternalTracking: (subtaskId, projectId, p) => setInternalTrackingState(prev => {
+      const key = `${subtaskId}:${projectId}`;
+      const cur = prev[key] ?? { status: 'Não iniciado' as const };
+      return { ...prev, [key]: { ...cur, ...p } };
+    }),
+
     // Rotas
     routes,
     updateRoute: (id, p) => setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...p } : r))),
@@ -450,9 +500,12 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       setRoutes(seedRotas);
       setEvents(calendarSeed);
       setGantt(cronogramaExecutivoSeed);
+      setInternalTasks(internalTasksSeed);
+      setInternalSubtasks(internalSubtasksSeed);
+      setInternalTrackingState({});
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     },
-  }), [projects, communities, routes, events, gantt, patch]);
+  }), [projects, communities, routes, events, gantt, internalTasks, internalSubtasks, internalTracking, patch]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
