@@ -166,7 +166,7 @@ const StoreContext = createContext<Ctx | null>(null);
 
 type Persisted = {
   projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[];
-  internalTasks?: InternalTask[]; internalSubtasks?: InternalSubtask[]; internalTracking?: Record<string, InternalTracking>;
+  ganttTracking?: Record<string, InternalTracking>;
 };
 
 function loadInitial(): Persisted {
@@ -176,9 +176,7 @@ function loadInitial(): Persisted {
     routes: seedRotas,
     events: calendarSeed,
     gantt: cronogramaExecutivoSeed,
-    internalTasks: internalTasksSeed,
-    internalSubtasks: internalSubtasksSeed,
-    internalTracking: {},
+    ganttTracking: {},
   };
   if (typeof window === 'undefined') return fallback;
   try {
@@ -191,19 +189,11 @@ function loadInitial(): Persisted {
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
       gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
-      internalTasks: parsed.internalTasks?.length ? parsed.internalTasks : fallback.internalTasks,
-      internalSubtasks: parsed.internalSubtasks?.length ? parsed.internalSubtasks : fallback.internalSubtasks,
-      internalTracking: Object.fromEntries(
-        Object.entries(parsed.internalTracking ?? {}).map(([k, v]) => [
-          k,
-          (v as InternalTracking).status === ('Em andamento' as InternalTracking['status'])
-            ? { ...(v as InternalTracking), status: 'Validação pendente' as InternalTracking['status'] }
-            : (v as InternalTracking),
-        ]),
-      ),
+      ganttTracking: parsed.ganttTracking ?? {},
     };
   } catch { return fallback; }
 }
+
 
 function recalcProject(p: ProjectExt): ProjectExt {
   const allActivities = p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
