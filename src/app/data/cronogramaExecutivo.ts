@@ -29,7 +29,12 @@ export interface GanttActivity {
   comentario?: string;
   /** Progresso manual — quando ausente, é calculado pela validação por projeto. */
   progress?: number;
+  /** Projeto/comunidade ao qual esta atividade (ou subatividade) está vinculada. */
+  projetoId?: number | null;
+  /** Subatividades — mesma estrutura, também podem ter vínculo próprio. */
+  subatividades?: GanttActivity[];
 }
+
 
 export interface GanttEntrega {
   id: number;
