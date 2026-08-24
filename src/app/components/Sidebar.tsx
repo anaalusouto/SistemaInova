@@ -1,17 +1,12 @@
-import { useState } from 'react';
 import {
   LayoutDashboard,
   FolderKanban,
-  Users,
-  ClipboardCheck,
   CalendarDays,
   BarChart3,
   Settings,
   ChevronRight,
-  ChevronDown,
   Search,
   ClipboardList,
-  Layers,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
@@ -42,7 +37,6 @@ const bottomItems = [
 ];
 
 export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
-  const [inovaOpen, setInovaOpen] = useState(true);
   const { user, isAdmin, signOut } = useAuth();
 
   const initials = (user?.displayName ?? '')
