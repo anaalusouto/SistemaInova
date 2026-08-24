@@ -28,9 +28,9 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
 
   const [filterProject, setFilterProject] = useState<number | 'all'>(projectId ?? 'all');
   const [search, setSearch] = useState('');
-  const [expanded, setExpanded] = useState<Set<number>>(() => new Set(gantt.flatMap(b => b.entregas.map(e => e.id))));
+  const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
   const [openActivity, setOpenActivity] = useState<number | null>(null);
-  const [showGantt, setShowGantt] = useState(true);
+  const [showGantt, setShowGantt] = useState(false);
   const [editing, setEditing] = useState<{ kind: 'entrega' | 'atividade'; id: number } | null>(null);
   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [novaAtividade, setNovaAtividade] = useState('');
