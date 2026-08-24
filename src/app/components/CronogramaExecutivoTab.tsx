@@ -30,6 +30,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<number>>(() => new Set(gantt.flatMap(b => b.entregas.map(e => e.id))));
   const [openActivity, setOpenActivity] = useState<number | null>(null);
+  const [showGantt, setShowGantt] = useState(true);
   const [editing, setEditing] = useState<{ kind: 'entrega' | 'atividade'; id: number } | null>(null);
   const [addingTo, setAddingTo] = useState<number | null>(null);
   const [novaAtividade, setNovaAtividade] = useState('');
@@ -87,8 +88,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
 
   const DAY_PX = 5;
   const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / 86400000));
-  const timelineWidth = totalDays * DAY_PX;
-  const LEFT_COL = 430;
+  const timelineWidth = showGantt ? totalDays * DAY_PX : 0;
+  const LEFT_COL = showGantt ? 430 : 0;
 
   const pctPos = (dateStr: string) =>
     Math.round((new Date(`${dateStr}T00:00:00`).getTime() - minDate.getTime()) / 86400000) * DAY_PX;
@@ -172,7 +173,12 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <GanttChart size={14} className="inline mr-1.5" />Cronograma Executivo — INOVA SOCIOBIO II
           </h3>
-          <div className="flex gap-3 text-[11px] flex-wrap">
+          <div className="flex items-center gap-3 text-[11px] flex-wrap">
+            <button onClick={() => setShowGantt(v => !v)}
+              className="px-2.5 py-1 rounded-md text-[11px] font-medium"
+              style={{ border: '1px solid var(--border)', background: showGantt ? 'var(--primary)' : '#fff', color: showGantt ? '#fff' : 'var(--foreground)' }}>
+              <GanttChart size={11} className="inline mr-1" />{showGantt ? 'Ocultar Gantt' : 'Mostrar Gantt'}
+            </button>
             {STATUS_LIST.map(s => (
               <span key={s} className="flex items-center gap-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: ganttStatusColors[s] }} />{s}
@@ -182,29 +188,31 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         </div>
 
         <div className="overflow-auto" style={{ maxHeight: '72vh' }}>
-          <div style={{ minWidth: LEFT_COL + timelineWidth }}>
+          <div style={{ minWidth: showGantt ? LEFT_COL + timelineWidth : '100%' }}>
             {/* Cabeçalho da timeline */}
             <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: '#F1F5F9', borderBottom: '1px solid var(--border)' }}>
-              <div className="shrink-0 px-3 py-2 font-semibold" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+              <div className={showGantt ? 'shrink-0 px-3 py-2 font-semibold' : 'flex-1 px-3 py-2 font-semibold'}
+                style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                 Bloco / Entrega / Atividade
               </div>
-              <div className="relative" style={{ width: timelineWidth, height: 32 }}>
+              {showGantt && <div className="relative" style={{ width: timelineWidth, height: 32 }}>
                 {weeks.map((w, i) => (
                   <div key={i} className="absolute top-0 bottom-0 flex items-center pl-1 text-slate-500"
                     style={{ left: pctPos(fmtDate(w)), width: 7 * DAY_PX, borderLeft: '1px solid #E2E8F0' }}>
                     {i % 2 === 0 ? `${String(w.getDate()).padStart(2, '0')}/${String(w.getMonth() + 1).padStart(2, '0')}` : ''}
                   </div>
                 ))}
-              </div>
+              </div>}
             </div>
 
             {visibleGantt.map(b => (
               <div key={b.id}>
                 <div className="flex" style={{ background: '#ECFEFF', borderBottom: '1px solid var(--border)' }}>
-                  <div className="px-3 py-2 text-xs font-bold text-slate-700 shrink-0" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                  <div className={`px-3 py-2 text-xs font-bold text-slate-700 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+                    style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                     {b.bloco}
                   </div>
-                  <div style={{ width: timelineWidth }} />
+                  {showGantt && <div style={{ width: timelineWidth }} />}
                 </div>
 
                 {b.entregas.map(en => {
@@ -213,7 +221,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                   return (
                     <div key={en.id}>
                       <div className="flex hover:bg-slate-50" style={{ borderBottom: '1px solid var(--border)' }}>
-                        <div className="px-3 py-2 shrink-0 flex items-start gap-1.5" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                        <div className={`px-3 py-2 flex items-start gap-1.5 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+                          style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                           <button onClick={() => toggle(en.id)} className="mt-0.5 text-slate-400 hover:text-slate-700">
                             <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 150ms' }} />
                           </button>
@@ -246,13 +255,13 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                             )}
                           </div>
                         </div>
-                        <div className="relative" style={{ width: timelineWidth, minHeight: 44 }}>
+                        {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 44 }}>
                           {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
                           <GanttBar left={pctPos(en.inicio)} width={barWidth(en.inicio, en.fim)}
                             color={ganttStatusColors[en.status]} progress={enProg} bold
                             label={`${br(en.inicio)} – ${br(en.fim)}`}
                             onClick={() => setEditing({ kind: 'entrega', id: en.id })} />
-                        </div>
+                        </div>}
                       </div>
 
                       {isOpen && en.atividades.map(a => {
@@ -261,7 +270,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                         return (
                           <div key={a.id}>
                             <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
-                              <div className="pl-8 pr-3 py-1.5 shrink-0 flex items-start gap-2" style={{ width: LEFT_COL, borderRight: '1px solid var(--border)' }}>
+                              <div className={`pl-8 pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+                                style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                                 <button onClick={() => setOpenActivity(isTrackOpen ? null : a.id)}
                                   title="Ver acompanhamento por projeto" className="mt-0.5 text-slate-400 hover:text-slate-700">
                                   <ListChecks size={12} />
@@ -284,18 +294,18 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                                   </button>
                                 )}
                               </div>
-                              <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
+                              {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
                                 {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
                                 <GanttBar left={pctPos(a.inicio)} width={barWidth(a.inicio, a.fim)}
                                   color={ganttStatusColors[a.status]} progress={prog}
                                   label={`${br(a.inicio)} – ${br(a.fim)}`}
                                   onClick={() => setEditing({ kind: 'atividade', id: a.id })} />
-                              </div>
+                              </div>}
                             </div>
 
                             {isTrackOpen && (
                               <div className="flex" style={{ borderBottom: '1px solid var(--border)', background: '#FCFDFF' }}>
-                                <div className="px-3 py-3" style={{ width: LEFT_COL + timelineWidth }}>
+                                <div className="px-3 py-3 sticky left-0" style={{ width: 'min(1100px, 100%)' }}>
                                   {a.descricao && <p className="text-[11px] text-muted-foreground mb-2">{a.descricao}</p>}
                                   <TrackingTable
                                     activityId={a.id}
