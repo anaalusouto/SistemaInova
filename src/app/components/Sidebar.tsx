@@ -18,7 +18,6 @@ import { useAuth } from '../auth/authStore';
 
 export type NavItem =
   | 'dashboard'
-  | 'internal'
   | 'projects'
   | 'schedule'
   | 'diagnostics'
@@ -34,12 +33,8 @@ const topItems = [
   { id: 'dashboard' as NavItem, label: 'Dashboard', icon: LayoutDashboard },
 ];
 
-const inovaChildren = [
-  { id: 'internal' as NavItem, label: 'Controle interno', icon: ClipboardCheck },
-  { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
-];
-
 const bottomItems = [
+  { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
   { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
