@@ -134,17 +134,10 @@ type Ctx = {
   getCommunity: (id: number) => Comunidade | undefined;
   updateCommunity: (id: number, patch: Partial<Comunidade>) => void;
 
-  // Controle Interno
-  internalTasks: InternalTask[];
-  internalSubtasks: InternalSubtask[];
-  internalTracking: Record<string, InternalTracking>;
-  addInternalTask: (titulo: string, descricao?: string) => void;
-  updateInternalTask: (id: number, patch: Partial<InternalTask>) => void;
-  deleteInternalTask: (id: number) => void;
-  addInternalSubtask: (taskId: number, s: Omit<InternalSubtask, 'id' | 'taskId'>) => void;
-  updateInternalSubtask: (id: number, patch: Partial<InternalSubtask>) => void;
-  deleteInternalSubtask: (id: number) => void;
-  setInternalTracking: (subtaskId: number, projectId: number, patch: Partial<InternalTracking>) => void;
+  // Acompanhamento das atividades do cronograma por projeto
+  ganttTracking: Record<string, InternalTracking>;
+  setGanttTracking: (activityId: number, projectId: number, patch: Partial<InternalTracking>) => void;
+
 
   // Rotas / Calendário
   routes: RotaItem[];
