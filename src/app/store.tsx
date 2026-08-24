@@ -422,13 +422,18 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       ...b,
       entregas: b.entregas.map(en => ({
         ...en,
-        atividades: en.atividades.map(a => a.id === atividadeId ? { ...a, ...patchData } : a),
+        atividades: en.atividades.map(a => {
+          const self = a.id === atividadeId ? { ...a, ...patchData } : a;
+          return {
+            ...self,
+            subatividades: (self.subatividades ?? []).map(s => s.id === atividadeId ? { ...s, ...patchData } : s),
+          };
+        }),
       })),
     }))),
 
     addGanttAtividade: (entregaId, atividade) => setGantt(prev => {
-      const allIds = prev.flatMap(b => b.entregas.flatMap(e => e.atividades.map(a => a.id)));
-      const nextId = allIds.reduce((m, x) => Math.max(m, x), 0) + 1;
+      const nextId = nextGanttId(prev);
       return prev.map(b => ({
         ...b,
         entregas: b.entregas.map(en => en.id !== entregaId ? en : {
@@ -436,32 +441,71 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
           atividades: [...en.atividades, {
             id: nextId, atividade, inicio: en.inicio, fim: en.fim,
             responsavel: en.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
+            projetoId: null, subatividades: [],
           }],
         }),
       }));
     }),
+    addGanttSubatividade: (atividadeId, atividade) => setGantt(prev => {
+      const nextId = nextGanttId(prev);
+      return prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => ({
+          ...en,
+          atividades: en.atividades.map(a => a.id !== atividadeId ? a : {
+            ...a,
+            subatividades: [...(a.subatividades ?? []), {
+              id: nextId, atividade, inicio: a.inicio, fim: a.fim,
+              responsavel: a.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
+              projetoId: a.projetoId ?? null, subatividades: [],
+            }],
+          }),
+        })),
+      }));
+    }),
     deleteGanttAtividade: (atividadeId) => {
-      let found: { entregaId: number; index: number; atividade: GanttActivity } | null = null;
+      let found: { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null = null;
       gantt.forEach(b => b.entregas.forEach(en => {
         const idx = en.atividades.findIndex(a => a.id === atividadeId);
         if (idx >= 0) found = { entregaId: en.id, index: idx, atividade: en.atividades[idx] };
+        en.atividades.forEach(a => {
+          const si = (a.subatividades ?? []).findIndex(s => s.id === atividadeId);
+          if (si >= 0) found = { entregaId: en.id, index: si, atividade: a.subatividades![si], parentId: a.id };
+        });
       }));
       if (!found) return null;
       setGantt(prev => prev.map(b => ({
         ...b,
-        entregas: b.entregas.map(en => ({ ...en, atividades: en.atividades.filter(a => a.id !== atividadeId) })),
+        entregas: b.entregas.map(en => ({
+          ...en,
+          atividades: en.atividades.filter(a => a.id !== atividadeId).map(a => ({
+            ...a, subatividades: (a.subatividades ?? []).filter(s => s.id !== atividadeId),
+          })),
+        })),
       })));
       return found;
     },
-    restoreGanttAtividade: (entregaId, index, atividade) => setGantt(prev => prev.map(b => ({
+    restoreGanttAtividade: (entregaId, index, atividade, parentId) => setGantt(prev => prev.map(b => ({
       ...b,
       entregas: b.entregas.map(en => {
         if (en.id !== entregaId) return en;
+        if (parentId != null) {
+          return {
+            ...en,
+            atividades: en.atividades.map(a => {
+              if (a.id !== parentId) return a;
+              const subs = [...(a.subatividades ?? [])];
+              subs.splice(Math.min(index, subs.length), 0, atividade);
+              return { ...a, subatividades: subs };
+            }),
+          };
+        }
         const list = [...en.atividades];
         list.splice(Math.min(index, list.length), 0, atividade);
         return { ...en, atividades: list };
       }),
     }))),
+
 
 
 
