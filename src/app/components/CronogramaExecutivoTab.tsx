@@ -297,65 +297,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                         </div>}
                       </div>
 
-                      {isOpen && en.atividades.map(a => {
-                        const prog = activityProgress(a);
-                        const isTrackOpen = openActivity === a.id;
-                        return (
-                          <div key={a.id}>
-                            <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
-                              <div className={`pl-8 pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
-                                style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
-                                <button onClick={() => setOpenActivity(isTrackOpen ? null : a.id)}
-                                  title="Ver acompanhamento por projeto" className="mt-0.5 text-slate-400 hover:text-slate-700">
-                                  <ListChecks size={12} />
-                                </button>
-                                <div className="flex-1 min-w-0">
-                                  {a.grupo && <div className="text-[9px] uppercase tracking-wide text-slate-400 truncate">{a.grupo}</div>}
-                                  <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
-                                    className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block">
-                                    {a.atividade}
-                                  </button>
-                                  <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                                    {br(a.inicio)} → {br(a.fim)}{a.responsavel ? ` · ${a.responsavel}` : ''} · {prog}%
-                                    {a.comentario && <MessageSquare size={10} className="text-slate-400" />}
-                                  </div>
-                                </div>
-                                {isAdmin && projectId == null && (
-                                  <button onClick={() => handleDelete(a)} title="Remover atividade"
-                                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 mt-0.5">
-                                    <Trash2 size={12} />
-                                  </button>
-                                )}
-                              </div>
-                              {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
-                                {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
-                                <GanttBar left={pctPos(a.inicio)} width={barWidth(a.inicio, a.fim)}
-                                  color={ganttStatusColors[a.status]} progress={prog}
-                                  label={`${br(a.inicio)} – ${br(a.fim)}`}
-                                  onClick={() => setEditing({ kind: 'atividade', id: a.id })} />
-                              </div>}
-                            </div>
+                      {isOpen && en.atividades.map(a => renderRow(a, 0))}
 
-                            {isTrackOpen && (
-                              <div className="flex" style={{ borderBottom: '1px solid var(--border)', background: '#FCFDFF' }}>
-                                <div className="px-3 py-3 sticky left-0" style={{ width: 'min(1100px, 100%)' }}>
-                                  {a.descricao && <p className="text-[11px] text-muted-foreground mb-2">{a.descricao}</p>}
-                                  <TrackingTable
-                                    activityId={a.id}
-                                    fallback={a}
-                                    projects={scopeProjects}
-                                    track={track}
-                                    onTrack={(pid, p) => {
-                                      setGanttTracking(a.id, pid, p);
-                                      audit('acompanhamento', `${a.atividade} · projeto ${pid}`);
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
                     </div>
                   );
                 })}
