@@ -19,7 +19,11 @@ export default defineConfig(async ({ command }) => {
 
   if (command === "build") {
     const { nitro } = await import("nitro/vite");
-    plugins.push(nitro({ preset: "node-server" }));
+    // No explicit preset: Nitro auto-detects Vercel (or any other supported
+    // platform) via its build-time env vars, falling back to "node-server"
+    // for a plain local build. Force { preset: "node-server" } only for a
+    // build meant to run as a standalone Node process outside Vercel.
+    plugins.push(nitro({}));
   }
 
   return {
