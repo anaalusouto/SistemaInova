@@ -29,14 +29,14 @@ const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLO
 export function CronogramaPage() {
   const [tab, setTab] = useState<'rotas' | 'calendario' | 'executivo'>('executivo');
   return (
-    <div className="h-full overflow-y-auto p-8">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="mb-5">
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.4rem' }}>Cronograma 2026</h1>
+    <div className={`h-full min-h-0 p-6 flex flex-col ${tab === 'executivo' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div className="max-w-[1500px] mx-auto w-full flex flex-col flex-1 min-h-0">
+        <div className="mb-3">
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem' }}>Cronograma 2026</h1>
           <p className="text-sm text-muted-foreground">Cronograma executivo, rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
         </div>
 
-        <div className="flex gap-2 mb-5">
+        <div className="flex gap-2 mb-3 shrink-0">
           {[
             { id: 'executivo', label: 'Cronograma Executivo', icon: GanttChart },
             { id: 'rotas', label: 'Rotas', icon: RouteIcon },
@@ -54,7 +54,9 @@ export function CronogramaPage() {
           })}
         </div>
 
-        {tab === 'executivo' && <CronogramaExecutivoTab />}
+        {tab === 'executivo' && (
+          <div className="flex-1 min-h-0"><CronogramaExecutivoTab /></div>
+        )}
         {tab === 'rotas' && <RotasTab />}
         {tab === 'calendario' && <CalendarioTab />}
       </div>
