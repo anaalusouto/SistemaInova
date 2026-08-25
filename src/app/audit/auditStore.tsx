@@ -1,5 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+/** Tipo de registro: acesso (telas abertas), alteração (mudanças) ou pendência. */
+export type AuditKind = 'acesso' | 'alteracao' | 'pendencia';
+
 export interface AuditEntry {
   id: string;
   userLogin: string;
@@ -7,6 +10,10 @@ export interface AuditEntry {
   area: string;
   action: string;
   detail?: string;
+  /** Projeto relacionado (quando houver). */
+  projectId?: number;
+  projectName?: string;
+  kind?: AuditKind;
 }
 
 interface Ctx {
@@ -16,8 +23,8 @@ interface Ctx {
 }
 
 const AuditContext = createContext<Ctx | null>(null);
-const KEY = 'pp-audit-log-v1';
-const MAX = 500;
+const KEY = 'pp-audit-log-v2';
+const MAX = 2000;
 
 export function AuditProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
@@ -38,6 +45,7 @@ export function AuditProvider({ children }: { children: ReactNode }) {
 
   const log = useCallback((e: Omit<AuditEntry, 'id' | 'timestamp'>) => {
     const entry: AuditEntry = {
+      kind: 'acesso',
       ...e,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       timestamp: new Date().toISOString(),

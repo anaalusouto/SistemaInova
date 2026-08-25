@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Plus, Download, TrendingUp, DollarSign, Wallet, Trash2, X, HandCoins, History,
+  Plus, Download, TrendingUp, DollarSign, Wallet, Trash2, X, HandCoins, PencilLine, ArrowDownCircle, ArrowUpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -54,17 +54,23 @@ const selCls = 'w-full bg-transparent rounded px-1 py-1 border border-transparen
 interface TabFinanceiroProps { project: Project }
 
 export function TabFinanceiro({ project }: TabFinanceiroProps) {
-  const { submitMetaEdit, addContrapartida, deleteContrapartida, getProject } = useStore();
+  const { submitMetaEdit, addContrapartida, deleteContrapartida, addAporte, deleteAporte, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
   const p = getProject(project.id) ?? (project as ProjectExt);
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCpForm, setShowCpForm] = useState(false);
-  const [showLog, setShowLog] = useState(false);
+  const [editItem, setEditItem] = useState<FinancialItem | null>(null);
+  const [showAporteForm, setShowAporteForm] = useState(false);
 
   const items = p.financialItems;
   const contrapartidas = p.contrapartidas ?? [];
-  const log = (p.metaLog ?? []).filter(l => l.entity === 'financeiro');
+  const aportes = p.aportes ?? [];
+  const metaOptions = useMemo(() => {
+    const fromGoals = (p.goals ?? []).map(g => g.name);
+    const fromItems = p.financialItems.map(i => i.meta).filter(Boolean);
+    return Array.from(new Set([...fromGoals, ...fromItems]));
+  }, [p]);
 
   const notify = (r: 'aplicado' | 'pendente') =>
     r === 'pendente'
@@ -73,6 +79,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 
   const edit = (item: FinancialItem, field: string, from: string, to: string) => {
     if (from === to) return;
+    if (!isAdmin) { setEditItem(item); return; }
     notify(submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, field, from, to,
@@ -85,6 +92,15 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       entity: 'financeiro', action: 'excluir', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, from: item.item,
     }, author));
+  };
+
+  const submitRowEdit = (item: FinancialItem, payload: Record<string, unknown>) => {
+    notify(submitMetaEdit(project.id, {
+      entity: 'financeiro', action: 'editar', targetId: item.id,
+      targetPath: `${item.meta} › ${item.item.slice(0, 40)}`,
+      field: 'item orçamentário', from: item.item, to: String(payload.item ?? item.item), payload,
+    }, author));
+    setEditItem(null);
   };
 
   const create = (payload: Record<string, unknown>) => {
@@ -181,9 +197,6 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowLog(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}>
-            <History size={12} /> Alterações ({log.length})
-          </button>
           <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}>
             <Download size={12} /> Exportar CSV
           </button>
@@ -318,7 +331,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                   <table className="w-full" style={{ minWidth: 1420 }}>
                     <thead>
                       <tr style={{ background: '#FAFAFA' }}>
-                        {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', ''].map(h => (
+                        {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', isAdmin ? '' : 'Realizar alteração'].map(h => (
                           <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                         ))}
                       </tr>
@@ -332,36 +345,36 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                             <td className="px-2 py-2 w-48">
-                              <select className={selCls} style={{ fontSize: '0.7rem' }} value={item.category} onChange={e => edit(item, 'categoria', item.category, e.target.value)}>
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.7rem' }} value={item.category} onChange={e => edit(item, 'categoria', item.category, e.target.value)}>
                                 {BUDGET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 {!BUDGET_CATEGORIES.includes(item.category as BudgetCategory) && <option value={item.category}>{item.category}</option>}
                               </select>
                             </td>
                             <td className="px-2 py-2 min-w-[260px]">
-                              <input className={selCls} style={{ fontSize: '0.76rem', color: '#0F172A' }} defaultValue={item.item}
+                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.76rem', color: '#0F172A' }} defaultValue={item.item}
                                 onBlur={e => edit(item, 'descrição', item.item, e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-16">
-                              <input type="number" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtd}
+                              <input type="number" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtd}
                                 onBlur={e => edit(item, 'qtd', String(item.qtd), e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-28">
-                              <input className={selCls} style={{ fontSize: '0.74rem' }} defaultValue={item.unidade}
+                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem' }} defaultValue={item.unidade}
                                 onBlur={e => edit(item, 'unidade', item.unidade, e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-20">
-                              <input type="number" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtdUnidades}
+                              <input type="number" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtdUnidades}
                                 onBlur={e => edit(item, 'qtd. de unidades', String(item.qtdUnidades), e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-28">
-                              <input type="number" step="0.01" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.valorUnitario}
+                              <input type="number" step="0.01" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.valorUnitario}
                                 onBlur={e => edit(item, 'valor unitário', String(item.valorUnitario), e.target.value)} />
                             </td>
                             <td className="px-3 py-2 w-32" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A', fontWeight: 600, background: '#F0FDF4' }}>
                               {fmt(total)}
                             </td>
                             <td className="px-2 py-2 w-24">
-                              <select className={selCls} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? '#059669' : flag === 'Parcial' ? '#B45309' : '#64748B' }}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? '#059669' : flag === 'Parcial' ? '#B45309' : '#64748B' }}
                                 value={flag} onChange={e => edit(item, 'executado', flag, e.target.value)}>
                                 {EXECUTED_FLAGS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
@@ -372,7 +385,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               ) : (
                                 <input
                                   type="number" step="0.01"
-                                  className={selCls}
+                                  className={selCls} disabled={!isAdmin} readOnly={!isAdmin}
                                   style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: '#059669', fontWeight: 600 }}
                                   defaultValue={item.executedValue}
                                   key={`${item.id}-${item.executedValue}`}
@@ -382,7 +395,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                             </td>
                             <td className="px-2 py-2 w-44">
                               <select
-                                className={selCls}
+                                className={selCls} disabled={!isAdmin}
                                 style={{ fontSize: '0.71rem', background: ACC_COLORS[acc].bg, color: ACC_COLORS[acc].fg, borderRadius: 6 }}
                                 value={acc}
                                 onChange={e => edit(item, 'prestação de contas', acc, e.target.value)}
@@ -391,15 +404,25 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               </select>
                             </td>
                             <td className="px-2 py-2 w-44">
-                              <select className={selCls} style={{ fontSize: '0.71rem', color: '#475569' }} value={rec}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.71rem', color: '#475569' }} value={rec}
                                 onChange={e => edit(item, 'registro de alterações', rec, e.target.value)}>
                                 {CHANGE_RECORDS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
                             </td>
-                            <td className="px-2 py-2">
-                              <button onClick={() => remove(item)} className="p-1 rounded hover:bg-red-50" title="Excluir item">
-                                <Trash2 size={12} color="#DC2626" />
-                              </button>
+                            <td className="px-2 py-2 whitespace-nowrap">
+                              {isAdmin ? (
+                                <button onClick={() => remove(item)} className="p-1 rounded hover:bg-red-50" title="Excluir item">
+                                  <Trash2 size={12} color="#DC2626" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setEditItem(item)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border"
+                                  style={{ borderColor: '#BFDBFE', color: '#1D4ED8', background: '#EFF6FF' }}
+                                >
+                                  <PencilLine size={11} /> Realizar alteração
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -475,8 +498,92 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         </div>
       </div>
 
+      {/* Caderno de recursos adicionais */}
+      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
+              Caderno de recursos (entradas e saídas)
+            </h3>
+            <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+              Recursos que a comunidade movimentou fora do valor do termo. Não altera o orçamento aprovado — serve só para conhecimento e acompanhamento.
+            </p>
+          </div>
+          <button onClick={() => setShowAporteForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
+            <Plus size={13} /> Lançar
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-px" style={{ background: 'var(--border)' }}>
+          {(() => {
+            const ent = aportes.filter(a => a.tipo === 'Entrada').reduce((x, a) => x + a.valor, 0);
+            const sai = aportes.filter(a => a.tipo === 'Saída').reduce((x, a) => x + a.valor, 0);
+            const cards = [
+              { l: 'Recurso do termo (recebido)', v: fmt(p.budgetApproved), c: '#0F172A' },
+              { l: 'Entradas adicionais', v: fmt(ent), c: '#059669' },
+              { l: 'Saídas adicionais', v: fmt(sai), c: '#DC2626' },
+              { l: 'Saldo de controle', v: fmt(p.budgetApproved + ent - sai - 0), c: '#1D4ED8' },
+            ];
+            return cards.map(c => (
+              <div key={c.l} className="px-4 py-3" style={{ background: '#fff' }}>
+                <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{c.l}</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: c.c }}>{c.v}</div>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {aportes.length > 0 && (
+          <table className="w-full" style={{ borderTop: '1px solid var(--border)' }}>
+            <thead>
+              <tr style={{ background: '#FAFAFA' }}>
+                {['Data', 'Tipo', 'Origem / destino', 'Descrição', 'Valor', 'Registrado por', ''].map(h => (
+                  <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {aportes.map(a => (
+                <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td className="px-4 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{a.data}</td>
+                  <td className="px-4 py-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                      style={a.tipo === 'Entrada' ? { background: '#ECFDF5', color: '#059669' } : { background: '#FEF2F2', color: '#DC2626' }}>
+                      {a.tipo === 'Entrada' ? <ArrowDownCircle size={10} /> : <ArrowUpCircle size={10} />} {a.tipo}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.origem}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.descricao}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: a.tipo === 'Entrada' ? '#059669' : '#DC2626' }}>{fmt(a.valor)}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{a.registradoPor ?? '—'}</td>
+                  <td className="px-2 py-2">
+                    {isAdmin && (
+                      <button onClick={() => deleteAporte(project.id, a.id)} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="#DC2626" /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       {showItemForm && (
-        <ItemForm existingMetas={byMeta.map(([m]) => m)} onClose={() => setShowItemForm(false)} onSave={create} />
+        <ItemForm existingMetas={metaOptions} onClose={() => setShowItemForm(false)} onSave={create} />
+      )}
+      {editItem && (
+        <ItemForm
+          existingMetas={metaOptions}
+          initial={editItem}
+          onClose={() => setEditItem(null)}
+          onSave={payload => submitRowEdit(editItem, payload)}
+        />
+      )}
+      {showAporteForm && (
+        <AporteForm
+          onClose={() => setShowAporteForm(false)}
+          onSave={a => { addAporte(project.id, { ...a, registradoPor: author.name }); toast.success('Lançamento registrado.'); setShowAporteForm(false); }}
+        />
       )}
       {showCpForm && (
         <CpForm
@@ -486,38 +593,6 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         />
       )}
 
-      {showLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setShowLog(false)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>Registro de alterações — Financeiro</h3>
-              <button onClick={() => setShowLog(false)}><X size={16} /></button>
-            </div>
-            {log.length === 0 ? (
-              <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Nenhuma alteração registrada ainda.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {log.map(l => (
-                  <div key={l.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style={{ background: '#F1F5F9', color: '#475569' }}>{l.action}</span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{l.targetPath}{l.field ? ` · ${l.field}` : ''}</span>
-                      <span className="ml-auto" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{new Date(l.date).toLocaleString('pt-BR')}</span>
-                    </div>
-                    <div style={{ fontSize: '0.76rem' }}>
-                      <span style={{ color: '#DC2626', textDecoration: 'line-through' }}>{l.from || '—'}</span>{' → '}
-                      <span style={{ color: '#059669' }}>{l.to || '—'}</span>
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: 2 }}>
-                      por <strong>{l.author}</strong> ({l.authorRole}){l.approvedBy ? ` · validado por ${l.approvedBy}` : ''}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -533,23 +608,24 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 const inputCls = 'w-full px-3 py-2 rounded-lg border text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-200';
 const inputStyle = { borderColor: 'var(--border)', background: '#fff' } as const;
 
-function ItemForm({ existingMetas, onClose, onSave }: {
+function ItemForm({ existingMetas, initial, onClose, onSave }: {
   existingMetas: string[];
+  initial?: FinancialItem;
   onClose: () => void;
   onSave: (i: Record<string, unknown>) => void;
 }) {
   const [f, setF] = useState({
-    meta: existingMetas[existingMetas.length - 1] || 'Meta 1',
-    category: BUDGET_CATEGORIES[0] as BudgetCategory,
-    item: '',
-    qtd: '1',
-    unidade: 'unidade',
-    qtdUnidades: '1',
-    valorUnitario: '',
-    executedFlag: 'Não' as ExecutedFlag,
-    executedValue: '0',
-    accountability: 'Não enviado' as AccountabilityStatus,
-    changeRecord: 'Novo item' as ChangeRecord,
+    meta: initial?.meta ?? existingMetas[existingMetas.length - 1] ?? 'Meta 1',
+    category: (initial?.category ?? BUDGET_CATEGORIES[0]) as BudgetCategory,
+    item: initial?.item ?? '',
+    qtd: String(initial?.qtd ?? 1),
+    unidade: initial?.unidade ?? 'unidade',
+    qtdUnidades: String(initial?.qtdUnidades ?? 1),
+    valorUnitario: String(initial?.valorUnitario ?? ''),
+    executedFlag: (initial?.executedFlag ?? 'Não') as ExecutedFlag,
+    executedValue: String(initial?.executedValue ?? 0),
+    accountability: (initial?.accountability ?? 'Não enviado') as AccountabilityStatus,
+    changeRecord: (initial?.changeRecord ?? (initial ? 'Conforme planejado' : 'Novo item')) as ChangeRecord,
   });
   const total = (Number(f.qtd) || 0) * (Number(f.qtdUnidades) || 0) * (Number(f.valorUnitario) || 0);
   const submit = (e: React.FormEvent) => {
@@ -574,17 +650,16 @@ function ItemForm({ existingMetas, onClose, onSave }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Novo Item Orçamentário</h3>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>{initial ? 'Realizar alteração no item' : 'Novo Item Orçamentário'}</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <FieldLabel>Meta</FieldLabel>
-            <input list="metas-list" className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })} placeholder="Ex: Meta 1" />
-            <datalist id="metas-list">
-              {existingMetas.map(m => <option key={m} value={m} />)}
-              {['Meta 1', 'Meta 2', 'Meta 3', 'Meta 4', 'Meta 5'].map(m => <option key={m} value={m} />)}
-            </datalist>
+            <select className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })}>
+              {!existingMetas.includes(f.meta) && f.meta && <option value={f.meta}>{f.meta}</option>}
+              {(existingMetas.length ? existingMetas : ['Meta 1', 'Meta 2', 'Meta 3', 'Meta 4', 'Meta 5']).map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
           </div>
           <div>
             <FieldLabel>Categoria</FieldLabel>
@@ -724,6 +799,71 @@ function CpForm({ existingMetas, onClose, onSave }: {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function AporteForm({ onClose, onSave }: {
+  onClose: () => void;
+  onSave: (a: { data: string; tipo: 'Entrada' | 'Saída'; origem: string; descricao: string; valor: number }) => void;
+}) {
+  const [f, setF] = useState({
+    data: new Date().toISOString().slice(0, 10),
+    tipo: 'Entrada' as 'Entrada' | 'Saída',
+    origem: '',
+    descricao: '',
+    valor: '',
+  });
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
+      <form
+        onClick={e => e.stopPropagation()}
+        onSubmit={e => {
+          e.preventDefault();
+          const valor = Number(f.valor) || 0;
+          if (!valor) { toast.error('Informe o valor.'); return; }
+          onSave({ data: f.data, tipo: f.tipo, origem: f.origem.trim(), descricao: f.descricao.trim(), valor });
+        }}
+        className="bg-white rounded-2xl border p-6 w-full max-w-lg"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Lançamento de recurso</h3>
+          <button type="button" onClick={onClose}><X size={16} /></button>
+        </div>
+        <p style={{ fontSize: '0.72rem', color: '#94A3B8', marginBottom: 12 }}>
+          Entradas e saídas fora do termo. O valor recebido do termo continua inalterado.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <FieldLabel>Data</FieldLabel>
+            <input type="date" className={inputCls} style={inputStyle} value={f.data} onChange={e => setF({ ...f, data: e.target.value })} />
+          </div>
+          <div>
+            <FieldLabel>Tipo</FieldLabel>
+            <select className={inputCls} style={inputStyle} value={f.tipo} onChange={e => setF({ ...f, tipo: e.target.value as 'Entrada' | 'Saída' })}>
+              <option value="Entrada">Entrada</option>
+              <option value="Saída">Saída</option>
+            </select>
+          </div>
+          <div>
+            <FieldLabel>Origem / destino</FieldLabel>
+            <input className={inputCls} style={inputStyle} value={f.origem} onChange={e => setF({ ...f, origem: e.target.value })} placeholder="Ex: recurso próprio da comunidade" />
+          </div>
+          <div>
+            <FieldLabel>Valor (R$)</FieldLabel>
+            <input type="number" step="0.01" className={inputCls} style={inputStyle} value={f.valor} onChange={e => setF({ ...f, valor: e.target.value })} placeholder="0,00" />
+          </div>
+          <div className="col-span-2">
+            <FieldLabel>Descrição</FieldLabel>
+            <input className={inputCls} style={inputStyle} value={f.descricao} onChange={e => setF({ ...f, descricao: e.target.value })} placeholder="Do que se trata este recurso" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
           <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>

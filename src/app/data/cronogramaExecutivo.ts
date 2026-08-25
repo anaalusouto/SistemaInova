@@ -29,8 +29,12 @@ export interface GanttActivity {
   comentario?: string;
   /** Progresso manual — quando ausente, é calculado pela validação por projeto. */
   progress?: number;
-  /** Projeto/comunidade ao qual esta atividade (ou subatividade) está vinculada. */
+  /** Projeto/comunidade ao qual esta atividade (ou subatividade) está vinculada (legado, 1 projeto). */
   projetoId?: number | null;
+  /** Marca se a atividade pode ser vinculada a projetos/comunidades. */
+  vinculavel?: boolean;
+  /** Projetos/comunidades vinculados (vazio = nenhum; ausente = sem vínculo). */
+  projetoIds?: number[];
   /** Subatividades — mesma estrutura, também podem ter vínculo próprio. */
   subatividades?: GanttActivity[];
 }

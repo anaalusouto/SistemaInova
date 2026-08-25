@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks } from 'lucide-react';
+import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks, Pencil, Check } from 'lucide-react';
 import { useStore } from '../store';
 import { useAuth, APP_PEOPLE } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
@@ -20,7 +20,7 @@ interface Props {
 export function CronogramaExecutivoTab({ projectId }: Props) {
   const {
     projects, gantt, ganttTracking, setGanttTracking,
-    updateGanttEntrega, updateGanttAtividade,
+    updateGanttEntrega, updateGanttAtividade, updateGanttBloco,
     addGanttAtividade, addGanttSubatividade, deleteGanttAtividade, restoreGanttAtividade,
   } = useStore();
   const { user, isAdmin } = useAuth();
@@ -36,6 +36,9 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const [novaAtividade, setNovaAtividade] = useState('');
   const [addingSubTo, setAddingSubTo] = useState<number | null>(null);
   const [novaSub, setNovaSub] = useState('');
+  const [linking, setLinking] = useState<number | null>(null);
+  const [editingBloco, setEditingBloco] = useState<number | null>(null);
+  const [blocoNome, setBlocoNome] = useState('');
 
   const activeProject = projectId ?? (filterProject === 'all' ? null : filterProject);
   const scopeProjects = activeProject != null ? projects.filter(p => p.id === activeProject) : projects;
@@ -46,16 +49,20 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const track = (aid: number, pid: number) =>
     ganttTracking[`${aid}:${pid}`] ?? { status: 'Não iniciado' as GanttStatus };
 
-  /** Projetos considerados no acompanhamento de uma atividade (vinculada = só o projeto atrelado). */
-  const projectsFor = (a: GanttActivity) =>
-    a.projetoId != null ? projects.filter(p => p.id === a.projetoId) : scopeProjects;
+  /** Ids dos projetos/comunidades vinculados à atividade. */
+  const linkedIds = (a: GanttActivity): number[] =>
+    a.projetoIds && a.projetoIds.length ? a.projetoIds : (a.projetoId != null ? [a.projetoId] : []);
 
-  /** Uma atividade pertence ao projeto quando está vinculada a ele (ou quando não há vínculo algum). */
-  const belongsToProject = (a: GanttActivity, pid: number): boolean => {
-    const links = [a.projetoId ?? null, ...(a.subatividades ?? []).map(s => s.projetoId ?? null)];
-    if (links.every(l => l == null)) return true;
-    return links.some(l => l === pid);
+  /** Projetos considerados no acompanhamento de uma atividade. */
+  const projectsFor = (a: GanttActivity) => {
+    const ids = linkedIds(a);
+    if (!ids.length) return scopeProjects;
+    return projects.filter(p => ids.includes(p.id));
   };
+
+  /** Uma atividade só aparece no cronograma de um projeto quando está vinculada a ele. */
+  const belongsToProject = (a: GanttActivity, pid: number): boolean =>
+    linkedIds(a).includes(pid) || (a.subatividades ?? []).some(s => linkedIds(s).includes(pid));
 
   /** Progresso da atividade = % de projetos com a validação concluída (Entregue). */
   const activityProgress = (a: GanttActivity): number => {
@@ -90,7 +97,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               .map(a => ({
                 ...a,
                 subatividades: (a.subatividades ?? []).filter(s =>
-                  pid == null || s.projetoId == null || s.projetoId === pid),
+                  pid == null || linkedIds(s).includes(pid) || linkedIds(s).length === 0),
               }))
               .filter(a => !q || norm(`${a.grupo ?? ''} ${a.atividade}`).includes(q)
                 || (a.subatividades ?? []).some(s => norm(s.atividade).includes(q))),
@@ -187,12 +194,31 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     const subs = a.subatividades ?? [];
     const prog = activityProgress(a);
     const isTrackOpen = openActivity === a.id;
-    const vinculo = projName(a.projetoId);
+    const ids = linkedIds(a);
+    const vinculavel = a.vinculavel ?? ids.length > 0;
     return (
       <div key={a.id}>
         <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
           <div className={`pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
             style={{ paddingLeft: 32 + depth * 20, width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
+            <button
+              disabled={!isAdmin}
+              onClick={() => {
+                updateGanttAtividade(a.id, { vinculavel: !vinculavel, ...(vinculavel ? { projetoIds: [] } : {}) });
+                audit(vinculavel ? 'desmarcar vínculo' : 'marcar vínculo', a.atividade);
+              }}
+              title={vinculavel ? 'Vinculável a projetos/comunidades' : 'Marcar para vincular a projetos/comunidades'}
+              className="mt-0.5 shrink-0 inline-flex items-center justify-center rounded-sm"
+              style={{ width: 13, height: 13, border: `1px solid ${vinculavel ? 'var(--primary)' : '#CBD5E1'}`, background: vinculavel ? 'var(--primary)' : '#fff' }}>
+              {vinculavel && <Check size={9} color="#fff" />}
+            </button>
+            {vinculavel ? (
+              <button onClick={() => setLinking(a.id)}
+                title="Vincular projetos / comunidades" className="mt-0.5 shrink-0"
+                style={{ color: ids.length ? '#1D4ED8' : '#94A3B8' }}>
+                <Link2 size={12} />
+              </button>
+            ) : <span className="mt-0.5 w-3 shrink-0" />}
             {!subs.length ? (
               <button onClick={() => setOpenActivity(isTrackOpen ? null : a.id)}
                 title="Ver acompanhamento por projeto" className="mt-0.5 text-slate-400 hover:text-slate-700">
@@ -208,11 +234,15 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
                 {br(a.inicio)} → {br(a.fim)}{a.responsavel ? ` · ${a.responsavel}` : ''} · {prog}%
                 {a.comentario && <MessageSquare size={10} className="text-slate-400" />}
-                {vinculo && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
+                {ids.length > 0 && (
+                  <button onClick={() => setLinking(a.id)}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
                     style={{ background: '#EEF2FF', color: '#1D4ED8' }}>
-                    <Link2 size={9} />{vinculo}
-                  </span>
+                    <Link2 size={9} />
+                    {ids.length === projects.length
+                      ? 'Todos os projetos'
+                      : ids.length === 1 ? (projName(ids[0]) ?? '1 projeto') : `${ids.length} projetos`}
+                  </button>
                 )}
               </div>
               {isAdmin && depth === 0 && (
@@ -274,7 +304,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
 
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-3 h-full min-h-0">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Kpi label="Entregas" value={kpis.entregas} color="#1A5C3A" />
         <Kpi label="Atividades" value={kpis.atividades} color="#0D6E8A" />
@@ -303,7 +333,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         O progresso de cada atividade vem da validação por projeto — só chega a 100% quando todos os projetos do escopo estão como “Entregue”.
       </div>
 
-      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+      <div className="rounded-lg overflow-hidden flex flex-col flex-1 min-h-0" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <div className="px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <GanttChart size={14} className="inline mr-1.5" />Cronograma Executivo — INOVA SOCIOBIO II
@@ -322,7 +352,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
           </div>
         </div>
 
-        <div className="overflow-auto" style={{ maxHeight: '72vh' }}>
+        <div className="overflow-auto flex-1 min-h-0">
           <div style={{ minWidth: showGantt ? LEFT_COL + timelineWidth : '100%' }}>
             {/* Cabeçalho da timeline */}
             <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: '#F1F5F9', borderBottom: '1px solid var(--border)' }}>
@@ -343,9 +373,29 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
             {visibleGantt.map(b => (
               <div key={b.id}>
                 <div className="flex" style={{ background: '#ECFEFF', borderBottom: '1px solid var(--border)' }}>
-                  <div className={`px-3 py-2 text-xs font-bold text-slate-700 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+                  <div className={`px-3 py-2 text-xs font-bold text-slate-700 flex items-center gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
                     style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
-                    {b.bloco}
+                    {editingBloco === b.id ? (
+                      <>
+                        <input autoFocus value={blocoNome} onChange={e => setBlocoNome(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && blocoNome.trim()) { updateGanttBloco(b.id, blocoNome.trim()); audit('renomear bloco', blocoNome.trim()); setEditingBloco(null); toast.success('Bloco renomeado.'); }
+                            if (e.key === 'Escape') setEditingBloco(null);
+                          }}
+                          className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
+                        <button onClick={() => { if (blocoNome.trim()) { updateGanttBloco(b.id, blocoNome.trim()); audit('renomear bloco', blocoNome.trim()); toast.success('Bloco renomeado.'); } setEditingBloco(null); }}
+                          className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                        <button onClick={() => setEditingBloco(null)} className="text-[10px] text-slate-500">Cancelar</button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 min-w-0">{b.bloco}</span>
+                        {isAdmin && projectId == null && (
+                          <button onClick={() => { setEditingBloco(b.id); setBlocoNome(b.bloco); }}
+                            title="Renomear bloco" className="text-slate-400 hover:text-slate-700"><Pencil size={11} /></button>
+                        )}
+                      </>
+                    )}
                   </div>
                   {showGantt && <div style={{ width: timelineWidth }} />}
                 </div>
@@ -432,19 +482,131 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         return <GanttEditModal
           title="Editar atividade"
           canRename={isAdmin}
-          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel ?? '', status: a.status, comentario: a.comentario ?? '', projetoId: a.projetoId ?? null }}
-          projectOptions={projects.map(p => ({ id: p.id, label: `${p.org ? `${p.org} · ` : ''}${p.name}` }))}
+          item={{ nome: a.atividade, inicio: a.inicio, fim: a.fim, responsavel: a.responsavel ?? '', status: a.status, comentario: a.comentario ?? '' }}
           onClose={() => setEditing(null)}
           onSave={(v) => {
             updateGanttAtividade(a.id, isAdmin
               ? { ...v, atividade: v.nome }
-              : { inicio: v.inicio, fim: v.fim, responsavel: v.responsavel, status: v.status, comentario: v.comentario, projetoId: v.projetoId });
+              : { inicio: v.inicio, fim: v.fim, responsavel: v.responsavel, status: v.status, comentario: v.comentario });
             audit('editar atividade', a.atividade);
             toast.success('Atividade atualizada.');
             setEditing(null);
           }}
         />;
       })()}
+
+      {linking != null && (() => {
+        const a = gantt.flatMap(b => b.entregas.flatMap(e => e.atividades.flatMap(x => [x, ...(x.subatividades ?? [])]))).find(x => x.id === linking);
+        if (!a) return null;
+        return (
+          <VinculoModal
+            atividade={a}
+            initial={linkedIds(a)}
+            projects={projects.map(p => ({ id: p.id, label: `${p.org ? `${p.org} · ` : ''}${p.name}` }))}
+            canEdit={isAdmin}
+            onClose={() => setLinking(null)}
+            onSave={(v) => {
+              updateGanttAtividade(a.id, {
+                projetoIds: v.ids, projetoId: null, vinculavel: true,
+                inicio: v.inicio, fim: v.fim, comentario: v.comentario, observacao: v.observacao,
+              });
+              audit('vincular atividade', `${a.atividade} · ${v.ids.length} projeto(s)`);
+              toast.success('Vínculos atualizados.');
+              setLinking(null);
+            }}
+          />
+        );
+      })()}
+    </div>
+  );
+}
+
+function VinculoModal({ atividade, initial, projects, canEdit, onSave, onClose }: {
+  atividade: GanttActivity;
+  initial: number[];
+  projects: { id: number; label: string }[];
+  canEdit: boolean;
+  onSave: (v: { ids: number[]; inicio: string; fim: string; comentario: string; observacao: string }) => void;
+  onClose: () => void;
+}) {
+  const [ids, setIds] = useState<number[]>(initial);
+  const [inicio, setInicio] = useState(atividade.inicio ?? '');
+  const [fim, setFim] = useState(atividade.fim ?? '');
+  const [comentario, setComentario] = useState(atividade.comentario ?? '');
+  const [observacao, setObservacao] = useState(atividade.observacao ?? '');
+  const [q, setQ] = useState('');
+
+  const list = projects.filter(p => !q.trim() || p.label.toLowerCase().includes(q.toLowerCase()));
+  const toggle = (id: number) => setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-base font-semibold">Vincular projetos / comunidades</h3>
+          <button onClick={onClose}><X size={18} /></button>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">{atividade.atividade}</p>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-xs font-medium block mb-1">Início</label>
+            <input type="date" value={inicio} onChange={e => setInicio(e.target.value)} disabled={!canEdit}
+              className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1">Fim</label>
+            <input type="date" value={fim} onChange={e => setFim(e.target.value)} disabled={!canEdit}
+              className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-2">
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar projeto/comunidade…"
+            className="flex-1 px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+          <button onClick={() => setIds(projects.map(p => p.id))} className="text-[11px] px-2 py-2 rounded-md" style={{ border: '1px solid var(--border)' }}>Todos</button>
+          <button onClick={() => setIds([])} className="text-[11px] px-2 py-2 rounded-md" style={{ border: '1px solid var(--border)' }}>Nenhum</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto rounded-md mb-3" style={{ border: '1px solid var(--border)', minHeight: 140 }}>
+          {list.map(p => {
+            const on = ids.includes(p.id);
+            return (
+              <button key={p.id} onClick={() => toggle(p.id)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-slate-50"
+                style={{ borderBottom: '1px solid #F1F5F9' }}>
+                <span className="inline-flex items-center justify-center rounded-sm shrink-0"
+                  style={{ width: 14, height: 14, border: `1px solid ${on ? 'var(--primary)' : '#CBD5E1'}`, background: on ? 'var(--primary)' : '#fff' }}>
+                  {on && <Check size={10} color="#fff" />}
+                </span>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mb-2">
+          <label className="text-xs font-medium mb-1 flex items-center gap-1"><MessageSquare size={12} /> Comentários</label>
+          <textarea value={comentario} onChange={e => setComentario(e.target.value)} rows={2}
+            className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+        </div>
+        <div>
+          <label className="text-xs font-medium block mb-1">Observações</label>
+          <textarea value={observacao} onChange={e => setObservacao(e.target.value)} rows={2}
+            className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 mt-4">
+          <span className="text-[11px] text-muted-foreground">{ids.length} de {projects.length} selecionados</span>
+          <span className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
+            <button onClick={() => onSave({ ids, inicio, fim, comentario, observacao })}
+              className="px-4 py-2 text-sm text-white rounded-md flex items-center gap-1" style={{ background: 'var(--primary)' }}>
+              <Save size={13} /> Salvar
+            </button>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

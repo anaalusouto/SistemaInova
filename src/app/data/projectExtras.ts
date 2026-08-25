@@ -55,3 +55,20 @@ export interface PendingApproval extends ProjectOp {
   /** legado */
   kind?: MetaNodeKind;
 }
+
+/** Meio de comunicação usado no contato com a instituição. */
+export type CommMeio = 'Ligação' | 'Meet (video chamada)' | 'Whatsapp (msg)' | 'E-mail' | 'Presencial' | 'Outro';
+export const COMM_MEIOS: CommMeio[] = ['Ligação', 'Meet (video chamada)', 'Whatsapp (msg)', 'E-mail', 'Presencial', 'Outro'];
+
+/** Linha do registro de comunicação (área de Contatos de cada projeto). */
+export interface CommLog {
+  id: number;
+  data: string;          // YYYY-MM-DD
+  hora: string;          // HH:MM
+  instituicao: string;
+  representante: string;
+  meio: CommMeio | string;
+  quemRealizou: string;
+  registro: string;      // Registro de comunicação
+  saida: string;         // Encaminhamento / saída
+}
