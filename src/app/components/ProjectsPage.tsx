@@ -111,7 +111,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             />
           </div>
           <button
-            onClick={() => setShowFilters(v => !v)}
+            onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[13px] font-medium"
             style={{
               borderColor: showFilters ? 'var(--primary)' : 'var(--border)',
