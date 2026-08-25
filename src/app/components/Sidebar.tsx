@@ -22,6 +22,8 @@ export type NavItem =
 interface SidebarProps {
   activeItem: NavItem;
   onNavigate: (item: NavItem) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const topItems = [
@@ -36,7 +38,7 @@ const bottomItems = [
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings, adminOnly: true },
 ];
 
-export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
+export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: SidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
 
   const initials = (user?.displayName ?? '')
@@ -52,7 +54,7 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
     return (
       <button
         key={item.id}
-        onClick={() => onNavigate(item.id)}
+        onClick={() => { onNavigate(item.id); onClose?.(); }}
         className="w-full flex items-center gap-3 rounded-md mb-0.5 text-left transition-all duration-150"
         style={{
           padding: indent ? '8px 12px 8px 30px' : '8px 12px',
@@ -71,7 +73,20 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   };
 
   return (
-    <aside className="flex flex-col h-full w-60 flex-shrink-0" style={{ background: 'var(--sidebar)' }}>
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`flex flex-col h-full w-60 flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ background: 'var(--sidebar)' }}
+      >
       <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)', background: '#FFFFFF' }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sidebar-primary)' }}>
           <LayoutDashboard size={16} color="#fff" />
@@ -120,6 +135,7 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

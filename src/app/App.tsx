@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Menu } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -17,6 +18,7 @@ import { LoginScreen } from './auth/LoginScreen';
 function AppShell() {
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { getProject } = useStore();
   const { user, isAdmin } = useAuth();
   const { log } = useAudit();
@@ -70,8 +72,28 @@ function AppShell() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--background)' }}>
-      <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
-      <main className="flex-1 overflow-hidden">{renderMain()}</main>
+      <Sidebar
+        activeItem={activeNav}
+        onNavigate={handleNavigate}
+        isOpen={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+      />
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header
+          className="flex items-center gap-3 border-b px-4 py-3 lg:hidden"
+          style={{ borderColor: 'var(--border)', background: 'var(--background)' }}
+        >
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Abrir menu"
+            className="flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="text-sm font-semibold text-foreground">INOVA CRIA</span>
+        </header>
+        <main className="flex-1 overflow-y-auto">{renderMain()}</main>
+      </div>
       <Toaster position="top-right" richColors closeButton />
     </div>
   );
