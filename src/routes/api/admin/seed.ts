@@ -11,7 +11,7 @@ export const Route = createFileRoute('/api/admin/seed')({
         const expected = process.env.SEED_TOKEN;
         if (!expected) {
           return Response.json(
-            { ok: false, error: 'SEED_TOKEN não configurado no serviço do Railway.' },
+            { ok: false, error: 'SEED_TOKEN não configurado no ambiente do servidor.' },
             { status: 500 },
           );
         }
