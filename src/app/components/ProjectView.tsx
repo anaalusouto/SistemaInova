@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { type Project } from '../data/mockData';
 import { type ProjectExt } from '../store';
 import { useStore } from '../store';
+import { useAuth } from '../auth/authStore';
+import { useAudit } from '../audit/auditStore';
 import { TabResumo } from './project-tabs/TabResumo';
 import { TabMetas } from './project-tabs/TabMetas';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
@@ -52,6 +54,8 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
   const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; value: string } | null>(null);
   const { getProject, updateProject } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const project = getProject(initial.id) ?? initial;
   const driveLink = (project as ProjectExt).driveLink ?? '';
   const budgetLink = (project as ProjectExt).budgetLink ?? '';
@@ -313,6 +317,10 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
               <button
                 onClick={() => {
                   updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);
+                  audit({
+                    userLogin: user?.login ?? '—', area: 'projeto', action: `editar link (${editLink.kind})`,
+                    detail: editLink.value.trim(), projectId: project.id, projectName: project.name, kind: 'alteracao',
+                  });
                   toast.success('Link atualizado.');
                   setEditLink(null);
                 }}

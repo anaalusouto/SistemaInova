@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import { Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { type Project, type ProjectStatus } from '../../data/mockData';
 import { useStore, type PlanoTrabalho, type ProjectExt } from '../../store';
+import { useAuth } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 
 interface Props { project: Project; }
 
@@ -72,7 +74,15 @@ const P_FIELDS: { title: string; fields: { key: keyof PlanoTrabalho; label: stri
 
 export function TabCadastro({ project }: Props) {
   const { updateProject, communities } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const proj = project as ProjectExt;
+
+  const record = (action: string, detail: string) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'cadastro', action, detail,
+      projectId: project.id, projectName: project.name, kind: 'alteracao',
+    });
   const [form, setForm] = useState({
     name: project.name,
     code: project.code,
@@ -107,6 +117,7 @@ export function TabCadastro({ project }: Props) {
       team: form.teamText.split(',').map(t => t.trim()).filter(Boolean),
       communityId: form.communityId, plano,
     } as Partial<ProjectExt>);
+    record('editar cadastro/plano de trabalho', form.name);
     toast.success('Cadastro salvo.');
   };
 
@@ -160,6 +171,7 @@ export function TabCadastro({ project }: Props) {
                   const next = project.team.filter(m => m !== member);
                   updateProject(project.id, { team: next });
                   setForm(f => ({ ...f, teamText: next.join(', ') }));
+                  record('remover membro da equipe', member);
                   toast.success('Membro removido.');
                 }} className="p-0.5 rounded hover:bg-red-50">
                   <X size={10} color="#DC2626" />

@@ -3,6 +3,8 @@ import { FileText, Image, Video, Link2, File, Upload, Search, Plus, Trash2, X } 
 import { toast } from 'sonner';
 import { type Project, type Evidence } from '../../data/mockData';
 import { useStore } from '../../store';
+import { useAuth } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 
 const typeConfig = {
   PDF:       { icon: FileText, color: '#DC2626', bg: '#FEF2F2' },
@@ -33,6 +35,13 @@ function formatSize(bytes: number) {
 
 export function TabEvidencias({ project }: Props) {
   const { addEvidence, deleteEvidence } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
+  const record = (action: string, detail: string) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'evidências', action, detail,
+      projectId: project.id, projectName: project.name, kind: 'alteracao',
+    });
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<FilterType>('Todos');
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -54,6 +63,7 @@ export function TabEvidencias({ project }: Props) {
         uploadDate: new Date().toLocaleDateString('pt-BR'),
         size: formatSize(file.size),
       });
+      record('adicionar evidência', file.name);
     });
     toast.success(`${files.length} arquivo(s) adicionado(s).`);
   };
@@ -149,7 +159,7 @@ export function TabEvidencias({ project }: Props) {
                     <div className="flex items-center gap-1">
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: cfg.bg, color: cfg.color }}>{ev.type}</span>
                       <button
-                        onClick={() => { if (window.confirm('Excluir evidência?')) { deleteEvidence(project.id, ev.id); toast.success('Excluída.'); } }}
+                        onClick={() => { if (window.confirm('Excluir evidência?')) { deleteEvidence(project.id, ev.id); record('excluir evidência', ev.name); toast.success('Excluída.'); } }}
                         className="p-1 rounded hover:bg-red-50 opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 size={12} color="#DC2626" />
@@ -197,6 +207,7 @@ export function TabEvidencias({ project }: Props) {
               uploadDate: new Date().toLocaleDateString('pt-BR'),
               size: '—',
             });
+            record('adicionar evidência (link)', title || url);
             toast.success('Link vinculado.');
             setShowLinkForm(false);
           }}

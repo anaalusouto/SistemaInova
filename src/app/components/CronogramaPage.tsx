@@ -72,8 +72,13 @@ export function CronogramaPage() {
    ============================================================ */
 function RotasTab() {
   const { routes, updateRoute, addRoute, deleteRoute } = useStore();
+  const { user } = useAuth();
+  const { log } = useAudit();
   const [selectedRota, setSelectedRota] = useState<string>('all');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const record = (action: string, detail: string) =>
+    log({ userLogin: user?.login ?? '—', area: 'rotas', action, detail, kind: 'alteracao' });
 
   const rotasUnicas = useMemo(() => Array.from(new Set(routes.map(r => r.rota))).sort(), [routes]);
   const filtered = useMemo(
@@ -101,7 +106,7 @@ function RotasTab() {
             {rotasUnicas.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <button onClick={() => addRoute({ rota: 'ROTA NOVA', organizacao: '', municipio: '', uf: 'PA', diasAtuacao: 2, modalAcesso: '', tipoComunidade: '', notasLogisticas: '', status: 'Operacional' })}
+        <button onClick={() => { addRoute({ rota: 'ROTA NOVA', organizacao: '', municipio: '', uf: 'PA', diasAtuacao: 2, modalAcesso: '', tipoComunidade: '', notasLogisticas: '', status: 'Operacional' }); record('adicionar rota', 'ROTA NOVA'); }}
           className="flex items-center gap-1 text-xs px-3 py-2 rounded-md text-white ml-auto" style={{ background: 'var(--primary)' }}>
           <Plus size={12} /> Adicionar rota
         </button>
@@ -167,27 +172,27 @@ function RotasTab() {
                   onClick={() => setSelectedId(r.id)}
                   className="border-t cursor-pointer"
                   style={{ borderColor: 'var(--border)', background: selectedId === r.id ? '#EFF6FF' : undefined }}>
-                  <Td><input className="cell" value={r.rota} onChange={e => updateRoute(r.id, { rota: e.target.value })} /></Td>
-                  <Td><input className="cell" value={r.organizacao} onChange={e => updateRoute(r.id, { organizacao: e.target.value })} /></Td>
+                  <Td><input className="cell" value={r.rota} onChange={e => updateRoute(r.id, { rota: e.target.value })} onBlur={() => record('editar rota', `rota: ${r.rota}`)} /></Td>
+                  <Td><input className="cell" value={r.organizacao} onChange={e => updateRoute(r.id, { organizacao: e.target.value })} onBlur={() => record('editar rota', `organização: ${r.organizacao}`)} /></Td>
                   <Td>
                     <div className="flex gap-1">
-                      <input className="cell" style={{ flex: 1 }} value={r.municipio} onChange={e => updateRoute(r.id, { municipio: e.target.value })} />
-                      <input className="cell" style={{ width: 48 }} value={r.uf} onChange={e => updateRoute(r.id, { uf: e.target.value })} />
+                      <input className="cell" style={{ flex: 1 }} value={r.municipio} onChange={e => updateRoute(r.id, { municipio: e.target.value })} onBlur={() => record('editar rota', `município: ${r.municipio} · ${r.organizacao}`)} />
+                      <input className="cell" style={{ width: 48 }} value={r.uf} onChange={e => updateRoute(r.id, { uf: e.target.value })} onBlur={() => record('editar rota', `UF: ${r.uf} · ${r.organizacao}`)} />
                     </div>
                   </Td>
-                  <Td><input type="number" className="cell" style={{ width: 60 }} value={r.diasAtuacao} onChange={e => updateRoute(r.id, { diasAtuacao: Number(e.target.value) })} /></Td>
-                  <Td><input className="cell" value={r.modalAcesso} onChange={e => updateRoute(r.id, { modalAcesso: e.target.value })} /></Td>
-                  <Td><input className="cell" value={r.tipoComunidade} onChange={e => updateRoute(r.id, { tipoComunidade: e.target.value })} /></Td>
+                  <Td><input type="number" className="cell" style={{ width: 60 }} value={r.diasAtuacao} onChange={e => updateRoute(r.id, { diasAtuacao: Number(e.target.value) })} onBlur={() => record('editar rota', `dias de atuação: ${r.diasAtuacao} · ${r.organizacao}`)} /></Td>
+                  <Td><input className="cell" value={r.modalAcesso} onChange={e => updateRoute(r.id, { modalAcesso: e.target.value })} onBlur={() => record('editar rota', `modal de acesso: ${r.modalAcesso} · ${r.organizacao}`)} /></Td>
+                  <Td><input className="cell" value={r.tipoComunidade} onChange={e => updateRoute(r.id, { tipoComunidade: e.target.value })} onBlur={() => record('editar rota', `tipo de comunidade: ${r.tipoComunidade} · ${r.organizacao}`)} /></Td>
                   <Td>
-                    <select className="cell" value={r.status ?? 'Operacional'} onChange={e => updateRoute(r.id, { status: e.target.value as RotaItem['status'] })}>
+                    <select className="cell" value={r.status ?? 'Operacional'} onChange={e => { updateRoute(r.id, { status: e.target.value as RotaItem['status'] }); record('editar rota', `status: ${e.target.value} · ${r.organizacao}`); }}>
                       <option value="Operacional">Operacional</option>
                       <option value="Atenção">Atenção</option>
                       <option value="Crítico">Crítico</option>
                     </select>
                   </Td>
-                  <Td><input className="cell" value={r.notasLogisticas} onChange={e => updateRoute(r.id, { notasLogisticas: e.target.value })} /></Td>
+                  <Td><input className="cell" value={r.notasLogisticas} onChange={e => updateRoute(r.id, { notasLogisticas: e.target.value })} onBlur={() => record('editar rota', `notas logísticas: ${r.organizacao}`)} /></Td>
                   <Td>
-                    <button onClick={(ev) => { ev.stopPropagation(); if (confirm(`Excluir ${r.rota} — ${r.organizacao}?`)) { deleteRoute(r.id); toast.success('Rota excluída'); } }} className="p-1.5 rounded hover:bg-red-50">
+                    <button onClick={(ev) => { ev.stopPropagation(); if (confirm(`Excluir ${r.rota} — ${r.organizacao}?`)) { deleteRoute(r.id); record('excluir rota', `${r.rota} — ${r.organizacao}`); toast.success('Rota excluída'); } }} className="p-1.5 rounded hover:bg-red-50">
                       <Trash2 size={13} className="text-red-500" />
                     </button>
                   </Td>
@@ -320,6 +325,10 @@ type CalView = 'month' | 'week' | 'day';
 
 function CalendarioTab() {
   const { events, addEvent, updateEvent, deleteEvent, routes, communities } = useStore();
+  const { user } = useAuth();
+  const { log } = useAudit();
+  const record = (action: string, detail: string) =>
+    log({ userLogin: user?.login ?? '—', area: 'calendário', action, detail, kind: 'alteracao' });
   const [view, setView] = useState<CalView>('month');
   const [cursor, setCursor] = useState<Date>(new Date(2026, 0, 1));
   const [showForm, setShowForm] = useState(false);
@@ -400,11 +409,17 @@ function CalendarioTab() {
           communities={communities}
           onClose={() => setShowForm(false)}
           onSave={(data) => {
-            if (editing != null) { updateEvent(editing, data); toast.success('Evento atualizado.'); }
-            else { addEvent(data); toast.success('Evento criado.'); }
+            if (editing != null) { updateEvent(editing, data); record('editar evento', `${data.title} · ${data.date}`); toast.success('Evento atualizado.'); }
+            else { addEvent(data); record('criar evento', `${data.title} · ${data.date}`); toast.success('Evento criado.'); }
             setShowForm(false);
           }}
-          onDelete={editing != null ? () => { deleteEvent(editing); toast.success('Evento excluído.'); setShowForm(false); } : undefined}
+          onDelete={editing != null ? () => {
+            const ev = events.find(x => x.id === editing);
+            deleteEvent(editing);
+            record('excluir evento', ev ? `${ev.title} · ${ev.date}` : String(editing));
+            toast.success('Evento excluído.');
+            setShowForm(false);
+          } : undefined}
         />
       )}
     </div>

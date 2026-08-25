@@ -3,6 +3,8 @@ import { ChevronDown, ChevronRight, Plus, Target, Package, CheckSquare, ArrowDow
 import { toast } from 'sonner';
 import { type Project, type ActivityStatus } from '../../data/mockData';
 import { useStore } from '../../store';
+import { useAuth } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -20,6 +22,13 @@ interface TabMonitoramentoProps {
 
 export function TabMonitoramento({ project }: TabMonitoramentoProps) {
   const { updateActivityStatus } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
+  const record = (action: string, detail: string) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'monitoramento', action, detail,
+      projectId: project.id, projectName: project.name, kind: 'alteracao',
+    });
   const detailRef = useRef<HTMLDivElement>(null);
   const [expandedGoals, setExpandedGoals] = useState<number[]>(project.goals.map(g => g.id));
   const [expandedDeliverables, setExpandedDeliverables] = useState<number[]>(
@@ -270,6 +279,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
                                           value={activity.status}
                                           onChange={(e) => {
                                             updateActivityStatus(project.id, activity.id, e.target.value as ActivityStatus);
+                                            record('alterar status de atividade', `${activity.name}: ${activity.status} → ${e.target.value}`);
                                             toast.success('Status atualizado.');
                                           }}
                                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap border-0 outline-none cursor-pointer"

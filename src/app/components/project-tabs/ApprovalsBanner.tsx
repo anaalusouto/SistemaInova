@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import type { OpEntity, PendingApproval } from '../../data/projectExtras';
 import { useStore } from '../../store';
 import { useAuth, hasAdminPowers } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 
 const actionLabel: Record<string, string> = { criar: 'Criar', editar: 'Editar', excluir: 'Excluir' };
 
@@ -15,10 +16,18 @@ interface Props {
 
 /** Faixa com solicitações pendentes de validação de administrador. */
 export function ApprovalsBanner({ projectId, approvals, entities }: Props) {
-  const { approveMetaEdit, rejectMetaEdit } = useStore();
+  const { approveMetaEdit, rejectMetaEdit, getProject } = useStore();
   const { user } = useAuth();
+  const { log: audit } = useAudit();
   const isAdmin = hasAdminPowers(user);
   const adminName = user?.displayName ?? 'Administrador';
+  const projectName = getProject(projectId)?.name;
+
+  const record = (action: string, detail: string) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'aprovações', action, detail,
+      projectId, projectName, kind: 'alteracao',
+    });
 
   const pending = approvals.filter(
     a => a.status === 'Pendente' && (!entities || entities.includes(a.entity)),
@@ -55,12 +64,20 @@ export function ApprovalsBanner({ projectId, approvals, entities }: Props) {
             {isAdmin ? (
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
-                  onClick={() => { approveMetaEdit(projectId, a.id, adminName); toast.success('Alteração aprovada.'); }}
+                  onClick={() => {
+                    approveMetaEdit(projectId, a.id, adminName);
+                    record('aprovar alteração', `${actionLabel[a.action] ?? a.action} · ${a.entity} · ${a.targetPath}`);
+                    toast.success('Alteração aprovada.');
+                  }}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-white"
                   style={{ background: '#059669' }}
                 ><Check size={11} /> Aprovar</button>
                 <button
-                  onClick={() => { rejectMetaEdit(projectId, a.id, adminName); toast.error('Alteração recusada.'); }}
+                  onClick={() => {
+                    rejectMetaEdit(projectId, a.id, adminName);
+                    record('recusar alteração', `${actionLabel[a.action] ?? a.action} · ${a.entity} · ${a.targetPath}`);
+                    toast.error('Alteração recusada.');
+                  }}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border"
                   style={{ borderColor: '#FCA5A5', color: '#DC2626' }}
                 ><X size={11} /> Recusar</button>

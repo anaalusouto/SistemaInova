@@ -16,6 +16,8 @@ import {
 import { type Project, type ProjectStatus } from '../data/mockData';
 import type { ProjectExt } from '../store';
 import { useStore } from '../store';
+import { useAuth } from '../auth/authStore';
+import { useAudit } from '../audit/auditStore';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -37,6 +39,10 @@ const filterMemory: { search: string; categories: string[]; open: boolean } = { 
 
 export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const { projects, addProject, deleteProject } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
+  const record = (action: string, detail: string, projectId?: number, projectName?: string) =>
+    audit({ userLogin: user?.login ?? '—', area: 'projetos', action, detail, projectId, projectName, kind: 'alteracao' });
   const [search, setSearchState] = useState(filterMemory.search);
   const [selected, setSelectedState] = useState<string[]>(filterMemory.categories);
   const [showModal, setShowModal] = useState(false);
@@ -72,6 +78,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
     e.stopPropagation();
     if (!window.confirm(`Excluir "${name}"? Esta ação não pode ser desfeita.`)) return;
     deleteProject(id);
+    record('excluir projeto', name, id, name);
     toast.success('Projeto excluído.');
   };
 
@@ -304,6 +311,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
           onClose={() => setShowModal(false)}
           onCreate={(data) => {
             const created = addProject(data);
+            record('criar projeto', created.name, created.id, created.name);
             toast.success(`Projeto "${created.name}" criado.`);
             setShowModal(false);
             onSelectProject(created);

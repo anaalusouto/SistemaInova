@@ -6,7 +6,8 @@ import {
 import { toast } from 'sonner';
 import { type Project, type ActivityStatus } from '../../data/mockData';
 import { useStore, type MetaEdit } from '../../store';
-import { APP_PEOPLE } from '../../auth/authStore';
+import { APP_PEOPLE, useAuth } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
 const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: string }> = {
@@ -52,6 +53,8 @@ function CellInput({ value, onSave, placeholder, mono }: { value: string; onSave
 export function TabMetas({ project }: Props) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as never);
   const [open, setOpen] = useState<number[]>(project.goals.map(g => g.id));
   const [openStep, setOpenStep] = useState<number[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
@@ -62,6 +65,16 @@ export function TabMetas({ project }: Props) {
 
   const submit = (edit: MetaEdit, silent = false) => {
     const result = submitMetaEdit(project.id, edit, author);
+    audit({
+      userLogin: user?.login ?? '—',
+      area: 'metas',
+      action: `${edit.action} ${edit.entity}`,
+      detail: edit.field
+        ? `${edit.targetPath} · ${edit.field}: ${edit.from ?? '—'} → ${edit.to ?? '—'}`
+        : `${edit.targetPath}${edit.to ? ` · ${edit.to}` : ''}`,
+      projectId: project.id, projectName: project.name,
+      kind: result === 'pendente' ? 'pendencia' : 'alteracao',
+    });
     setEditing(null);
     if (silent) return;
     if (result === 'pendente') toast.info('Alteração enviada para validação de um administrador.');

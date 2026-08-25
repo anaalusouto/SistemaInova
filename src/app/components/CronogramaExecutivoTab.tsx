@@ -44,7 +44,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const scopeProjects = activeProject != null ? projects.filter(p => p.id === activeProject) : projects;
 
   const audit = (action: string, detail: string) =>
-    log({ userLogin: user?.login ?? '—', area: 'cronograma executivo', action, detail });
+    log({ userLogin: user?.login ?? '—', area: 'cronograma executivo', action, detail, kind: 'alteracao' });
 
   const track = (aid: number, pid: number) =>
     ganttTracking[`${aid}:${pid}`] ?? { status: 'Não iniciado' as GanttStatus };

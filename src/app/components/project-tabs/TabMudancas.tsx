@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { Plus, GitBranch, CheckCircle2, Clock, XCircle, X, Trash2, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Change, type ApprovalStatus, type ChangeType, type ChangeNature, type Goal } from '../../data/mockData';
-import { APP_PEOPLE } from '../../auth/authStore';
+import { APP_PEOPLE, useAuth } from '../../auth/authStore';
 import { useStore, type ProjectExt } from '../../store';
+import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
 const CHANGE_TYPES: ChangeType[] = ['Escopo', 'Prazo', 'Financeiro', 'Equipe', 'Técnico'];
@@ -27,10 +28,18 @@ interface Props { project: Project }
 export function TabMudancas({ project }: Props) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as ProjectExt);
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<number | null>(null);
+
+  const record = (action: string, detail: string, kind: 'alteracao' | 'pendencia' = 'alteracao') =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'mudanças', action, detail,
+      projectId: project.id, projectName: project.name, kind,
+    });
 
   const notify = (r: 'aplicado' | 'pendente') =>
     r === 'pendente'
@@ -39,25 +48,31 @@ export function TabMudancas({ project }: Props) {
 
   const edit = (c: Change, field: string, from: string, to: string) => {
     if (from === to) return;
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'editar', targetId: c.id,
       targetPath: `Mudança: ${c.description.slice(0, 40)}`, field, from, to,
-    }, author));
+    }, author);
+    notify(result);
+    record('editar mudança', `${field}: ${from} → ${to} · ${c.description.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const remove = (c: Change) => {
     if (!window.confirm('Excluir esta mudança?')) return;
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'excluir', targetId: c.id,
       targetPath: `Mudança: ${c.description.slice(0, 40)}`, from: c.description,
-    }, author));
+    }, author);
+    notify(result);
+    record('excluir mudança', c.description.slice(0, 40), result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const create = (payload: Record<string, unknown>) => {
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'criar', targetPath: 'Nova mudança',
       to: String(payload.description ?? ''), payload,
-    }, author));
+    }, author);
+    notify(result);
+    record('registrar mudança', String(payload.description ?? ''), result === 'pendente' ? 'pendencia' : 'alteracao');
     setShowForm(false);
   };
 

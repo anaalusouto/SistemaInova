@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { Plus, ShieldAlert, Trash2, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Risk, type RiskStatus, type Goal } from '../../data/mockData';
-import { APP_PEOPLE } from '../../auth/authStore';
+import { APP_PEOPLE, useAuth } from '../../auth/authStore';
 import { useStore } from '../../store';
 import type { ProjectExt } from '../../store';
+import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
 const RISK_STATUSES: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
@@ -40,11 +41,19 @@ interface TabRiscosProps { project: Project }
 export function TabRiscos({ project }: TabRiscosProps) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as ProjectExt);
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Todos' | RiskStatus>('Todos');
   const [expanded, setExpanded] = useState<number | null>(null);
+
+  const record = (action: string, detail: string, kind: 'alteracao' | 'pendencia' = 'alteracao') =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'riscos', action, detail,
+      projectId: project.id, projectName: project.name, kind,
+    });
 
   const notify = (r: 'aplicado' | 'pendente') =>
     r === 'pendente'
@@ -53,25 +62,31 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
   const edit = (risk: Risk, field: string, from: string, to: string) => {
     if (from === to) return;
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'risco', action: 'editar', targetId: risk.id,
       targetPath: `Risco: ${risk.description.slice(0, 40)}`, field, from, to,
-    }, author));
+    }, author);
+    notify(result);
+    record('editar risco', `${field}: ${from} → ${to} · ${risk.description.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const remove = (risk: Risk) => {
     if (!window.confirm('Excluir este risco?')) return;
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'risco', action: 'excluir', targetId: risk.id,
       targetPath: `Risco: ${risk.description.slice(0, 40)}`, from: risk.description,
-    }, author));
+    }, author);
+    notify(result);
+    record('excluir risco', risk.description.slice(0, 40), result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const create = (payload: Record<string, unknown>) => {
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'risco', action: 'criar',
       targetPath: 'Novo risco', to: String(payload.description ?? ''), payload,
-    }, author));
+    }, author);
+    notify(result);
+    record('cadastrar risco', String(payload.description ?? ''), result === 'pendente' ? 'pendencia' : 'alteracao');
     setShowForm(false);
   };
 

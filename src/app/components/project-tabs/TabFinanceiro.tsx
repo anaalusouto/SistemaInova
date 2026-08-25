@@ -17,6 +17,8 @@ import {
 } from '../../data/mockData';
 import { useStore, type ProjectExt } from '../../store';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
+import { useAuth } from '../../auth/authStore';
+import { useAudit } from '../../audit/auditStore';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }).format(n);
@@ -56,7 +58,15 @@ interface TabFinanceiroProps { project: Project }
 export function TabFinanceiro({ project }: TabFinanceiroProps) {
   const { submitMetaEdit, addContrapartida, deleteContrapartida, addAporte, deleteAporte, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as ProjectExt);
+
+  const record = (action: string, detail: string, kind: 'alteracao' | 'pendencia' = 'alteracao') =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'financeiro', action, detail,
+      projectId: project.id, projectName: project.name, kind,
+    });
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCpForm, setShowCpForm] = useState(false);
@@ -80,34 +90,42 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
   const edit = (item: FinancialItem, field: string, from: string, to: string) => {
     if (from === to) return;
     if (!isAdmin) { setEditItem(item); return; }
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, field, from, to,
-    }, author));
+    }, author);
+    notify(result);
+    record('editar item orçamentário', `${field}: ${from} → ${to} · ${item.item.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const remove = (item: FinancialItem) => {
     if (!window.confirm('Excluir item orçamentário?')) return;
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'excluir', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, from: item.item,
-    }, author));
+    }, author);
+    notify(result);
+    record('excluir item orçamentário', `${item.meta} · ${item.item.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
   const submitRowEdit = (item: FinancialItem, payload: Record<string, unknown>) => {
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`,
       field: 'item orçamentário', from: item.item, to: String(payload.item ?? item.item), payload,
-    }, author));
+    }, author);
+    notify(result);
+    record('editar item orçamentário', `${item.meta} · ${String(payload.item ?? item.item)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
     setEditItem(null);
   };
 
   const create = (payload: Record<string, unknown>) => {
-    notify(submitMetaEdit(project.id, {
+    const result = submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'criar', targetPath: `${payload.meta}`,
       to: String(payload.item ?? ''), payload,
-    }, author));
+    }, author);
+    notify(result);
+    record('criar item orçamentário', `${payload.meta} · ${String(payload.item ?? '')}`, result === 'pendente' ? 'pendencia' : 'alteracao');
     setShowItemForm(false);
   };
 
@@ -485,7 +503,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                       <td className="px-4 py-2" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A', fontWeight: 600 }}>{fmt(total)}</td>
                       <td className="px-2 py-2">
                         <button
-                          onClick={() => { if (window.confirm('Excluir contrapartida?')) { deleteContrapartida(project.id, c.id); toast.success('Excluída.'); } }}
+                          onClick={() => { if (window.confirm('Excluir contrapartida?')) { deleteContrapartida(project.id, c.id); record('excluir contrapartida', `${c.meta} · ${c.descricao}`); toast.success('Excluída.'); } }}
                           className="p-1 rounded hover:bg-red-50"
                         ><Trash2 size={12} color="#DC2626" /></button>
                       </td>
@@ -558,7 +576,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                   <td className="px-4 py-2" style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{a.registradoPor ?? '—'}</td>
                   <td className="px-2 py-2">
                     {isAdmin && (
-                      <button onClick={() => deleteAporte(project.id, a.id)} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="#DC2626" /></button>
+                      <button onClick={() => { deleteAporte(project.id, a.id); record('excluir lançamento', `${a.tipo} · ${a.descricao}`); }} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="#DC2626" /></button>
                     )}
                   </td>
                 </tr>
@@ -582,14 +600,14 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       {showAporteForm && (
         <AporteForm
           onClose={() => setShowAporteForm(false)}
-          onSave={a => { addAporte(project.id, { ...a, registradoPor: author.name }); toast.success('Lançamento registrado.'); setShowAporteForm(false); }}
+          onSave={a => { addAporte(project.id, { ...a, registradoPor: author.name }); record('lançar recurso', `${a.tipo} · ${a.descricao}`); toast.success('Lançamento registrado.'); setShowAporteForm(false); }}
         />
       )}
       {showCpForm && (
         <CpForm
           existingMetas={byMeta.map(([m]) => m)}
           onClose={() => setShowCpForm(false)}
-          onSave={(payload) => { addContrapartida(project.id, payload); toast.success('Contrapartida adicionada.'); setShowCpForm(false); }}
+          onSave={(payload) => { addContrapartida(project.id, payload); record('adicionar contrapartida', `${payload.meta} · ${payload.descricao}`); toast.success('Contrapartida adicionada.'); setShowCpForm(false); }}
         />
       )}
 

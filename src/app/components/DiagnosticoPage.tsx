@@ -8,6 +8,8 @@ import { useDiagnostics, type Diagnostic, type DiagnosticStatus, type RoundId } 
 import { sections, maturityAxes, type Question } from '../diagnostic/schema';
 import { useStore } from '../store';
 import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
+import { useAuth } from '../auth/authStore';
+import { useAudit } from '../audit/auditStore';
 
 const statusColor: Record<DiagnosticStatus, { bg: string; color: string }> = {
   'Rascunho':        { bg: '#F3F4F6', color: '#6B7280' },
@@ -24,6 +26,14 @@ const ROUNDS: { id: RoundId; label: string }[] = [
 export function DiagnosticoPage() {
   const { diagnostics, createDiagnostic, deleteDiagnostic } = useDiagnostics();
   const { projects, communities } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
+  const record = (action: string, detail: string, d?: Diagnostic) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'diagnóstico', action, detail,
+      projectId: d?.projectId ?? undefined, projectName: d?.projectId ? d.organizationName : undefined,
+      kind: 'alteracao',
+    });
   const [search, setSearch] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -58,6 +68,7 @@ export function DiagnosticoPage() {
       communityId: community?.id ?? null,
       projectId: project?.id ?? null,
     });
+    record('criar diagnóstico', created.title, created);
     toast.success('Diagnóstico criado');
     setShowNew(false); setNfCommunity(''); setNfProject('');
     setEditingId(created.id);
@@ -138,7 +149,7 @@ export function DiagnosticoPage() {
                         <div className="text-xs text-muted-foreground mb-1">Preenchimento</div>
                         <div className="text-sm font-semibold">{pct}%</div>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`Excluir "${d.title}"?`)) { deleteDiagnostic(d.id); toast.success('Diagnóstico excluído'); }}}
+                      <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`Excluir "${d.title}"?`)) { deleteDiagnostic(d.id); record('excluir diagnóstico', d.title, d); toast.success('Diagnóstico excluído'); }}}
                         className="p-2 rounded-md hover:bg-red-50" title="Excluir">
                         <Trash2 size={14} className="text-red-500" />
                       </button>
@@ -198,6 +209,15 @@ export function DiagnosticoPage() {
 function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBack: () => void }) {
   const { setAnswer, setMaturity, setRound, updateDiagnostic, addProduct, deleteProduct } = useDiagnostics();
   const { projects, communities } = useStore();
+  const { user } = useAuth();
+  const { log: audit } = useAudit();
+  const record = (action: string, detail: string) =>
+    audit({
+      userLogin: user?.login ?? '—', area: 'diagnóstico', action, detail,
+      projectId: diagnostic.projectId ?? undefined,
+      projectName: diagnostic.projectId ? diagnostic.organizationName : undefined,
+      kind: 'alteracao',
+    });
   const [tab, setTab] = useState<'questoes' | 'maturidade' | 'produtos' | 'resumo'>('questoes');
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const [activeRound, setActiveRound] = useState<RoundId>('r1');
@@ -221,7 +241,9 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
     if (!roundReady) { toast.error('Preencha avaliador e data da rodada antes.'); setShowRoundForm(activeRound); return; }
     if (roundLocked) { setPendingMaturity({ key, value }); return; }
     const current = diagnostic.maturity[key];
-    setMaturity(diagnostic.id, key, current === value ? 0 : value);
+    const next = current === value ? 0 : value;
+    setMaturity(diagnostic.id, key, next);
+    record('marcar índice de maturidade', `${key}: ${current ?? 0} → ${next}`);
   };
 
   const handleExport = () => {
@@ -252,6 +274,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
 
   const handleConclude = () => {
     updateDiagnostic(diagnostic.id, { status: 'Concluído' });
+    record('concluir diagnóstico', diagnostic.title);
     toast.success('Diagnóstico marcado como concluído');
   };
 
@@ -350,7 +373,8 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                   <div className="space-y-4">
                     {s.questions.map(q => (
                       <QuestionField key={q.id} question={q} value={diagnostic.answers[q.id]}
-                        onChange={(v) => setAnswer(diagnostic.id, q.id, v)} />
+                        onChange={(v) => setAnswer(diagnostic.id, q.id, v)}
+                        onLog={(v) => record('responder questão', `${s.title} · ${q.label}: ${Array.isArray(v) ? v.join(', ') : v}`)} />
                     ))}
                   </div>
                 </div>
@@ -383,7 +407,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                   {roundMeta ? 'Editar rodada' : 'Iniciar rodada'}
                 </button>
                 {roundReady && !roundLocked && (
-                  <button onClick={() => setRound(diagnostic.id, activeRound, { finalized: true })}
+                  <button onClick={() => { setRound(diagnostic.id, activeRound, { finalized: true }); record('finalizar rodada', ROUNDS.find(r => r.id === activeRound)?.label ?? activeRound); }}
                     className="text-xs px-3 py-1.5 rounded-md text-white" style={{ background: '#059669' }}>
                     Finalizar rodada
                   </button>
@@ -462,8 +486,12 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
 
         {tab === 'produtos' && (
           <ProdutosTab diagnostic={diagnostic}
-            onAdd={(p) => addProduct(diagnostic.id, p)}
-            onDelete={(pid) => deleteProduct(diagnostic.id, pid)} />
+            onAdd={(p) => { addProduct(diagnostic.id, p); record('adicionar produto', p.nome); }}
+            onDelete={(pid) => {
+              const prod = diagnostic.products.find(x => x.id === pid);
+              deleteProduct(diagnostic.id, pid);
+              record('excluir produto', prod?.nome ?? String(pid));
+            }} />
         )}
 
         {tab === 'resumo' && <ResumoTab diagnostic={diagnostic} />}
@@ -475,6 +503,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
           description="Esta rodada foi finalizada. Alterar índices requer autenticação administrativa."
           onSuccess={() => {
             setMaturity(diagnostic.id, pendingMaturity.key, pendingMaturity.value);
+            record('alterar índice de maturidade (rodada finalizada)', `${pendingMaturity.key} → ${pendingMaturity.value}`);
             toast.success('Índice atualizado.');
           }}
           onClose={() => setPendingMaturity(null)}
@@ -486,7 +515,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
           round={showRoundForm}
           meta={diagnostic.rounds[showRoundForm]}
           onClose={() => setShowRoundForm(null)}
-          onSave={(m) => { setRound(diagnostic.id, showRoundForm, m); toast.success('Rodada atualizada.'); setShowRoundForm(null); }}
+          onSave={(m) => { setRound(diagnostic.id, showRoundForm, m); record('editar rodada', `${ROUNDS.find(r => r.id === showRoundForm)?.label ?? showRoundForm}: ${m.evaluator} · ${m.date}`); toast.success('Rodada atualizada.'); setShowRoundForm(null); }}
         />
       )}
     </div>
@@ -531,10 +560,12 @@ function RoundForm({ round, meta, onSave, onClose }: {
   );
 }
 
-function QuestionField({ question: q, value, onChange }: {
+function QuestionField({ question: q, value, onChange, onLog }: {
   question: Question;
   value: string | string[] | number | undefined;
   onChange: (v: string | string[] | number) => void;
+  /** Registro de auditoria — chamado ao concluir a edição (blur), nunca a cada tecla digitada. */
+  onLog?: (v: string | string[] | number) => void;
 }) {
   const inputStyle = { background: 'var(--input-background)', border: '1px solid var(--border)' };
   return (
@@ -542,19 +573,22 @@ function QuestionField({ question: q, value, onChange }: {
       <label className="text-sm font-medium block mb-1.5">{q.label}</label>
       {q.type === 'text' && (
         <input value={(value as string) ?? ''} onChange={e => onChange(e.target.value)}
+          onBlur={e => onLog?.(e.target.value)}
           className="w-full px-3 py-2 rounded-md text-sm" style={inputStyle} />
       )}
       {q.type === 'textarea' && (
         <textarea value={(value as string) ?? ''} onChange={e => onChange(e.target.value)} rows={3}
+          onBlur={e => onLog?.(e.target.value)}
           className="w-full px-3 py-2 rounded-md text-sm" style={inputStyle} />
       )}
       {q.type === 'number' && (
         <input type="number" value={(value as number | string) ?? ''}
           onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+          onBlur={e => onLog?.(e.target.value === '' ? '' : Number(e.target.value))}
           className="w-full px-3 py-2 rounded-md text-sm" style={inputStyle} />
       )}
       {q.type === 'select' && (
-        <select value={(value as string) ?? ''} onChange={e => onChange(e.target.value)}
+        <select value={(value as string) ?? ''} onChange={e => { onChange(e.target.value); onLog?.(e.target.value); }}
           className="w-full px-3 py-2 rounded-md text-sm" style={inputStyle}>
           <option value="">— Selecione —</option>
           {q.options?.map(o => <option key={o} value={o}>{o}</option>)}
@@ -566,7 +600,11 @@ function QuestionField({ question: q, value, onChange }: {
             const arr = (Array.isArray(value) ? value : []) as string[];
             const checked = arr.includes(o);
             return (
-              <button key={o} type="button" onClick={() => onChange(checked ? arr.filter(x => x !== o) : [...arr, o])}
+              <button key={o} type="button" onClick={() => {
+                const next = checked ? arr.filter(x => x !== o) : [...arr, o];
+                onChange(next);
+                onLog?.(next);
+              }}
                 className="px-3 py-1.5 text-xs rounded-full transition-colors"
                 style={{ background: checked ? 'var(--primary)' : 'var(--muted)', color: checked ? '#fff' : 'var(--foreground)', border: '1px solid var(--border)' }}>
                 {o}
