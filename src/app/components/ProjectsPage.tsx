@@ -10,6 +10,7 @@ import {
   DollarSign,
   Users,
   Trash2,
+  Check,
   X,
 } from 'lucide-react';
 import { type Project, type ProjectStatus } from '../data/mockData';
@@ -31,14 +32,24 @@ interface ProjectsPageProps {
   onSelectProject: (project: Project) => void;
 }
 
+/** Filtros preservados enquanto a sessão estiver aberta (entrar/sair de um projeto não limpa). */
+const filterMemory: { search: string; categories: string[]; open: boolean } = { search: '', categories: [], open: false };
+
 export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const { projects, addProject, deleteProject } = useStore();
-  const [search, setSearch] = useState('');
-  const [filterCategory, setFilterCategory] = useState('Todas');
+  const [search, setSearchState] = useState(filterMemory.search);
+  const [selected, setSelectedState] = useState<string[]>(filterMemory.categories);
   const [showModal, setShowModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFiltersState] = useState(filterMemory.open || filterMemory.categories.length > 0);
 
-  const categories = ['Todas', 'Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
+  const setSearch = (v: string) => { filterMemory.search = v; setSearchState(v); };
+  const setSelected = (v: string[]) => { filterMemory.categories = v; setSelectedState(v); };
+  const setShowFilters = (v: boolean) => { filterMemory.open = v; setShowFiltersState(v); };
+
+  const categories = ['Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
+
+  const toggleCategory = (c: string) =>
+    setSelected(selected.includes(c) ? selected.filter(x => x !== c) : [...selected, c]);
 
   const normalized = (s: string) =>
     s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -53,7 +64,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       normalized(p.coordinator).includes(q) ||
       normalized(p.financier).includes(q) ||
       normalized(p.code).includes(q);
-    const matchCategory = filterCategory === 'Todas' || (p as ProjectExt).segmento === filterCategory;
+    const matchCategory = selected.length === 0 || selected.includes((p as ProjectExt).segmento ?? '');
     return matchSearch && matchCategory;
   });
 
@@ -108,7 +119,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
               background: showFilters ? '#EFF6FF' : '#fff',
             }}
           >
-            <Filter size={12} /> Filtros
+            <Filter size={12} /> Filtros{selected.length > 0 ? ` (${selected.length})` : ''}
           </button>
         </div>
       </div>
@@ -116,28 +127,49 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       {showFilters && (
         <div className="p-3 rounded-lg border bg-card" style={{ borderColor: 'var(--border)' }}>
           <div className="flex flex-wrap items-center gap-2">
-            {categories.map(c => (
-              <button
-                key={c}
-                onClick={() => setFilterCategory(c)}
-                className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
-                style={{
-                  background: filterCategory === c ? 'var(--primary)' : '#fff',
-                  color: filterCategory === c ? '#fff' : '#64748B',
-                  border: `1px solid ${filterCategory === c ? 'var(--primary)' : 'var(--border)'}`,
-                }}
-              >
-                {c}
-              </button>
-            ))}
             <button
-              onClick={() => { setSearch(''); setFilterCategory('Todas'); }}
+              onClick={() => setSelected([])}
+              className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
+              style={{
+                background: selected.length === 0 ? 'var(--primary)' : '#fff',
+                color: selected.length === 0 ? '#fff' : '#64748B',
+                border: `1px solid ${selected.length === 0 ? 'var(--primary)' : 'var(--border)'}`,
+              }}
+            >
+              Todas
+            </button>
+            {categories.map(c => {
+              const on = selected.includes(c);
+              return (
+                <button
+                  key={c}
+                  onClick={() => toggleCategory(c)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
+                  style={{
+                    background: on ? 'var(--primary)' : '#fff',
+                    color: on ? '#fff' : '#64748B',
+                    border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
+                  }}
+                >
+                  <span className="inline-flex items-center justify-center rounded-sm"
+                    style={{ width: 12, height: 12, border: `1px solid ${on ? '#fff' : '#CBD5E1'}`, background: on ? '#fff' : 'transparent' }}>
+                    {on && <Check size={9} color="#2563EB" />}
+                  </span>
+                  {c}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => { setSearch(''); setSelected([]); }}
               className="text-[12px] px-2 py-1.5 rounded border ml-auto"
               style={{ borderColor: 'var(--border)', color: '#475569' }}
             >
               Limpar filtros
             </button>
           </div>
+          <p className="mt-2" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+            Você pode marcar mais de uma categoria. Os filtros continuam ativos ao entrar e sair de um projeto — use “Todas” ou “Limpar filtros” para zerar.
+          </p>
         </div>
       )}
 
