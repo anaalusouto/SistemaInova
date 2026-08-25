@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Plus, Download, TrendingUp, DollarSign, Wallet, Trash2, X, HandCoins, History,
+  Plus, Download, TrendingUp, DollarSign, Wallet, Trash2, X, HandCoins, PencilLine, ArrowDownCircle, ArrowUpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -54,17 +54,23 @@ const selCls = 'w-full bg-transparent rounded px-1 py-1 border border-transparen
 interface TabFinanceiroProps { project: Project }
 
 export function TabFinanceiro({ project }: TabFinanceiroProps) {
-  const { submitMetaEdit, addContrapartida, deleteContrapartida, getProject } = useStore();
+  const { submitMetaEdit, addContrapartida, deleteContrapartida, addAporte, deleteAporte, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
   const p = getProject(project.id) ?? (project as ProjectExt);
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [showCpForm, setShowCpForm] = useState(false);
-  const [showLog, setShowLog] = useState(false);
+  const [editItem, setEditItem] = useState<FinancialItem | null>(null);
+  const [showAporteForm, setShowAporteForm] = useState(false);
 
   const items = p.financialItems;
   const contrapartidas = p.contrapartidas ?? [];
-  const log = (p.metaLog ?? []).filter(l => l.entity === 'financeiro');
+  const aportes = p.aportes ?? [];
+  const metaOptions = useMemo(() => {
+    const fromGoals = (p.goals ?? []).map(g => g.name);
+    const fromItems = p.financialItems.map(i => i.meta).filter(Boolean);
+    return Array.from(new Set([...fromGoals, ...fromItems]));
+  }, [p]);
 
   const notify = (r: 'aplicado' | 'pendente') =>
     r === 'pendente'
@@ -73,6 +79,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 
   const edit = (item: FinancialItem, field: string, from: string, to: string) => {
     if (from === to) return;
+    if (!isAdmin) { setEditItem(item); return; }
     notify(submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, field, from, to,
@@ -85,6 +92,15 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       entity: 'financeiro', action: 'excluir', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, from: item.item,
     }, author));
+  };
+
+  const submitRowEdit = (item: FinancialItem, payload: Record<string, unknown>) => {
+    notify(submitMetaEdit(project.id, {
+      entity: 'financeiro', action: 'editar', targetId: item.id,
+      targetPath: `${item.meta} › ${item.item.slice(0, 40)}`,
+      field: 'item orçamentário', from: item.item, to: String(payload.item ?? item.item), payload,
+    }, author));
+    setEditItem(null);
   };
 
   const create = (payload: Record<string, unknown>) => {
@@ -318,7 +334,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                   <table className="w-full" style={{ minWidth: 1420 }}>
                     <thead>
                       <tr style={{ background: '#FAFAFA' }}>
-                        {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', ''].map(h => (
+                        {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', isAdmin ? '' : 'Realizar alteração'].map(h => (
                           <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                         ))}
                       </tr>
@@ -332,36 +348,36 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
                             <td className="px-2 py-2 w-48">
-                              <select className={selCls} style={{ fontSize: '0.7rem' }} value={item.category} onChange={e => edit(item, 'categoria', item.category, e.target.value)}>
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.7rem' }} value={item.category} onChange={e => edit(item, 'categoria', item.category, e.target.value)}>
                                 {BUDGET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 {!BUDGET_CATEGORIES.includes(item.category as BudgetCategory) && <option value={item.category}>{item.category}</option>}
                               </select>
                             </td>
                             <td className="px-2 py-2 min-w-[260px]">
-                              <input className={selCls} style={{ fontSize: '0.76rem', color: '#0F172A' }} defaultValue={item.item}
+                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.76rem', color: '#0F172A' }} defaultValue={item.item}
                                 onBlur={e => edit(item, 'descrição', item.item, e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-16">
-                              <input type="number" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtd}
+                              <input type="number" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtd}
                                 onBlur={e => edit(item, 'qtd', String(item.qtd), e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-28">
-                              <input className={selCls} style={{ fontSize: '0.74rem' }} defaultValue={item.unidade}
+                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem' }} defaultValue={item.unidade}
                                 onBlur={e => edit(item, 'unidade', item.unidade, e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-20">
-                              <input type="number" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtdUnidades}
+                              <input type="number" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.qtdUnidades}
                                 onBlur={e => edit(item, 'qtd. de unidades', String(item.qtdUnidades), e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-28">
-                              <input type="number" step="0.01" className={selCls} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.valorUnitario}
+                              <input type="number" step="0.01" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.valorUnitario}
                                 onBlur={e => edit(item, 'valor unitário', String(item.valorUnitario), e.target.value)} />
                             </td>
                             <td className="px-3 py-2 w-32" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A', fontWeight: 600, background: '#F0FDF4' }}>
                               {fmt(total)}
                             </td>
                             <td className="px-2 py-2 w-24">
-                              <select className={selCls} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? '#059669' : flag === 'Parcial' ? '#B45309' : '#64748B' }}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? '#059669' : flag === 'Parcial' ? '#B45309' : '#64748B' }}
                                 value={flag} onChange={e => edit(item, 'executado', flag, e.target.value)}>
                                 {EXECUTED_FLAGS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
@@ -372,7 +388,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               ) : (
                                 <input
                                   type="number" step="0.01"
-                                  className={selCls}
+                                  className={selCls} disabled={!isAdmin} readOnly={!isAdmin}
                                   style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: '#059669', fontWeight: 600 }}
                                   defaultValue={item.executedValue}
                                   key={`${item.id}-${item.executedValue}`}
@@ -382,7 +398,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                             </td>
                             <td className="px-2 py-2 w-44">
                               <select
-                                className={selCls}
+                                className={selCls} disabled={!isAdmin}
                                 style={{ fontSize: '0.71rem', background: ACC_COLORS[acc].bg, color: ACC_COLORS[acc].fg, borderRadius: 6 }}
                                 value={acc}
                                 onChange={e => edit(item, 'prestação de contas', acc, e.target.value)}
@@ -391,15 +407,25 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               </select>
                             </td>
                             <td className="px-2 py-2 w-44">
-                              <select className={selCls} style={{ fontSize: '0.71rem', color: '#475569' }} value={rec}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.71rem', color: '#475569' }} value={rec}
                                 onChange={e => edit(item, 'registro de alterações', rec, e.target.value)}>
                                 {CHANGE_RECORDS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
                             </td>
-                            <td className="px-2 py-2">
-                              <button onClick={() => remove(item)} className="p-1 rounded hover:bg-red-50" title="Excluir item">
-                                <Trash2 size={12} color="#DC2626" />
-                              </button>
+                            <td className="px-2 py-2 whitespace-nowrap">
+                              {isAdmin ? (
+                                <button onClick={() => remove(item)} className="p-1 rounded hover:bg-red-50" title="Excluir item">
+                                  <Trash2 size={12} color="#DC2626" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setEditItem(item)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border"
+                                  style={{ borderColor: '#BFDBFE', color: '#1D4ED8', background: '#EFF6FF' }}
+                                >
+                                  <PencilLine size={11} /> Realizar alteração
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -475,8 +501,92 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         </div>
       </div>
 
+      {/* Caderno de recursos adicionais */}
+      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
+              Caderno de recursos (entradas e saídas)
+            </h3>
+            <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+              Recursos que a comunidade movimentou fora do valor do termo. Não altera o orçamento aprovado — serve só para conhecimento e acompanhamento.
+            </p>
+          </div>
+          <button onClick={() => setShowAporteForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
+            <Plus size={13} /> Lançar
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-px" style={{ background: 'var(--border)' }}>
+          {(() => {
+            const ent = aportes.filter(a => a.tipo === 'Entrada').reduce((x, a) => x + a.valor, 0);
+            const sai = aportes.filter(a => a.tipo === 'Saída').reduce((x, a) => x + a.valor, 0);
+            const cards = [
+              { l: 'Recurso do termo (recebido)', v: fmt(p.budgetApproved), c: '#0F172A' },
+              { l: 'Entradas adicionais', v: fmt(ent), c: '#059669' },
+              { l: 'Saídas adicionais', v: fmt(sai), c: '#DC2626' },
+              { l: 'Saldo de controle', v: fmt(p.budgetApproved + ent - sai - 0), c: '#1D4ED8' },
+            ];
+            return cards.map(c => (
+              <div key={c.l} className="px-4 py-3" style={{ background: '#fff' }}>
+                <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{c.l}</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: c.c }}>{c.v}</div>
+              </div>
+            ));
+          })()}
+        </div>
+
+        {aportes.length > 0 && (
+          <table className="w-full" style={{ borderTop: '1px solid var(--border)' }}>
+            <thead>
+              <tr style={{ background: '#FAFAFA' }}>
+                {['Data', 'Tipo', 'Origem / destino', 'Descrição', 'Valor', 'Registrado por', ''].map(h => (
+                  <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {aportes.map(a => (
+                <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td className="px-4 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{a.data}</td>
+                  <td className="px-4 py-2">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                      style={a.tipo === 'Entrada' ? { background: '#ECFDF5', color: '#059669' } : { background: '#FEF2F2', color: '#DC2626' }}>
+                      {a.tipo === 'Entrada' ? <ArrowDownCircle size={10} /> : <ArrowUpCircle size={10} />} {a.tipo}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.origem}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.descricao}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: a.tipo === 'Entrada' ? '#059669' : '#DC2626' }}>{fmt(a.valor)}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{a.registradoPor ?? '—'}</td>
+                  <td className="px-2 py-2">
+                    {isAdmin && (
+                      <button onClick={() => deleteAporte(project.id, a.id)} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="#DC2626" /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       {showItemForm && (
-        <ItemForm existingMetas={byMeta.map(([m]) => m)} onClose={() => setShowItemForm(false)} onSave={create} />
+        <ItemForm existingMetas={metaOptions} onClose={() => setShowItemForm(false)} onSave={create} />
+      )}
+      {editItem && (
+        <ItemForm
+          existingMetas={metaOptions}
+          initial={editItem}
+          onClose={() => setEditItem(null)}
+          onSave={payload => submitRowEdit(editItem, payload)}
+        />
+      )}
+      {showAporteForm && (
+        <AporteForm
+          onClose={() => setShowAporteForm(false)}
+          onSave={a => { addAporte(project.id, { ...a, registradoPor: author.name }); toast.success('Lançamento registrado.'); setShowAporteForm(false); }}
+        />
       )}
       {showCpForm && (
         <CpForm
@@ -533,8 +643,9 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 const inputCls = 'w-full px-3 py-2 rounded-lg border text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-200';
 const inputStyle = { borderColor: 'var(--border)', background: '#fff' } as const;
 
-function ItemForm({ existingMetas, onClose, onSave }: {
+function ItemForm({ existingMetas, initial, onClose, onSave }: {
   existingMetas: string[];
+  initial?: FinancialItem;
   onClose: () => void;
   onSave: (i: Record<string, unknown>) => void;
 }) {
@@ -580,10 +691,11 @@ function ItemForm({ existingMetas, onClose, onSave }: {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <FieldLabel>Meta</FieldLabel>
-            <input list="metas-list" className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })} placeholder="Ex: Meta 1" />
+            <select className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })}>
+              {!existingMetas.includes(f.meta) && f.meta && <option value={f.meta}>{f.meta}</option>}
+              {(existingMetas.length ? existingMetas : ['Meta 1', 'Meta 2', 'Meta 3', 'Meta 4', 'Meta 5']).map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
             <datalist id="metas-list">
-              {existingMetas.map(m => <option key={m} value={m} />)}
-              {['Meta 1', 'Meta 2', 'Meta 3', 'Meta 4', 'Meta 5'].map(m => <option key={m} value={m} />)}
             </datalist>
           </div>
           <div>
