@@ -13,22 +13,31 @@ import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
-import type { Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
+import type { CommLog, Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
 import { applyOp } from './data/projectOps';
 import { metasProjetos } from './data/metasProjetos';
 import type { InternalTracking } from './data/controleInterno';
 import { riscosProjetos } from './data/riscosProjetos';
 
 // Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
+/** Correções de valores aprovados informadas pela coordenação. */
+const BUDGET_FIX: Record<string, number> = {
+  ATAIC: 164198.0,
+  ARQUIA: 200000.0,
+  AMIG: 164244.4,
+  COOPAFS: 164285.71,
+};
+
 const seedProjects = inovaProjetos.map(p => ({
   ...p,
   goals: metasProjetos[p.id] ?? p.goals ?? [],
   risks: p.risks?.length ? p.risks : (riscosProjetos[p.id] ?? []),
+  budgetApproved: BUDGET_FIX[(p as { org?: string }).org ?? ''] ?? p.budgetApproved,
 }));
 void seedProjectsLegacy;
 
 
-const STORAGE_KEY = 'pp-portfolio-v12';
+const STORAGE_KEY = 'pp-portfolio-v13';
 
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
@@ -85,7 +94,22 @@ export type ProjectExt = Project & {
   contacts?: Contact[];
   metaLog?: MetaChangeLog[];
   approvals?: PendingApproval[];
+  /** Caderno de entradas e saídas de recursos adicionais (aportes). */
+  aportes?: Aporte[];
+  /** Registro de comunicação com a instituição (contatos). */
+  commLogs?: CommLog[];
 };
+
+/** Lançamento simples de recurso adicional — entradas e saídas fora do orçamento aprovado. */
+export interface Aporte {
+  id: number;
+  data: string;          // YYYY-MM-DD
+  tipo: 'Entrada' | 'Saída';
+  origem: string;        // quem aportou / destino
+  descricao: string;
+  valor: number;
+  registradoPor?: string;
+}
 
 /** Operação sujeita a registro e (para estagiários) validação de administrador. */
 export type MetaEdit = ProjectOp;
@@ -116,6 +140,15 @@ type Ctx = {
   deleteEvidence: (projectId: number, evId: number) => void;
 
   updateActivityStatus: (projectId: number, activityId: number, status: ActivityStatus, progress?: number) => void;
+
+  // Aportes (caderno financeiro paralelo)
+  addAporte: (projectId: number, a: Omit<Aporte, 'id'>) => void;
+  deleteAporte: (projectId: number, id: number) => void;
+
+  // Registro de comunicação (contatos)
+  addCommLog: (projectId: number, c: Omit<CommLog, 'id'>) => void;
+  updateCommLog: (projectId: number, id: number, patch: Partial<CommLog>) => void;
+  deleteCommLog: (projectId: number, id: number) => void;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => void;
@@ -153,7 +186,8 @@ type Ctx = {
   // Cronograma Executivo (Gantt)
   gantt: GanttBloco[];
   updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; entrega?: string; comentario?: string }) => void;
-  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string; projetoId?: number | null }) => void;
+  updateGanttBloco: (blocoId: number, bloco: string) => void;
+  updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string; observacao?: string; projetoId?: number | null; projetoIds?: number[]; vinculavel?: boolean }) => void;
   addGanttAtividade: (entregaId: number, atividade: string) => void;
   addGanttSubatividade: (atividadeId: number, atividade: string) => void;
   deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null;
@@ -171,13 +205,28 @@ type Persisted = {
   ganttTracking?: Record<string, InternalTracking>;
 };
 
+/**
+ * Remove os vínculos pré-existentes entre atividades e projetos.
+ * O vínculo passa a ser feito manualmente, atividade a atividade.
+ */
+function unlinkGantt(blocos: GanttBloco[]): GanttBloco[] {
+  const clean = (a: GanttActivity): GanttActivity => ({
+    ...a,
+    projetoId: null,
+    vinculavel: a.vinculavel ?? false,
+    projetoIds: a.projetoIds ?? [],
+    subatividades: (a.subatividades ?? []).map(clean),
+  });
+  return blocos.map(b => ({ ...b, entregas: b.entregas.map(en => ({ ...en, atividades: en.atividades.map(clean) })) }));
+}
+
 function loadInitial(): Persisted {
   const fallback: Persisted = {
     projects: seedProjects as ProjectExt[],
     communities: seedComunidades,
     routes: seedRotas,
     events: calendarSeed,
-    gantt: cronogramaExecutivoSeed,
+    gantt: unlinkGantt(cronogramaExecutivoSeed),
     ganttTracking: {},
   };
   if (typeof window === 'undefined') return fallback;
@@ -190,7 +239,7 @@ function loadInitial(): Persisted {
       communities: parsed.communities?.length ? parsed.communities : fallback.communities,
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
-      gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
+      gantt: unlinkGantt(parsed.gantt?.length ? parsed.gantt : fallback.gantt),
       ganttTracking: parsed.ganttTracking ?? {},
     };
   } catch { return fallback; }
@@ -341,6 +390,25 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       })),
     })),
 
+    addAporte: (projectId, a) => patch(projectId, p => {
+      const list = p.aportes ?? [];
+      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, aportes: [{ ...a, id: nextId }, ...list] };
+    }),
+    deleteAporte: (projectId, id) => patch(projectId, p => ({ ...p, aportes: (p.aportes ?? []).filter(a => a.id !== id) })),
+
+    addCommLog: (projectId, c) => patch(projectId, p => {
+      const list = p.commLogs ?? [];
+      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+      return { ...p, commLogs: [{ ...c, id: nextId }, ...list] };
+    }),
+    updateCommLog: (projectId, id, patchData) => patch(projectId, p => ({
+      ...p, commLogs: (p.commLogs ?? []).map(c => (c.id === id ? { ...c, ...patchData } : c)),
+    })),
+    deleteCommLog: (projectId, id) => patch(projectId, p => ({
+      ...p, commLogs: (p.commLogs ?? []).filter(c => c.id !== id),
+    })),
+
     addContact: (projectId, c) => patch(projectId, p => {
       const list = p.contacts ?? [];
       const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
@@ -424,6 +492,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         progress: patchData.progress ?? en.progress,
       } : en),
     }))),
+    updateGanttBloco: (blocoId, bloco) => setGantt(prev => prev.map(b => (b.id === blocoId ? { ...b, bloco } : b))),
     updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => prev.map(b => ({
       ...b,
       entregas: b.entregas.map(en => ({
