@@ -239,7 +239,7 @@ function loadInitial(): Persisted {
       communities: parsed.communities?.length ? parsed.communities : fallback.communities,
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
-      gantt: unlinkGantt(parsed.gantt?.length ? parsed.gantt : fallback.gantt),
+      gantt: parsed.gantt?.length ? parsed.gantt : fallback.gantt,
       ganttTracking: parsed.ganttTracking ?? {},
     };
   } catch { return fallback; }
