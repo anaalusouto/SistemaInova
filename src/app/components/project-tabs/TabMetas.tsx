@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
   ChevronDown, ChevronRight, Info, Target, Pencil, Check, X, Plus, Trash2,
-  History, ShieldCheck, Minus,
+  Minus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type ActivityStatus } from '../../data/mockData';
