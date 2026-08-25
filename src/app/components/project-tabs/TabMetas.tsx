@@ -57,7 +57,6 @@ export function TabMetas({ project }: Props) {
   const [openStep, setOpenStep] = useState<number[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
   const [infoGoal, setInfoGoal] = useState<number | null>(null);
   const [editing, setEditing] = useState<{ key: string; value: string } | null>(null);
-  const [showLog, setShowLog] = useState(false);
 
   const log = p.metaLog ?? [];
 
@@ -107,13 +106,6 @@ export function TabMetas({ project }: Props) {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => setShowLog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-          style={{ borderColor: 'var(--border)', color: '#475569' }}
-        >
-          <History size={13} /> Registro de alterações ({log.length})
-        </button>
         <button
           onClick={() => askCreate('Nome da nova meta:', { entity: 'meta', targetPath: 'Nova meta' })}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
@@ -506,49 +498,6 @@ export function TabMetas({ project }: Props) {
         );
       })()}
 
-      {/* Registro de alterações */}
-      {showLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setShowLog(false)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>Registro de alterações</h3>
-              <button onClick={() => setShowLog(false)}><X size={16} /></button>
-            </div>
-            {log.length === 0 ? (
-              <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Nenhuma alteração registrada ainda.</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {log.map(l => (
-                  <div key={l.id} className="rounded-lg border p-3" style={{ borderColor: 'var(--border)' }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style={{ background: '#F1F5F9', color: '#475569' }}>
-                        {l.action ?? 'editar'} · {l.entity ?? l.kind ?? 'meta'}
-                      </span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{l.targetPath}{l.field ? ` · ${l.field}` : ''}</span>
-                      <span className="ml-auto" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                        {new Date(l.date).toLocaleString('pt-BR')}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.76rem' }}>
-                      <span style={{ color: '#DC2626', textDecoration: 'line-through' }}>{l.from || '—'}</span>
-                      {' → '}
-                      <span style={{ color: '#059669' }}>{l.to || '—'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1" style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                      <span>por <strong>{l.author}</strong> ({l.authorRole})</span>
-                      {l.approvedBy && (
-                        <span className="flex items-center gap-1" style={{ color: '#059669' }}>
-                          <ShieldCheck size={11} /> validado por {l.approvedBy}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
