@@ -650,17 +650,17 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
   onSave: (i: Record<string, unknown>) => void;
 }) {
   const [f, setF] = useState({
-    meta: existingMetas[existingMetas.length - 1] || 'Meta 1',
-    category: BUDGET_CATEGORIES[0] as BudgetCategory,
-    item: '',
-    qtd: '1',
-    unidade: 'unidade',
-    qtdUnidades: '1',
-    valorUnitario: '',
-    executedFlag: 'Não' as ExecutedFlag,
-    executedValue: '0',
-    accountability: 'Não enviado' as AccountabilityStatus,
-    changeRecord: 'Novo item' as ChangeRecord,
+    meta: initial?.meta ?? existingMetas[existingMetas.length - 1] ?? 'Meta 1',
+    category: (initial?.category ?? BUDGET_CATEGORIES[0]) as BudgetCategory,
+    item: initial?.item ?? '',
+    qtd: String(initial?.qtd ?? 1),
+    unidade: initial?.unidade ?? 'unidade',
+    qtdUnidades: String(initial?.qtdUnidades ?? 1),
+    valorUnitario: String(initial?.valorUnitario ?? ''),
+    executedFlag: (initial?.executedFlag ?? 'Não') as ExecutedFlag,
+    executedValue: String(initial?.executedValue ?? 0),
+    accountability: (initial?.accountability ?? 'Não enviado') as AccountabilityStatus,
+    changeRecord: (initial?.changeRecord ?? (initial ? 'Conforme planejado' : 'Novo item')) as ChangeRecord,
   });
   const total = (Number(f.qtd) || 0) * (Number(f.qtdUnidades) || 0) * (Number(f.valorUnitario) || 0);
   const submit = (e: React.FormEvent) => {
@@ -685,7 +685,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
       <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Novo Item Orçamentário</h3>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>{initial ? 'Realizar alteração no item' : 'Novo Item Orçamentário'}</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -695,8 +695,6 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
               {!existingMetas.includes(f.meta) && f.meta && <option value={f.meta}>{f.meta}</option>}
               {(existingMetas.length ? existingMetas : ['Meta 1', 'Meta 2', 'Meta 3', 'Meta 4', 'Meta 5']).map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-            <datalist id="metas-list">
-            </datalist>
           </div>
           <div>
             <FieldLabel>Categoria</FieldLabel>
@@ -836,6 +834,71 @@ function CpForm({ existingMetas, onClose, onSave }: {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function AporteForm({ onClose, onSave }: {
+  onClose: () => void;
+  onSave: (a: { data: string; tipo: 'Entrada' | 'Saída'; origem: string; descricao: string; valor: number }) => void;
+}) {
+  const [f, setF] = useState({
+    data: new Date().toISOString().slice(0, 10),
+    tipo: 'Entrada' as 'Entrada' | 'Saída',
+    origem: '',
+    descricao: '',
+    valor: '',
+  });
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
+      <form
+        onClick={e => e.stopPropagation()}
+        onSubmit={e => {
+          e.preventDefault();
+          const valor = Number(f.valor) || 0;
+          if (!valor) { toast.error('Informe o valor.'); return; }
+          onSave({ data: f.data, tipo: f.tipo, origem: f.origem.trim(), descricao: f.descricao.trim(), valor });
+        }}
+        className="bg-white rounded-2xl border p-6 w-full max-w-lg"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Lançamento de recurso</h3>
+          <button type="button" onClick={onClose}><X size={16} /></button>
+        </div>
+        <p style={{ fontSize: '0.72rem', color: '#94A3B8', marginBottom: 12 }}>
+          Entradas e saídas fora do termo. O valor recebido do termo continua inalterado.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <FieldLabel>Data</FieldLabel>
+            <input type="date" className={inputCls} style={inputStyle} value={f.data} onChange={e => setF({ ...f, data: e.target.value })} />
+          </div>
+          <div>
+            <FieldLabel>Tipo</FieldLabel>
+            <select className={inputCls} style={inputStyle} value={f.tipo} onChange={e => setF({ ...f, tipo: e.target.value as 'Entrada' | 'Saída' })}>
+              <option value="Entrada">Entrada</option>
+              <option value="Saída">Saída</option>
+            </select>
+          </div>
+          <div>
+            <FieldLabel>Origem / destino</FieldLabel>
+            <input className={inputCls} style={inputStyle} value={f.origem} onChange={e => setF({ ...f, origem: e.target.value })} placeholder="Ex: recurso próprio da comunidade" />
+          </div>
+          <div>
+            <FieldLabel>Valor (R$)</FieldLabel>
+            <input type="number" step="0.01" className={inputCls} style={inputStyle} value={f.valor} onChange={e => setF({ ...f, valor: e.target.value })} placeholder="0,00" />
+          </div>
+          <div className="col-span-2">
+            <FieldLabel>Descrição</FieldLabel>
+            <input className={inputCls} style={inputStyle} value={f.descricao} onChange={e => setF({ ...f, descricao: e.target.value })} placeholder="Do que se trata este recurso" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
           <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
           <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>
