@@ -17,10 +17,19 @@ export function LoginScreen() {
 
   return (
     <div
-      className="flex items-center justify-center h-screen w-screen p-6"
+      className="relative flex items-center justify-center h-screen w-screen p-6 overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)' }}
     >
-      <div className="w-full max-w-sm bg-card rounded-2xl border p-7 flex flex-col gap-5" style={{ borderColor: 'var(--border)' }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url('https://mundolenny.com.br/wp-content/uploads/2022/09/MundoLenny_DiaDaAmazonia.gif')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.72)' }} />
+      <div className="relative w-full max-w-sm bg-card rounded-2xl border p-7 flex flex-col gap-5" style={{ borderColor: 'var(--border)' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary)' }}>
             <ShieldCheck size={22} color="#fff" />

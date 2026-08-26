@@ -1,5 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../integrations/supabase/client';
 import {
   type Project, type Risk, type Change, type FinancialItem, type ContrapartidaItem, type Evidence, type ActivityStatus,
 } from './data/mockData';
@@ -253,6 +254,20 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     const result = await fn();
     await invalidate();
     return result;
+  }, [invalidate]);
+
+  // Realtime: qualquer mudança nas tabelas de projetos (feita por qualquer
+  // pessoa, em qualquer aba) dispara um broadcast (ver migração
+  // 0002_realtime_broadcast.sql) — aqui a gente só re-busca a lista via
+  // server function; o canal nunca carrega o conteúdo da linha em si.
+  useEffect(() => {
+    const channel = supabase
+      .channel('projetos-sync')
+      .on('broadcast', { event: 'changed' }, () => {
+        void invalidate();
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
   }, [invalidate]);
 
   const value = useMemo<Ctx>(() => ({
