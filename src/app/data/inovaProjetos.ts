@@ -3331,11 +3331,11 @@ divulgação de ações nos eventos comunitários.`, experienciaPrevia: `Experi�
  FINEP desenvolvido junto a EMBRAPA-AP).
  Energia solar para soberania alimentar de famílias ribeirinhas - Fase 1: desenvolvido
  de 2020 a 2023, no valor de 100.000,00 dólares, em parceria com a Honnold
- Foundation e EMBRAPA-AP, visou a instalação de paineis solares em 50 residências
+ Foundation e EMBRAPA-AP, visou a instalação de painéis solares em 50 residências
  atuantes com a ATAIC, em parceria com a Fundação Ronald e EMBRAPA-AP.
  Energia solar para soberania alimentar de famílias ribeirinhas - Fase 2: executado
  de 2023 a 2025, no valor de 360.000,00 dólares, em parceria com a Honnold
- Foundation e EMBRAPA-AP, prevê a instalação de paineis solares em 120 residências
+ Foundation e EMBRAPA-AP, prevê a instalação de painéis solares em 120 residências
  que pertencem a 6 comunidades do território, que atuam em atividades desenvolvidas
  pela ATAIC.
  Implantação da primeira agroindústria de óleos e manteigas em área de várzea da

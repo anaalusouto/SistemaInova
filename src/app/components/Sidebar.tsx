@@ -93,7 +93,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         </div>
         <div>
           <div style={{ color: '#000000', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
-            INOVA CRIA
+            Sistema Inova
           </div>
           <div style={{ color: '#000000', fontSize: '0.7rem', opacity: 0.7 }}>
             Gestão de Projetos

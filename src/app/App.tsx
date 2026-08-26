@@ -90,7 +90,7 @@ function AppShell() {
           >
             <Menu size={20} />
           </button>
-          <span className="text-sm font-semibold text-foreground">INOVA CRIA</span>
+          <span className="text-sm font-semibold text-foreground">Sistema Inova</span>
         </header>
         <main className="flex-1 overflow-y-auto">{renderMain()}</main>
       </div>

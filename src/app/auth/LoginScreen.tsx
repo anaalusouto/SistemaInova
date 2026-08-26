@@ -27,7 +27,7 @@ export function LoginScreen() {
           </div>
           <div className="text-center">
             <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: '#0F172A' }}>
-              INOVA CRIA
+              Sistema Inova
             </h1>
             <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 3 }}>
               Acesse o portfólio de projetos institucionais
