@@ -30,15 +30,15 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
       projectId: project.id, projectName: project.name, kind: 'alteracao',
     });
   const detailRef = useRef<HTMLDivElement>(null);
-  const [expandedGoals, setExpandedGoals] = useState<number[]>(project.goals.map(g => g.id));
-  const [expandedDeliverables, setExpandedDeliverables] = useState<number[]>(
+  const [expandedGoals, setExpandedGoals] = useState<string[]>(project.goals.map(g => g.id));
+  const [expandedDeliverables, setExpandedDeliverables] = useState<string[]>(
     project.goals.flatMap(g => g.deliverables.map(d => d.id))
   );
 
-  const toggleGoal = (id: number) =>
+  const toggleGoal = (id: string) =>
     setExpandedGoals(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-  const toggleDeliverable = (id: number) =>
+  const toggleDeliverable = (id: string) =>
     setExpandedDeliverables(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const allActivities = project.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));

@@ -1,44 +1,24 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  projects as seedProjectsLegacy,
-  type Project,
-  type Risk,
-  type Change,
-  type FinancialItem,
-  type ContrapartidaItem,
-  type Evidence,
-  type ActivityStatus,
+  type Project, type Risk, type Change, type FinancialItem, type ContrapartidaItem, type Evidence, type ActivityStatus,
 } from './data/mockData';
-import { inovaProjetos } from './data/inovaProjetos';
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
-import type { CommLog, Contact, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
-import { applyOp } from './data/projectOps';
-import { metasProjetos } from './data/metasProjetos';
+import type { CommLog, Contact, ProjectOp, MetaChangeLog, PendingApproval } from './data/projectExtras';
 import type { InternalTracking } from './data/controleInterno';
-import { riscosProjetos } from './data/riscosProjetos';
-
-// Seed = 19 propostas importadas (Planos de Trabalho preenchidos) + metas do cronograma físico.
-/** Correções de valores aprovados informadas pela coordenação. */
-const BUDGET_FIX: Record<string, number> = {
-  ATAIC: 164198.0,
-  ARQUIA: 200000.0,
-  AMIG: 164244.4,
-  COOPAFS: 164285.71,
-};
-
-const seedProjects = inovaProjetos.map(p => ({
-  ...p,
-  goals: metasProjetos[p.id] ?? p.goals ?? [],
-  risks: p.risks?.length ? p.risks : (riscosProjetos[p.id] ?? []),
-  budgetApproved: BUDGET_FIX[(p as { org?: string }).org ?? ''] ?? p.budgetApproved,
-}));
-void seedProjectsLegacy;
-
+import {
+  listarProjetos, criarProjeto, atualizarProjeto, excluirProjeto,
+  submeterEdicaoMeta, aprovarEdicaoMeta, rejeitarEdicaoMeta,
+  addRisco, deleteRisco, addMudanca, updateMudancaAprovacao, deleteMudanca,
+  addFinanceiro, updateFinanceiroExecutado, deleteFinanceiro,
+  addContrapartida, deleteContrapartida, addEvidencia, deleteEvidencia, updateAtividadeStatus,
+  addAporte, deleteAporte, addCommLog, updateCommLog, deleteCommLog,
+  addContato, updateContato, deleteContato,
+} from './projetos.server';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
-
 
 /** Campos extras do plano de trabalho (todos opcionais e editáveis). */
 export interface PlanoTrabalho {
@@ -78,6 +58,7 @@ export interface PlanoTrabalho {
   observacoes?: string;
   planoArquivo?: string;
 }
+
 export type ProjectExt = Project & {
   communityId?: number | null;
   /** Sigla padronizada da instituição executora (ex.: ARQMO, COOPAFS). */
@@ -102,7 +83,7 @@ export type ProjectExt = Project & {
 
 /** Lançamento simples de recurso adicional — entradas e saídas fora do orçamento aprovado. */
 export interface Aporte {
-  id: number;
+  id: string;
   data: string;          // YYYY-MM-DD
   tipo: 'Entrada' | 'Saída';
   origem: string;        // quem aportou / destino
@@ -117,50 +98,49 @@ export interface EditAuthor { name: string; role: string; isAdmin: boolean }
 
 type Ctx = {
   projects: ProjectExt[];
+  projectsLoading: boolean;
   getProject: (id: number) => ProjectExt | undefined;
-  addProject: (p: Omit<ProjectExt, 'id' | 'goals' | 'financialItems' | 'risks' | 'changes' | 'evidences' | 'contrapartidas' | 'team'> & { team?: string[] }) => ProjectExt;
-  updateProject: (id: number, patch: Partial<ProjectExt>) => void;
-  deleteProject: (id: number) => void;
+  addProject: (p: Partial<ProjectExt> & { team?: string[] }) => Promise<ProjectExt>;
+  updateProject: (id: number, patch: Partial<ProjectExt>) => Promise<void>;
+  deleteProject: (id: number) => Promise<void>;
 
-  addRisk: (projectId: number, r: Omit<Risk, 'id' | 'severity'>) => void;
-  deleteRisk: (projectId: number, riskId: number) => void;
+  addRisk: (projectId: number, r: Omit<Risk, 'id' | 'severity'>) => Promise<void>;
+  deleteRisk: (projectId: number, riskId: string) => Promise<void>;
 
-  addChange: (projectId: number, c: Omit<Change, 'id'>) => void;
-  updateChangeApproval: (projectId: number, changeId: number, approval: Change['approval']) => void;
-  deleteChange: (projectId: number, changeId: number) => void;
+  addChange: (projectId: number, c: Omit<Change, 'id'>) => Promise<void>;
+  updateChangeApproval: (projectId: number, changeId: string, approval: Change['approval']) => Promise<void>;
+  deleteChange: (projectId: number, changeId: string) => Promise<void>;
 
-  addFinancial: (projectId: number, f: Omit<FinancialItem, 'id'>) => void;
-  updateFinancialExecuted: (projectId: number, itemId: number, executedValue: number, date?: string, supplier?: string, document?: string) => void;
-  deleteFinancial: (projectId: number, itemId: number) => void;
+  addFinancial: (projectId: number, f: Omit<FinancialItem, 'id'>) => Promise<void>;
+  updateFinancialExecuted: (projectId: number, itemId: string, executedValue: number, date?: string, supplier?: string, document?: string) => Promise<void>;
+  deleteFinancial: (projectId: number, itemId: string) => Promise<void>;
 
-  addContrapartida: (projectId: number, c: Omit<ContrapartidaItem, 'id'>) => void;
-  deleteContrapartida: (projectId: number, itemId: number) => void;
+  addContrapartida: (projectId: number, c: Omit<ContrapartidaItem, 'id'>) => Promise<void>;
+  deleteContrapartida: (projectId: number, itemId: string) => Promise<void>;
 
-  addEvidence: (projectId: number, e: Omit<Evidence, 'id'>) => void;
-  deleteEvidence: (projectId: number, evId: number) => void;
+  addEvidence: (projectId: number, e: Omit<Evidence, 'id'>) => Promise<void>;
+  deleteEvidence: (projectId: number, evId: string) => Promise<void>;
 
-  updateActivityStatus: (projectId: number, activityId: number, status: ActivityStatus, progress?: number) => void;
+  updateActivityStatus: (projectId: number, activityId: string, status: ActivityStatus, progress?: number) => Promise<void>;
 
   // Aportes (caderno financeiro paralelo)
-  addAporte: (projectId: number, a: Omit<Aporte, 'id'>) => void;
-  deleteAporte: (projectId: number, id: number) => void;
+  addAporte: (projectId: number, a: Omit<Aporte, 'id'>) => Promise<void>;
+  deleteAporte: (projectId: number, id: string) => Promise<void>;
 
   // Registro de comunicação (contatos)
-  addCommLog: (projectId: number, c: Omit<CommLog, 'id'>) => void;
-  updateCommLog: (projectId: number, id: number, patch: Partial<CommLog>) => void;
-  deleteCommLog: (projectId: number, id: number) => void;
+  addCommLog: (projectId: number, c: Omit<CommLog, 'id'>) => Promise<void>;
+  updateCommLog: (projectId: number, id: string, patch: Partial<CommLog>) => Promise<void>;
+  deleteCommLog: (projectId: number, id: string) => Promise<void>;
 
   // Contatos do projeto
-  addContact: (projectId: number, c: Omit<Contact, 'id'>) => void;
-  updateContact: (projectId: number, id: number, patch: Partial<Contact>) => void;
-  deleteContact: (projectId: number, id: number) => void;
+  addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
+  updateContact: (projectId: number, id: string, patch: Partial<Contact>) => Promise<void>;
+  deleteContact: (projectId: number, id: string) => Promise<void>;
 
   // Metas: edição com registro e validação de administrador
-  submitMetaEdit: (projectId: number, edit: MetaEdit, author: EditAuthor) => 'aplicado' | 'pendente';
-  approveMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
-  rejectMetaEdit: (projectId: number, approvalId: number, adminName: string) => void;
-
-
+  submitMetaEdit: (projectId: number, edit: MetaEdit, author: EditAuthor) => Promise<'aplicado' | 'pendente'>;
+  approveMetaEdit: (projectId: number, approvalId: string, adminName: string) => Promise<void>;
+  rejectMetaEdit: (projectId: number, approvalId: string, adminName: string) => Promise<void>;
 
   // Comunidades
   communities: Comunidade[];
@@ -170,7 +150,6 @@ type Ctx = {
   // Acompanhamento das atividades do cronograma por projeto
   ganttTracking: Record<string, InternalTracking>;
   setGanttTracking: (activityId: number, projectId: number, patch: Partial<InternalTracking>) => void;
-
 
   // Rotas / Calendário
   routes: RotaItem[];
@@ -193,15 +172,13 @@ type Ctx = {
   deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null;
   restoreGanttAtividade: (entregaId: number, index: number, atividade: GanttActivity, parentId?: number) => void;
 
-
-
   resetToSeed: () => void;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
 
-type Persisted = {
-  projects: ProjectExt[]; communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[];
+type PersistedLocal = {
+  communities: Comunidade[]; routes: RotaItem[]; events: CalendarEvent[]; gantt: GanttBloco[];
   ganttTracking?: Record<string, InternalTracking>;
 };
 
@@ -220,9 +197,8 @@ function unlinkGantt(blocos: GanttBloco[]): GanttBloco[] {
   return blocos.map(b => ({ ...b, entregas: b.entregas.map(en => ({ ...en, atividades: en.atividades.map(clean) })) }));
 }
 
-function loadInitial(): Persisted {
-  const fallback: Persisted = {
-    projects: seedProjects as ProjectExt[],
+function loadInitialLocal(): PersistedLocal {
+  const fallback: PersistedLocal = {
     communities: seedComunidades,
     routes: seedRotas,
     events: calendarSeed,
@@ -233,9 +209,8 @@ function loadInitial(): Persisted {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as Partial<Persisted>;
+    const parsed = JSON.parse(raw) as Partial<PersistedLocal>;
     return {
-      projects: parsed.projects?.length ? parsed.projects : fallback.projects,
       communities: parsed.communities?.length ? parsed.communities : fallback.communities,
       routes: parsed.routes?.length ? parsed.routes : fallback.routes,
       events: parsed.events?.length ? parsed.events : fallback.events,
@@ -245,271 +220,141 @@ function loadInitial(): Persisted {
   } catch { return fallback; }
 }
 
-
-function recalcProject(p: ProjectExt): ProjectExt {
-  const allActivities = p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
-  const progress = allActivities.length
-    ? Math.round(allActivities.reduce((a, x) => a + x.progress, 0) / allActivities.length)
-    : p.progress;
-  const budgetExecuted = p.financialItems.length
-    ? p.financialItems.reduce((a, i) => a + i.executedValue, 0)
-    : p.budgetExecuted;
-  return { ...p, progress, budgetExecuted };
-}
-
 function nextGanttId(blocos: GanttBloco[]): number {
   const ids = blocos.flatMap(b => b.entregas.flatMap(e =>
     e.atividades.flatMap(a => [a.id, ...(a.subatividades ?? []).map(s => s.id)])));
   return ids.reduce((m, x) => Math.max(m, x), 0) + 1;
 }
 
-const applyMetaEdit = (p: ProjectExt, edit: MetaEdit): ProjectExt => applyOp(p, edit);
-
-function appendLog(p: ProjectExt, edit: MetaEdit, author: string, authorRole: string, approvedBy: string | null): ProjectExt {
-  const list = p.metaLog ?? [];
-  const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-  const entry: MetaChangeLog = {
-    id: nextId,
-    ...edit,
-    author, authorRole, date: new Date().toISOString(), approvedBy,
-  };
-  return { ...p, metaLog: [entry, ...list] };
-}
-
-
-
 export function ProjectsProvider({ children }: { children: ReactNode }) {
-  const [projects, setProjects] = useState<ProjectExt[]>(seedProjects as ProjectExt[]);
-  const [communities, setCommunities] = useState<Comunidade[]>(seedComunidades);
-  const [routes, setRoutes] = useState<RotaItem[]>(seedRotas);
-  const [events, setEvents] = useState<CalendarEvent[]>(calendarSeed);
-  const [gantt, setGantt] = useState<GanttBloco[]>(cronogramaExecutivoSeed);
-  const [ganttTracking, setGanttTrackingState] = useState<Record<string, InternalTracking>>({});
-  const [hydrated, setHydrated] = useState(false);
+  const queryClient = useQueryClient();
+  const initialLocal = useMemo(loadInitialLocal, []);
 
-  useEffect(() => {
-    const p = loadInitial();
-    setProjects(p.projects); setCommunities(p.communities); setRoutes(p.routes); setEvents(p.events); setGantt(p.gantt);
-    setGanttTrackingState(p.ganttTracking ?? {});
-    setHydrated(true);
-  }, []);
+  const [communities, setCommunities] = useState<Comunidade[]>(initialLocal.communities);
+  const [routes, setRoutes] = useState<RotaItem[]>(initialLocal.routes);
+  const [events, setEvents] = useState<CalendarEvent[]>(initialLocal.events);
+  const [gantt, setGantt] = useState<GanttBloco[]>(initialLocal.gantt);
+  const [ganttTracking, setGanttTrackingState] = useState<Record<string, InternalTracking>>(initialLocal.ganttTracking ?? {});
 
-  useEffect(() => {
-    if (!hydrated) return;
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ projects, communities, routes, events, gantt, ganttTracking } as Persisted)); } catch { /* ignore */ }
-  }, [projects, communities, routes, events, gantt, ganttTracking, hydrated]);
+  const persistLocal = useCallback((next: Partial<PersistedLocal>) => {
+    try {
+      const merged = { communities, routes, events, gantt, ganttTracking, ...next };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    } catch { /* ignore */ }
+  }, [communities, routes, events, gantt, ganttTracking]);
 
+  const { data: projects = [], isLoading: projectsLoading } = useQuery({
+    queryKey: ['projetos'],
+    queryFn: () => listarProjetos(),
+  });
 
-  const patch = useCallback((id: number, fn: (p: ProjectExt) => ProjectExt) => {
-    setProjects(prev => prev.map(p => (p.id === id ? recalcProject(fn(p)) : p)));
-  }, []);
+  const invalidate = useCallback(() => queryClient.invalidateQueries({ queryKey: ['projetos'] }), [queryClient]);
+  const run = useCallback(async <T,>(fn: () => Promise<T>): Promise<T> => {
+    const result = await fn();
+    await invalidate();
+    return result;
+  }, [invalidate]);
 
   const value = useMemo<Ctx>(() => ({
     projects,
+    projectsLoading,
     getProject: (id) => projects.find(p => p.id === id),
-    addProject: (data) => {
-      const nextId = projects.reduce((m, p) => Math.max(m, p.id), 0) + 1;
-      const year = new Date().getFullYear();
-      const seq = projects.filter(p => (p.code ?? '').endsWith(`-${year}`)).length + 1;
-      const internalCode = `${String(seq).padStart(2, '0')}-${year}`;
-      const p: ProjectExt = {
-        id: nextId,
-        team: data.team ?? [],
-        goals: [],
-        financialItems: [],
-        contrapartidas: [],
-        risks: [],
-        changes: [],
-        evidences: [],
-        ...data,
-        code: internalCode,
-      } as ProjectExt;
-      setProjects(prev => [...prev, p]);
-      return p;
-    },
-    updateProject: (id, patchData) => {
-      setProjects(prev => prev.map(p => (p.id === id ? recalcProject({ ...p, ...patchData }) : p)));
-    },
-    deleteProject: (id) => setProjects(prev => prev.filter(p => p.id !== id)),
 
-    addRisk: (projectId, r) => patch(projectId, p => {
-      const nextId = p.risks.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, risks: [...p.risks, { ...r, id: nextId, severity: r.probability * r.impact }] };
-    }),
-    deleteRisk: (projectId, riskId) => patch(projectId, p => ({ ...p, risks: p.risks.filter(r => r.id !== riskId) })),
+    addProject: (data) => run(() => criarProjeto({ data })),
+    updateProject: (id, patch) => run(() => atualizarProjeto({ data: { id, patch } })),
+    deleteProject: (id) => run(() => excluirProjeto({ data: { id } })),
 
-    addChange: (projectId, c) => patch(projectId, p => {
-      const nextId = p.changes.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, changes: [...p.changes, { ...c, id: nextId }] };
-    }),
-    updateChangeApproval: (projectId, changeId, approval) =>
-      patch(projectId, p => ({ ...p, changes: p.changes.map(c => (c.id === changeId ? { ...c, approval } : c)) })),
-    deleteChange: (projectId, changeId) => patch(projectId, p => ({ ...p, changes: p.changes.filter(c => c.id !== changeId) })),
+    addRisk: (projectId, r) => run(() => addRisco({ data: { projectId, risco: r } })),
+    deleteRisk: (_projectId, riskId) => run(() => deleteRisco({ data: { riskId } })),
 
-    addFinancial: (projectId, f) => patch(projectId, p => {
-      const nextId = p.financialItems.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, financialItems: [...p.financialItems, { ...f, id: nextId }] };
-    }),
-    updateFinancialExecuted: (projectId, itemId, executedValue, date, supplier, document) =>
-      patch(projectId, p => ({
-        ...p,
-        financialItems: p.financialItems.map(i => i.id === itemId ? {
-          ...i, executedValue,
-          date: date ?? i.date,
-          supplier: supplier ?? i.supplier,
-          document: document ?? i.document,
-        } : i),
-      })),
-    deleteFinancial: (projectId, itemId) => patch(projectId, p => ({ ...p, financialItems: p.financialItems.filter(i => i.id !== itemId) })),
+    addChange: (projectId, c) => run(() => addMudanca({ data: { projectId, mudanca: c } })),
+    updateChangeApproval: (_projectId, changeId, approval) => run(() => updateMudancaAprovacao({ data: { changeId, approval } })),
+    deleteChange: (_projectId, changeId) => run(() => deleteMudanca({ data: { changeId } })),
 
-    addContrapartida: (projectId, c) => patch(projectId, p => {
-      const list = p.contrapartidas ?? [];
-      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, contrapartidas: [...list, { ...c, id: nextId }] };
-    }),
-    deleteContrapartida: (projectId, itemId) => patch(projectId, p => ({ ...p, contrapartidas: (p.contrapartidas ?? []).filter(i => i.id !== itemId) })),
+    addFinancial: (projectId, f) => run(() => addFinanceiro({ data: { projectId, item: f } })),
+    updateFinancialExecuted: (_projectId, itemId, executedValue, date, supplier, document) =>
+      run(() => updateFinanceiroExecutado({ data: { itemId, executedValue, date, supplier, document } })),
+    deleteFinancial: (_projectId, itemId) => run(() => deleteFinanceiro({ data: { itemId } })),
 
-    addEvidence: (projectId, e) => patch(projectId, p => {
-      const nextId = p.evidences.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, evidences: [...p.evidences, { ...e, id: nextId }] };
-    }),
-    deleteEvidence: (projectId, evId) => patch(projectId, p => ({ ...p, evidences: p.evidences.filter(e => e.id !== evId) })),
+    addContrapartida: (projectId, c) => run(() => addContrapartida({ data: { projectId, item: c } })),
+    deleteContrapartida: (_projectId, itemId) => run(() => deleteContrapartida({ data: { itemId } })),
 
-    updateActivityStatus: (projectId, activityId, status, progress) => patch(projectId, p => ({
-      ...p,
-      goals: p.goals.map(g => ({
-        ...g,
-        deliverables: g.deliverables.map(d => ({
-          ...d,
-          activities: d.activities.map(a => a.id === activityId ? {
-            ...a, status,
-            progress: progress ?? (status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : a.progress),
-            conclusionDate: status === 'Concluído' ? new Date().toLocaleDateString('pt-BR') : a.conclusionDate,
-          } : a),
-        })),
-      })),
-    })),
+    addEvidence: (projectId, e) => run(() => addEvidencia({ data: { projectId, evidencia: e } })),
+    deleteEvidence: (_projectId, evId) => run(() => deleteEvidencia({ data: { evidenciaId: evId } })),
 
-    addAporte: (projectId, a) => patch(projectId, p => {
-      const list = p.aportes ?? [];
-      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, aportes: [{ ...a, id: nextId }, ...list] };
-    }),
-    deleteAporte: (projectId, id) => patch(projectId, p => ({ ...p, aportes: (p.aportes ?? []).filter(a => a.id !== id) })),
+    updateActivityStatus: (_projectId, activityId, status, progress) =>
+      run(() => updateAtividadeStatus({ data: { activityId, status, progress } })),
 
-    addCommLog: (projectId, c) => patch(projectId, p => {
-      const list = p.commLogs ?? [];
-      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, commLogs: [{ ...c, id: nextId }, ...list] };
-    }),
-    updateCommLog: (projectId, id, patchData) => patch(projectId, p => ({
-      ...p, commLogs: (p.commLogs ?? []).map(c => (c.id === id ? { ...c, ...patchData } : c)),
-    })),
-    deleteCommLog: (projectId, id) => patch(projectId, p => ({
-      ...p, commLogs: (p.commLogs ?? []).filter(c => c.id !== id),
-    })),
+    addAporte: (projectId, a) => run(() => addAporte({ data: { projectId, aporte: a } })),
+    deleteAporte: (_projectId, id) => run(() => deleteAporte({ data: { aporteId: id } })),
 
-    addContact: (projectId, c) => patch(projectId, p => {
-      const list = p.contacts ?? [];
-      const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-      return { ...p, contacts: [...list, { ...c, id: nextId }] };
-    }),
-    updateContact: (projectId, id, patchData) => patch(projectId, p => ({
-      ...p, contacts: (p.contacts ?? []).map(c => (c.id === id ? { ...c, ...patchData } : c)),
-    })),
-    deleteContact: (projectId, id) => patch(projectId, p => ({
-      ...p, contacts: (p.contacts ?? []).filter(c => c.id !== id),
-    })),
+    addCommLog: (projectId, c) => run(() => addCommLog({ data: { projectId, log: c } })),
+    updateCommLog: (_projectId, id, patch) => run(() => updateCommLog({ data: { logId: id, patch } })),
+    deleteCommLog: (_projectId, id) => run(() => deleteCommLog({ data: { logId: id } })),
 
-    submitMetaEdit: (projectId, edit, author) => {
-      const needsApproval = !author.isAdmin;
-      patch(projectId, p => {
-        if (needsApproval) {
-          const list = p.approvals ?? [];
-          const nextId = list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
-          return {
-            ...p,
-            approvals: [{
-              id: nextId, ...edit,
-              author: author.name, authorRole: author.role,
-              date: new Date().toISOString(), status: 'Pendente' as const, reviewedBy: null,
-            }, ...list],
-          };
-        }
-        return appendLog(applyMetaEdit(p, edit), edit, author.name, author.role, author.name);
-      });
-      return needsApproval ? 'pendente' : 'aplicado';
-    },
-    approveMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => {
-      const req = (p.approvals ?? []).find(a => a.id === approvalId);
-      if (!req) return p;
-      const applied = applyMetaEdit(p, req);
-      const logged = appendLog(applied, req, req.author, req.authorRole, adminName);
-      return {
-        ...logged,
-        approvals: (logged.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Aprovado' as const, reviewedBy: adminName } : a),
-      };
-    }),
-    rejectMetaEdit: (projectId, approvalId, adminName) => patch(projectId, p => ({
-      ...p,
-      approvals: (p.approvals ?? []).map(a => a.id === approvalId ? { ...a, status: 'Recusado' as const, reviewedBy: adminName } : a),
-    })),
+    addContact: (projectId, c) => run(() => addContato({ data: { projectId, contato: c } })),
+    updateContact: (_projectId, id, patch) => run(() => updateContato({ data: { contatoId: id, patch } })),
+    deleteContact: (_projectId, id) => run(() => deleteContato({ data: { contatoId: id } })),
 
+    submitMetaEdit: (projectId, edit, author) => run(() => submeterEdicaoMeta({ data: { projectId, edit, author } })),
+    approveMetaEdit: (projectId, approvalId, adminName) => run(() => aprovarEdicaoMeta({ data: { projectId, approvalId, adminName } })),
+    rejectMetaEdit: (_projectId, approvalId, adminName) => run(() => rejeitarEdicaoMeta({ data: { approvalId, adminName } })),
 
-
-    // Comunidades
+    // Comunidades — ainda local (migração onda 2)
     communities,
     getCommunity: (id) => communities.find(c => c.id === id),
-    updateCommunity: (id, p) => setCommunities(prev => prev.map(c => (c.id === id ? { ...c, ...p } : c))),
+    updateCommunity: (id, p) => setCommunities(prev => { const next = prev.map(c => (c.id === id ? { ...c, ...p } : c)); persistLocal({ communities: next }); return next; }),
 
-    // Acompanhamento por projeto das atividades do cronograma
+    // Acompanhamento por projeto das atividades do cronograma — ainda local (onda 3)
     ganttTracking,
     setGanttTracking: (activityId, projectId, p) => setGanttTrackingState(prev => {
       const key = `${activityId}:${projectId}`;
       const cur = prev[key] ?? { status: 'Não iniciado' as const };
-      return { ...prev, [key]: { ...cur, ...p } };
+      const next = { ...prev, [key]: { ...cur, ...p } };
+      persistLocal({ ganttTracking: next });
+      return next;
     }),
 
-
-    // Rotas
+    // Rotas — ainda local (onda 2)
     routes,
-    updateRoute: (id, p) => setRoutes(prev => prev.map(r => (r.id === id ? { ...r, ...p } : r))),
-    addRoute: (r) => setRoutes(prev => [...prev, { ...r, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
-    deleteRoute: (id) => setRoutes(prev => prev.filter(r => r.id !== id)),
+    updateRoute: (id, p) => setRoutes(prev => { const next = prev.map(r => (r.id === id ? { ...r, ...p } : r)); persistLocal({ routes: next }); return next; }),
+    addRoute: (r) => setRoutes(prev => { const next = [...prev, { ...r, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]; persistLocal({ routes: next }); return next; }),
+    deleteRoute: (id) => setRoutes(prev => { const next = prev.filter(r => r.id !== id); persistLocal({ routes: next }); return next; }),
 
-    // Eventos
+    // Eventos — ainda local (onda 2)
     events,
-    addEvent: (e) => setEvents(prev => [...prev, { ...e, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]),
-    updateEvent: (id, p) => setEvents(prev => prev.map(e => (e.id === id ? { ...e, ...p } : e))),
-    deleteEvent: (id) => setEvents(prev => prev.filter(e => e.id !== id)),
+    addEvent: (e) => setEvents(prev => { const next = [...prev, { ...e, id: prev.reduce((m, x) => Math.max(m, x.id), 0) + 1 }]; persistLocal({ events: next }); return next; }),
+    updateEvent: (id, p) => setEvents(prev => { const next = prev.map(e => (e.id === id ? { ...e, ...p } : e)); persistLocal({ events: next }); return next; }),
+    deleteEvent: (id) => setEvents(prev => { const next = prev.filter(e => e.id !== id); persistLocal({ events: next }); return next; }),
 
-    // Gantt (cronograma executivo)
+    // Gantt (cronograma executivo) — ainda local (onda 3)
     gantt,
-    updateGanttEntrega: (entregaId, patchData) => setGantt(prev => prev.map(b => ({
-      ...b,
-      entregas: b.entregas.map(en => en.id === entregaId ? {
-        ...en, ...patchData,
-        progress: patchData.progress ?? en.progress,
-      } : en),
-    }))),
-    updateGanttBloco: (blocoId, bloco) => setGantt(prev => prev.map(b => (b.id === blocoId ? { ...b, bloco } : b))),
-    updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => prev.map(b => ({
-      ...b,
-      entregas: b.entregas.map(en => ({
-        ...en,
-        atividades: en.atividades.map(a => {
-          const self = a.id === atividadeId ? { ...a, ...patchData } : a;
-          return {
-            ...self,
-            subatividades: (self.subatividades ?? []).map(s => s.id === atividadeId ? { ...s, ...patchData } : s),
-          };
-        }),
-      })),
-    }))),
-
+    updateGanttEntrega: (entregaId, patchData) => setGantt(prev => {
+      const next = prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => en.id === entregaId ? { ...en, ...patchData, progress: patchData.progress ?? en.progress } : en),
+      }));
+      persistLocal({ gantt: next });
+      return next;
+    }),
+    updateGanttBloco: (blocoId, bloco) => setGantt(prev => { const next = prev.map(b => (b.id === blocoId ? { ...b, bloco } : b)); persistLocal({ gantt: next }); return next; }),
+    updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => {
+      const next = prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => ({
+          ...en,
+          atividades: en.atividades.map(a => {
+            const self = a.id === atividadeId ? { ...a, ...patchData } : a;
+            return { ...self, subatividades: (self.subatividades ?? []).map(s => s.id === atividadeId ? { ...s, ...patchData } : s) };
+          }),
+        })),
+      }));
+      persistLocal({ gantt: next });
+      return next;
+    }),
     addGanttAtividade: (entregaId, atividade) => setGantt(prev => {
       const nextId = nextGanttId(prev);
-      return prev.map(b => ({
+      const next = prev.map(b => ({
         ...b,
         entregas: b.entregas.map(en => en.id !== entregaId ? en : {
           ...en,
@@ -520,10 +365,12 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
           }],
         }),
       }));
+      persistLocal({ gantt: next });
+      return next;
     }),
     addGanttSubatividade: (atividadeId, atividade) => setGantt(prev => {
       const nextId = nextGanttId(prev);
-      return prev.map(b => ({
+      const next = prev.map(b => ({
         ...b,
         entregas: b.entregas.map(en => ({
           ...en,
@@ -537,6 +384,8 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
           }),
         })),
       }));
+      persistLocal({ gantt: next });
+      return next;
     }),
     deleteGanttAtividade: (atividadeId) => {
       let found: { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null = null;
@@ -549,52 +398,54 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
         });
       }));
       if (!found) return null;
-      setGantt(prev => prev.map(b => ({
-        ...b,
-        entregas: b.entregas.map(en => ({
-          ...en,
-          atividades: en.atividades.filter(a => a.id !== atividadeId).map(a => ({
-            ...a, subatividades: (a.subatividades ?? []).filter(s => s.id !== atividadeId),
+      setGantt(prev => {
+        const next = prev.map(b => ({
+          ...b,
+          entregas: b.entregas.map(en => ({
+            ...en,
+            atividades: en.atividades.filter(a => a.id !== atividadeId).map(a => ({ ...a, subatividades: (a.subatividades ?? []).filter(s => s.id !== atividadeId) })),
           })),
-        })),
-      })));
+        }));
+        persistLocal({ gantt: next });
+        return next;
+      });
       return found;
     },
-    restoreGanttAtividade: (entregaId, index, atividade, parentId) => setGantt(prev => prev.map(b => ({
-      ...b,
-      entregas: b.entregas.map(en => {
-        if (en.id !== entregaId) return en;
-        if (parentId != null) {
-          return {
-            ...en,
-            atividades: en.atividades.map(a => {
-              if (a.id !== parentId) return a;
-              const subs = [...(a.subatividades ?? [])];
-              subs.splice(Math.min(index, subs.length), 0, atividade);
-              return { ...a, subatividades: subs };
-            }),
-          };
-        }
-        const list = [...en.atividades];
-        list.splice(Math.min(index, list.length), 0, atividade);
-        return { ...en, atividades: list };
-      }),
-    }))),
-
-
-
+    restoreGanttAtividade: (entregaId, index, atividade, parentId) => setGantt(prev => {
+      const next = prev.map(b => ({
+        ...b,
+        entregas: b.entregas.map(en => {
+          if (en.id !== entregaId) return en;
+          if (parentId != null) {
+            return {
+              ...en,
+              atividades: en.atividades.map(a => {
+                if (a.id !== parentId) return a;
+                const subs = [...(a.subatividades ?? [])];
+                subs.splice(Math.min(index, subs.length), 0, atividade);
+                return { ...a, subatividades: subs };
+              }),
+            };
+          }
+          const list = [...en.atividades];
+          list.splice(Math.min(index, list.length), 0, atividade);
+          return { ...en, atividades: list };
+        }),
+      }));
+      persistLocal({ gantt: next });
+      return next;
+    }),
 
     resetToSeed: () => {
-      setProjects(seedProjects as ProjectExt[]);
       setCommunities(seedComunidades);
       setRoutes(seedRotas);
       setEvents(calendarSeed);
-      setGantt(cronogramaExecutivoSeed);
+      setGantt(unlinkGantt(cronogramaExecutivoSeed));
       setGanttTrackingState({});
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      void invalidate();
     },
-  }), [projects, communities, routes, events, gantt, ganttTracking, patch]);
-
+  }), [projects, projectsLoading, communities, routes, events, gantt, ganttTracking, run, invalidate, persistLocal]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

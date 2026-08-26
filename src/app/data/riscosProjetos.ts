@@ -1,7 +1,16 @@
-import type { Risk } from './mockData';
+import type { RiskStatus } from './mockData';
+
+// Tipo só-de-seed (id/goalId number): este arquivo alimenta apenas o script de
+// seed do Supabase (src/routes/api/admin/seed.ts) — em runtime os riscos vêm do
+// banco, com id/goalId uuid (ver tipo Risk em mockData.ts).
+export interface RiskSeed {
+  id: number; description: string; category: string; probability: number; impact: number;
+  severity: number; responseStrategy: string; responsible: string; status: RiskStatus;
+  goalId?: number; stage?: string; spec?: string;
+}
 
 /** Riscos por projeto, vinculados às metas (goalId) — fonte: planilha RISCOS - PLANOS DE TRABALHO. */
-export const riscosProjetos: Record<number, Risk[]> = {
+export const riscosProjetos: Record<number, RiskSeed[]> = {
   1: [
     { id: 1, description: `Dificuldade em obter três cotações adequadas pode atrasar a aquisição.`, category: `Estratégico`, probability: 2, impact: 3, severity: 6, responseStrategy: `Realizar cotações com antecedência, ampliar a busca de fornecedores e comparar preço, prazo de entrega, garantia e especificações técnicas`, responsible: `Jaime Lucena de Lima`, status: `Aberto`, goalId: 1001, stage: `1.1 Levantamento e orçamento de equipamentos`, spec: `Cotação com, pelo menos, 3 fornecedores de equipamentos de refrigeração e de energia elétrica.` },
     { id: 2, description: `Atraso, aumento de preço ou indisponibilidade da máquina pode comprometer implantação.`, category: `Financeiro`, probability: 3, impact: 5, severity: 15, responseStrategy: `Confirmar disponibilidade e prazo antes da compra, selecionar fornecedores com garantia e prever fornecedores alternativos.`, responsible: `Jaime Lucena de Lima`, status: `Aberto`, goalId: 1001, stage: `1.2. Aquisição`, spec: `Compra da máquina de fazer gelo e de todos os equipamentos necessários para a ligação elétrica` },

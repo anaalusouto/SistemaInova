@@ -309,8 +309,8 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       {showModal && (
         <NewProjectModal
           onClose={() => setShowModal(false)}
-          onCreate={(data) => {
-            const created = addProject(data);
+          onCreate={async (data) => {
+            const created = await addProject(data);
             record('criar projeto', created.name, created.id, created.name);
             toast.success(`Projeto "${created.name}" criado.`);
             setShowModal(false);

@@ -1,7 +1,18 @@
-import type { Goal } from './mockData';
+import type { ActivityStatus } from './mockData';
+
+// Tipos só-de-seed (ids number): este arquivo alimenta apenas o script de seed do
+// Supabase (src/routes/api/admin/seed.ts) — em runtime os dados vêm do banco, com
+// ids uuid (ver tipos Goal/Deliverable/Activity em mockData.ts).
+export interface ActivitySeed {
+  id: number; name: string; responsible: string; plannedDate: string;
+  startDate: string | null; conclusionDate: string | null; progress: number;
+  status: ActivityStatus; observations: string;
+}
+export interface DeliverableSeed { id: number; name: string; expectedResult: string; activities: ActivitySeed[] }
+export interface GoalSeed { id: number; name: string; deliverables: DeliverableSeed[] }
 
 /** Metas/Etapas/Especificações padronizadas a partir da planilha RISCOS - PLANOS DE TRABALHO. */
-export const metasProjetos: Record<number, Goal[]> = {
+export const metasProjetos: Record<number, GoalSeed[]> = {
   1: [
     { id: 1001, name: `1. Implantar a geleira comunitária com energia elétrica`, deliverables: [
       { id: 100101, name: `1.1 Levantamento e orçamento de equipamentos`, expectedResult: `Cotação com, pelo menos, 3 fornecedores de equipamentos de refrigeração e de energia elétrica.`, activities: [

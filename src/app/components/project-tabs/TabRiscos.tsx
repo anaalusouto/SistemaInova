@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Plus, ShieldAlert, Trash2, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Risk, type RiskStatus, type Goal } from '../../data/mockData';
+import type { JsonValue } from '../../data/projectExtras';
 import { APP_PEOPLE, useAuth } from '../../auth/authStore';
 import { useStore } from '../../store';
 import type { ProjectExt } from '../../store';
@@ -47,7 +48,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Todos' | RiskStatus>('Todos');
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const record = (action: string, detail: string, kind: 'alteracao' | 'pendencia' = 'alteracao') =>
     audit({
@@ -60,9 +61,9 @@ export function TabRiscos({ project }: TabRiscosProps) {
       ? toast.info('Solicitação enviada para validação de um administrador.')
       : toast.success('Registro atualizado.');
 
-  const edit = (risk: Risk, field: string, from: string, to: string) => {
+  const edit = async (risk: Risk, field: string, from: string, to: string) => {
     if (from === to) return;
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'risco', action: 'editar', targetId: risk.id,
       targetPath: `Risco: ${risk.description.slice(0, 40)}`, field, from, to,
     }, author);
@@ -70,9 +71,9 @@ export function TabRiscos({ project }: TabRiscosProps) {
     record('editar risco', `${field}: ${from} → ${to} · ${risk.description.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const remove = (risk: Risk) => {
+  const remove = async (risk: Risk) => {
     if (!window.confirm('Excluir este risco?')) return;
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'risco', action: 'excluir', targetId: risk.id,
       targetPath: `Risco: ${risk.description.slice(0, 40)}`, from: risk.description,
     }, author);
@@ -80,8 +81,8 @@ export function TabRiscos({ project }: TabRiscosProps) {
     record('excluir risco', risk.description.slice(0, 40), result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const create = (payload: Record<string, unknown>) => {
-    const result = submitMetaEdit(project.id, {
+  const create = async (payload: Record<string, JsonValue>) => {
+    const result = await submitMetaEdit(project.id, {
       entity: 'risco', action: 'criar',
       targetPath: 'Novo risco', to: String(payload.description ?? ''), payload,
     }, author);
@@ -272,8 +273,8 @@ export function TabRiscos({ project }: TabRiscosProps) {
                       />
                     </Field>
                     <Field label="Meta vinculada">
-                      <select className="ipt" value={risk.goalId ?? 0} onChange={e => edit(risk, 'meta', String(risk.goalId ?? ''), e.target.value)}>
-                        <option value={0}>—</option>
+                      <select className="ipt" value={risk.goalId ?? ''} onChange={e => edit(risk, 'meta', String(risk.goalId ?? ''), e.target.value)}>
+                        <option value="">—</option>
                         {p.goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name.slice(0, 50)}`}</option>)}
                       </select>
                       {goal && <span style={{ fontSize: '0.66rem', color: '#94A3B8' }}>{goal.name}</span>}
@@ -344,10 +345,10 @@ function Field({ label, children, full }: { label: string; children: React.React
 function RiskForm({ goals, onClose, onSave }: {
   goals: Goal[];
   onClose: () => void;
-  onSave: (r: Record<string, unknown>) => void;
+  onSave: (r: Record<string, JsonValue>) => void;
 }) {
   const [f, setF] = useState({
-    goalId: goals[0]?.id ?? 0,
+    goalId: goals[0]?.id ?? '',
     description: '',
     category: 'Operacional',
     probability: 3,
@@ -373,8 +374,8 @@ function RiskForm({ goals, onClose, onSave }: {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
-            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: Number(e.target.value) })}>
-              {goals.length === 0 && <option value={0}>Nenhuma meta cadastrada</option>}
+            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: e.target.value })}>
+              {goals.length === 0 && <option value="">Nenhuma meta cadastrada</option>}
               {goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name}`}</option>)}
             </select>
           </Field>

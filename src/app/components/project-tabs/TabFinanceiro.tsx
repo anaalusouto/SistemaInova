@@ -15,6 +15,7 @@ import {
   type FinancialItem,
   type Project,
 } from '../../data/mockData';
+import type { JsonValue } from '../../data/projectExtras';
 import { useStore, type ProjectExt } from '../../store';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 import { useAuth } from '../../auth/authStore';
@@ -87,10 +88,10 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       ? toast.info('Alteração enviada para validação de um administrador.')
       : toast.success('Alteração registrada.');
 
-  const edit = (item: FinancialItem, field: string, from: string, to: string) => {
+  const edit = async (item: FinancialItem, field: string, from: string, to: string) => {
     if (from === to) return;
     if (!isAdmin) { setEditItem(item); return; }
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, field, from, to,
     }, author);
@@ -98,9 +99,9 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
     record('editar item orçamentário', `${field}: ${from} → ${to} · ${item.item.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const remove = (item: FinancialItem) => {
+  const remove = async (item: FinancialItem) => {
     if (!window.confirm('Excluir item orçamentário?')) return;
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'excluir', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`, from: item.item,
     }, author);
@@ -108,8 +109,8 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
     record('excluir item orçamentário', `${item.meta} · ${item.item.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const submitRowEdit = (item: FinancialItem, payload: Record<string, unknown>) => {
-    const result = submitMetaEdit(project.id, {
+  const submitRowEdit = async (item: FinancialItem, payload: Record<string, JsonValue>) => {
+    const result = await submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'editar', targetId: item.id,
       targetPath: `${item.meta} › ${item.item.slice(0, 40)}`,
       field: 'item orçamentário', from: item.item, to: String(payload.item ?? item.item), payload,
@@ -119,8 +120,8 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
     setEditItem(null);
   };
 
-  const create = (payload: Record<string, unknown>) => {
-    const result = submitMetaEdit(project.id, {
+  const create = async (payload: Record<string, JsonValue>) => {
+    const result = await submitMetaEdit(project.id, {
       entity: 'financeiro', action: 'criar', targetPath: `${payload.meta}`,
       to: String(payload.item ?? ''), payload,
     }, author);
@@ -630,7 +631,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
   existingMetas: string[];
   initial?: FinancialItem;
   onClose: () => void;
-  onSave: (i: Record<string, unknown>) => void;
+  onSave: (i: Record<string, JsonValue>) => void;
 }) {
   const [f, setF] = useState({
     meta: initial?.meta ?? existingMetas[existingMetas.length - 1] ?? 'Meta 1',

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Plus, GitBranch, CheckCircle2, Clock, XCircle, X, Trash2, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Change, type ApprovalStatus, type ChangeType, type ChangeNature, type Goal } from '../../data/mockData';
+import type { JsonValue } from '../../data/projectExtras';
 import { APP_PEOPLE, useAuth } from '../../auth/authStore';
 import { useStore, type ProjectExt } from '../../store';
 import { useAudit } from '../../audit/auditStore';
@@ -33,7 +34,7 @@ export function TabMudancas({ project }: Props) {
   const p = getProject(project.id) ?? (project as ProjectExt);
   const [showForm, setShowForm] = useState(false);
   const [query, setQuery] = useState('');
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const record = (action: string, detail: string, kind: 'alteracao' | 'pendencia' = 'alteracao') =>
     audit({
@@ -46,9 +47,9 @@ export function TabMudancas({ project }: Props) {
       ? toast.info('Solicitação enviada para validação de um administrador.')
       : toast.success('Registro atualizado.');
 
-  const edit = (c: Change, field: string, from: string, to: string) => {
+  const edit = async (c: Change, field: string, from: string, to: string) => {
     if (from === to) return;
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'editar', targetId: c.id,
       targetPath: `Mudança: ${c.description.slice(0, 40)}`, field, from, to,
     }, author);
@@ -56,9 +57,9 @@ export function TabMudancas({ project }: Props) {
     record('editar mudança', `${field}: ${from} → ${to} · ${c.description.slice(0, 40)}`, result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const remove = (c: Change) => {
+  const remove = async (c: Change) => {
     if (!window.confirm('Excluir esta mudança?')) return;
-    const result = submitMetaEdit(project.id, {
+    const result = await submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'excluir', targetId: c.id,
       targetPath: `Mudança: ${c.description.slice(0, 40)}`, from: c.description,
     }, author);
@@ -66,8 +67,8 @@ export function TabMudancas({ project }: Props) {
     record('excluir mudança', c.description.slice(0, 40), result === 'pendente' ? 'pendencia' : 'alteracao');
   };
 
-  const create = (payload: Record<string, unknown>) => {
-    const result = submitMetaEdit(project.id, {
+  const create = async (payload: Record<string, JsonValue>) => {
+    const result = await submitMetaEdit(project.id, {
       entity: 'mudanca', action: 'criar', targetPath: 'Nova mudança',
       to: String(payload.description ?? ''), payload,
     }, author);
@@ -167,8 +168,8 @@ export function TabMudancas({ project }: Props) {
                       <input className="ipt" defaultValue={change.description} onBlur={e => edit(change, 'descrição', change.description, e.target.value)} />
                     </Field>
                     <Field label="Meta vinculada">
-                      <select className="ipt" value={change.goalId ?? 0} onChange={e => edit(change, 'meta', String(change.goalId ?? ''), e.target.value)}>
-                        <option value={0}>—</option>
+                      <select className="ipt" value={change.goalId ?? ''} onChange={e => edit(change, 'meta', String(change.goalId ?? ''), e.target.value)}>
+                        <option value="">—</option>
                         {p.goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name.slice(0, 50)}`}</option>)}
                       </select>
                     </Field>
@@ -245,7 +246,7 @@ function Field({ label, children, full }: { label: string; children: React.React
 function ChangeForm({ goals, onClose, onSave }: {
   goals: Goal[];
   onClose: () => void;
-  onSave: (c: Record<string, unknown>) => void;
+  onSave: (c: Record<string, JsonValue>) => void;
 }) {
   const [f, setF] = useState({
     description: '',
@@ -254,7 +255,7 @@ function ChangeForm({ goals, onClose, onSave }: {
     justification: '',
     approval: 'Pendente' as ApprovalStatus,
     responsible: APP_PEOPLE[0]?.name ?? '',
-    goalId: goals[0]?.id ?? 0,
+    goalId: goals[0]?.id ?? '',
     nature: 'Adaptação' as ChangeNature,
   });
   const submit = (e: React.FormEvent) => {
@@ -272,8 +273,8 @@ function ChangeForm({ goals, onClose, onSave }: {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
-            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: Number(e.target.value) })}>
-              {goals.length === 0 && <option value={0}>Nenhuma meta cadastrada</option>}
+            <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: e.target.value })}>
+              {goals.length === 0 && <option value="">Nenhuma meta cadastrada</option>}
               {goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name}`}</option>)}
             </select>
           </Field>

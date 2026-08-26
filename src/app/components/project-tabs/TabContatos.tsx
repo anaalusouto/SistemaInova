@@ -33,7 +33,7 @@ export function TabContatos({ project }: { project: Project }) {
     [p.commLogs],
   );
 
-  const [form, setForm] = useState<(Omit<CommLog, 'id'> & { id?: number }) | null>(null);
+  const [form, setForm] = useState<(Omit<CommLog, 'id'> & { id?: string }) | null>(null);
 
   const record = (action: string, detail: string) =>
     audit({

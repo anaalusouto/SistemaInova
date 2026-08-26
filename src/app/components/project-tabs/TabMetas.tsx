@@ -56,15 +56,15 @@ export function TabMetas({ project }: Props) {
   const { user } = useAuth();
   const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as never);
-  const [open, setOpen] = useState<number[]>(project.goals.map(g => g.id));
-  const [openStep, setOpenStep] = useState<number[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
-  const [infoGoal, setInfoGoal] = useState<number | null>(null);
+  const [open, setOpen] = useState<string[]>(project.goals.map(g => g.id));
+  const [openStep, setOpenStep] = useState<string[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
+  const [infoGoal, setInfoGoal] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ key: string; value: string } | null>(null);
 
   const log = p.metaLog ?? [];
 
-  const submit = (edit: MetaEdit, silent = false) => {
-    const result = submitMetaEdit(project.id, edit, author);
+  const submit = async (edit: MetaEdit, silent = false) => {
+    const result = await submitMetaEdit(project.id, edit, author);
     audit({
       userLogin: user?.login ?? '—',
       area: 'metas',
@@ -98,7 +98,7 @@ export function TabMetas({ project }: Props) {
   };
 
   const goalProgress = useMemo(() => {
-    const map: Record<number, number> = {};
+    const map: Record<string, number> = {};
     p.goals.forEach(g => {
       const acts = g.deliverables.flatMap(d => d.activities);
       map[g.id] = acts.length ? Math.round(acts.reduce((s, a) => s + a.progress, 0) / acts.length) : 0;

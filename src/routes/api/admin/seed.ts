@@ -1,9 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { query } from '@/server/db';
 import { comunidades } from '@/app/data/comunidades';
 import { inovaProjetos } from '@/app/data/inovaProjetos';
-import { rotas, calendarSeed } from '@/app/data/rotas';
-import { cronogramaExecutivoSeed } from '@/app/data/cronogramaExecutivo';
+import { metasProjetos } from '@/app/data/metasProjetos';
+import { riscosProjetos } from '@/app/data/riscosProjetos';
+
+/** Correções de valores aprovados informadas pela coordenação (ver store.tsx histórico). */
+const BUDGET_FIX: Record<string, number> = {
+  ATAIC: 164198.0,
+  ARQUIA: 200000.0,
+  AMIG: 164244.4,
+  COOPAFS: 164285.71,
+};
+
 export const Route = createFileRoute('/api/admin/seed')({
   server: {
     handlers: {
@@ -19,101 +27,150 @@ export const Route = createFileRoute('/api/admin/seed')({
         if (token !== expected) {
           return Response.json({ ok: false, error: 'Token inválido ou ausente.' }, { status: 401 });
         }
-        const summary: Record<string, number> = {};
+
+        const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+        const summary: Record<string, number> = {
+          comunidades: 0, projetos: 0, metas: 0, entregas: 0, atividades: 0, riscos: 0,
+        };
+
         try {
+          const { count, error: countError } = await supabaseAdmin
+            .from('projetos')
+            .select('*', { count: 'exact', head: true });
+          if (countError) throw countError;
+          if ((count ?? 0) > 0) {
+            return Response.json(
+              { ok: false, error: `Já existem ${count} projeto(s) no banco. Rode TRUNCATE nas tabelas (SQL Editor) antes de semear de novo.` },
+              { status: 409 },
+            );
+          }
+
           for (const c of comunidades) {
-            await query(
-              `INSERT INTO communities (id, code, nome, status, eixo_principal, municipio, uf, data, updated_at)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,now())
-               ON CONFLICT (id) DO UPDATE SET
-                 code = EXCLUDED.code, nome = EXCLUDED.nome, status = EXCLUDED.status,
-                 eixo_principal = EXCLUDED.eixo_principal, municipio = EXCLUDED.municipio,
-                 uf = EXCLUDED.uf, data = EXCLUDED.data, updated_at = now()`,
-              [c.id, c.code, c.nome, c.status, c.eixoPrincipal, c.municipio ?? null, c.uf ?? null, JSON.stringify(c)],
-            );
+            const { error } = await supabaseAdmin.from('comunidades').insert({
+              code: c.code, nome: c.nome, responsavel_tecnico: c.responsavelTecnico || null,
+              segmento_social: c.segmentoSocial || null, eixo_principal: c.eixoPrincipal || null,
+              classificacao: c.classificacao || null, localizacao: c.localizacao || null,
+              municipio: c.municipio || null, uf: c.uf || null, financiador: c.financiador || null,
+              objetivo: c.objetivo || null, valor_total: c.valorTotal, forma_repasse: c.formaRepasse || null,
+              status_repasse: c.statusRepasse || null, data_repasse: c.dataRepasse || null,
+              inicio_previsto: c.inicioPrevisto || null, final_previsto: c.finalPrevisto || null,
+              status: c.status, categorias_tematicas: c.categoriasTematicas || null,
+              compradores: c.compradores || null, garantia_venda: c.garantiaVenda || null,
+              destinacao: c.destinacao || null, ativacoes: c.ativacoes || null,
+              oportunidades: c.oportunidades || null, total_beneficiados_diretos: c.totalBeneficiadosDiretos,
+              total_beneficiados_indiretos: c.totalBeneficiadosIndiretos,
+              mulheres_beneficiadas: c.mulheresBeneficiadas ?? null, receita_faixa: c.receitaFaixa || null,
+              observacoes: c.observacoes || null, plano_trabalho_arquivo: c.planoTrabalhoArquivo || null,
+              detalhamento: c.detalhamento || null, justificativa: c.justificativa || null,
+              produto_texto: c.produtoTexto || null, infraestrutura: c.infraestrutura || null,
+              certificacao: c.certificacao || null, territorio: c.territorio || null,
+            });
+            if (error) throw error;
+            summary.comunidades += 1;
           }
-          summary.communities = comunidades.length;
+
           for (const p of inovaProjetos) {
-            await query(
-              `INSERT INTO projects (id, code, name, status, community_id, coordinator, financier, start_date, end_date, budget_approved, budget_executed, progress, data, updated_at)
-               VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now())
-               ON CONFLICT (id) DO UPDATE SET
-                 code = EXCLUDED.code, name = EXCLUDED.name, status = EXCLUDED.status,
-                 community_id = EXCLUDED.community_id, coordinator = EXCLUDED.coordinator,
-                 financier = EXCLUDED.financier, start_date = EXCLUDED.start_date, end_date = EXCLUDED.end_date,
-                 budget_approved = EXCLUDED.budget_approved, budget_executed = EXCLUDED.budget_executed,
-                 progress = EXCLUDED.progress, data = EXCLUDED.data, updated_at = now()`,
-              [
-                p.id, p.code, p.name, p.status, p.communityId ?? null,
-                p.coordinator, p.financier, p.startDate, p.endDate,
-                p.budgetApproved, p.budgetExecuted, p.progress, JSON.stringify(p),
-              ],
-            );
-          }
-          summary.projects = inovaProjetos.length;
-          for (const r of rotas) {
-            await query(
-              `INSERT INTO routes (id, rota, organizacao, municipio, uf, status, data)
-               VALUES ($1,$2,$3,$4,$5,$6,$7)
-               ON CONFLICT (id) DO UPDATE SET
-                 rota = EXCLUDED.rota, organizacao = EXCLUDED.organizacao, municipio = EXCLUDED.municipio,
-                 uf = EXCLUDED.uf, status = EXCLUDED.status, data = EXCLUDED.data`,
-              [r.id, r.rota, r.organizacao, r.municipio, r.uf, r.status ?? null, JSON.stringify(r)],
-            );
-          }
-          summary.routes = rotas.length;
-          for (const e of calendarSeed) {
-            await query(
-              `INSERT INTO calendar_events (id, title, event_date, route_id, community_id, data)
-               VALUES ($1,$2,$3,$4,$5,$6)
-               ON CONFLICT (id) DO UPDATE SET
-                 title = EXCLUDED.title, event_date = EXCLUDED.event_date,
-                 route_id = EXCLUDED.route_id, community_id = EXCLUDED.community_id, data = EXCLUDED.data`,
-              [e.id, e.title, e.date, e.rotaId ?? null, e.comunidadeId ?? null, JSON.stringify(e)],
-            );
-          }
-          summary.calendar_events = calendarSeed.length;
-          let entregasCount = 0;
-          let atividadesCount = 0;
-          for (const bloco of cronogramaExecutivoSeed) {
-            await query(
-              `INSERT INTO gantt_blocks (id, titulo) VALUES ($1,$2)
-               ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo`,
-              [bloco.id, bloco.bloco],
-            );
-            for (const entrega of bloco.entregas) {
-              await query(
-                `INSERT INTO gantt_entregas (id, block_id, entrega, inicio, fim, responsavel, status, progress, comentario)
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-                 ON CONFLICT (id) DO UPDATE SET
-                   block_id = EXCLUDED.block_id, entrega = EXCLUDED.entrega, inicio = EXCLUDED.inicio,
-                   fim = EXCLUDED.fim, responsavel = EXCLUDED.responsavel, status = EXCLUDED.status,
-                   progress = EXCLUDED.progress, comentario = EXCLUDED.comentario`,
-                [entrega.id, bloco.id, entrega.entrega, entrega.inicio, entrega.fim, entrega.responsavel, entrega.status, entrega.progress, entrega.comentario ?? null],
-              );
-              entregasCount += 1;
-              for (const atividade of entrega.atividades) {
-                await query(
-                  `INSERT INTO gantt_atividades (id, entrega_id, atividade, inicio, fim, responsavel, status, progress, comentario)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-                   ON CONFLICT (id) DO UPDATE SET
-                     entrega_id = EXCLUDED.entrega_id, atividade = EXCLUDED.atividade, inicio = EXCLUDED.inicio,
-                     fim = EXCLUDED.fim, responsavel = EXCLUDED.responsavel, status = EXCLUDED.status,
-                     progress = EXCLUDED.progress, comentario = EXCLUDED.comentario`,
-                  [atividade.id, entrega.id, atividade.atividade, atividade.inicio, atividade.fim, atividade.responsavel, atividade.status, atividade.progress, atividade.comentario ?? null],
-                );
-                atividadesCount += 1;
+            const plano = p.plano ?? {};
+            const budgetApproved = BUDGET_FIX[p.org ?? ''] ?? p.budgetApproved;
+            const { data: projetoRow, error: projetoError } = await supabaseAdmin
+              .from('projetos')
+              .insert({
+                nome: p.name, org: p.org ?? null, segmento: p.segmento ?? null, code: p.code,
+                coordenador: p.coordinator, financiador: p.financier, objetivo: p.objective,
+                data_inicio: p.startDate, data_fim: p.endDate, status: p.status, progresso: p.progress,
+                orcamento_aprovado: budgetApproved, orcamento_executado: p.budgetExecuted,
+                nivel_risco: p.riskLevel, drive_link: p.driveLink ?? null, budget_link: p.budgetLink ?? null,
+                termo_fomento_link: p.termoFomentoLink ?? null,
+                problematica: plano.problematica ?? null, justificativa: plano.justificativa ?? null,
+                localizacao_abrangencia: plano.localizacaoAbrangencia ?? null, diversidade: plano.diversidade ?? null,
+                saberes_locais: plano.saberesLocais ?? null, experiencia_previa: plano.experienciaPrevia ?? null,
+                capacidade_tecnica: plano.capacidadeTecnica ?? null, estrategia: plano.estrategia ?? null,
+                cronograma_fisico: plano.cronogramaFisico ?? null, detalhamento_recursos: plano.detalhamentoRecursos ?? null,
+                contrapartida: plano.contrapartida ?? null, justificativa_contrapartida: plano.justificativaContrapartida ?? null,
+                resultados_impactos: plano.resultadosImpactos ?? null, publico_alvo: plano.publicoAlvo ?? null,
+                beneficiados_diretos: plano.beneficiadosDiretos ?? null, beneficiados_indiretos: plano.beneficiadosIndiretos ?? null,
+                forma_acompanhamento: plano.formaAcompanhamento ?? null, potencial_replicabilidade: plano.potencialReplicabilidade ?? null,
+                potencial_ampliacao: plano.potencialAmpliacao ?? null, pilares: plano.pilares ?? null,
+                metas_texto: plano.metasTexto ?? null, detalhamento_plano: plano.detalhamentoPlano ?? null,
+                compradores: plano.compradores ?? null, garantia_venda: plano.garantiaVenda ?? null,
+                destinacao: plano.destinacao ?? null, ativacoes: plano.ativacoes ?? null,
+                oportunidades: plano.oportunidades ?? null, receita_faixa: plano.receitaFaixa ?? null,
+                valor_repasse: plano.valorRepasse ?? null, forma_repasse: plano.formaRepasse ?? null,
+                status_repasse: plano.statusRepasse ?? null, data_repasse: plano.dataRepasse ?? null,
+                observacoes: plano.observacoes ?? null, plano_arquivo: plano.planoArquivo ?? null,
+              })
+              .select('id')
+              .single();
+            if (projetoError) throw projetoError;
+            const projetoId = projetoRow.id as number;
+            summary.projetos += 1;
+
+            if (p.team?.length) {
+              const { error } = await supabaseAdmin
+                .from('projeto_equipe')
+                .insert(p.team.map(nome => ({ projeto_id: projetoId, nome })));
+              if (error) throw error;
+            }
+
+            const goals = metasProjetos[p.id] ?? [];
+            const goalIdMap: Record<number, string> = {};
+            for (const g of goals) {
+              const { data: metaRow, error: metaError } = await supabaseAdmin
+                .from('metas')
+                .insert({ projeto_id: projetoId, nome: g.name })
+                .select('id')
+                .single();
+              if (metaError) throw metaError;
+              goalIdMap[g.id] = metaRow.id as string;
+              summary.metas += 1;
+
+              for (const d of g.deliverables) {
+                const { data: entregaRow, error: entregaError } = await supabaseAdmin
+                  .from('entregas')
+                  .insert({ meta_id: metaRow.id, nome: d.name, resultado_esperado: d.expectedResult })
+                  .select('id')
+                  .single();
+                if (entregaError) throw entregaError;
+                summary.entregas += 1;
+
+                if (d.activities.length) {
+                  const { error: atividadeError } = await supabaseAdmin.from('atividades').insert(
+                    d.activities.map(a => ({
+                      entrega_id: entregaRow.id, nome: a.name, responsavel: a.responsible || null,
+                      data_planejada: a.plannedDate || null, data_inicio: a.startDate, data_conclusao: a.conclusionDate,
+                      progresso: a.progress, status: a.status, observacoes: a.observations || null,
+                    })),
+                  );
+                  if (atividadeError) throw atividadeError;
+                  summary.atividades += d.activities.length;
+                }
               }
             }
+
+            // p.risks (inovaProjetos) é sempre [] no seed atual — os riscos reais vêm de riscosProjetos.
+            const risks = riscosProjetos[p.id] ?? [];
+            if (risks.length) {
+              const { error: riscoError } = await supabaseAdmin.from('plano_riscos').insert(
+                risks.map(r => ({
+                  projeto_id: projetoId,
+                  meta_id: r.goalId != null ? goalIdMap[r.goalId] ?? null : null,
+                  etapa_nome_legado: r.stage ?? null, especificacao_legado: r.spec ?? null,
+                  descricao: r.description, categoria: r.category || null,
+                  probabilidade: r.probability, impacto: r.impact,
+                  estrategia_mitigacao: r.responseStrategy || null, responsavel: r.responsible || null,
+                  status: r.status,
+                })),
+              );
+              if (riscoError) throw riscoError;
+              summary.riscos += risks.length;
+            }
           }
-          summary.gantt_blocks = cronogramaExecutivoSeed.length;
-          summary.gantt_entregas = entregasCount;
-          summary.gantt_atividades = atividadesCount;
+
           return Response.json({ ok: true, summary });
         } catch (error) {
           console.error('[api/admin/seed] falha na migração:', error);
           return Response.json(
-            { ok: false, error: error instanceof Error ? error.message : 'erro desconhecido', summary },
+            { ok: false, error: error instanceof Error ? error.message : String(error), summary },
             { status: 500 },
           );
         }
