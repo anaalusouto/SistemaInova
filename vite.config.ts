@@ -4,7 +4,16 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
-export default defineConfig(async ({ command }) => {
+export default defineConfig(async ({ command, mode }) => {
+  // DEBUG TEMPORÁRIO: confirmar se a Vercel está passando VITE_SUPABASE_URL
+  // pro processo de build. Aparece nos Build Logs da Vercel. Remover depois.
+  console.log('[debug-env]', {
+    command, mode,
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_PUBLISHABLE_KEY: process.env.VITE_SUPABASE_PUBLISHABLE_KEY ? '(presente)' : undefined,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+  });
+
   const plugins = [
     tailwindcss(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
