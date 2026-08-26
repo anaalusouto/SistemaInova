@@ -26,9 +26,10 @@ const USER_LIST: UserRecord[] = [
   // Estagiária com acesso administrativo
   { password: '235010', user: { login: 'ana23330012@aluno.cesupa.br', displayName: 'Ana Paula', role: 'estagiario', adminOverride: true } },
 
-  // ===== Visualizadores (FAS / FUNBIO) — somente leitura + comentários =====
+  // ===== Visualizadores (FAS / FUNBIO / SEMAS) — somente leitura + comentários =====
   { password: 'FAS2026', user: { login: 'fas', displayName: 'FAS (Visualizador)', role: 'visualizador' } },
   { password: 'FUNBIO2026', user: { login: 'funbio', displayName: 'FUNBIO (Visualizador)', role: 'visualizador' } },
+  { password: 'SEMAS2026', user: { login: 'semas', displayName: 'SEMAS (Visualizador)', role: 'visualizador' } },
 ];
 
 const USERS: Record<string, UserRecord> = USER_LIST.reduce((acc, r) => {
