@@ -124,8 +124,8 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
 
       <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-3 px-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: 'var(--sidebar-primary)', color: 'var(--primary-foreground)' }}>
-            {initials}
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 overflow-hidden" style={{ background: 'var(--sidebar-primary)', color: 'var(--primary-foreground)' }}>
+            {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
           </div>
           <div className="flex-1 min-w-0">
             <div className="truncate" style={{ color: 'var(--sidebar-foreground)', fontSize: '0.78rem', fontWeight: 500 }}>{user?.displayName ?? '—'}</div>

@@ -18,6 +18,14 @@ export interface PublicUser {
   adminOverride: boolean;
   /** Timestamp ISO do último heartbeat de presença (null = nunca acessou). */
   ultimoAcesso: string | null;
+  /** Foto de perfil como data URL (já redimensionada/comprimida no cliente). */
+  avatarUrl: string | null;
+}
+
+/** Retornado só pelo login — inclui o e-mail, que listarPessoas/listarUsuarios não expõem a qualquer um. */
+export interface SessionUser extends PublicUser {
+  email: string | null;
+  notifEmail: boolean;
 }
 
 export interface ManagedUser extends PublicUser {
@@ -48,18 +56,22 @@ function verifyPassword(password: string, stored: string): boolean {
 function toPublicUser(row: any): PublicUser {
   return {
     login: row.login, displayName: row.nome_exibicao, role: row.papel, adminOverride: row.admin_override,
-    ultimoAcesso: row.ultimo_acesso ?? null,
+    ultimoAcesso: row.ultimo_acesso ?? null, avatarUrl: row.avatar_data_url ?? null,
   };
+}
+
+function toSessionUser(row: any): SessionUser {
+  return { ...toPublicUser(row), email: row.email ?? null, notifEmail: row.notif_email };
 }
 
 function hasAdminPowers(row: any): boolean {
   return row.papel === 'admin' || !!row.admin_override;
 }
 
-/** Autentica login+senha. Retorna o usuário público (sem hash) ou null. */
+/** Autentica login+senha. Retorna o usuário (com e-mail, sem hash) ou null. */
 export const autenticar = createServerFn({ method: 'POST' })
   .validator((d: { login: string; senha: string }) => d)
-  .handler(async ({ data: { login, senha } }): Promise<PublicUser | null> => {
+  .handler(async ({ data: { login, senha } }): Promise<SessionUser | null> => {
     const supabaseAdmin = await getAdmin();
     const { data, error } = await supabaseAdmin
       .from('usuarios')
@@ -68,7 +80,7 @@ export const autenticar = createServerFn({ method: 'POST' })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data || !verifyPassword(senha, data.senha_hash)) return null;
-    return toPublicUser(data);
+    return toSessionUser(data);
   });
 
 /** Confirma que login+senha pertencem a um admin (poderes administrativos). */
@@ -192,6 +204,66 @@ export const atualizarNomeExibicao = createServerFn({ method: 'POST' })
       .from('usuarios')
       .update({ nome_exibicao: novoNome })
       .eq('id', user.id);
+    if (error) throw new Error(error.message);
+  });
+
+/** Busca o próprio usuário e confere a senha atual — base comum das trocas self-service abaixo. */
+async function findAndVerifySelf(login: string, senha: string) {
+  const supabaseAdmin = await getAdmin();
+  const { data: user, error } = await supabaseAdmin
+    .from('usuarios').select('*').ilike('login', login.trim()).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!user || !verifyPassword(senha, user.senha_hash)) throw new Error('Senha incorreta.');
+  return { supabaseAdmin, user };
+}
+
+/** Altera o login do próprio usuário logado (exige a senha atual). */
+export const atualizarLogin = createServerFn({ method: 'POST' })
+  .validator((d: { login: string; senha: string; novoLogin: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const { supabaseAdmin, user } = await findAndVerifySelf(data.login, data.senha);
+    const novoLogin = data.novoLogin.trim();
+    if (!novoLogin) throw new Error('O login não pode ficar vazio.');
+    const { data: existing } = await supabaseAdmin
+      .from('usuarios').select('id').ilike('login', novoLogin).neq('id', user.id).maybeSingle();
+    if (existing) throw new Error('Já existe um usuário com esse login.');
+    const { error } = await supabaseAdmin.from('usuarios').update({ login: novoLogin }).eq('id', user.id);
+    if (error) throw new Error(error.message);
+  });
+
+/** Altera o e-mail de contato do próprio usuário logado (exige a senha atual). */
+export const atualizarEmail = createServerFn({ method: 'POST' })
+  .validator((d: { login: string; senha: string; novoEmail: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const { supabaseAdmin, user } = await findAndVerifySelf(data.login, data.senha);
+    const { error } = await supabaseAdmin
+      .from('usuarios').update({ email: data.novoEmail.trim() || null }).eq('id', user.id);
+    if (error) throw new Error(error.message);
+  });
+
+/** Altera a senha do próprio usuário logado (exige a senha atual). */
+export const atualizarSenha = createServerFn({ method: 'POST' })
+  .validator((d: { login: string; senhaAtual: string; novaSenha: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const { supabaseAdmin, user } = await findAndVerifySelf(data.login, data.senhaAtual);
+    if (!data.novaSenha) throw new Error('Informe a nova senha.');
+    const { error } = await supabaseAdmin
+      .from('usuarios').update({ senha_hash: hashPassword(data.novaSenha) }).eq('id', user.id);
+    if (error) throw new Error(error.message);
+  });
+
+const MAX_AVATAR_LENGTH = 250_000;
+
+/** Define/remove a foto de perfil do próprio usuário logado (data URL já redimensionada no cliente). */
+export const atualizarAvatar = createServerFn({ method: 'POST' })
+  .validator((d: { login: string; senha: string; avatarDataUrl: string | null }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const { supabaseAdmin, user } = await findAndVerifySelf(data.login, data.senha);
+    if (data.avatarDataUrl && data.avatarDataUrl.length > MAX_AVATAR_LENGTH) {
+      throw new Error('Imagem muito grande. Escolha uma foto menor.');
+    }
+    const { error } = await supabaseAdmin
+      .from('usuarios').update({ avatar_data_url: data.avatarDataUrl }).eq('id', user.id);
     if (error) throw new Error(error.message);
   });
 

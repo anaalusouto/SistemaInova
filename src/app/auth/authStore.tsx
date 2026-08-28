@@ -1,5 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, registrarPresenca, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
+import {
+  autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, registrarPresenca,
+  atualizarLogin, atualizarEmail, atualizarSenha, atualizarAvatar,
+  type PublicUser, type UserRole as ServerUserRole,
+} from '../usuarios.server';
 
 export type UserRole = ServerUserRole;
 export interface AuthUser {
@@ -8,6 +12,9 @@ export interface AuthUser {
   role: UserRole;
   /** Estagiário com poderes administrativos (ex.: Ana Paula). */
   adminOverride?: boolean;
+  email: string | null;
+  notifEmail: boolean;
+  avatarUrl: string | null;
 }
 
 /** Um usuário tem poderes administrativos se for admin ou estagiário com override. */
@@ -43,6 +50,14 @@ interface Ctx {
   updateNotificationPrefs: (password: string, email: string, notifEmail: boolean) => Promise<boolean>;
   /** Altera o nome de exibição do próprio usuário (exige a senha atual). */
   updateDisplayName: (password: string, newName: string) => Promise<boolean>;
+  /** Altera o login do próprio usuário (exige a senha atual). */
+  updateLogin: (password: string, newLogin: string) => Promise<boolean>;
+  /** Altera o e-mail de contato do próprio usuário (exige a senha atual). */
+  updateEmail: (password: string, newEmail: string) => Promise<boolean>;
+  /** Altera a senha do próprio usuário (exige a senha atual). */
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  /** Define ou remove (null) a foto de perfil do próprio usuário (exige a senha atual). */
+  updateAvatar: (password: string, avatarDataUrl: string | null) => Promise<boolean>;
 }
 
 const AuthContext = createContext<Ctx | null>(null);
@@ -102,7 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (login: string, password: string, rememberMe = false) => {
     const found = await autenticar({ data: { login, senha: password } });
     if (!found) return null;
-    const authUser: AuthUser = { login: found.login, displayName: found.displayName, role: found.role, adminOverride: found.adminOverride };
+    const authUser: AuthUser = {
+      login: found.login, displayName: found.displayName, role: found.role, adminOverride: found.adminOverride,
+      email: found.email, notifEmail: found.notifEmail, avatarUrl: found.avatarUrl,
+    };
     setRemember(rememberMe);
     setUser(authUser);
     return authUser;
@@ -127,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return false;
     try {
       await atualizarPreferenciasNotificacao({ data: { login: user.login, senha: password, email, notifEmail } });
+      setUser(u => (u ? { ...u, email: email.trim() || null, notifEmail } : u));
       return true;
     } catch { return false; }
   }, [user]);
@@ -141,6 +160,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { return false; }
   }, [user, refreshPeople]);
 
+  const updateLogin = useCallback(async (password: string, newLogin: string) => {
+    if (!user) return false;
+    try {
+      await atualizarLogin({ data: { login: user.login, senha: password, novoLogin: newLogin } });
+      setUser(u => (u ? { ...u, login: newLogin.trim() } : u));
+      refreshPeople();
+      return true;
+    } catch { return false; }
+  }, [user, refreshPeople]);
+
+  const updateEmail = useCallback(async (password: string, newEmail: string) => {
+    if (!user) return false;
+    try {
+      await atualizarEmail({ data: { login: user.login, senha: password, novoEmail: newEmail } });
+      setUser(u => (u ? { ...u, email: newEmail.trim() || null } : u));
+      return true;
+    } catch { return false; }
+  }, [user]);
+
+  const updatePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    if (!user) return false;
+    try {
+      await atualizarSenha({ data: { login: user.login, senhaAtual: currentPassword, novaSenha: newPassword } });
+      return true;
+    } catch { return false; }
+  }, [user]);
+
+  const updateAvatar = useCallback(async (password: string, avatarDataUrl: string | null) => {
+    if (!user) return false;
+    try {
+      await atualizarAvatar({ data: { login: user.login, senha: password, avatarDataUrl } });
+      setUser(u => (u ? { ...u, avatarUrl: avatarDataUrl } : u));
+      refreshPeople();
+      return true;
+    } catch { return false; }
+  }, [user, refreshPeople]);
+
   const value = useMemo<Ctx>(
     () => ({
       user,
@@ -148,8 +204,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       readOnly: isReadOnly(user),
       signIn, signOut, verifyAdmin, verifyOwnPassword,
       people, refreshPeople, updateNotificationPrefs, updateDisplayName,
+      updateLogin, updateEmail, updatePassword, updateAvatar,
     }),
-    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, people, refreshPeople, updateNotificationPrefs, updateDisplayName],
+    [
+      user, signIn, signOut, verifyAdmin, verifyOwnPassword, people, refreshPeople, updateNotificationPrefs, updateDisplayName,
+      updateLogin, updateEmail, updatePassword, updateAvatar,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -167,7 +227,7 @@ export function usePeople() {
   return useMemo(
     () => people
       .filter(p => p.login !== 'LJCRIA' && p.login !== 'ADMCRIA')
-      .map(p => ({ name: p.displayName, role: p.role, login: p.login, ultimoAcesso: p.ultimoAcesso })),
+      .map(p => ({ name: p.displayName, role: p.role, login: p.login, ultimoAcesso: p.ultimoAcesso, avatarUrl: p.avatarUrl })),
     [people],
   );
 }

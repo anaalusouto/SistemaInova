@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
@@ -31,7 +31,7 @@ function presenceStatus(ultimoAcesso: string | null): { active: boolean; label: 
 }
 
 export function ConfiguracoesPage() {
-  const { user, isAdmin, signOut, verifyOwnPassword } = useAuth();
+  const { user, isAdmin, signOut, verifyOwnPassword, updateDisplayName, updateLogin, updateEmail } = useAuth();
   const APP_PEOPLE = usePeople();
   const { entries } = useAudit();
   const { projects } = useStore();
@@ -121,16 +121,16 @@ export function ConfiguracoesPage() {
               </span>
             </div>
 
-            <div className="flex items-center gap-4 p-5 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold"
-                style={{ background: 'var(--primary)', color: 'var(--primary-foreground)', fontFamily: 'var(--font-heading)' }}
-              >
-                {user?.login.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <NomeExibicaoEditor />
-                <div style={{ fontSize: '0.8rem', color: 'var(--ink-4)' }}>Login: {user?.login}</div>
+            <div className="flex items-start gap-5 p-5 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+              <AvatarEditor />
+              <div className="flex-1 min-w-0 flex flex-col">
+                <ProfileFieldEditor label="Nome de exibição" value={user?.displayName ?? ''} onSave={updateDisplayName} bordered />
+                <ProfileFieldEditor label="Login" value={user?.login ?? ''} onSave={updateLogin} bordered />
+                <ProfileFieldEditor
+                  label="E-mail" value={user?.email ?? ''} inputType="email" placeholder="Nenhum e-mail cadastrado"
+                  onSave={updateEmail} bordered
+                />
+                <SenhaEditor />
               </div>
             </div>
           </div>
@@ -167,8 +167,10 @@ export function ConfiguracoesPage() {
                       <tr key={m.login} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
-                              {m.name.split(' ').map(x => x[0]).slice(0, 2).join('')}
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold overflow-hidden" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+                              {m.avatarUrl
+                                ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                : m.name.split(' ').map(x => x[0]).slice(0, 2).join('')}
                             </div>
                             <div>
                               <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{m.name}</div>
@@ -326,20 +328,28 @@ function AparenciaSection() {
   );
 }
 
-function NomeExibicaoEditor() {
-  const { user, updateDisplayName } = useAuth();
+/** Editor inline genérico de um campo de identidade (nome, login, e-mail…): mostra o valor, e ao
+ * salvar exige a senha atual antes de chamar onSave. */
+function ProfileFieldEditor({ label, value, placeholder, inputType = 'text', bordered, onSave }: {
+  label: string;
+  value: string;
+  placeholder?: string;
+  inputType?: string;
+  bordered?: boolean;
+  onSave: (password: string, newValue: string) => Promise<boolean>;
+}) {
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user?.displayName ?? '');
+  const [val, setVal] = useState(value);
   const [pwd, setPwd] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const startEdit = () => { setName(user?.displayName ?? ''); setEditing(true); };
+  const startEdit = () => { setVal(value); setEditing(true); };
   const cancel = () => { setEditing(false); setShowPwd(false); setPwd(''); };
 
   const startSave = () => {
-    if (!name.trim()) { toast.error('O nome não pode ficar vazio.'); return; }
-    if (name.trim() === user?.displayName) { setEditing(false); return; }
+    if (!val.trim()) { toast.error(`Preencha o campo "${label}".`); return; }
+    if (val.trim() === value) { setEditing(false); return; }
     setShowPwd(true);
   };
 
@@ -347,50 +357,218 @@ function NomeExibicaoEditor() {
     if (!pwd) return;
     setSaving(true);
     try {
-      const ok = await updateDisplayName(pwd, name);
-      if (ok) { toast.success('Nome atualizado.'); cancel(); }
+      const ok = await onSave(pwd, val.trim());
+      if (ok) { toast.success(`${label} atualizado.`); cancel(); }
       else toast.error('Senha incorreta.');
     } finally {
       setSaving(false);
     }
   };
 
-  if (!editing) {
-    return (
-      <div className="flex items-center gap-2">
-        <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--ink-1)' }}>{user?.displayName}</div>
-        <button onClick={startEdit} className="p-1 rounded hover:bg-accent" title="Alterar nome de exibição">
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5" style={bordered ? { borderBottom: '1px solid var(--border)' } : undefined}>
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+        {!editing ? (
+          <div style={{ fontSize: '0.85rem', color: value ? 'var(--ink-1)' : 'var(--ink-5)', marginTop: 2 }}>
+            {value || placeholder || 'Não definido'}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 mt-1.5 max-w-xs">
+            <input
+              type={inputType} autoFocus value={val} onChange={e => setVal(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !showPwd && startSave()}
+              className="px-2.5 py-1.5 rounded-lg text-[13px]"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+            />
+            {!showPwd ? (
+              <div className="flex items-center gap-2">
+                <button onClick={startSave} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                <button onClick={cancel} className="px-3 py-1.5 rounded-lg text-[12px]" style={{ color: 'var(--ink-4)' }}>Cancelar</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="password" autoFocus placeholder="Confirme sua senha" value={pwd} onChange={e => setPwd(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && confirmSave()}
+                  className="flex-1 px-2.5 py-1.5 rounded-lg text-[13px]"
+                  style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+                />
+                <button onClick={confirmSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+                  {saving ? 'Salvando…' : 'Confirmar'}
+                </button>
+                <button onClick={cancel} className="px-1.5 py-1.5 rounded-lg" style={{ color: 'var(--ink-4)' }}><X size={13} /></button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {!editing && (
+        <button onClick={startEdit} className="p-1.5 rounded hover:bg-accent flex-shrink-0" title={`Alterar ${label.toLowerCase()}`}>
           <Pencil size={12} color="var(--ink-4)" />
         </button>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
+}
+
+function SenhaEditor() {
+  const { updatePassword } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [atual, setAtual] = useState('');
+  const [nova, setNova] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const cancel = () => { setEditing(false); setAtual(''); setNova(''); };
+
+  const submit = async () => {
+    if (!atual || !nova) { toast.error('Preencha a senha atual e a nova senha.'); return; }
+    setSaving(true);
+    try {
+      const ok = await updatePassword(atual, nova);
+      if (ok) { toast.success('Senha atualizada.'); cancel(); }
+      else toast.error('Senha atual incorreta.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-2 max-w-xs">
-      <input
-        autoFocus value={name} onChange={e => setName(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && !showPwd && startSave()}
-        className="px-2.5 py-1.5 rounded-lg text-[13px]"
-        style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
-      />
-      {!showPwd ? (
-        <div className="flex items-center gap-2">
-          <button onClick={startSave} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
-          <button onClick={cancel} className="px-3 py-1.5 rounded-lg text-[12px]" style={{ color: 'var(--ink-4)' }}>Cancelar</button>
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senha</div>
+        {!editing ? (
+          <div style={{ fontSize: '0.85rem', color: 'var(--ink-1)', marginTop: 2 }}>••••••••</div>
+        ) : (
+          <div className="flex flex-col gap-2 mt-1.5 max-w-xs">
+            <input
+              type="password" autoFocus placeholder="Senha atual" value={atual} onChange={e => setAtual(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg text-[13px]"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+            />
+            <input
+              type="password" placeholder="Nova senha" value={nova} onChange={e => setNova(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && submit()}
+              className="px-2.5 py-1.5 rounded-lg text-[13px]"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+            />
+            <div className="flex items-center gap-2">
+              <button onClick={submit} disabled={saving} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+                {saving ? 'Salvando…' : 'Salvar'}
+              </button>
+              <button onClick={cancel} className="px-3 py-1.5 rounded-lg text-[12px]" style={{ color: 'var(--ink-4)' }}>Cancelar</button>
+            </div>
+          </div>
+        )}
+      </div>
+      {!editing && (
+        <button onClick={() => setEditing(true)} className="p-1.5 rounded hover:bg-accent flex-shrink-0" title="Alterar senha">
+          <Pencil size={12} color="var(--ink-4)" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Redimensiona/comprime a imagem no cliente antes de mandar pro servidor (sem bucket de Storage). */
+function resizeImageToDataUrl(file: File, maxSize = 200, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      URL.revokeObjectURL(url);
+      if (!ctx) { reject(new Error('Canvas não suportado.')); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Não foi possível ler a imagem.')); };
+    img.src = url;
+  });
+}
+
+function AvatarEditor() {
+  const { user, updateAvatar } = useAuth();
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [pendingRemove, setPendingRemove] = useState(false);
+  const [pwd, setPwd] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const initials = (user?.displayName ?? user?.login ?? '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || 'US';
+  const shown = pendingRemove ? null : pendingImage ?? user?.avatarUrl ?? null;
+
+  const cancel = () => { setPendingImage(null); setPendingRemove(false); setShowPwd(false); setPwd(''); };
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Escolha um arquivo de imagem.'); return; }
+    try {
+      setPendingImage(await resizeImageToDataUrl(file));
+      setPendingRemove(false);
+      setShowPwd(true);
+    } catch {
+      toast.error('Não foi possível processar a imagem.');
+    }
+  };
+
+  const startRemove = () => { setPendingImage(null); setPendingRemove(true); setShowPwd(true); };
+
+  const confirm = async () => {
+    if (!pwd) return;
+    setSaving(true);
+    try {
+      const ok = await updateAvatar(pwd, pendingRemove ? null : pendingImage);
+      if (ok) { toast.success(pendingRemove ? 'Foto removida.' : 'Foto atualizada.'); cancel(); }
+      else toast.error('Senha incorreta.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+      <div className="relative">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold overflow-hidden"
+          style={{ background: 'var(--primary)', color: 'var(--primary-foreground)', fontFamily: 'var(--font-heading)' }}
+        >
+          {shown ? <img src={shown} alt="" className="w-full h-full object-cover" /> : initials}
         </div>
-      ) : (
-        <div className="flex items-center gap-2">
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="absolute -bottom-1 -right-1 p-1.5 rounded-full text-white"
+          style={{ background: 'var(--primary)', border: '2px solid var(--card)' }}
+          title="Alterar foto"
+        >
+          <Pencil size={10} />
+        </button>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+      {user?.avatarUrl && !showPwd && (
+        <button onClick={startRemove} style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>Remover foto</button>
+      )}
+      {showPwd && (
+        <div className="flex items-center gap-1.5 mt-0.5">
           <input
-            type="password" autoFocus placeholder="Confirme sua senha" value={pwd} onChange={e => setPwd(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && confirmSave()}
-            className="flex-1 px-2.5 py-1.5 rounded-lg text-[13px]"
+            type="password" autoFocus placeholder="Senha" value={pwd} onChange={e => setPwd(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && confirm()}
+            className="w-20 px-2 py-1 rounded-md text-[11px]"
             style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
           />
-          <button onClick={confirmSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
-            {saving ? 'Salvando…' : 'Confirmar'}
+          <button onClick={confirm} disabled={saving} className="px-2 py-1 rounded-md text-[11px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+            OK
           </button>
-          <button onClick={cancel} className="px-1.5 py-1.5 rounded-lg" style={{ color: 'var(--ink-4)' }}><X size={13} /></button>
+          <button onClick={cancel} className="p-1 rounded-md" style={{ color: 'var(--ink-4)' }}><X size={12} /></button>
         </div>
       )}
     </div>
@@ -402,9 +580,9 @@ function NomeExibicaoEditor() {
    ============================================================ */
 
 function NotificacoesSection({ prefs, setPrefs }: { prefs: NotifPrefs; setPrefs: (p: NotifPrefs | ((p: NotifPrefs) => NotifPrefs)) => void }) {
-  const { updateNotificationPrefs } = useAuth();
-  const [emailOn, setEmailOn] = useState(false);
-  const [address, setAddress] = useState('');
+  const { user, updateNotificationPrefs } = useAuth();
+  const [emailOn, setEmailOn] = useState(user?.notifEmail ?? false);
+  const [address, setAddress] = useState(user?.email ?? '');
   const [pwd, setPwd] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [saving, setSaving] = useState(false);
