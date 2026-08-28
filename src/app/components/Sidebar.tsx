@@ -8,6 +8,7 @@ import {
   Search,
   ClipboardList,
   LogOut,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 
@@ -17,6 +18,7 @@ export type NavItem =
   | 'schedule'
   | 'diagnostics'
   | 'reports'
+  | 'messages'
   | 'settings';
 
 interface SidebarProps {
@@ -35,6 +37,7 @@ const bottomItems = [
   { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
+  { id: 'messages' as NavItem, label: 'Mensagens', icon: MessageSquare },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
@@ -87,7 +90,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         }`}
         style={{ background: 'var(--sidebar)' }}
       >
-      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)', background: 'var(--surface-0)' }}>
+      <div className="flex items-center gap-3 px-5 h-16 flex-shrink-0 border-b" style={{ borderColor: 'var(--sidebar-border)', background: 'var(--surface-0)' }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sidebar-primary)' }}>
           <LayoutDashboard size={16} color="var(--primary-foreground)" />
         </div>

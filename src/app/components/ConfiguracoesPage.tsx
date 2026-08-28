@@ -4,7 +4,7 @@ import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
   UserCog, Plus, Trash2, X, Pencil,
 } from 'lucide-react';
-import { usePeople, ROLE_LABEL, useAuth, type UserRole } from '../auth/authStore';
+import { usePeople, ROLE_LABEL, useAuth, PRESENCE_ACTIVE_MS, type UserRole } from '../auth/authStore';
 import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type ManagedUser } from '../usuarios.server';
 import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
 import { useAudit } from '../audit/auditStore';
@@ -23,8 +23,15 @@ const formatTs = (iso: string) => {
 };
 const dayOf = (iso: string) => iso.slice(0, 10);
 
+/** Status de presença estilo WhatsApp: "Ativo agora" ou "Inativo desde ...". */
+function presenceStatus(ultimoAcesso: string | null): { active: boolean; label: string } {
+  if (!ultimoAcesso) return { active: false, label: 'Nunca acessou' };
+  const active = Date.now() - new Date(ultimoAcesso).getTime() < PRESENCE_ACTIVE_MS;
+  return { active, label: active ? 'Ativo agora' : `Inativo desde ${formatTs(ultimoAcesso)}` };
+}
+
 export function ConfiguracoesPage() {
-  const { user, isAdmin, signOut, verifyOwnPassword, onlineLogins } = useAuth();
+  const { user, isAdmin, signOut, verifyOwnPassword } = useAuth();
   const APP_PEOPLE = usePeople();
   const { entries } = useAudit();
   const { projects } = useStore();
@@ -155,7 +162,7 @@ export function ConfiguracoesPage() {
                 </thead>
                 <tbody>
                   {APP_PEOPLE.map(m => {
-                    const online = onlineLogins.includes(m.login);
+                    const { active, label } = presenceStatus(m.ultimoAcesso);
                     return (
                       <tr key={m.login} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td className="px-4 py-3">
@@ -176,10 +183,10 @@ export function ConfiguracoesPage() {
                           <td className="px-4 py-3">
                             <span
                               className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium"
-                              style={online ? { background: 'var(--success-soft)', color: 'var(--success)' } : { background: 'var(--surface-2)', color: 'var(--ink-4)' }}
+                              style={active ? { background: 'var(--success-soft)', color: 'var(--success)' } : { background: 'var(--surface-2)', color: 'var(--ink-4)' }}
                             >
-                              {online ? <Check size={10} /> : null}
-                              {online ? 'Ativo agora' : 'Inativo'}
+                              {active ? <Check size={10} /> : null}
+                              {label}
                             </span>
                           </td>
                         )}

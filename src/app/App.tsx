@@ -9,6 +9,7 @@ import { ReportsPage } from './components/ReportsPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
 import { CronogramaPage } from './components/CronogramaPage';
+import { MensagensPage } from './components/MensagensPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
@@ -17,6 +18,22 @@ import { AuditProvider, useAudit } from './audit/auditStore';
 import { ThemeProvider, useTheme } from './theme/themeStore';
 import { LoginScreen } from './auth/LoginScreen';
 
+const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
+  manha: 'Bom dia',
+  tarde: 'Boa tarde',
+  noite: 'Boa noite',
+};
+
+function greetingFor(displayName: string): string {
+  const firstName = displayName.trim().split(' ')[0] || displayName;
+  const hour = new Date().getHours();
+  const period: 'manha' | 'tarde' | 'noite' = hour < 6 || hour >= 18 ? 'noite' : hour < 12 ? 'manha' : 'tarde';
+  const base = GREETING_BY_PERIOD[period];
+  // Uma a cada 4 vezes aparece "bem-vindo de volta" em vez do horário — só pra variar.
+  const variants = [`${base}, ${firstName}!`, `${base}, ${firstName}!`, `${base}, ${firstName}!`, `Bem-vindo de volta, ${firstName}!`];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
+
 function AppShell() {
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
@@ -24,6 +41,7 @@ function AppShell() {
   const { getProject } = useStore();
   const { user } = useAuth();
   const { log } = useAudit();
+  const [greeting] = useState(() => greetingFor(user?.displayName ?? ''));
   useApprovalToasts();
 
   useEffect(() => {
@@ -60,6 +78,8 @@ function AppShell() {
         return <DiagnosticoPage />;
       case 'reports':
         return <ReportsPage />;
+      case 'messages':
+        return <MensagensPage onOpenProject={handleSelectProject} />;
       case 'settings':
         return <ConfiguracoesPage />;
 
@@ -78,7 +98,7 @@ function AppShell() {
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="flex items-center gap-3 border-b px-4 py-2.5"
+          className="flex items-center gap-3 border-b px-4 h-16 flex-shrink-0"
           style={{ borderColor: 'var(--border)', background: 'var(--background)' }}
         >
           <button
@@ -89,6 +109,7 @@ function AppShell() {
             <Menu size={20} />
           </button>
           <span className="text-sm font-semibold text-foreground lg:hidden">Sistema Inova</span>
+          <span className="hidden lg:inline text-sm font-medium" style={{ color: 'var(--ink-1)' }}>{greeting}</span>
           <div className="flex-1" />
           <ThemeToggleButton />
           <NotificationsBell onOpenProject={handleSelectProject} />

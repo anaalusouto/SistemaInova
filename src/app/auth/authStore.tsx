@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
+import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, registrarPresenca, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
 
 export type UserRole = ServerUserRole;
 export interface AuthUser {
@@ -21,12 +21,9 @@ export const ROLE_LABEL: Record<UserRole, string> = {
   visualizador: 'Visualizador',
 };
 
-const PRESENCE_KEY = 'pp-presence-v1';
-const PRESENCE_TTL = 2 * 60 * 1000;
-
-function readPresence(): Record<string, number> {
-  try { return JSON.parse(window.localStorage.getItem(PRESENCE_KEY) ?? '{}'); } catch { return {}; }
-}
+/** Considerado "ativo agora" se o último heartbeat foi há menos que isso (mesmo intervalo do heartbeat, com folga). */
+export const PRESENCE_ACTIVE_MS = 2 * 60 * 1000;
+const PRESENCE_HEARTBEAT_MS = 30 * 1000;
 
 interface Ctx {
   user: AuthUser | null;
@@ -38,8 +35,6 @@ interface Ctx {
   verifyAdmin: (login: string, password: string) => Promise<boolean>;
   /** Confere a senha do usuário logado (usado para desbloquear Registros). */
   verifyOwnPassword: (password: string) => Promise<boolean>;
-  /** Logins ativos na plataforma nos últimos minutos. */
-  onlineLogins: string[];
   /** Pessoas cadastradas (para seleção de responsáveis) — sem senhas. */
   people: PublicUser[];
   /** Recarrega a lista de pessoas (chamar depois de criar/editar/excluir usuário). */
@@ -57,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [remember, setRemember] = useState(false);
-  const [onlineLogins, setOnlineLogins] = useState<string[]>([]);
   const [people, setPeople] = useState<PublicUser[]>([]);
 
   useEffect(() => {
@@ -77,9 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { setPeople(await listarPessoas()); } catch { /* ignore */ }
   }, []);
 
+  // Heartbeat de presença: avisa o servidor que este login está ativo, e recarrega
+  // a lista de pessoas para refletir o status (próprio e de todos os outros).
   useEffect(() => {
     if (!hydrated || !user) return;
-    refreshPeople();
+    const beat = async () => {
+      try { await registrarPresenca({ data: { login: user.login } }); } catch { /* ignore */ }
+      refreshPeople();
+    };
+    beat();
+    const t = window.setInterval(beat, PRESENCE_HEARTBEAT_MS);
+    return () => window.clearInterval(t);
   }, [hydrated, user, refreshPeople]);
 
   useEffect(() => {
@@ -97,24 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
   }, [user, remember, hydrated]);
 
-  // Heartbeat de presença (para "ativo agora" na área de Equipe).
-  useEffect(() => {
-    if (!hydrated) return;
-    const beat = () => {
-      try {
-        const map = readPresence();
-        if (user) map[user.login] = Date.now();
-        const now = Date.now();
-        const alive = Object.entries(map).filter(([, t]) => now - t < PRESENCE_TTL);
-        window.localStorage.setItem(PRESENCE_KEY, JSON.stringify(Object.fromEntries(alive)));
-        setOnlineLogins(alive.map(([l]) => l));
-      } catch { /* ignore */ }
-    };
-    beat();
-    const t = window.setInterval(beat, 30000);
-    return () => window.clearInterval(t);
-  }, [user, hydrated]);
-
   const signIn = useCallback(async (login: string, password: string, rememberMe = false) => {
     const found = await autenticar({ data: { login, senha: password } });
     if (!found) return null;
@@ -125,14 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
-    try {
-      const map = readPresence();
-      if (user) delete map[user.login];
-      window.localStorage.setItem(PRESENCE_KEY, JSON.stringify(map));
-    } catch { /* ignore */ }
     setRemember(false);
     setUser(null);
-  }, [user]);
+  }, []);
 
   const verifyAdmin = useCallback(async (login: string, password: string) => {
     return verificarAdmin({ data: { login, senha: password } });
@@ -167,10 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAdmin: hasAdminPowers(user),
       readOnly: isReadOnly(user),
-      signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins,
+      signIn, signOut, verifyAdmin, verifyOwnPassword,
       people, refreshPeople, updateNotificationPrefs, updateDisplayName,
     }),
-    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins, people, refreshPeople, updateNotificationPrefs, updateDisplayName],
+    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, people, refreshPeople, updateNotificationPrefs, updateDisplayName],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -188,7 +167,7 @@ export function usePeople() {
   return useMemo(
     () => people
       .filter(p => p.login !== 'LJCRIA' && p.login !== 'ADMCRIA')
-      .map(p => ({ name: p.displayName, role: p.role, login: p.login })),
+      .map(p => ({ name: p.displayName, role: p.role, login: p.login, ultimoAcesso: p.ultimoAcesso })),
     [people],
   );
 }

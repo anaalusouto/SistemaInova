@@ -16,6 +16,8 @@ export interface PublicUser {
   displayName: string;
   role: UserRole;
   adminOverride: boolean;
+  /** Timestamp ISO do último heartbeat de presença (null = nunca acessou). */
+  ultimoAcesso: string | null;
 }
 
 export interface ManagedUser extends PublicUser {
@@ -44,7 +46,10 @@ function verifyPassword(password: string, stored: string): boolean {
 }
 
 function toPublicUser(row: any): PublicUser {
-  return { login: row.login, displayName: row.nome_exibicao, role: row.papel, adminOverride: row.admin_override };
+  return {
+    login: row.login, displayName: row.nome_exibicao, role: row.papel, adminOverride: row.admin_override,
+    ultimoAcesso: row.ultimo_acesso ?? null,
+  };
 }
 
 function hasAdminPowers(row: any): boolean {
@@ -78,6 +83,18 @@ export const verificarAdmin = createServerFn({ method: 'POST' })
       .maybeSingle();
     if (error) throw new Error(error.message);
     return !!data && verifyPassword(senha, data.senha_hash) && hasAdminPowers(data);
+  });
+
+/** Heartbeat de presença — chamado periodicamente pelo cliente enquanto a aba está aberta. */
+export const registrarPresenca = createServerFn({ method: 'POST' })
+  .validator((d: { login: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const supabaseAdmin = await getAdmin();
+    const { error } = await supabaseAdmin
+      .from('usuarios')
+      .update({ ultimo_acesso: new Date().toISOString() })
+      .ilike('login', data.login.trim());
+    if (error) throw new Error(error.message);
   });
 
 /** Lista pública de pessoas (para seleção de responsáveis) — sem dados sensíveis. */
