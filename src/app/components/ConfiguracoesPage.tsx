@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
-  UserCog, Plus, Trash2, X,
+  UserCog, Plus, Trash2, X, Pencil,
 } from 'lucide-react';
 import { usePeople, ROLE_LABEL, useAuth, type UserRole } from '../auth/authStore';
 import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type ManagedUser } from '../usuarios.server';
@@ -121,8 +121,8 @@ export function ConfiguracoesPage() {
               >
                 {user?.login.slice(0, 2).toUpperCase()}
               </div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--ink-1)' }}>{user?.displayName}</div>
+              <div className="flex-1">
+                <NomeExibicaoEditor />
                 <div style={{ fontSize: '0.8rem', color: 'var(--ink-4)' }}>Login: {user?.login}</div>
               </div>
             </div>
@@ -315,6 +315,77 @@ function AparenciaSection() {
       <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
         As preferências de aparência ficam salvas neste dispositivo.
       </p>
+    </div>
+  );
+}
+
+function NomeExibicaoEditor() {
+  const { user, updateDisplayName } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(user?.displayName ?? '');
+  const [pwd, setPwd] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = () => { setName(user?.displayName ?? ''); setEditing(true); };
+  const cancel = () => { setEditing(false); setShowPwd(false); setPwd(''); };
+
+  const startSave = () => {
+    if (!name.trim()) { toast.error('O nome não pode ficar vazio.'); return; }
+    if (name.trim() === user?.displayName) { setEditing(false); return; }
+    setShowPwd(true);
+  };
+
+  const confirmSave = async () => {
+    if (!pwd) return;
+    setSaving(true);
+    try {
+      const ok = await updateDisplayName(pwd, name);
+      if (ok) { toast.success('Nome atualizado.'); cancel(); }
+      else toast.error('Senha incorreta.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--ink-1)' }}>{user?.displayName}</div>
+        <button onClick={startEdit} className="p-1 rounded hover:bg-accent" title="Alterar nome de exibição">
+          <Pencil size={12} color="var(--ink-4)" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 max-w-xs">
+      <input
+        autoFocus value={name} onChange={e => setName(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && !showPwd && startSave()}
+        className="px-2.5 py-1.5 rounded-lg text-[13px]"
+        style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+      />
+      {!showPwd ? (
+        <div className="flex items-center gap-2">
+          <button onClick={startSave} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+          <button onClick={cancel} className="px-3 py-1.5 rounded-lg text-[12px]" style={{ color: 'var(--ink-4)' }}>Cancelar</button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <input
+            type="password" autoFocus placeholder="Confirme sua senha" value={pwd} onChange={e => setPwd(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && confirmSave()}
+            className="flex-1 px-2.5 py-1.5 rounded-lg text-[13px]"
+            style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+          />
+          <button onClick={confirmSave} disabled={saving} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+            {saving ? 'Salvando…' : 'Confirmar'}
+          </button>
+          <button onClick={cancel} className="px-1.5 py-1.5 rounded-lg" style={{ color: 'var(--ink-4)' }}><X size={13} /></button>
+        </div>
+      )}
     </div>
   );
 }

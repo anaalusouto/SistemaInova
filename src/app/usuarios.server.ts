@@ -160,6 +160,24 @@ export const excluirUsuario = createServerFn({ method: 'POST' })
     if (error) throw new Error(error.message);
   });
 
+/** Atualiza o nome de exibição do próprio usuário logado (exige a senha atual). */
+export const atualizarNomeExibicao = createServerFn({ method: 'POST' })
+  .validator((d: { login: string; senha: string; novoNome: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const supabaseAdmin = await getAdmin();
+    const { data: user, error: findError } = await supabaseAdmin
+      .from('usuarios').select('*').ilike('login', data.login.trim()).maybeSingle();
+    if (findError) throw new Error(findError.message);
+    if (!user || !verifyPassword(data.senha, user.senha_hash)) throw new Error('Sessão inválida.');
+    const novoNome = data.novoNome.trim();
+    if (!novoNome) throw new Error('O nome não pode ficar vazio.');
+    const { error } = await supabaseAdmin
+      .from('usuarios')
+      .update({ nome_exibicao: novoNome })
+      .eq('id', user.id);
+    if (error) throw new Error(error.message);
+  });
+
 /** Lê e-mail e preferência de notificação do próprio usuário logado. */
 export const obterPreferenciasNotificacao = createServerFn({ method: 'POST' })
   .validator((d: { login: string; senha: string }) => d)

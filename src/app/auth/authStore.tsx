@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
+import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
 
 export type UserRole = ServerUserRole;
 export interface AuthUser {
@@ -46,6 +46,8 @@ interface Ctx {
   refreshPeople: () => Promise<void>;
   /** Salva e-mail e preferência de notificação do próprio usuário (exige a senha atual). */
   updateNotificationPrefs: (password: string, email: string, notifEmail: boolean) => Promise<boolean>;
+  /** Altera o nome de exibição do próprio usuário (exige a senha atual). */
+  updateDisplayName: (password: string, newName: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<Ctx | null>(null);
@@ -150,15 +152,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { return false; }
   }, [user]);
 
+  const updateDisplayName = useCallback(async (password: string, newName: string) => {
+    if (!user) return false;
+    try {
+      await atualizarNomeExibicao({ data: { login: user.login, senha: password, novoNome: newName } });
+      setUser(u => (u ? { ...u, displayName: newName.trim() } : u));
+      refreshPeople();
+      return true;
+    } catch { return false; }
+  }, [user, refreshPeople]);
+
   const value = useMemo<Ctx>(
     () => ({
       user,
       isAdmin: hasAdminPowers(user),
       readOnly: isReadOnly(user),
       signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins,
-      people, refreshPeople, updateNotificationPrefs,
+      people, refreshPeople, updateNotificationPrefs, updateDisplayName,
     }),
-    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins, people, refreshPeople, updateNotificationPrefs],
+    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins, people, refreshPeople, updateNotificationPrefs, updateDisplayName],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
