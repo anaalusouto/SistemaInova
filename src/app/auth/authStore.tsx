@@ -17,6 +17,7 @@ const USER_LIST: UserRecord[] = [
   { password: '09230047', user: { login: 'suze.oliveira@cesupa.br', displayName: 'Suze Oliveira', role: 'admin' } },
   { password: '010203', user: { login: 'monica.silva@cesupa.br', displayName: 'Mônica Silva', role: 'admin' } },
   { password: '91049303', user: { login: 'gaby', displayName: 'Gaby', role: 'admin' } },
+  { password: 'ADMCRIA123', user: { login: 'ADMCRIA', displayName: 'ADMCRIA (Administrador)', role: 'admin' } },
 
   // ===== Estagiários =====
   { password: 'Pipa123', user: { login: 'caio25230026@aluno.cesupa.br', displayName: 'Caio Fiuza', role: 'estagiario' } },
@@ -39,7 +40,7 @@ const USERS: Record<string, UserRecord> = USER_LIST.reduce((acc, r) => {
 
 /** Lista de pessoas para seleção de responsáveis (sem senhas). */
 export const APP_PEOPLE = USER_LIST
-  .filter(r => r.user.login !== 'LJCRIA')
+  .filter(r => r.user.login !== 'LJCRIA' && r.user.login !== 'ADMCRIA')
   .map(r => ({ name: r.user.displayName, role: r.user.role, login: r.user.login }));
 
 export const ROLE_LABEL: Record<UserRole, string> = {
