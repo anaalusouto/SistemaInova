@@ -8,11 +8,20 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const user = signIn(login, password, remember);
-    if (!user) setError('E-mail ou senha inválidos.');
+    setLoading(true);
+    setError(null);
+    try {
+      const user = await signIn(login, password, remember);
+      if (!user) setError('E-mail ou senha inválidos.');
+    } catch {
+      setError('Não foi possível entrar agora. Tente de novo em instantes.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -79,10 +88,11 @@ export function LoginScreen() {
           )}
           <button
             type="submit"
-            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium text-white mt-1"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium text-white mt-1 disabled:opacity-60"
             style={{ background: 'var(--primary)' }}
           >
-            <LogIn size={14} /> Entrar
+            <LogIn size={14} /> {loading ? 'Entrando…' : 'Entrar'}
           </button>
         </form>
 

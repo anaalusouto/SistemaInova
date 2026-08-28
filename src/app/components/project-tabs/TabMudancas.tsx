@@ -3,7 +3,7 @@ import { Plus, GitBranch, CheckCircle2, Clock, XCircle, X, Trash2, Search, Chevr
 import { toast } from 'sonner';
 import { type Project, type Change, type ApprovalStatus, type ChangeType, type ChangeNature, type Goal } from '../../data/mockData';
 import type { JsonValue } from '../../data/projectExtras';
-import { APP_PEOPLE, useAuth } from '../../auth/authStore';
+import { usePeople, useAuth } from '../../auth/authStore';
 import { useStore, type ProjectExt } from '../../store';
 import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
@@ -30,6 +30,7 @@ export function TabMudancas({ project }: Props) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
   const { user } = useAuth();
+  const APP_PEOPLE = usePeople();
   const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as ProjectExt);
   const [showForm, setShowForm] = useState(false);
@@ -248,6 +249,7 @@ function ChangeForm({ goals, onClose, onSave }: {
   onClose: () => void;
   onSave: (c: Record<string, JsonValue>) => void;
 }) {
+  const APP_PEOPLE = usePeople();
   const [f, setF] = useState({
     description: '',
     type: 'Escopo' as ChangeType,

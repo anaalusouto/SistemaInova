@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { type Project } from '../../data/mockData';
 import { COMM_MEIOS, type CommLog } from '../../data/projectExtras';
 import { useStore, type ProjectExt } from '../../store';
-import { useAuth, APP_PEOPLE } from '../../auth/authStore';
+import { useAuth, usePeople } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -26,6 +26,7 @@ const COLS = ['Data', 'Hora', 'Instituição', 'Representante', 'Meio', 'Quem re
 export function TabContatos({ project }: { project: Project }) {
   const { getProject, addCommLog, updateCommLog, deleteCommLog } = useStore();
   const { user, readOnly } = useAuth();
+  const APP_PEOPLE = usePeople();
   const { log: audit } = useAudit();
   const p = (getProject(project.id) ?? project) as ProjectExt;
   const logs = useMemo(

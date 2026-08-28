@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter, GanttChart, ChevronDown, MessageSquare } from 'lucide-react';
 import { useStore } from '../store';
-import { useAuth, APP_PEOPLE } from '../auth/authStore';
+import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 import { CronogramaExecutivoTab } from './CronogramaExecutivoTab';

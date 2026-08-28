@@ -57,11 +57,17 @@ export function NotificationsBell({ onOpenProject }: Props) {
     return () => document.removeEventListener('mousedown', onClick);
   }, [open]);
 
-  const rows = useMemo<Row[]>(() => {
+  const allRows = useMemo<Row[]>(() => {
     return projects
       .flatMap(p => (p.approvals ?? []).map(a => ({ ...a, projectId: p.id, projectName: p.name })))
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [projects]);
+
+  // Admin vê todas as solicitações (para poder aprovar); os demais veem só as próprias.
+  const rows = useMemo(
+    () => (isAdmin ? allRows : allRows.filter(r => r.author === user?.displayName)),
+    [allRows, isAdmin, user?.displayName],
+  );
 
   const pendingCount = rows.filter(r => r.status === 'Pendente').length;
 
@@ -74,7 +80,6 @@ export function NotificationsBell({ onOpenProject }: Props) {
     }
   }, [rows, tab]);
 
-  if (!isAdmin) return null;
   const adminName = user?.displayName ?? 'Administrador';
 
   const record = (row: Row, action: string) => audit({
@@ -178,26 +183,30 @@ export function NotificationsBell({ onOpenProject }: Props) {
                       {row.reviewedBy ? ` · revisado por ${row.reviewedBy}` : ''}
                     </span>
                     {row.status === 'Pendente' && (
-                      <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => {
-                            approveMetaEdit(row.projectId, row.id, adminName);
-                            record(row, 'aprovar alteração');
-                            toast.success('Alteração aprovada.');
-                          }}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-white"
-                          style={{ background: 'var(--success)' }}
-                        ><Check size={10} /> Aprovar</button>
-                        <button
-                          onClick={() => {
-                            rejectMetaEdit(row.projectId, row.id, adminName);
-                            record(row, 'recusar alteração');
-                            toast.error('Alteração recusada.');
-                          }}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border"
-                          style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)' }}
-                        ><X size={10} /> Recusar</button>
-                      </div>
+                      isAdmin ? (
+                        <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => {
+                              approveMetaEdit(row.projectId, row.id, adminName);
+                              record(row, 'aprovar alteração');
+                              toast.success('Alteração aprovada.');
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-white"
+                            style={{ background: 'var(--success)' }}
+                          ><Check size={10} /> Aprovar</button>
+                          <button
+                            onClick={() => {
+                              rejectMetaEdit(row.projectId, row.id, adminName);
+                              record(row, 'recusar alteração');
+                              toast.error('Alteração recusada.');
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border"
+                            style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)' }}
+                          ><X size={10} /> Recusar</button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.68rem', color: 'var(--warning-strong-text)' }}>Aguardando administrador</span>
+                      )
                     )}
                   </div>
                 </div>
@@ -208,4 +217,37 @@ export function NotificationsBell({ onOpenProject }: Props) {
       )}
     </div>
   );
+}
+
+/**
+ * Pop-up (toast) em tempo real: dispara quando uma solicitação nova chega
+ * (para admins) ou quando uma solicitação própria é aprovada/recusada (para
+ * quem a enviou). Chamar uma única vez, perto da raiz do app (depois do
+ * login) — usa o mesmo `projects` que já é atualizado via realtime.
+ */
+export function useApprovalToasts() {
+  const { projects } = useStore();
+  const { user, isAdmin } = useAuth();
+  const prevRef = useRef<Map<string, PendingApproval['status']> | null>(null);
+
+  useEffect(() => {
+    const rows = projects.flatMap(p => (p.approvals ?? []).map(a => ({ ...a, projectName: p.name })));
+    const prev = prevRef.current;
+
+    if (prev) {
+      for (const row of rows) {
+        const before = prev.get(row.id);
+        if (before === undefined && row.status === 'Pendente' && isAdmin) {
+          toast.info(`Nova solicitação de ${row.author} em ${row.projectName}`, {
+            description: `${actionLabel[row.action] ?? row.action} · ${entityLabel[row.entity] ?? row.entity} · ${row.targetPath}`,
+          });
+        } else if (before === 'Pendente' && row.status !== before && row.author === user?.displayName) {
+          if (row.status === 'Aprovado') toast.success(`Sua solicitação em ${row.projectName} foi aprovada.`);
+          else if (row.status === 'Recusado') toast.error(`Sua solicitação em ${row.projectName} foi recusada.`);
+        }
+      }
+    }
+
+    prevRef.current = new Map(rows.map(r => [r.id, r.status]));
+  }, [projects, user?.displayName, isAdmin]);
 }

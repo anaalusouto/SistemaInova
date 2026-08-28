@@ -9,7 +9,7 @@ import { ReportsPage } from './components/ReportsPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
 import { CronogramaPage } from './components/CronogramaPage';
-import { NotificationsBell } from './components/NotificationsBell';
+import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
@@ -24,6 +24,7 @@ function AppShell() {
   const { getProject } = useStore();
   const { user } = useAuth();
   const { log } = useAudit();
+  useApprovalToasts();
 
   useEffect(() => {
     if (!user) return;

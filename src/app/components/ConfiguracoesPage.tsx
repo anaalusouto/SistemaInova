@@ -2,16 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
+  UserCog, Plus, Trash2, X,
 } from 'lucide-react';
-import { APP_PEOPLE, ROLE_LABEL, useAuth, type UserRole } from '../auth/authStore';
+import { usePeople, ROLE_LABEL, useAuth, type UserRole } from '../auth/authStore';
+import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type ManagedUser } from '../usuarios.server';
+import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
 import { useAudit } from '../audit/auditStore';
 import { useStore } from '../store';
 import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, type AccentColor } from '../theme/themeStore';
 
 const NOTIF_KEY = 'pp-notificacoes-v1';
 
-interface NotifPrefs { email: boolean; address: string; deadlines: boolean }
-const defaultPrefs: NotifPrefs = { email: false, address: '', deadlines: false };
+interface NotifPrefs { deadlines: boolean }
+const defaultPrefs: NotifPrefs = { deadlines: false };
 
 const formatTs = (iso: string) => {
   try {
@@ -22,6 +25,7 @@ const dayOf = (iso: string) => iso.slice(0, 10);
 
 export function ConfiguracoesPage() {
   const { user, isAdmin, signOut, verifyOwnPassword, onlineLogins } = useAuth();
+  const APP_PEOPLE = usePeople();
   const { entries } = useAudit();
   const { projects } = useStore();
   const [activeSection, setActiveSection] = useState('profile');
@@ -49,6 +53,7 @@ export function ConfiguracoesPage() {
     { id: 'appearance', label: 'Aparência', icon: Palette },
     { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'team', label: 'Equipe', icon: Users },
+    ...(isAdmin ? [{ id: 'usuarios', label: 'Usuários', icon: UserCog }] : []),
     ...(isAdmin ? [{ id: 'registros', label: 'Registros', icon: FolderKanban }] : []),
   ];
 
@@ -127,60 +132,10 @@ export function ConfiguracoesPage() {
         {activeSection === 'appearance' && <AparenciaSection />}
 
         {activeSection === 'notifications' && (
-          <div className="max-w-xl flex flex-col gap-6">
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.125rem', color: 'var(--ink-1)' }}>
-              Notificações
-            </h2>
-
-            <div className="bg-card rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: 'var(--border)' }}>
-              <Toggle
-                label="Notificações por e-mail"
-                desc="Enviar aviso sempre que uma atividade for atribuída: qual atividade, onde foi atribuída e por quem."
-                on={prefs.email}
-                onChange={v => setPrefs(p => ({ ...p, email: v, deadlines: v ? p.deadlines : false }))}
-              />
-              {prefs.email && (
-                <div className="pl-1">
-                  <label className="text-[11px] font-medium flex items-center gap-1.5 mb-1" style={{ color: 'var(--ink-4)' }}>
-                    <Mail size={11} /> E-mail para envio
-                  </label>
-                  <input
-                    type="email"
-                    value={prefs.address}
-                    onChange={e => setPrefs(p => ({ ...p, address: e.target.value }))}
-                    placeholder="nome@dominio.com"
-                    className="w-full px-3 py-2 rounded-lg text-[13px]"
-                    style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
-                  />
-                  {!prefs.address.trim() && (
-                    <p style={{ fontSize: '0.7rem', color: 'var(--warning-strong-text)', marginTop: 4 }}>
-                      Informe um e-mail para que os avisos possam ser enviados.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-                <Toggle
-                  label="Alerta de prazos"
-                  desc="No mesmo e-mail: aviso quando a atividade passa da metade do prazo e quando ultrapassa o prazo final — informando a atividade, onde e por quem foi atribuída."
-                  on={prefs.deadlines}
-                  disabled={!prefs.email}
-                  onChange={v => setPrefs(p => ({ ...p, deadlines: v }))}
-                />
-                {!prefs.email && (
-                  <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 6 }}>
-                    Disponível apenas com as notificações por e-mail ligadas.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
-              As preferências ficam salvas neste dispositivo. O disparo automático dos e-mails é ativado quando o domínio de envio da plataforma estiver configurado.
-            </p>
-          </div>
+          <NotificacoesSection prefs={prefs} setPrefs={setPrefs} />
         )}
+
+        {activeSection === 'usuarios' && isAdmin && <UsuariosSection />}
 
         {activeSection === 'team' && (
           <div className="max-w-2xl flex flex-col gap-6">
@@ -249,9 +204,9 @@ export function ConfiguracoesPage() {
                 Área restrita. Confirme sua senha para acessar os registros de projetos e o acompanhamento individual.
               </p>
               <form
-                onSubmit={e => {
+                onSubmit={async e => {
                   e.preventDefault();
-                  if (verifyOwnPassword(pwd)) { setRegistrosUnlocked(true); setPwd(''); }
+                  if (await verifyOwnPassword(pwd)) { setRegistrosUnlocked(true); setPwd(''); }
                   else toast.error('Senha incorreta.');
                 }}
                 className="bg-card rounded-xl border p-4 flex flex-col gap-3"
@@ -361,6 +316,304 @@ function AparenciaSection() {
         As preferências de aparência ficam salvas neste dispositivo.
       </p>
     </div>
+  );
+}
+
+/* ============================================================
+   NOTIFICAÇÕES POR E-MAIL
+   ============================================================ */
+
+function NotificacoesSection({ prefs, setPrefs }: { prefs: NotifPrefs; setPrefs: (p: NotifPrefs | ((p: NotifPrefs) => NotifPrefs)) => void }) {
+  const { updateNotificationPrefs } = useAuth();
+  const [emailOn, setEmailOn] = useState(false);
+  const [address, setAddress] = useState('');
+  const [pwd, setPwd] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const startSave = () => {
+    if (emailOn && !address.trim()) { toast.error('Informe um e-mail para ativar os avisos.'); return; }
+    setShowPwd(true);
+  };
+
+  const confirmSave = async () => {
+    if (!pwd) return;
+    setSaving(true);
+    try {
+      const ok = await updateNotificationPrefs(pwd, address, emailOn);
+      if (ok) { toast.success('Preferências salvas.'); setShowPwd(false); setPwd(''); }
+      else toast.error('Senha incorreta.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-xl flex flex-col gap-6">
+      <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.125rem', color: 'var(--ink-1)' }}>
+        Notificações
+      </h2>
+
+      <div className="bg-card rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: 'var(--border)' }}>
+        <Toggle
+          label="Notificações por e-mail"
+          desc="Avisa por e-mail quando uma solicitação sua for aprovada/recusada (ou, se você for administrador, quando alguém enviar uma nova solicitação)."
+          on={emailOn}
+          onChange={v => setEmailOn(v)}
+        />
+        {emailOn && (
+          <div className="pl-1">
+            <label className="text-[11px] font-medium flex items-center gap-1.5 mb-1" style={{ color: 'var(--ink-4)' }}>
+              <Mail size={11} /> E-mail para envio
+            </label>
+            <input
+              type="email"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              placeholder="nome@dominio.com"
+              className="w-full px-3 py-2 rounded-lg text-[13px]"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+            />
+          </div>
+        )}
+
+        <div className="border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+          <Toggle
+            label="Alerta de prazos"
+            desc="No mesmo e-mail: aviso quando a atividade passa da metade do prazo e quando ultrapassa o prazo final."
+            on={prefs.deadlines}
+            disabled={!emailOn}
+            onChange={v => setPrefs(p => ({ ...p, deadlines: v }))}
+          />
+          {!emailOn && (
+            <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 6 }}>
+              Disponível apenas com as notificações por e-mail ligadas. (Este alerta específico ainda depende de uma rotina agendada — chega quando ela estiver configurada.)
+            </p>
+          )}
+        </div>
+
+        {!showPwd ? (
+          <button onClick={startSave} className="self-start px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>
+            Salvar preferências
+          </button>
+        ) : (
+          <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+            <label className="text-[11px] font-medium flex items-center gap-1.5" style={{ color: 'var(--ink-4)' }}>
+              <Lock size={11} /> Confirme sua senha para salvar
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="password" autoFocus value={pwd} onChange={e => setPwd(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && confirmSave()}
+                className="flex-1 px-3 py-2 rounded-lg text-[13px]"
+                style={{ border: '1px solid var(--border)', background: 'var(--surface-1)' }}
+              />
+              <button onClick={confirmSave} disabled={saving} className="px-3 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+                {saving ? 'Salvando…' : 'Confirmar'}
+              </button>
+              <button onClick={() => { setShowPwd(false); setPwd(''); }} className="px-2 py-2 rounded-lg" style={{ color: 'var(--ink-4)' }}><X size={14} /></button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
+        O e-mail e a preferência ficam salvos na sua conta (não só neste dispositivo).
+      </p>
+    </div>
+  );
+}
+
+/* ============================================================
+   USUÁRIOS E PAPÉIS (admin)
+   ============================================================ */
+
+const ROLE_OPTIONS: UserRole[] = ['admin', 'estagiario', 'visualizador'];
+
+function UsuariosSection() {
+  const { refreshPeople } = useAuth();
+  const [rows, setRows] = useState<ManagedUser[] | null>(null);
+  const [unlock, setUnlock] = useState<{ login: string; senha: string } | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const load = async (login: string, senha: string) => {
+    try {
+      setRows(await listarUsuarios({ data: { actingLogin: login, actingSenha: senha } }));
+      setUnlock({ login, senha });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível carregar os usuários.');
+    }
+  };
+
+  const run = async (action: (creds: { actingLogin: string; actingSenha: string }) => Promise<void>, successMsg: string) => {
+    if (!unlock) return;
+    try {
+      await action({ actingLogin: unlock.login, actingSenha: unlock.senha });
+      toast.success(successMsg);
+      await load(unlock.login, unlock.senha);
+      refreshPeople();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível concluir.');
+    }
+  };
+
+  if (!unlock) {
+    return (
+      <div className="max-w-sm">
+        <h2 className="mb-2" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.125rem', color: 'var(--ink-1)' }}>
+          Usuários
+        </h2>
+        <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginBottom: 12 }}>
+          Área restrita. Confirme sua senha de administrador para gerenciar contas e papéis (admin / estagiário / visualizador).
+        </p>
+        {dialogOpen ? (
+          <AdminUnlockDialog
+            title="Gerenciar usuários"
+            description="Confirme suas credenciais de administrador para ver e editar contas."
+            onSuccess={(login, senha) => load(login, senha)}
+            onClose={() => setDialogOpen(false)}
+          />
+        ) : (
+          <button onClick={() => setDialogOpen(true)} className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>
+            Tentar de novo
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl flex flex-col gap-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.125rem', color: 'var(--ink-1)' }}>Usuários</h2>
+          <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 2 }}>
+            Administradores têm poder total (edição e aprovação em tudo). Estagiários podem ter poderes de admin ativados individualmente.
+          </p>
+        </div>
+        <button onClick={() => setShowNew(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
+          <Plus size={13} /> Novo usuário
+        </button>
+      </div>
+
+      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <table className="w-full">
+          <thead>
+            <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
+              {['Nome', 'Login', 'Papel', 'Admin total', 'E-mail', ''].map(h => (
+                <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: '0.71rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {(rows ?? []).map(r => (
+              <tr key={r.login} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--ink-1)' }}>{r.displayName}</td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{r.login}</td>
+                <td className="px-4 py-2.5">
+                  <select
+                    value={r.role}
+                    onChange={e => run(creds => atualizarUsuario({ data: { ...creds, alvoLogin: r.login, role: e.target.value as UserRole } }), 'Papel atualizado.')}
+                    className="px-2 py-1 rounded-md text-[12px]"
+                    style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}
+                  >
+                    {ROLE_OPTIONS.map(o => <option key={o} value={o}>{ROLE_LABEL[o]}</option>)}
+                  </select>
+                </td>
+                <td className="px-4 py-2.5">
+                  <input
+                    type="checkbox" checked={r.adminOverride}
+                    onChange={e => run(creds => atualizarUsuario({ data: { ...creds, alvoLogin: r.login, adminOverride: e.target.checked } }), 'Atualizado.')}
+                  />
+                </td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>{r.email ?? '—'}</td>
+                <td className="px-4 py-2.5 text-right">
+                  {r.login.toLowerCase() !== unlock.login.toLowerCase() && (
+                    confirmDelete === r.login ? (
+                      <span className="flex items-center gap-1.5 justify-end">
+                        <button
+                          onClick={() => { run(creds => excluirUsuario({ data: { ...creds, alvoLogin: r.login } }), 'Usuário excluído.'); setConfirmDelete(null); }}
+                          className="px-2 py-1 rounded text-[11px] font-medium text-white" style={{ background: 'var(--danger)' }}
+                        >Confirmar</button>
+                        <button onClick={() => setConfirmDelete(null)} className="px-2 py-1 rounded text-[11px]" style={{ color: 'var(--ink-4)' }}>Cancelar</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => setConfirmDelete(r.login)} className="p-1.5 rounded hover:bg-accent" title="Excluir">
+                        <Trash2 size={13} color="var(--danger)" />
+                      </button>
+                    )
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showNew && (
+        <NovoUsuarioModal
+          onClose={() => setShowNew(false)}
+          onCreate={async (data) => {
+            await run(creds => criarUsuario({ data: { ...creds, ...data } }), 'Usuário criado.');
+            setShowNew(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function NovoUsuarioModal({ onClose, onCreate }: {
+  onClose: () => void;
+  onCreate: (d: { login: string; senha: string; nomeExibicao: string; role: UserRole; adminOverride?: boolean; email?: string }) => Promise<void>;
+}) {
+  const [login, setLogin] = useState('');
+  const [senha, setSenha] = useState('');
+  const [nome, setNome] = useState('');
+  const [role, setRole] = useState<UserRole>('estagiario');
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (!login.trim() || !senha.trim() || !nome.trim()) { toast.error('Preencha login, senha e nome.'); return; }
+    setSaving(true);
+    try { await onCreate({ login, senha, nomeExibicao: nome, role, email: email || undefined }); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(15, 23, 42, 0.5)' }} onClick={onClose}>
+      <div className="w-full max-w-sm bg-card rounded-2xl border p-6 flex flex-col gap-3" style={{ borderColor: 'var(--border)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>Novo usuário</h3>
+          <button onClick={onClose}><X size={16} color="var(--ink-4)" /></button>
+        </div>
+        <Field label="Nome de exibição"><input className="ci2" value={nome} onChange={e => setNome(e.target.value)} /></Field>
+        <Field label="Login"><input className="ci2" value={login} onChange={e => setLogin(e.target.value)} /></Field>
+        <Field label="Senha"><input className="ci2" type="password" value={senha} onChange={e => setSenha(e.target.value)} /></Field>
+        <Field label="E-mail (opcional, para notificações)"><input className="ci2" type="email" value={email} onChange={e => setEmail(e.target.value)} /></Field>
+        <Field label="Papel">
+          <select className="ci2" value={role} onChange={e => setRole(e.target.value as UserRole)}>
+            {ROLE_OPTIONS.map(o => <option key={o} value={o}>{ROLE_LABEL[o]}</option>)}
+          </select>
+        </Field>
+        <button onClick={submit} disabled={saving} className="mt-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+          {saving ? 'Criando…' : 'Criar usuário'}
+        </button>
+        <style>{`.ci2{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}`}</style>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)' }}>{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -541,6 +794,7 @@ function AcompanhamentoIndividual({ entries, projects, onBack }: {
   projects: ReturnType<typeof useStore>['projects'];
   onBack: () => void;
 }) {
+  const APP_PEOPLE = usePeople();
   const people = APP_PEOPLE.filter(p => p.role !== 'admin');
   const [login, setLogin] = useState(people[0]?.login ?? '');
   const [day, setDay] = useState(new Date().toISOString().slice(0, 10));

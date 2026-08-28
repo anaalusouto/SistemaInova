@@ -6,7 +6,7 @@ import {
 import { toast } from 'sonner';
 import { type Project, type ActivityStatus } from '../../data/mockData';
 import { useStore, type MetaEdit } from '../../store';
-import { APP_PEOPLE, useAuth } from '../../auth/authStore';
+import { usePeople, useAuth } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
@@ -54,6 +54,7 @@ export function TabMetas({ project }: Props) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
   const { user } = useAuth();
+  const APP_PEOPLE = usePeople();
   const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as never);
   const [open, setOpen] = useState<string[]>(project.goals.map(g => g.id));

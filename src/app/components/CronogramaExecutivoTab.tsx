@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks, Pencil, Check } from 'lucide-react';
 import { useStore } from '../store';
-import { useAuth, APP_PEOPLE } from '../auth/authStore';
+import { useAuth, usePeople } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { ganttStatusColors, type GanttActivity, type GanttStatus } from '../data/cronogramaExecutivo';
 import { INTERNAL_STATUSES, internalStatusColors } from '../data/controleInterno';
@@ -619,6 +619,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
   onTrack: (pid: number, patch: Partial<{ status: GanttStatus; inicio: string; fim: string; responsavel: string; observacao: string }>) => void;
 }) {
   void activityId;
+  const APP_PEOPLE = usePeople();
   return (
     <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--border)' }}>
       <table className="w-full text-[12px]">
@@ -701,10 +702,11 @@ function GanttEditModal({ title, item, canRename, projectOptions, onSave, onClos
   onSave: (v: GanttFormValue) => void; onClose: () => void;
 }) {
   const [f, setF] = useState(item);
+  const APP_PEOPLE = usePeople();
   const responsaveis = useMemo(() => {
     const base = APP_PEOPLE.map(p => p.name);
     return Array.from(new Set([...base, 'CESUPA', 'SEMAS', 'Equipe', 'Coordenação', item.responsavel].filter(Boolean)));
-  }, [item.responsavel]);
+  }, [APP_PEOPLE, item.responsavel]);
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>

@@ -463,6 +463,13 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
   }
 }
 
+function resumoOp(edit: ProjectOp): string {
+  const acao = edit.action === 'criar' ? 'Criar' : edit.action === 'excluir' ? 'Excluir' : 'Editar';
+  const campo = edit.field ? ` · ${edit.field}` : '';
+  const valores = edit.action === 'editar' ? `: ${edit.from ?? '—'} → ${edit.to ?? '—'}` : '';
+  return `${acao} · ${edit.entity}${campo} · ${edit.targetPath}${valores}`;
+}
+
 export const submeterEdicaoMeta = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; edit: ProjectOp; author: EditAuthor }) => d)
   .handler(async ({ data: { projectId, edit, author } }): Promise<'aplicado' | 'pendente'> => {
@@ -475,6 +482,11 @@ export const submeterEdicaoMeta = createServerFn({ method: 'POST' })
         autor: author.name, autor_papel: author.role, status: 'Pendente',
       });
       if (error) throw new Error(error.message);
+      try {
+        const { data: proj } = await supabaseAdmin.from('projetos').select('nome').eq('id', projectId).single();
+        const { avisarNovaSolicitacao } = await import('./usuarios.server');
+        await avisarNovaSolicitacao({ data: { autorNome: author.name, projetoNome: proj?.nome ?? '—', resumo: resumoOp(edit) } });
+      } catch (e) { console.error('[email] falha ao avisar admins:', e); }
       return 'pendente';
     }
     await aplicarOperacaoSql(supabaseAdmin, projectId, edit);
@@ -509,14 +521,30 @@ export const aprovarEdicaoMeta = createServerFn({ method: 'POST' })
     if (logError) throw new Error(logError.message);
     const { error: updError } = await supabaseAdmin.from('aprovacoes_pendentes').update({ status: 'Aprovado', revisado_por: adminName }).eq('id', approvalId);
     if (updError) throw new Error(updError.message);
+    try {
+      const { data: proj } = await supabaseAdmin.from('projetos').select('nome').eq('id', projectId).single();
+      const { avisarSolicitacaoDecidida } = await import('./usuarios.server');
+      await avisarSolicitacaoDecidida({ data: { autorNome: req.autor, aprovado: true, projetoNome: proj?.nome ?? '—', resumo: resumoOp(edit), revisadoPor: adminName } });
+    } catch (e) { console.error('[email] falha ao avisar autor:', e); }
   });
 
 export const rejeitarEdicaoMeta = createServerFn({ method: 'POST' })
   .validator((d: { approvalId: string; adminName: string }) => d)
   .handler(async ({ data: { approvalId, adminName } }): Promise<void> => {
     const supabaseAdmin = await getAdmin();
+    const { data: req, error: reqError } = await supabaseAdmin.from('aprovacoes_pendentes').select('*').eq('id', approvalId).single();
+    if (reqError) throw new Error(reqError.message);
     const { error } = await supabaseAdmin.from('aprovacoes_pendentes').update({ status: 'Recusado', revisado_por: adminName }).eq('id', approvalId);
     if (error) throw new Error(error.message);
+    try {
+      const edit: ProjectOp = {
+        entity: req.entidade, action: req.acao, targetPath: req.target_path, field: req.campo ?? undefined,
+        from: req.de_valor ?? undefined, to: req.para_valor ?? undefined,
+      };
+      const { data: proj } = await supabaseAdmin.from('projetos').select('nome').eq('id', req.projeto_id).single();
+      const { avisarSolicitacaoDecidida } = await import('./usuarios.server');
+      await avisarSolicitacaoDecidida({ data: { autorNome: req.autor, aprovado: false, projetoNome: proj?.nome ?? '—', resumo: resumoOp(edit), revisadoPor: adminName } });
+    } catch (e) { console.error('[email] falha ao avisar autor:', e); }
   });
 
 // ---------------------------------------------------------------------------

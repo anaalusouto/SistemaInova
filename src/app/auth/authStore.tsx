@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, type PublicUser, type UserRole as ServerUserRole } from '../usuarios.server';
 
-export type UserRole = 'admin' | 'estagiario' | 'visualizador';
+export type UserRole = ServerUserRole;
 export interface AuthUser {
   login: string;          // e-mail (ou identificador) usado no acesso
   displayName: string;
@@ -9,50 +10,16 @@ export interface AuthUser {
   adminOverride?: boolean;
 }
 
-interface UserRecord { password: string; user: AuthUser }
-
-const USER_LIST: UserRecord[] = [
-  // ===== Administradores =====
-  { password: '12332145+', user: { login: 'LJCRIA', displayName: 'LJCRIA (Administrador)', role: 'admin' } },
-  { password: '09230047', user: { login: 'suze.oliveira@cesupa.br', displayName: 'Suze Oliveira', role: 'admin' } },
-  { password: '010203', user: { login: 'monica.silva@cesupa.br', displayName: 'Mônica Silva', role: 'admin' } },
-  { password: '91049303', user: { login: 'gaby', displayName: 'Gaby', role: 'admin' } },
-  { password: 'ADMCRIA123', user: { login: 'ADMCRIA', displayName: 'ADMCRIA (Administrador)', role: 'admin' } },
-
-  // ===== Estagiários =====
-  { password: 'Pipa123', user: { login: 'caio25230026@aluno.cesupa.br', displayName: 'Caio Fiuza', role: 'estagiario' } },
-  { password: '310718', user: { login: 'flavia2414310@aluno.cesupa.br', displayName: 'Flávia Cascaes', role: 'estagiario' } },
-  { password: '120604', user: { login: 'pedro25230037@aluno.cesupa.br', displayName: 'Pedro Henrique', role: 'estagiario' } },
-  { password: '35trcpz@!769A', user: { login: 'ana23070210@aluno.cesupa.br', displayName: 'Ana Luiza Souto', role: 'estagiario' } },
-  // Estagiária com acesso administrativo
-  { password: '235010', user: { login: 'ana23330012@aluno.cesupa.br', displayName: 'Ana Paula', role: 'estagiario', adminOverride: true } },
-
-  // ===== Visualizadores (FAS / FUNBIO / SEMAS) — somente leitura + comentários =====
-  { password: 'FAS2026', user: { login: 'fas', displayName: 'FAS', role: 'visualizador' } },
-  { password: 'FUNBIO2026', user: { login: 'funbio', displayName: 'FUNBIO', role: 'visualizador' } },
-  { password: 'SEMAS2026', user: { login: 'semas', displayName: 'SEMAS', role: 'visualizador' } },
-];
-
-const USERS: Record<string, UserRecord> = USER_LIST.reduce((acc, r) => {
-  acc[r.user.login.toLowerCase()] = r;
-  return acc;
-}, {} as Record<string, UserRecord>);
-
-/** Lista de pessoas para seleção de responsáveis (sem senhas). */
-export const APP_PEOPLE = USER_LIST
-  .filter(r => r.user.login !== 'LJCRIA' && r.user.login !== 'ADMCRIA')
-  .map(r => ({ name: r.user.displayName, role: r.user.role, login: r.user.login }));
+/** Um usuário tem poderes administrativos se for admin ou estagiário com override. */
+export const hasAdminPowers = (u: AuthUser | null) => !!u && (u.role === 'admin' || !!u.adminOverride);
+/** Visualizadores (FAS/FUNBIO) não editam nada — apenas leem e comentam. */
+export const isReadOnly = (u: AuthUser | null) => !!u && u.role === 'visualizador';
 
 export const ROLE_LABEL: Record<UserRole, string> = {
   admin: 'Administrador',
   estagiario: 'Estagiário',
   visualizador: 'Visualizador',
 };
-
-/** Um usuário tem poderes administrativos se for admin ou estagiário com override. */
-export const hasAdminPowers = (u: AuthUser | null) => !!u && (u.role === 'admin' || !!u.adminOverride);
-/** Visualizadores (FAS/FUNBIO) não editam nada — apenas leem e comentam. */
-export const isReadOnly = (u: AuthUser | null) => !!u && u.role === 'visualizador';
 
 const PRESENCE_KEY = 'pp-presence-v1';
 const PRESENCE_TTL = 2 * 60 * 1000;
@@ -65,14 +32,20 @@ interface Ctx {
   user: AuthUser | null;
   isAdmin: boolean;
   readOnly: boolean;
-  signIn: (login: string, password: string, remember?: boolean) => AuthUser | null;
+  signIn: (login: string, password: string, remember?: boolean) => Promise<AuthUser | null>;
   signOut: () => void;
   /** Validate admin credentials without changing the current session (used for locked actions). */
-  verifyAdmin: (login: string, password: string) => boolean;
+  verifyAdmin: (login: string, password: string) => Promise<boolean>;
   /** Confere a senha do usuário logado (usado para desbloquear Registros). */
-  verifyOwnPassword: (password: string) => boolean;
+  verifyOwnPassword: (password: string) => Promise<boolean>;
   /** Logins ativos na plataforma nos últimos minutos. */
   onlineLogins: string[];
+  /** Pessoas cadastradas (para seleção de responsáveis) — sem senhas. */
+  people: PublicUser[];
+  /** Recarrega a lista de pessoas (chamar depois de criar/editar/excluir usuário). */
+  refreshPeople: () => Promise<void>;
+  /** Salva e-mail e preferência de notificação do próprio usuário (exige a senha atual). */
+  updateNotificationPrefs: (password: string, email: string, notifEmail: boolean) => Promise<boolean>;
 }
 
 const AuthContext = createContext<Ctx | null>(null);
@@ -83,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [remember, setRemember] = useState(false);
   const [onlineLogins, setOnlineLogins] = useState<string[]>([]);
+  const [people, setPeople] = useState<PublicUser[]>([]);
 
   useEffect(() => {
     try {
@@ -96,6 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
     setHydrated(true);
   }, []);
+
+  const refreshPeople = useCallback(async () => {
+    try { setPeople(await listarPessoas()); } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || !user) return;
+    refreshPeople();
+  }, [hydrated, user, refreshPeople]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -130,12 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(t);
   }, [user, hydrated]);
 
-  const signIn = useCallback((login: string, password: string, rememberMe = false) => {
-    const entry = USERS[login.trim().toLowerCase()];
-    if (!entry || entry.password !== password) return null;
+  const signIn = useCallback(async (login: string, password: string, rememberMe = false) => {
+    const found = await autenticar({ data: { login, senha: password } });
+    if (!found) return null;
+    const authUser: AuthUser = { login: found.login, displayName: found.displayName, role: found.role, adminOverride: found.adminOverride };
     setRemember(rememberMe);
-    setUser(entry.user);
-    return entry.user;
+    setUser(authUser);
+    return authUser;
   }, []);
 
   const signOut = useCallback(() => {
@@ -148,15 +132,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [user]);
 
-  const verifyAdmin = useCallback((login: string, password: string) => {
-    const entry = USERS[login.trim().toLowerCase()];
-    return !!entry && entry.password === password && hasAdminPowers(entry.user);
+  const verifyAdmin = useCallback(async (login: string, password: string) => {
+    return verificarAdmin({ data: { login, senha: password } });
   }, []);
 
-  const verifyOwnPassword = useCallback((password: string) => {
+  const verifyOwnPassword = useCallback(async (password: string) => {
     if (!user) return false;
-    const entry = USERS[user.login.toLowerCase()];
-    return !!entry && entry.password === password;
+    const found = await autenticar({ data: { login: user.login, senha: password } });
+    return !!found;
+  }, [user]);
+
+  const updateNotificationPrefs = useCallback(async (password: string, email: string, notifEmail: boolean) => {
+    if (!user) return false;
+    try {
+      await atualizarPreferenciasNotificacao({ data: { login: user.login, senha: password, email, notifEmail } });
+      return true;
+    } catch { return false; }
   }, [user]);
 
   const value = useMemo<Ctx>(
@@ -165,8 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: hasAdminPowers(user),
       readOnly: isReadOnly(user),
       signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins,
+      people, refreshPeople, updateNotificationPrefs,
     }),
-    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins],
+    [user, signIn, signOut, verifyAdmin, verifyOwnPassword, onlineLogins, people, refreshPeople, updateNotificationPrefs],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -176,4 +168,15 @@ export function useAuth(): Ctx {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
+}
+
+/** Lista de pessoas para seleção de responsáveis (sem senhas) — vem do banco agora. */
+export function usePeople() {
+  const { people } = useAuth();
+  return useMemo(
+    () => people
+      .filter(p => p.login !== 'LJCRIA' && p.login !== 'ADMCRIA')
+      .map(p => ({ name: p.displayName, role: p.role, login: p.login })),
+    [people],
+  );
 }

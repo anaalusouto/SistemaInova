@@ -3,7 +3,7 @@ import { Plus, ShieldAlert, Trash2, X, Search, ChevronDown, ChevronRight } from 
 import { toast } from 'sonner';
 import { type Project, type Risk, type RiskStatus, type Goal } from '../../data/mockData';
 import type { JsonValue } from '../../data/projectExtras';
-import { APP_PEOPLE, useAuth } from '../../auth/authStore';
+import { usePeople, useAuth } from '../../auth/authStore';
 import { useStore } from '../../store';
 import type { ProjectExt } from '../../store';
 import { useAudit } from '../../audit/auditStore';
@@ -43,6 +43,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
   const { submitMetaEdit, getProject } = useStore();
   const { author, isAdmin } = useOpAuthor();
   const { user } = useAuth();
+  const APP_PEOPLE = usePeople();
   const { log: audit } = useAudit();
   const p = getProject(project.id) ?? (project as ProjectExt);
   const [showForm, setShowForm] = useState(false);
@@ -347,6 +348,7 @@ function RiskForm({ goals, onClose, onSave }: {
   onClose: () => void;
   onSave: (r: Record<string, JsonValue>) => void;
 }) {
+  const APP_PEOPLE = usePeople();
   const [f, setF] = useState({
     goalId: goals[0]?.id ?? '',
     description: '',

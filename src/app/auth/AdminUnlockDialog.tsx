@@ -5,7 +5,8 @@ import { useAuth } from './authStore';
 interface Props {
   title?: string;
   description?: string;
-  onSuccess: () => void;
+  /** Recebe o login/senha do admin que confirmou — útil para repassar a server functions que exigem re-checagem. */
+  onSuccess: (login: string, password: string) => void;
   onClose: () => void;
 }
 
@@ -18,14 +19,22 @@ export function AdminUnlockDialog({ title = 'Ação restrita', description = 'In
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (verifyAdmin(login, password)) {
-      onSuccess();
-      onClose();
-    } else {
-      setError('Credenciais administrativas inválidas.');
+    setChecking(true);
+    try {
+      if (await verifyAdmin(login, password)) {
+        onSuccess(login, password);
+        onClose();
+      } else {
+        setError('Credenciais administrativas inválidas.');
+      }
+    } catch {
+      setError('Não foi possível validar agora. Tente de novo.');
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -73,8 +82,8 @@ export function AdminUnlockDialog({ title = 'Ação restrita', description = 'In
             <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] font-medium border" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
               Cancelar
             </button>
-            <button type="submit" className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
-              Confirmar
+            <button type="submit" disabled={checking} className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
+              {checking ? 'Verificando…' : 'Confirmar'}
             </button>
           </div>
         </form>
