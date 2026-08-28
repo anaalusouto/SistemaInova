@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Moon, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -9,10 +9,12 @@ import { ReportsPage } from './components/ReportsPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
 import { CronogramaPage } from './components/CronogramaPage';
+import { NotificationsBell } from './components/NotificationsBell';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
 import { AuditProvider, useAudit } from './audit/auditStore';
+import { ThemeProvider, useTheme } from './theme/themeStore';
 import { LoginScreen } from './auth/LoginScreen';
 
 function AppShell() {
@@ -20,13 +22,8 @@ function AppShell() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { getProject } = useStore();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { log } = useAudit();
-
-  useEffect(() => {
-    if (!isAdmin && activeNav === 'settings') setActiveNav('dashboard');
-  }, [isAdmin, activeNav]);
-
 
   useEffect(() => {
     if (!user) return;
@@ -63,7 +60,7 @@ function AppShell() {
       case 'reports':
         return <ReportsPage />;
       case 'settings':
-        return isAdmin ? <ConfiguracoesPage /> : <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
+        return <ConfiguracoesPage />;
 
       default:
         return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
@@ -80,22 +77,40 @@ function AppShell() {
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
-          className="flex items-center gap-3 border-b px-4 py-3 lg:hidden"
+          className="flex items-center gap-3 border-b px-4 py-2.5"
           style={{ borderColor: 'var(--border)', background: 'var(--background)' }}
         >
           <button
             onClick={() => setMobileNavOpen(true)}
             aria-label="Abrir menu"
-            className="flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent"
+            className="flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent lg:hidden"
           >
             <Menu size={20} />
           </button>
-          <span className="text-sm font-semibold text-foreground">Sistema Inova</span>
+          <span className="text-sm font-semibold text-foreground lg:hidden">Sistema Inova</span>
+          <div className="flex-1" />
+          <ThemeToggleButton />
+          <NotificationsBell onOpenProject={handleSelectProject} />
         </header>
         <main className="flex-1 overflow-y-auto">{renderMain()}</main>
       </div>
       <Toaster position="top-right" richColors closeButton />
     </div>
+  );
+}
+
+function ThemeToggleButton() {
+  const { mode, toggleMode } = useTheme();
+  return (
+    <button
+      onClick={toggleMode}
+      aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+      title={mode === 'dark' ? 'Modo claro' : 'Modo escuro'}
+      className="flex items-center justify-center rounded-full transition-colors"
+      style={{ width: 34, height: 34, color: 'var(--ink-3)' }}
+    >
+      {mode === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+    </button>
   );
 }
 
@@ -122,14 +137,16 @@ function Gated() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AuditProvider>
-        <ProjectsProvider>
-          <DiagnosticProvider>
-            <Gated />
-          </DiagnosticProvider>
-        </ProjectsProvider>
-      </AuditProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuditProvider>
+          <ProjectsProvider>
+            <DiagnosticProvider>
+              <Gated />
+            </DiagnosticProvider>
+          </ProjectsProvider>
+        </AuditProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

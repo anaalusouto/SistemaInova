@@ -55,10 +55,10 @@ export function ReportsPage() {
     <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: '#0F172A' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
             Relatórios
           </h1>
-          <p style={{ color: '#64748B', fontSize: '0.825rem', marginTop: 2 }}>
+          <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
             Monte um resumo unificado escolhendo quais campos devem compor o relatório.
           </p>
         </div>
@@ -66,7 +66,7 @@ export function ReportsPage() {
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium border"
-            style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
           >
             <Printer size={13} /> Imprimir / PDF
           </button>
@@ -83,7 +83,7 @@ export function ReportsPage() {
       {/* Builder */}
       <div className="grid grid-cols-3 gap-4 print:hidden">
         <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A', marginBottom: 12 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
             Título
           </h3>
           <input
@@ -95,27 +95,27 @@ export function ReportsPage() {
         </div>
 
         <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A', marginBottom: 12 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
             Projetos incluídos ({selectedProjects.length}/{projects.length})
           </h3>
           <div className="flex flex-col gap-2 max-h-56 overflow-y-auto">
             {projects.map(p => (
-              <label key={p.id} className="flex items-center gap-2 cursor-pointer" style={{ fontSize: '0.8rem', color: '#0F172A' }}>
+              <label key={p.id} className="flex items-center gap-2 cursor-pointer" style={{ fontSize: '0.8rem', color: 'var(--ink-1)' }}>
                 <input type="checkbox" checked={selectedProjects.includes(p.id)} onChange={() => toggleProject(p.id)} />
                 <span>{p.name}</span>
-                <span style={{ fontSize: '0.7rem', color: '#94A3B8', marginLeft: 'auto' }}>{p.code}</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginLeft: 'auto' }}>{p.code}</span>
               </label>
             ))}
           </div>
         </div>
 
         <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A', marginBottom: 12 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
             Campos do relatório
           </h3>
           <div className="flex flex-col gap-2 max-h-56 overflow-y-auto">
             {FIELDS.map(f => (
-              <label key={f.id} className="flex items-start gap-2 cursor-pointer" style={{ fontSize: '0.78rem', color: '#0F172A' }}>
+              <label key={f.id} className="flex items-start gap-2 cursor-pointer" style={{ fontSize: '0.78rem', color: 'var(--ink-1)' }}>
                 <input type="checkbox" checked={selectedFields.includes(f.id)} onChange={() => toggleField(f.id)} style={{ marginTop: 3 }} />
                 <span>{f.label}</span>
               </label>
@@ -127,10 +127,10 @@ export function ReportsPage() {
       {/* Report preview */}
       <div className="bg-card rounded-xl border p-8 flex flex-col gap-6" id="report-preview" style={{ borderColor: 'var(--border)' }}>
         <header className="flex items-center gap-3 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
-          <FileText size={22} color="#2563EB" />
+          <FileText size={22} color="var(--brand)" />
           <div>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: '#0F172A' }}>{title}</h2>
-            <p style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: 'var(--ink-1)' }}>{title}</h2>
+            <p style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>
               Gerado em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())} · {included.length} projeto(s)
             </p>
           </div>
@@ -140,18 +140,18 @@ export function ReportsPage() {
           <section>
             <SectionTitle>Resumo Financeiro Consolidado</SectionTitle>
             <div className="grid grid-cols-3 gap-3 mt-3">
-              <StatCard label="Aprovado" value={fmt(totals.budget)} color="#2563EB" />
-              <StatCard label="Executado" value={fmt(totals.executed)} color="#059669" />
-              <StatCard label="Saldo" value={fmt(totals.balance)} color="#D97706" />
+              <StatCard label="Aprovado" value={fmt(totals.budget)} color="var(--brand)" />
+              <StatCard label="Executado" value={fmt(totals.executed)} color="var(--success)" />
+              <StatCard label="Saldo" value={fmt(totals.balance)} color="var(--warning)" />
             </div>
           </section>
         )}
 
         {included.map(p => (
-          <section key={p.id} className="rounded-lg border p-5" style={{ borderColor: 'var(--border)', background: '#FAFBFD' }}>
+          <section key={p.id} className="rounded-lg border p-5" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
             <div className="flex items-baseline justify-between mb-3">
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>{p.name}</h3>
-              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>{p.code}</span>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>{p.name}</h3>
+              <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>{p.code}</span>
             </div>
 
             {has('cadastro') && (
@@ -170,14 +170,14 @@ export function ReportsPage() {
             )}
 
             {has('objetivo') && (
-              <p style={{ fontSize: '0.82rem', color: '#334155', marginTop: 10, lineHeight: 1.55 }}>
-                <b style={{ color: '#0F172A' }}>Objetivo:</b> {p.objective}
+              <p style={{ fontSize: '0.82rem', color: 'var(--ink-2)', marginTop: 10, lineHeight: 1.55 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Objetivo:</b> {p.objective}
               </p>
             )}
 
             {has('equipe') && p.team.length > 0 && (
-              <p style={{ fontSize: '0.8rem', color: '#334155', marginTop: 6 }}>
-                <b style={{ color: '#0F172A' }}>Equipe:</b> {p.team.join(', ')}
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Equipe:</b> {p.team.join(', ')}
               </p>
             )}
 
@@ -191,8 +191,8 @@ export function ReportsPage() {
 
             {has('metas') && p.goals.length > 0 && (
               <div className="mt-3">
-                <b style={{ fontSize: '0.82rem', color: '#0F172A' }}>Metas ({p.goals.length}):</b>
-                <ul style={{ fontSize: '0.78rem', color: '#334155', marginTop: 6, paddingLeft: 18, listStyle: 'disc' }}>
+                <b style={{ fontSize: '0.82rem', color: 'var(--ink-1)' }}>Metas ({p.goals.length}):</b>
+                <ul style={{ fontSize: '0.78rem', color: 'var(--ink-2)', marginTop: 6, paddingLeft: 18, listStyle: 'disc' }}>
                   {p.goals.map(g => {
                     const acts = g.deliverables.flatMap(d => d.activities);
                     const done = acts.filter(a => a.status === 'Concluído').length;
@@ -203,40 +203,40 @@ export function ReportsPage() {
             )}
 
             {has('contrapart') && (p.contrapartidas ?? []).length > 0 && (
-              <p style={{ fontSize: '0.8rem', color: '#334155', marginTop: 8 }}>
-                <b style={{ color: '#0F172A' }}>Contrapartidas:</b> {(p.contrapartidas ?? []).length} item(ns)
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 8 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Contrapartidas:</b> {(p.contrapartidas ?? []).length} item(ns)
               </p>
             )}
 
             {has('riscos') && p.risks.length > 0 && (
-              <p style={{ fontSize: '0.8rem', color: '#334155', marginTop: 6 }}>
-                <b style={{ color: '#0F172A' }}>Riscos abertos:</b> {p.risks.length}
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Riscos abertos:</b> {p.risks.length}
               </p>
             )}
 
             {has('mudancas') && p.changes.length > 0 && (
-              <p style={{ fontSize: '0.8rem', color: '#334155', marginTop: 6 }}>
-                <b style={{ color: '#0F172A' }}>Mudanças:</b> {p.changes.length}
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Mudanças:</b> {p.changes.length}
               </p>
             )}
 
             {has('evidencias') && p.evidences.length > 0 && (
-              <p style={{ fontSize: '0.8rem', color: '#334155', marginTop: 6 }}>
-                <b style={{ color: '#0F172A' }}>Evidências:</b> {p.evidences.length} anexo(s)
+              <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
+                <b style={{ color: 'var(--ink-1)' }}>Evidências:</b> {p.evidences.length} anexo(s)
               </p>
             )}
           </section>
         ))}
 
         {included.length === 0 && (
-          <div className="py-10 text-center" style={{ fontSize: '0.85rem', color: '#94A3B8' }}>
+          <div className="py-10 text-center" style={{ fontSize: '0.85rem', color: 'var(--ink-5)' }}>
             Selecione ao menos um projeto para compor o relatório.
           </div>
         )}
       </div>
 
-      <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-      .ci:focus{border-color:var(--primary);background:#fff}
+      <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+      .ci:focus{border-color:var(--primary);background:var(--surface-0)}
       @media print { .print\\:hidden { display: none !important; } body { background: #fff; } }`}</style>
     </div>
   );
@@ -244,7 +244,7 @@ export function ReportsPage() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A', borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
+    <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
       {children}
     </h3>
   );
@@ -253,7 +253,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="rounded-lg border p-4" style={{ borderColor: 'var(--border)' }}>
-      <div style={{ fontSize: '0.7rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{label}</div>
       <div style={{ fontSize: '1.15rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color, marginTop: 4 }}>{value}</div>
     </div>
   );
@@ -264,8 +264,8 @@ function KV({ items }: { items: [string, string][] }) {
     <div className="grid grid-cols-3 gap-x-4 gap-y-1 mt-2">
       {items.map(([k, v]) => (
         <div key={k}>
-          <span style={{ fontSize: '0.68rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{k}: </span>
-          <span style={{ fontSize: '0.8rem', color: '#0F172A', fontWeight: 500 }}>{v}</span>
+          <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{k}: </span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--ink-1)', fontWeight: 500 }}>{v}</span>
         </div>
       ))}
     </div>

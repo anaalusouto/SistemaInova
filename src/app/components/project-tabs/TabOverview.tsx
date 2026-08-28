@@ -5,10 +5,10 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
-  'Em andamento': { color: '#2563EB', bg: '#EFF6FF', dot: '#2563EB' },
-  'Concluído':    { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
-  'Atrasado':     { color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
-  'Não iniciado': { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' },
+  'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
+  'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
+  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
 };
 
 interface TabOverviewProps {
@@ -17,15 +17,15 @@ interface TabOverviewProps {
 }
 
 export function TabOverview({ project, onTabChange }: TabOverviewProps) {
-  const cfg = statusConfig[project.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
+  const cfg = statusConfig[project.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
   const pctExec = project.budgetApproved > 0
     ? Math.round((project.budgetExecuted / project.budgetApproved) * 100)
     : 0;
   const saldo = project.budgetApproved - project.budgetExecuted;
 
   const progressColor =
-    project.status === 'Atrasado' ? '#EF4444' :
-    project.status === 'Concluído' ? '#10B981' : '#2563EB';
+    project.status === 'Atrasado' ? 'var(--danger)' :
+    project.status === 'Concluído' ? 'var(--success)' : 'var(--brand)';
 
   const allActivities = project.goals.flatMap(g =>
     g.deliverables.flatMap(d => d.activities)
@@ -51,11 +51,11 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
                 {project.status}
               </span>
-              <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
                 {project.code}
               </span>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.6, maxWidth: 600 }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--ink-3)', lineHeight: 1.6, maxWidth: 600 }}>
               {project.objective}
             </p>
           </div>
@@ -63,11 +63,11 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
             <div style={{ fontSize: '2.5rem', fontWeight: 700, fontFamily: 'var(--font-heading)', color: progressColor, lineHeight: 1 }}>
               {project.progress}%
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>execução física</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>execução física</div>
           </div>
         </div>
 
-        <div className="h-2 rounded-full" style={{ background: '#E2E8F0' }}>
+        <div className="h-2 rounded-full" style={{ background: 'var(--line-1)' }}>
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${project.progress}%`, background: progressColor }}
@@ -84,10 +84,10 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
             const Icon = item.icon;
             return (
               <div key={item.label} className="flex items-start gap-2">
-                <Icon size={13} color="#94A3B8" className="mt-0.5 flex-shrink-0" />
+                <Icon size={13} color="var(--ink-5)" className="mt-0.5 flex-shrink-0" />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{item.label}</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 500, color: '#0F172A' }}>{item.value}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{item.label}</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--ink-1)' }}>{item.value}</div>
                 </div>
               </div>
             );
@@ -98,10 +98,10 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
       {/* KPI strip */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Valor Aprovado', value: fmt(project.budgetApproved), icon: DollarSign, color: '#2563EB', bg: '#EFF6FF' },
-          { label: 'Valor Executado', value: `${fmt(project.budgetExecuted)} (${pctExec}%)`, icon: TrendingUp, color: '#059669', bg: '#ECFDF5' },
-          { label: 'Saldo Disponível', value: fmt(saldo), icon: DollarSign, color: '#D97706', bg: '#FFFBEB' },
-          { label: 'Riscos Abertos', value: project.risks.filter(r => r.status !== 'Encerrado').length.toString(), icon: ShieldAlert, color: '#DC2626', bg: '#FEF2F2' },
+          { label: 'Valor Aprovado', value: fmt(project.budgetApproved), icon: DollarSign, color: 'var(--brand)', bg: 'var(--brand-soft)' },
+          { label: 'Valor Executado', value: `${fmt(project.budgetExecuted)} (${pctExec}%)`, icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-soft)' },
+          { label: 'Saldo Disponível', value: fmt(saldo), icon: DollarSign, color: 'var(--warning)', bg: 'var(--warning-soft)' },
+          { label: 'Riscos Abertos', value: project.risks.filter(r => r.status !== 'Encerrado').length.toString(), icon: ShieldAlert, color: 'var(--danger)', bg: 'var(--danger-soft)' },
         ].map(k => {
           const Icon = k.icon;
           return (
@@ -114,8 +114,8 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                 <Icon size={16} color={k.color} />
               </div>
               <div>
-                <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{k.label}</div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A', fontFamily: 'var(--font-mono)' }}>{k.value}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{k.label}</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--ink-1)', fontFamily: 'var(--font-mono)' }}>{k.value}</div>
               </div>
             </div>
           );
@@ -130,7 +130,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
               Atividades
             </h3>
             <button
@@ -141,14 +141,14 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
             </button>
           </div>
           {totalActs === 0 ? (
-            <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Nenhuma atividade cadastrada.</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--ink-5)' }}>Nenhuma atividade cadastrada.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {[
-                { label: 'Concluídas', value: doneActs, color: '#10B981', bg: '#ECFDF5' },
-                { label: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: '#2563EB', bg: '#EFF6FF' },
-                { label: 'Atrasadas', value: lateActs, color: '#EF4444', bg: '#FEF2F2' },
-                { label: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: '#94A3B8', bg: '#F3F4F6' },
+                { label: 'Concluídas', value: doneActs, color: 'var(--success)', bg: 'var(--success-soft)' },
+                { label: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: 'var(--brand)', bg: 'var(--brand-soft)' },
+                { label: 'Atrasadas', value: lateActs, color: 'var(--danger)', bg: 'var(--danger-soft)' },
+                { label: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: 'var(--ink-5)', bg: 'var(--surface-2)' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-3">
                   <span
@@ -157,8 +157,8 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                   >
                     {item.value}
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: '#475569' }}>{item.label}</span>
-                  <div className="flex-1 h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--ink-3)' }}>{item.label}</span>
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--line-1)' }}>
                     <div
                       className="h-full rounded-full"
                       style={{ width: `${totalActs > 0 ? (item.value / totalActs) * 100 : 0}%`, background: item.color }}
@@ -176,7 +176,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
               Riscos e Mudanças
             </h3>
             <button
@@ -187,18 +187,18 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
             </button>
           </div>
           {project.risks.length === 0 && project.changes.length === 0 ? (
-            <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Nenhum risco ou mudança registrada.</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--ink-5)' }}>Nenhum risco ou mudança registrada.</p>
           ) : (
             <div className="flex flex-col gap-2">
               {project.risks.slice(0, 3).map(r => {
                 const sev = r.severity;
-                const sevColor = sev >= 15 ? '#DC2626' : sev >= 9 ? '#D97706' : '#059669';
-                const sevBg = sev >= 15 ? '#FEF2F2' : sev >= 9 ? '#FFFBEB' : '#ECFDF5';
+                const sevColor = sev >= 15 ? 'var(--danger)' : sev >= 9 ? 'var(--warning)' : 'var(--success)';
+                const sevBg = sev >= 15 ? 'var(--danger-soft)' : sev >= 9 ? 'var(--warning-soft)' : 'var(--success-soft)';
                 return (
                   <div
                     key={r.id}
                     className="flex items-start gap-3 p-3 rounded-lg"
-                    style={{ background: '#F8FAFC' }}
+                    style={{ background: 'var(--surface-1)' }}
                   >
                     <div
                       className="px-2 py-0.5 rounded text-[11px] font-bold flex-shrink-0"
@@ -207,8 +207,8 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                       {r.severity}
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 500, color: '#0F172A' }}>{r.description}</div>
-                      <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: 2 }}>{r.category} · {r.status}</div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--ink-1)' }}>{r.description}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 2 }}>{r.category} · {r.status}</div>
                     </div>
                   </div>
                 );
@@ -217,14 +217,14 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                 <div
                   key={ch.id}
                   className="flex items-start gap-3 p-3 rounded-lg"
-                  style={{ background: '#FFFBEB' }}
+                  style={{ background: 'var(--warning-soft)' }}
                 >
-                  <GitBranch size={13} color="#D97706" className="flex-shrink-0 mt-0.5" />
+                  <GitBranch size={13} color="var(--warning)" className="flex-shrink-0 mt-0.5" />
                   <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 500, color: '#92400E' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--warning-strong-text)' }}>
                       Mudança pendente: {ch.description}
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#B45309', marginTop: 2 }}>{ch.type} · {ch.date}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--warning-strong-text)', marginTop: 2 }}>{ch.type} · {ch.date}</div>
                   </div>
                 </div>
               ))}
@@ -240,7 +240,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
               Metas do Projeto
             </h3>
             <button
@@ -258,18 +258,18 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
               return (
                 <div key={g.id} className="flex items-center gap-4">
                   <div className="flex items-center gap-2 flex-1">
-                    <Target size={13} color="#94A3B8" />
-                    <span style={{ fontSize: '0.82rem', color: '#0F172A', fontWeight: 500 }}>{g.name}</span>
+                    <Target size={13} color="var(--ink-5)" />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--ink-1)', fontWeight: 500 }}>{g.name}</span>
                   </div>
                   <div className="flex items-center gap-2 w-48">
-                    <div className="flex-1 h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#2563EB' }} />
+                    <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--line-1)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--brand)' }} />
                     </div>
-                    <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: '#64748B', width: 28, textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-4)', width: 28, textAlign: 'right' }}>
                       {pct}%
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
                     {done}/{acts.length} atividades
                   </span>
                 </div>

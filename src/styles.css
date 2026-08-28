@@ -97,6 +97,87 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+:root {
+  /* Escala neutra (texto/bordas/superfícies) usada nas telas do app — permite dark mode real. */
+  --ink-1: #0F172A;
+  --ink-2: #1E293B;
+  --ink-3: #475569;
+  --ink-4: #64748B;
+  --ink-5: #94A3B8;
+  --line-1: #E2E8F0;
+  --line-2: #CBD5E1;
+  --surface-0: #FFFFFF;
+  --surface-1: #F8FAFC;
+  --surface-2: #F1F5F9;
+
+  /* Cor de destaque (marca) — controlada pelo usuário em Configurações › Aparência. */
+  --brand: #2563EB;
+  --brand-foreground: #FFFFFF;
+  --brand-text: #1D4ED8;
+  --brand-soft: #EFF6FF;
+  --brand-soft-border: #BFDBFE;
+
+  /* Cores de status — fixas independente da cor de destaque escolhida. */
+  --success: #059669;
+  --success-soft: #ECFDF5;
+  --success-soft-border: #A7F3D0;
+  --success-strong-text: #166534;
+  --danger: #DC2626;
+  --danger-soft: #FEF2F2;
+  --danger-soft-border: #FCA5A5;
+  --danger-strong-text: #991B1B;
+  --warning: #D97706;
+  --warning-soft: #FFFBEB;
+  --warning-soft-border: #FDE68A;
+  --warning-strong-text: #92400E;
+  --info: #7C3AED;
+  --info-soft: #F5F3FF;
+  --info-soft-border: #DDD6FE;
+}
+
+[data-accent="rosa"] { --brand: #DB2777; --brand-text: #BE185D; --brand-soft: #FCE7F3; --brand-soft-border: #F9A8D4; }
+[data-accent="verde"] { --brand: #16A34A; --brand-text: #15803D; --brand-soft: #F0FDF4; --brand-soft-border: #BBF7D0; }
+[data-accent="amarelo"] { --brand: #CA8A04; --brand-text: #A16207; --brand-soft: #FEFCE8; --brand-soft-border: #FDE68A; }
+
+.dark {
+  --ink-1: #F1F5F9;
+  --ink-2: #E2E8F0;
+  --ink-3: #CBD5E1;
+  --ink-4: #94A3B8;
+  --ink-5: #64748B;
+  --line-1: rgba(255,255,255,0.12);
+  --line-2: rgba(255,255,255,0.2);
+  --surface-0: #1B2740;
+  --surface-1: #111A2E;
+  --surface-2: #16233D;
+
+  --brand: #3B82F6;
+  --brand-foreground: #FFFFFF;
+  --brand-text: #93C5FD;
+  --brand-soft: rgba(59,130,246,0.16);
+  --brand-soft-border: rgba(59,130,246,0.4);
+
+  --success: #34D399;
+  --success-soft: rgba(5,150,105,0.16);
+  --success-soft-border: rgba(5,150,105,0.4);
+  --success-strong-text: #86EFAC;
+  --danger: #F87171;
+  --danger-soft: rgba(220,38,38,0.16);
+  --danger-soft-border: rgba(220,38,38,0.4);
+  --danger-strong-text: #FCA5A5;
+  --warning: #FBBF24;
+  --warning-soft: rgba(217,119,6,0.16);
+  --warning-soft-border: rgba(217,119,6,0.4);
+  --warning-strong-text: #FCD34D;
+  --info: #A78BFA;
+  --info-soft: rgba(124,58,237,0.16);
+  --info-soft-border: rgba(124,58,237,0.4);
+}
+
+.dark[data-accent="rosa"] { --brand: #F472B6; --brand-text: #F9A8D4; --brand-soft: rgba(244,114,182,0.16); --brand-soft-border: rgba(244,114,182,0.4); }
+.dark[data-accent="verde"] { --brand: #4ADE80; --brand-text: #86EFAC; --brand-soft: rgba(74,222,128,0.16); --brand-soft-border: rgba(74,222,128,0.4); }
+.dark[data-accent="amarelo"] { --brand: #FACC15; --brand-text: #FDE047; --brand-soft: rgba(250,204,21,0.16); --brand-soft-border: rgba(250,204,21,0.4); }
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -130,6 +211,17 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+/* Unifica os tokens shadcn de "primário" com a cor de destaque escolhida pelo
+   usuário, para que botões, item ativo do menu e anel de foco sigam o mesmo
+   tom em qualquer modo/accent (precisa vir depois dos blocos :root/.dark acima). */
+:root {
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --ring: var(--brand);
 }
 
 @layer base {

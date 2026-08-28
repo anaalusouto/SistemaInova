@@ -18,11 +18,11 @@ const typeColors: Record<CalendarEventType, string> = {
   'Outro': '#6B7280',
 };
 const statusColors: Record<string, string> = {
-  'Operacional': '#22C55E',
-  'Atenção': '#F59E0B',
-  'Crítico': '#EF4444',
+  'Operacional': 'var(--success)',
+  'Atenção': 'var(--warning)',
+  'Crítico': 'var(--danger)',
 };
-const DEFAULT_TIPO_COLOR = '#64748B';
+const DEFAULT_TIPO_COLOR = 'var(--ink-4)';
 const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 
@@ -47,7 +47,7 @@ export function CronogramaPage() {
             return (
               <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-md transition-colors"
-                style={{ background: active ? 'var(--primary)' : 'var(--card)', color: active ? '#fff' : 'var(--foreground)', border: '1px solid var(--border)', fontWeight: active ? 600 : 400 }}>
+                style={{ background: active ? 'var(--primary)' : 'var(--card)', color: active ? 'var(--primary-foreground)' : 'var(--foreground)', border: '1px solid var(--border)', fontWeight: active ? 600 : 400 }}>
                 <Icon size={14} /> {t.label}
               </button>
             );
@@ -114,15 +114,15 @@ function RotasTab() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi label="Organizações" value={kpis.total} color="#1A5C3A" />
-        <Kpi label="Dias de campo" value={kpis.dias} color="#0D6E8A" />
-        <Kpi label="Pontos de atenção" value={kpis.atencao} color="#F59E0B" />
-        <Kpi label="Tipos de comunidade" value={kpis.tipos} color="#7C3AED" />
+        <Kpi label="Organizações" value={kpis.total} color="var(--success-strong-text)" />
+        <Kpi label="Dias de campo" value={kpis.dias} color="var(--info)" />
+        <Kpi label="Pontos de atenção" value={kpis.atencao} color="var(--warning)" />
+        <Kpi label="Tipos de comunidade" value={kpis.tipos} color="var(--info)" />
       </div>
 
       {/* Map + Legend */}
       <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <MapPin size={14} className="inline mr-1.5" />Mapa das Rotas — Pará
           </h3>
@@ -148,7 +148,7 @@ function RotasTab() {
 
       {/* Table */}
       <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>Organizações & logística</h3>
         </div>
         <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
@@ -171,7 +171,7 @@ function RotasTab() {
                 <tr key={r.id}
                   onClick={() => setSelectedId(r.id)}
                   className="border-t cursor-pointer"
-                  style={{ borderColor: 'var(--border)', background: selectedId === r.id ? '#EFF6FF' : undefined }}>
+                  style={{ borderColor: 'var(--border)', background: selectedId === r.id ? 'var(--brand-soft)' : undefined }}>
                   <Td><input className="cell" value={r.rota} onChange={e => updateRoute(r.id, { rota: e.target.value })} onBlur={() => record('editar rota', `rota: ${r.rota}`)} /></Td>
                   <Td><input className="cell" value={r.organizacao} onChange={e => updateRoute(r.id, { organizacao: e.target.value })} onBlur={() => record('editar rota', `organização: ${r.organizacao}`)} /></Td>
                   <Td>
@@ -201,9 +201,9 @@ function RotasTab() {
             </tbody>
           </table>
         </div>
-        <style>{`.cell{border:1px solid transparent;border-radius:6px;padding:4px 8px;font-size:12.5px;background:transparent;width:100%;color:#0F172A}
-          .cell:focus{border-color:var(--primary);background:#fff;outline:none}
-          .cell:hover{background:#fff}`}</style>
+        <style>{`.cell{border:1px solid transparent;border-radius:6px;padding:4px 8px;font-size:12.5px;background:transparent;width:100%;color:var(--ink-1)}
+          .cell:focus{border-color:var(--primary);background:var(--surface-0);outline:none}
+          .cell:hover{background:var(--surface-0)}`}</style>
       </div>
     </div>
   );
@@ -295,15 +295,15 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
           <div style="font-family:Inter,sans-serif;min-width:220px">
             <div style="font-weight:700;color:${color};font-size:12px">${rotaName}</div>
             <div style="font-weight:600;font-size:13px;margin-top:2px">${r.organizacao}</div>
-            <div style="font-size:11px;color:#6B7280;margin-top:2px">${r.municipio}/${r.uf}</div>
+            <div style="font-size:11px;color:var(--ink-4);margin-top:2px">${r.municipio}/${r.uf}</div>
             <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
-              <span style="background:${tipoCor};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${r.tipoComunidade}</span>
-              <span style="background:${st};color:#fff;padding:2px 6px;border-radius:4px;font-size:10px">${r.status ?? 'Operacional'}</span>
+              <span style="background:${tipoCor};color:var(--primary-foreground);padding:2px 6px;border-radius:4px;font-size:10px">${r.tipoComunidade}</span>
+              <span style="background:${st};color:var(--primary-foreground);padding:2px 6px;border-radius:4px;font-size:10px">${r.status ?? 'Operacional'}</span>
             </div>
             <div style="font-size:11px;margin-top:6px"><b>Modal:</b> ${r.modalAcesso}</div>
             <div style="font-size:11px"><b>Dias:</b> ${r.diasAtuacao}</div>
             <div style="font-size:11px"><b>Coord.:</b> ${r.lat!.toFixed(4)}, ${r.lng!.toFixed(4)}</div>
-            ${r.notasLogisticas ? `<div style="font-size:10.5px;color:#92400E;background:#FFFBEB;padding:4px 6px;border-radius:4px;margin-top:6px">${r.notasLogisticas}</div>` : ''}
+            ${r.notasLogisticas ? `<div style="font-size:10.5px;color:var(--warning-strong-text);background:var(--warning-soft);padding:4px 6px;border-radius:4px;margin-top:6px">${r.notasLogisticas}</div>` : ''}
           </div>
         `);
         marker.on('click', () => onSelect(r.id));
@@ -365,11 +365,11 @@ function CalendarioTab() {
   return (
     <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         <div className="flex items-center gap-2">
-          <button onClick={goToday} className="text-xs px-3 py-1.5 rounded-md" style={{ border: '1px solid var(--border)', background: '#fff' }}>Hoje</button>
-          <button onClick={goPrev} className="p-1.5 rounded-md hover:bg-slate-100"><ChevronLeft size={16} /></button>
-          <button onClick={goNext} className="p-1.5 rounded-md hover:bg-slate-100"><ChevronRight size={16} /></button>
+          <button onClick={goToday} className="text-xs px-3 py-1.5 rounded-md" style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}>Hoje</button>
+          <button onClick={goPrev} className="p-1.5 rounded-md hover:bg-accent"><ChevronLeft size={16} /></button>
+          <button onClick={goNext} className="p-1.5 rounded-md hover:bg-accent"><ChevronRight size={16} /></button>
           <div className="text-sm font-semibold ml-2 capitalize">{title}</div>
         </div>
         <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ function CalendarioTab() {
             {(['day', 'week', 'month'] as CalView[]).map(v => (
               <button key={v} onClick={() => setView(v)}
                 className="text-xs px-3 py-1.5 capitalize"
-                style={{ background: view === v ? 'var(--primary)' : '#fff', color: view === v ? '#fff' : '#0F172A', fontWeight: view === v ? 600 : 400 }}>
+                style={{ background: view === v ? 'var(--primary)' : 'var(--surface-0)', color: view === v ? 'var(--primary-foreground)' : 'var(--ink-1)', fontWeight: view === v ? 600 : 400 }}>
                 {v === 'day' ? 'Dia' : v === 'week' ? 'Semana' : 'Mês'}
               </button>
             ))}
@@ -453,12 +453,12 @@ function MonthView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Ca
 
   return (
     <div>
-      <div className="grid grid-cols-7 border-b text-[11px] font-semibold text-muted-foreground" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+      <div className="grid grid-cols-7 border-b text-[11px] font-semibold text-muted-foreground" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         {weekDays.map(w => <div key={w} className="px-2 py-1.5 text-center">{w}</div>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((d, i) => {
-          if (!d) return <div key={i} className="min-h-[110px] border-b border-r" style={{ borderColor: 'var(--border)', background: '#FAFAFA' }} />;
+          if (!d) return <div key={i} className="min-h-[110px] border-b border-r" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }} />;
           const key = fmtDate(d);
           const list = events.filter(e => e.date === key);
           const isToday = isSameDay(d, today);
@@ -467,9 +467,9 @@ function MonthView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Ca
               onDoubleClick={() => onNew(key)}
               className="min-h-[110px] border-b border-r p-1.5 cursor-pointer"
               style={{ borderColor: 'var(--border)' }}>
-              <div className={`text-[11px] font-semibold mb-1 flex items-center justify-between ${isToday ? '' : 'text-slate-700'}`}>
-                <span style={isToday ? { background: 'var(--primary)', color: '#fff', width: 20, height: 20, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 } : {}}>{d.getDate()}</span>
-                <button onClick={(ev) => { ev.stopPropagation(); onNew(key); }} className="text-slate-300 hover:text-slate-600"><Plus size={11} /></button>
+              <div className={`text-[11px] font-semibold mb-1 flex items-center justify-between ${isToday ? '' : 'text-foreground'}`}>
+                <span style={isToday ? { background: 'var(--primary)', color: 'var(--primary-foreground)', width: 20, height: 20, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 } : {}}>{d.getDate()}</span>
+                <button onClick={(ev) => { ev.stopPropagation(); onNew(key); }} className="text-muted-foreground hover:text-foreground"><Plus size={11} /></button>
               </div>
               <div className="space-y-0.5">
                 {list.slice(0, 3).map(e => (
@@ -503,7 +503,7 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
         const isToday = isSameDay(d, today);
         return (
           <div key={key} className="border-r min-h-[500px]" style={{ borderColor: 'var(--border)' }}>
-            <div className="text-center py-2 border-b" style={{ borderColor: 'var(--border)', background: isToday ? '#EFF6FF' : '#F8FAFC' }}>
+            <div className="text-center py-2 border-b" style={{ borderColor: 'var(--border)', background: isToday ? 'var(--brand-soft)' : 'var(--surface-1)' }}>
               <div className="text-[10px] uppercase text-muted-foreground">{weekDays[d.getDay()]}</div>
               <div className="text-lg font-bold" style={{ color: isToday ? 'var(--primary)' : undefined }}>{d.getDate()}</div>
             </div>
@@ -512,13 +512,13 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
               {list.map(e => (
                 <button key={e.id} onClick={() => onEdit(e.id)}
                   className="w-full text-left rounded p-1.5"
-                  style={{ background: typeColors[e.type], color: '#fff' }}>
+                  style={{ background: typeColors[e.type], color: 'var(--primary-foreground)' }}>
                   <div className="text-[10px] font-mono opacity-90">{e.startTime ?? 'todo o dia'}</div>
                   <div className="text-[11px] font-semibold leading-tight">{e.title}</div>
                   {e.responsavel && <div className="text-[10px] opacity-90 truncate">{e.responsavel}</div>}
                 </button>
               ))}
-              <button onClick={() => onNew(key)} className="w-full text-[10px] py-1 rounded hover:bg-slate-100 text-slate-400 border border-dashed" style={{ borderColor: 'var(--border)' }}>
+              <button onClick={() => onNew(key)} className="w-full text-[10px] py-1 rounded hover:bg-accent text-muted-foreground border border-dashed" style={{ borderColor: 'var(--border)' }}>
                 <Plus size={10} className="inline" /> adicionar
               </button>
             </div>
@@ -542,7 +542,7 @@ function DayView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cale
         return (
           <div key={h} className="contents">
             <div className="text-[10px] text-right pr-2 pt-1 text-muted-foreground border-r border-b" style={{ borderColor: 'var(--border)' }}>{hh}:00</div>
-            <div className="border-b p-1 min-h-[48px] hover:bg-slate-50 cursor-pointer" style={{ borderColor: 'var(--border)' }}
+            <div className="border-b p-1 min-h-[48px] hover:bg-accent cursor-pointer" style={{ borderColor: 'var(--border)' }}
               onDoubleClick={() => onNew(key)}>
               {bucket.map(e => (
                 <button key={e.id} onClick={() => onEdit(e.id)} className="block w-full text-left rounded p-1.5 mb-1 text-white"
@@ -588,7 +588,7 @@ function EventForm({ initial, prefillDate, routes, communities, onSave, onClose,
   });
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-card rounded-lg max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">{initial ? 'Editar evento' : 'Novo evento'}</h3>
           <button onClick={onClose}><X size={18} /></button>

@@ -23,11 +23,11 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
-  'Em andamento': { color: '#2563EB', bg: '#EFF6FF', dot: '#2563EB' },
-  'Concluído':    { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
-  'Atrasado':     { color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
-  'Não iniciado': { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' },
-  'Suspenso':     { color: '#D97706', bg: '#FFFBEB', dot: '#F59E0B' },
+  'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
+  'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
+  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
+  'Suspenso':     { color: 'var(--warning)', bg: 'var(--warning-soft)', dot: 'var(--warning)' },
 };
 
 interface ProjectsPageProps {
@@ -86,10 +86,10 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
     <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: '#0F172A' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
             Projetos
           </h1>
-          <p style={{ color: '#64748B', fontSize: '0.825rem', marginTop: 2 }}>
+          <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
             {projects.length} projetos no portfólio · {filtered.length} exibidos
           </p>
         </div>
@@ -108,13 +108,13 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card flex-1"
             style={{ borderColor: 'var(--border)' }}
           >
-            <Search size={14} color="#94A3B8" />
+            <Search size={14} color="var(--ink-5)" />
             <input
               className="flex-1 outline-none text-[13px] bg-transparent"
               placeholder="Buscar projeto, comunidade, coordenador..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ color: '#0F172A' }}
+              style={{ color: 'var(--ink-1)' }}
             />
           </div>
           <button
@@ -122,8 +122,8 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[13px] font-medium"
             style={{
               borderColor: showFilters ? 'var(--primary)' : 'var(--border)',
-              color: showFilters ? 'var(--primary)' : '#64748B',
-              background: showFilters ? '#EFF6FF' : '#fff',
+              color: showFilters ? 'var(--primary)' : 'var(--ink-4)',
+              background: showFilters ? 'var(--brand-soft)' : 'var(--surface-0)',
             }}
           >
             <Filter size={12} /> Filtros{selected.length > 0 ? ` (${selected.length})` : ''}
@@ -138,8 +138,8 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
               onClick={() => setSelected([])}
               className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
               style={{
-                background: selected.length === 0 ? 'var(--primary)' : '#fff',
-                color: selected.length === 0 ? '#fff' : '#64748B',
+                background: selected.length === 0 ? 'var(--primary)' : 'var(--surface-0)',
+                color: selected.length === 0 ? 'var(--primary-foreground)' : 'var(--ink-4)',
                 border: `1px solid ${selected.length === 0 ? 'var(--primary)' : 'var(--border)'}`,
               }}
             >
@@ -153,14 +153,14 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
                   onClick={() => toggleCategory(c)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
                   style={{
-                    background: on ? 'var(--primary)' : '#fff',
-                    color: on ? '#fff' : '#64748B',
+                    background: on ? 'var(--primary)' : 'var(--surface-0)',
+                    color: on ? 'var(--primary-foreground)' : 'var(--ink-4)',
                     border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
                   }}
                 >
                   <span className="inline-flex items-center justify-center rounded-sm"
-                    style={{ width: 12, height: 12, border: `1px solid ${on ? '#fff' : '#CBD5E1'}`, background: on ? '#fff' : 'transparent' }}>
-                    {on && <Check size={9} color="#2563EB" />}
+                    style={{ width: 12, height: 12, border: `1px solid ${on ? 'var(--surface-0)' : 'var(--line-2)'}`, background: on ? 'var(--surface-0)' : 'transparent' }}>
+                    {on && <Check size={9} color="var(--brand)" />}
                   </span>
                   {c}
                 </button>
@@ -169,12 +169,12 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             <button
               onClick={() => { setSearch(''); setSelected([]); }}
               className="text-[12px] px-2 py-1.5 rounded border ml-auto"
-              style={{ borderColor: 'var(--border)', color: '#475569' }}
+              style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
             >
               Limpar filtros
             </button>
           </div>
-          <p className="mt-2" style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+          <p className="mt-2" style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
             Você pode marcar mais de uma categoria. Os filtros continuam ativos ao entrar e sair de um projeto — use “Todas” ou “Limpar filtros” para zerar.
           </p>
         </div>
@@ -182,10 +182,10 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
 
       <div className="grid grid-cols-3 gap-4">
         {filtered.map(p => {
-          const cfg = statusConfig[p.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
+          const cfg = statusConfig[p.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
           const progressColor =
-            p.status === 'Atrasado' ? '#EF4444' :
-            p.status === 'Concluído' ? '#10B981' : '#2563EB';
+            p.status === 'Atrasado' ? 'var(--danger)' :
+            p.status === 'Concluído' ? 'var(--success)' : 'var(--brand)';
 
           return (
             <div
@@ -206,7 +206,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
                     {p.status}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
                       {p.code}
                     </span>
                     <button
@@ -214,43 +214,43 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
                       className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 transition-opacity"
                       title="Excluir projeto"
                     >
-                      <Trash2 size={12} color="#DC2626" />
+                      <Trash2 size={12} color="var(--danger)" />
                     </button>
                   </div>
                 </div>
 
                 <h3
                   className="mb-1 group-hover:text-blue-600 transition-colors"
-                  style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.925rem', color: '#0F172A', lineHeight: 1.4 }}
+                  style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.925rem', color: 'var(--ink-1)', lineHeight: 1.4 }}
                 >
                   {p.name}
                 </h3>
                 {((p as ProjectExt).org || (p as ProjectExt).segmento) && (
                   <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                     {(p as ProjectExt).org && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
                         {(p as ProjectExt).org}
                       </span>
                     )}
                     {(p as ProjectExt).segmento && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-medium" style={{ background: '#F1F5F9', color: '#475569' }}>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-medium" style={{ background: 'var(--surface-2)', color: 'var(--ink-3)' }}>
                         {(p as ProjectExt).segmento}
                       </span>
                     )}
                   </div>
                 )}
-                <p style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.5, marginBottom: 14 }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', lineHeight: 1.5, marginBottom: 14 }}>
                   {p.objective.length > 90 ? p.objective.slice(0, 90) + '…' : p.objective}
                 </p>
 
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span style={{ fontSize: '0.72rem', color: '#64748B' }}>Execução física</span>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#0F172A', fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>Execução física</span>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-1)', fontFamily: 'var(--font-mono)' }}>
                       {p.progress}%
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full" style={{ background: '#E2E8F0' }}>
+                  <div className="h-1.5 rounded-full" style={{ background: 'var(--line-1)' }}>
                     <div
                       className="h-full rounded-full"
                       style={{ width: `${p.progress}%`, background: progressColor }}
@@ -260,22 +260,22 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
 
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <Users size={12} color="#94A3B8" />
-                    <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                    <Users size={12} color="var(--ink-5)" />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>
                       {p.coordinator}
                     </span>
-                    <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>· {p.financier}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>· {p.financier}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <DollarSign size={12} color="#94A3B8" />
-                      <span style={{ fontSize: '0.73rem', color: '#475569', fontFamily: 'var(--font-mono)' }}>
-                        {fmt(p.budgetExecuted)} <span style={{ color: '#94A3B8' }}>/ {fmt(p.budgetApproved)}</span>
+                      <DollarSign size={12} color="var(--ink-5)" />
+                      <span style={{ fontSize: '0.73rem', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>
+                        {fmt(p.budgetExecuted)} <span style={{ color: 'var(--ink-5)' }}>/ {fmt(p.budgetApproved)}</span>
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={12} color="#94A3B8" />
-                      <span style={{ fontSize: '0.73rem', color: '#475569' }}>{p.endDate}</span>
+                      <Calendar size={12} color="var(--ink-5)" />
+                      <span style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{p.endDate}</span>
                     </div>
                   </div>
                 </div>
@@ -283,16 +283,16 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
 
               <div
                 className="px-5 py-3 flex items-center justify-between border-t"
-                style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
               >
                 <div className="flex items-center gap-2">
-                  <FolderKanban size={12} color="#94A3B8" />
-                  <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+                  <FolderKanban size={12} color="var(--ink-5)" />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
                     {p.goals.length > 0 ? `${p.goals.length} metas · ` : ''}
                     {p.risks.length} riscos · {p.changes.length} mudanças
                   </span>
                 </div>
-                <ChevronRight size={14} color="#94A3B8" className="group-hover:text-blue-500 transition-colors" />
+                <ChevronRight size={14} color="var(--ink-5)" className="group-hover:text-blue-500 transition-colors" />
               </div>
             </div>
           );
@@ -301,8 +301,8 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
 
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <FolderKanban size={40} color="#CBD5E1" />
-          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Nenhum projeto encontrado</p>
+          <FolderKanban size={40} color="var(--line-2)" />
+          <p style={{ color: 'var(--ink-5)', fontSize: '0.875rem' }}>Nenhum projeto encontrado</p>
         </div>
       )}
 
@@ -384,14 +384,14 @@ function NewProjectModal({
       <form
         onSubmit={submit}
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl border p-6 w-full max-w-lg"
+        className="bg-card rounded-2xl border p-6 w-full max-w-lg"
         style={{ borderColor: 'var(--border)' }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: '#0F172A' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
             Novo Projeto
           </h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100">
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={16} />
           </button>
         </div>
@@ -422,15 +422,15 @@ function NewProjectModal({
           </Field>
         </div>
         <div className="flex items-center justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
             Cancelar
           </button>
           <button type="submit" className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>
             Criar projeto
           </button>
         </div>
-        <style>{`.input{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.input:focus{border-color:var(--primary);background:#fff}`}</style>
+        <style>{`.input{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.input:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
       </form>
     </div>
   );
@@ -439,7 +439,7 @@ function NewProjectModal({
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
-      <span className="text-[11px] font-medium" style={{ color: '#64748B' }}>{label}</span>
+      <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
   );

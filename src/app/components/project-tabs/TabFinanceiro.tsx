@@ -32,27 +32,27 @@ const computeLine = (i: Pick<FinancialItem, 'qtd' | 'qtdUnidades' | 'valorUnitar
 const EXECUTED_FLAGS: ExecutedFlag[] = ['Não', 'Sim', 'Parcial'];
 
 const ACC_COLORS: Record<AccountabilityStatus, { bg: string; fg: string }> = {
-  'Não enviado':           { bg: '#F1F5F9', fg: '#475569' },
-  'Enviado':               { bg: '#EFF6FF', fg: '#2563EB' },
-  'Aprovado pela FAS':     { bg: '#ECFDF5', fg: '#059669' },
-  'Devolvido para ajuste': { bg: '#FFFBEB', fg: '#B45309' },
-  'Reprovado':             { bg: '#FEF2F2', fg: '#DC2626' },
+  'Não enviado':           { bg: 'var(--surface-2)', fg: 'var(--ink-3)' },
+  'Enviado':               { bg: 'var(--brand-soft)', fg: 'var(--brand)' },
+  'Aprovado pela FAS':     { bg: 'var(--success-soft)', fg: 'var(--success)' },
+  'Devolvido para ajuste': { bg: 'var(--warning-soft)', fg: 'var(--warning-strong-text)' },
+  'Reprovado':             { bg: 'var(--danger-soft)', fg: 'var(--danger)' },
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; fg: string }> = {
-  'Despesas com pessoal': { bg: '#EFF6FF', fg: '#2563EB' },
-  'Serviços de terceiros': { bg: '#FEF3C7', fg: '#B45309' },
-  'Materiais de consumo': { bg: '#F0FDF4', fg: '#059669' },
-  'Material permanente/equipamentos': { bg: '#F5F3FF', fg: '#7C3AED' },
-  'Custos administrativos': { bg: '#FEE2E2', fg: '#B91C1C' },
+  'Despesas com pessoal': { bg: 'var(--brand-soft)', fg: 'var(--brand)' },
+  'Serviços de terceiros': { bg: 'var(--warning-soft)', fg: 'var(--warning-strong-text)' },
+  'Materiais de consumo': { bg: 'var(--success-soft)', fg: 'var(--success)' },
+  'Material permanente/equipamentos': { bg: 'var(--info-soft)', fg: 'var(--info)' },
+  'Custos administrativos': { bg: 'var(--danger-soft)', fg: 'var(--danger-strong-text)' },
 };
 
 const chipStyle = (c: string) => {
-  const cc = CATEGORY_COLORS[c] ?? { bg: '#E2E8F0', fg: '#475569' };
+  const cc = CATEGORY_COLORS[c] ?? { bg: 'var(--line-1)', fg: 'var(--ink-3)' };
   return { background: cc.bg, color: cc.fg };
 };
 
-const selCls = 'w-full bg-transparent rounded px-1 py-1 border border-transparent hover:border-slate-200 focus:border-blue-300 outline-none';
+const selCls = 'w-full bg-transparent rounded px-1 py-1 border border-transparent hover:border-border focus:border-blue-300 outline-none';
 
 interface TabFinanceiroProps { project: Project }
 
@@ -208,18 +208,18 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Planilha Orçamentária do Projeto
           </h2>
-          <p style={{ fontSize: '0.72rem', color: '#64748B' }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>
             Total da linha (previsto) = Qtd × Qtd. de unidades × Valor unitário · execução, prestação de contas e registro por linha
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}>
+          <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}>
             <Download size={12} /> Exportar CSV
           </button>
-          <button onClick={() => setShowCpForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}>
+          <button onClick={() => setShowCpForm(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}>
             <HandCoins size={12} /> Contrapartida
           </button>
           <button onClick={() => setShowItemForm(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
@@ -233,10 +233,10 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       {/* Executive summary */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Total do Projeto', value: fmt(totalPlanned), icon: DollarSign, color: '#2563EB', bg: '#EFF6FF', sub: `${items.length} itens em ${byMeta.length} metas` },
-          { label: 'Executado', value: fmt(totalExecuted), icon: TrendingUp, color: '#059669', bg: '#ECFDF5', sub: `${pctExec}% do orçamento` },
-          { label: 'Saldo Disponível', value: fmt(saldo), icon: Wallet, color: '#D97706', bg: '#FFFBEB', sub: `${Math.max(0, 100 - pctExec)}% restante` },
-          { label: 'Contrapartidas', value: fmt(cpTotals.total), icon: HandCoins, color: '#7C3AED', bg: '#F5F3FF', sub: `Fin. ${fmt(cpTotals.financeira)} · Econ. ${fmt(cpTotals.economica)}` },
+          { label: 'Total do Projeto', value: fmt(totalPlanned), icon: DollarSign, color: 'var(--brand)', bg: 'var(--brand-soft)', sub: `${items.length} itens em ${byMeta.length} metas` },
+          { label: 'Executado', value: fmt(totalExecuted), icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-soft)', sub: `${pctExec}% do orçamento` },
+          { label: 'Saldo Disponível', value: fmt(saldo), icon: Wallet, color: 'var(--warning)', bg: 'var(--warning-soft)', sub: `${Math.max(0, 100 - pctExec)}% restante` },
+          { label: 'Contrapartidas', value: fmt(cpTotals.total), icon: HandCoins, color: 'var(--info)', bg: 'var(--info-soft)', sub: `Fin. ${fmt(cpTotals.financeira)} · Econ. ${fmt(cpTotals.economica)}` },
         ].map(k => {
           const Icon = k.icon;
           return (
@@ -245,9 +245,9 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                 <Icon size={17} color={k.color} />
               </div>
               <div className="min-w-0">
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{k.value}</div>
-                <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{k.label}</div>
-                <div style={{ fontSize: '0.66rem', color: '#94A3B8' }} className="truncate">{k.sub}</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--ink-1)' }}>{k.value}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{k.label}</div>
+                <div style={{ fontSize: '0.66rem', color: 'var(--ink-5)' }} className="truncate">{k.sub}</div>
               </div>
             </div>
           );
@@ -256,7 +256,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 
       {/* Prestação de contas */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>Prestação de contas:</span>
+        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-3)' }}>Prestação de contas:</span>
         {accSummary.map(([s, c]) => (
           <span key={s} className="px-2.5 py-1 rounded-full text-[11px] font-medium" style={{ background: ACC_COLORS[s].bg, color: ACC_COLORS[s].fg }}>
             {c} {s}
@@ -267,32 +267,32 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       {/* Progress */}
       <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-2">
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>Execução do Orçamento</span>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: pctExec >= 90 ? '#059669' : pctExec >= 70 ? '#2563EB' : '#D97706' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>Execução do Orçamento</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: pctExec >= 90 ? 'var(--success)' : pctExec >= 70 ? 'var(--brand)' : 'var(--warning)' }}>
             {pctExec}%
           </span>
         </div>
-        <div className="h-3 rounded-full" style={{ background: '#E2E8F0' }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pctExec)}%`, background: pctExec >= 90 ? '#10B981' : pctExec >= 70 ? '#2563EB' : '#F59E0B' }} />
+        <div className="h-3 rounded-full" style={{ background: 'var(--line-1)' }}>
+          <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pctExec)}%`, background: pctExec >= 90 ? 'var(--success)' : pctExec >= 70 ? 'var(--brand)' : 'var(--warning)' }} />
         </div>
         <div className="flex justify-between mt-1.5">
-          <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>R$ 0</span>
-          <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{fmt(budgetBase)}</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>R$ 0</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{fmt(budgetBase)}</span>
         </div>
       </div>
 
       {/* Resumo por categoria */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
+        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>
             Resumo por Categoria de Gastos
           </h3>
         </div>
         <table className="w-full">
           <thead>
-            <tr style={{ background: '#F8FAFC' }}>
+            <tr style={{ background: 'var(--surface-1)' }}>
               {['Categoria', 'Itens', 'Previsto', 'Executado', '% Exec.'].map(h => (
-                <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: '0.68rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -300,20 +300,20 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
             {byCategory.map(([cat, v]) => (
               <tr key={cat} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-md text-[11px] font-medium" style={chipStyle(cat)}>{cat}</span></td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: '#475569' }}>{v.count}</td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{fmt(v.planned)}</td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#059669', fontWeight: 600 }}>{fmt(v.executed)}</td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: '#475569' }}>{pct(v.executed, v.planned)}%</td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{v.count}</td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-1)' }}>{fmt(v.planned)}</td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--success)', fontWeight: 600 }}>{fmt(v.executed)}</td>
+                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{pct(v.executed, v.planned)}%</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
-            <tr style={{ background: '#F8FAFC', borderTop: '2px solid var(--border)' }}>
-              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A' }}>TOTAL DO PROJETO</td>
-              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', color: '#475569' }}>{items.length}</td>
-              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(totalPlanned)}</td>
-              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#059669' }}>{fmt(totalExecuted)}</td>
-              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A' }}>{pct(totalExecuted, totalPlanned)}%</td>
+            <tr style={{ background: 'var(--surface-1)', borderTop: '2px solid var(--border)' }}>
+              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink-1)' }}>TOTAL DO PROJETO</td>
+              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', color: 'var(--ink-3)' }}>{items.length}</td>
+              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(totalPlanned)}</td>
+              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--success)' }}>{fmt(totalExecuted)}</td>
+              <td className="px-4 py-2.5" style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink-1)' }}>{pct(totalExecuted, totalPlanned)}%</td>
             </tr>
           </tfoot>
         </table>
@@ -321,8 +321,8 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 
       {/* Itens por Meta */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
+        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>
             Detalhamento Orçamentário por Meta
           </h3>
         </div>
@@ -330,8 +330,8 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         <div style={{ maxHeight: 520, overflow: 'auto' }}>
           {items.length === 0 ? (
             <div className="flex flex-col items-center py-10 gap-2">
-              <DollarSign size={32} color="#CBD5E1" />
-              <p style={{ color: '#94A3B8', fontSize: '0.825rem' }}>Nenhum item orçamentário cadastrado.</p>
+              <DollarSign size={32} color="var(--line-2)" />
+              <p style={{ color: 'var(--ink-5)', fontSize: '0.825rem' }}>Nenhum item orçamentário cadastrado.</p>
             </div>
           ) : (
             byMeta.map(([meta, its]) => {
@@ -339,19 +339,19 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
               const subtotalE = its.reduce((a, i) => a + i.executedValue, 0);
               return (
                 <div key={meta} style={{ borderTop: '1px solid var(--border)' }}>
-                  <div className="px-5 py-2 flex items-center justify-between sticky top-0 z-10" style={{ background: '#F1F5F9' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', textTransform: 'uppercase' }}>{meta}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#475569' }}>
-                      Previsto: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(subtotalP)}</span>
-                      <span style={{ margin: '0 8px', color: '#CBD5E1' }}>·</span>
-                      Executado: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#059669' }}>{fmt(subtotalE)}</span>
+                  <div className="px-5 py-2 flex items-center justify-between sticky top-0 z-10" style={{ background: 'var(--surface-2)' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink-1)', textTransform: 'uppercase' }}>{meta}</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ink-3)' }}>
+                      Previsto: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(subtotalP)}</span>
+                      <span style={{ margin: '0 8px', color: 'var(--line-2)' }}>·</span>
+                      Executado: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--success)' }}>{fmt(subtotalE)}</span>
                     </span>
                   </div>
                   <table className="w-full" style={{ minWidth: 1420 }}>
                     <thead>
-                      <tr style={{ background: '#FAFAFA' }}>
+                      <tr style={{ background: 'var(--surface-1)' }}>
                         {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', isAdmin ? '' : 'Realizar alteração'].map(h => (
-                          <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                          <th key={h} className="px-3 py-2 text-left" style={{ fontSize: '0.63rem', fontWeight: 700, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -370,7 +370,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               </select>
                             </td>
                             <td className="px-2 py-2 min-w-[260px]">
-                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.76rem', color: '#0F172A' }} defaultValue={item.item}
+                              <input className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.76rem', color: 'var(--ink-1)' }} defaultValue={item.item}
                                 onBlur={e => edit(item, 'descrição', item.item, e.target.value)} />
                             </td>
                             <td className="px-2 py-2 w-16">
@@ -389,23 +389,23 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               <input type="number" step="0.01" className={selCls} disabled={!isAdmin} readOnly={!isAdmin} style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)' }} defaultValue={item.valorUnitario}
                                 onBlur={e => edit(item, 'valor unitário', String(item.valorUnitario), e.target.value)} />
                             </td>
-                            <td className="px-3 py-2 w-32" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A', fontWeight: 600, background: '#F0FDF4' }}>
+                            <td className="px-3 py-2 w-32" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 600, background: 'var(--success-soft)' }}>
                               {fmt(total)}
                             </td>
                             <td className="px-2 py-2 w-24">
-                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? '#059669' : flag === 'Parcial' ? '#B45309' : '#64748B' }}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.72rem', color: flag === 'Sim' ? 'var(--success)' : flag === 'Parcial' ? 'var(--warning-strong-text)' : 'var(--ink-4)' }}
                                 value={flag} onChange={e => edit(item, 'executado', flag, e.target.value)}>
                                 {EXECUTED_FLAGS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
                             </td>
                             <td className="px-2 py-2 w-32">
                               {flag === 'Não' ? (
-                                <span style={{ fontSize: '0.72rem', color: '#CBD5E1' }}>—</span>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--line-2)' }}>—</span>
                               ) : (
                                 <input
                                   type="number" step="0.01"
                                   className={selCls} disabled={!isAdmin} readOnly={!isAdmin}
-                                  style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: '#059669', fontWeight: 600 }}
+                                  style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--success)', fontWeight: 600 }}
                                   defaultValue={item.executedValue}
                                   key={`${item.id}-${item.executedValue}`}
                                   onBlur={e => edit(item, 'valor executado', String(item.executedValue), e.target.value)}
@@ -423,7 +423,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                               </select>
                             </td>
                             <td className="px-2 py-2 w-44">
-                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.71rem', color: '#475569' }} value={rec}
+                              <select className={selCls} disabled={!isAdmin} style={{ fontSize: '0.71rem', color: 'var(--ink-3)' }} value={rec}
                                 onChange={e => edit(item, 'registro de alterações', rec, e.target.value)}>
                                 {CHANGE_RECORDS.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
@@ -431,13 +431,13 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                             <td className="px-2 py-2 whitespace-nowrap">
                               {isAdmin ? (
                                 <button onClick={() => remove(item)} className="p-1 rounded hover:bg-red-50" title="Excluir item">
-                                  <Trash2 size={12} color="#DC2626" />
+                                  <Trash2 size={12} color="var(--danger)" />
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => setEditItem(item)}
                                   className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border"
-                                  style={{ borderColor: '#BFDBFE', color: '#1D4ED8', background: '#EFF6FF' }}
+                                  style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand-text)', background: 'var(--brand-soft)' }}
                                 >
                                   <PencilLine size={11} /> Realizar alteração
                                 </button>
@@ -456,35 +456,35 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       </div>
 
       {!isAdmin && (
-        <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+        <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
           Você está como estagiário: alterações no orçamento só passam a valer após a aprovação de um administrador.
         </p>
       )}
 
       {/* Contrapartidas */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>Contrapartidas</h3>
-          <div style={{ fontSize: '0.72rem', color: '#475569' }}>
-            Financeira: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(cpTotals.financeira)}</span>
-            <span style={{ margin: '0 8px', color: '#CBD5E1' }}>·</span>
-            Econômica: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(cpTotals.economica)}</span>
-            <span style={{ margin: '0 8px', color: '#CBD5E1' }}>·</span>
-            Total: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#7C3AED' }}>{fmt(cpTotals.total)}</span>
+        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>Contrapartidas</h3>
+          <div style={{ fontSize: '0.72rem', color: 'var(--ink-3)' }}>
+            Financeira: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(cpTotals.financeira)}</span>
+            <span style={{ margin: '0 8px', color: 'var(--line-2)' }}>·</span>
+            Econômica: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(cpTotals.economica)}</span>
+            <span style={{ margin: '0 8px', color: 'var(--line-2)' }}>·</span>
+            Total: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--info)' }}>{fmt(cpTotals.total)}</span>
           </div>
         </div>
         <div style={{ maxHeight: 420, overflowY: 'auto' }}>
           {contrapartidas.length === 0 ? (
             <div className="flex flex-col items-center py-8 gap-2">
-              <HandCoins size={28} color="#CBD5E1" />
-              <p style={{ color: '#94A3B8', fontSize: '0.8rem' }}>Nenhuma contrapartida cadastrada.</p>
+              <HandCoins size={28} color="var(--line-2)" />
+              <p style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>Nenhuma contrapartida cadastrada.</p>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr style={{ background: '#FAFAFA' }}>
+                <tr style={{ background: 'var(--surface-1)' }}>
                   {['Meta', 'Descrição', 'Tipo', 'Qtd', 'Unidade', 'Valor Unit.', 'Total', ''].map(h => (
-                    <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                    <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -493,20 +493,20 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                   const total = c.quantidade * c.valorUnitario;
                   return (
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{c.meta}</td>
-                      <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: '#0F172A' }}>{c.descricao}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{c.meta}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-1)' }}>{c.descricao}</td>
                       <td className="px-4 py-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium" style={c.tipo === 'Financeira' ? { background: '#F5F3FF', color: '#7C3AED' } : { background: '#F0FDF4', color: '#059669' }}>{c.tipo}</span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium" style={c.tipo === 'Financeira' ? { background: 'var(--info-soft)', color: 'var(--info)' } : { background: 'var(--success-soft)', color: 'var(--success)' }}>{c.tipo}</span>
                       </td>
-                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{c.quantidade}</td>
-                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{c.unidade}</td>
-                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{fmt(c.valorUnitario)}</td>
-                      <td className="px-4 py-2" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: '#0F172A', fontWeight: 600 }}>{fmt(total)}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{c.quantidade}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{c.unidade}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{fmt(c.valorUnitario)}</td>
+                      <td className="px-4 py-2" style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 600 }}>{fmt(total)}</td>
                       <td className="px-2 py-2">
                         <button
                           onClick={() => { if (window.confirm('Excluir contrapartida?')) { deleteContrapartida(project.id, c.id); record('excluir contrapartida', `${c.meta} · ${c.descricao}`); toast.success('Excluída.'); } }}
                           className="p-1 rounded hover:bg-red-50"
-                        ><Trash2 size={12} color="#DC2626" /></button>
+                        ><Trash2 size={12} color="var(--danger)" /></button>
                       </td>
                     </tr>
                   );
@@ -519,12 +519,12 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 
       {/* Caderno de recursos adicionais */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="px-5 py-3 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between gap-3 flex-wrap" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
           <div>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>
               Caderno de recursos (entradas e saídas)
             </h3>
-            <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+            <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
               Recursos que a comunidade movimentou fora do valor do termo. Não altera o orçamento aprovado — serve só para conhecimento e acompanhamento.
             </p>
           </div>
@@ -538,14 +538,14 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
             const ent = aportes.filter(a => a.tipo === 'Entrada').reduce((x, a) => x + a.valor, 0);
             const sai = aportes.filter(a => a.tipo === 'Saída').reduce((x, a) => x + a.valor, 0);
             const cards = [
-              { l: 'Recurso do termo (recebido)', v: fmt(p.budgetApproved), c: '#0F172A' },
-              { l: 'Entradas adicionais', v: fmt(ent), c: '#059669' },
-              { l: 'Saídas adicionais', v: fmt(sai), c: '#DC2626' },
-              { l: 'Saldo de controle', v: fmt(p.budgetApproved + ent - sai - 0), c: '#1D4ED8' },
+              { l: 'Recurso do termo (recebido)', v: fmt(p.budgetApproved), c: 'var(--ink-1)' },
+              { l: 'Entradas adicionais', v: fmt(ent), c: 'var(--success)' },
+              { l: 'Saídas adicionais', v: fmt(sai), c: 'var(--danger)' },
+              { l: 'Saldo de controle', v: fmt(p.budgetApproved + ent - sai - 0), c: 'var(--brand-text)' },
             ];
             return cards.map(c => (
-              <div key={c.l} className="px-4 py-3" style={{ background: '#fff' }}>
-                <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{c.l}</div>
+              <div key={c.l} className="px-4 py-3" style={{ background: 'var(--surface-0)' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>{c.l}</div>
                 <div style={{ fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: c.c }}>{c.v}</div>
               </div>
             ));
@@ -555,29 +555,29 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         {aportes.length > 0 && (
           <table className="w-full" style={{ borderTop: '1px solid var(--border)' }}>
             <thead>
-              <tr style={{ background: '#FAFAFA' }}>
+              <tr style={{ background: 'var(--surface-1)' }}>
                 {['Data', 'Tipo', 'Origem / destino', 'Descrição', 'Valor', 'Registrado por', ''].map(h => (
-                  <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
+                  <th key={h} className="px-4 py-2 text-left" style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--ink-5)', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {aportes.map(a => (
                 <tr key={a.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td className="px-4 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{a.data}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{a.data}</td>
                   <td className="px-4 py-2">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
-                      style={a.tipo === 'Entrada' ? { background: '#ECFDF5', color: '#059669' } : { background: '#FEF2F2', color: '#DC2626' }}>
+                      style={a.tipo === 'Entrada' ? { background: 'var(--success-soft)', color: 'var(--success)' } : { background: 'var(--danger-soft)', color: 'var(--danger)' }}>
                       {a.tipo === 'Entrada' ? <ArrowDownCircle size={10} /> : <ArrowUpCircle size={10} />} {a.tipo}
                     </span>
                   </td>
-                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.origem}</td>
-                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: '#475569' }}>{a.descricao}</td>
-                  <td className="px-4 py-2" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: a.tipo === 'Entrada' ? '#059669' : '#DC2626' }}>{fmt(a.valor)}</td>
-                  <td className="px-4 py-2" style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{a.registradoPor ?? '—'}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{a.origem}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{a.descricao}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: a.tipo === 'Entrada' ? 'var(--success)' : 'var(--danger)' }}>{fmt(a.valor)}</td>
+                  <td className="px-4 py-2" style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>{a.registradoPor ?? '—'}</td>
                   <td className="px-2 py-2">
                     {isAdmin && (
-                      <button onClick={() => { deleteAporte(project.id, a.id); record('excluir lançamento', `${a.tipo} · ${a.descricao}`); }} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="#DC2626" /></button>
+                      <button onClick={() => { deleteAporte(project.id, a.id); record('excluir lançamento', `${a.tipo} · ${a.descricao}`); }} className="p-1 rounded hover:bg-red-50"><Trash2 size={12} color="var(--danger)" /></button>
                     )}
                   </td>
                 </tr>
@@ -621,11 +621,11 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
 // ---------------------------------------------------------------------------
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#475569', marginBottom: 4, display: 'block' }}>{children}</label>;
+  return <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 4, display: 'block' }}>{children}</label>;
 }
 
 const inputCls = 'w-full px-3 py-2 rounded-lg border text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-200';
-const inputStyle = { borderColor: 'var(--border)', background: '#fff' } as const;
+const inputStyle = { borderColor: 'var(--border)', background: 'var(--surface-0)' } as const;
 
 function ItemForm({ existingMetas, initial, onClose, onSave }: {
   existingMetas: string[];
@@ -667,10 +667,10 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>{initial ? 'Realizar alteração no item' : 'Novo Item Orçamentário'}</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -706,9 +706,9 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
             <FieldLabel>Valor unitário (R$)</FieldLabel>
             <input type="number" step="0.01" min="0" className={inputCls} style={inputStyle} value={f.valorUnitario} onChange={e => setF({ ...f, valorUnitario: e.target.value })} placeholder="0,00" />
           </div>
-          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: '#F1F5F9' }}>
-            <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>Total da linha — previsto (Qtd × Qtd. de unidades × Valor unitário):</span>
-            <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(total)}</span>
+          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)', fontWeight: 600 }}>Total da linha — previsto (Qtd × Qtd. de unidades × Valor unitário):</span>
+            <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(total)}</span>
           </div>
           <div>
             <FieldLabel>Valor executado</FieldLabel>
@@ -740,7 +740,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar Item</button>
         </div>
       </form>
@@ -776,10 +776,10 @@ function CpForm({ existingMetas, onClose, onSave }: {
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Nova Contrapartida</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -812,13 +812,13 @@ function CpForm({ existingMetas, onClose, onSave }: {
             <FieldLabel>Valor Unitário (R$)</FieldLabel>
             <input type="number" step="0.01" min="0" className={inputCls} style={inputStyle} value={f.valorUnitario} onChange={e => setF({ ...f, valorUnitario: e.target.value })} />
           </div>
-          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: '#F1F5F9' }}>
-            <span style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>Total da contrapartida:</span>
-            <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0F172A' }}>{fmt(total)}</span>
+          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)', fontWeight: 600 }}>Total da contrapartida:</span>
+            <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(total)}</span>
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>
       </form>
@@ -847,14 +847,14 @@ function AporteForm({ onClose, onSave }: {
           if (!valor) { toast.error('Informe o valor.'); return; }
           onSave({ data: f.data, tipo: f.tipo, origem: f.origem.trim(), descricao: f.descricao.trim(), valor });
         }}
-        className="bg-white rounded-2xl border p-6 w-full max-w-lg"
+        className="bg-card rounded-2xl border p-6 w-full max-w-lg"
         style={{ borderColor: 'var(--border)' }}
       >
         <div className="flex items-center justify-between mb-1">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Lançamento de recurso</h3>
           <button type="button" onClick={onClose}><X size={16} /></button>
         </div>
-        <p style={{ fontSize: '0.72rem', color: '#94A3B8', marginBottom: 12 }}>
+        <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)', marginBottom: 12 }}>
           Entradas e saídas fora do termo. O valor recebido do termo continua inalterado.
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -883,7 +883,7 @@ function AporteForm({ onClose, onSave }: {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-2 rounded-lg text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>
       </form>

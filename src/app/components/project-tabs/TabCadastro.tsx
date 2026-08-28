@@ -126,7 +126,7 @@ export function TabCadastro({ project }: Props) {
   return (
     <div className="space-y-4 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
           Cadastro do Projeto
         </h2>
         <button onClick={save} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
@@ -162,8 +162,8 @@ export function TabCadastro({ project }: Props) {
         {project.team.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {project.team.map(member => (
-              <span key={member} className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px]" style={{ borderColor: 'var(--border)', color: '#475569', background: '#F8FAFC' }}>
-                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: '#EFF6FF', color: '#2563EB' }}>
+              <span key={member} className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-1)' }}>
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
                   {member.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </span>
                 {member}
@@ -174,7 +174,7 @@ export function TabCadastro({ project }: Props) {
                   record('remover membro da equipe', member);
                   toast.success('Membro removido.');
                 }} className="p-0.5 rounded hover:bg-red-50">
-                  <X size={10} color="#DC2626" />
+                  <X size={10} color="var(--danger)" />
                 </button>
               </span>
             ))}
@@ -206,8 +206,8 @@ export function TabCadastro({ project }: Props) {
         </Section>
       ))}
 
-      <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-      .ci:focus{border-color:var(--primary);background:#fff}
+      <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+      .ci:focus{border-color:var(--primary);background:var(--surface-0)}
       .ci{resize:vertical}
       textarea.ci{overflow-y:auto}`}</style>
     </div>
@@ -218,9 +218,9 @@ function Section({ title, children, defaultOpen }: { title: string; children: Re
   const [open, setOpen] = useState(!!defaultOpen);
   return (
     <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-      <button onClick={() => setOpen(v => !v)} className="w-full px-5 py-3 border-b flex items-center gap-2 text-left" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+      <button onClick={() => setOpen(v => !v)} className="w-full px-5 py-3 border-b flex items-center gap-2 text-left" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A' }}>{title}</h3>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>{title}</h3>
       </button>
       {open && <div className="p-5">{children}</div>}
     </div>
@@ -230,7 +230,7 @@ function Section({ title, children, defaultOpen }: { title: string; children: Re
 function F({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`flex flex-col gap-1.5 ${full ? 'col-span-2' : ''}`}>
-      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
       {children}
     </label>
   );

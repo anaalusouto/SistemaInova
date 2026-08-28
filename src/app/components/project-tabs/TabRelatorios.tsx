@@ -48,10 +48,10 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
   const allActivities = project.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
 
   const activityStatusData = [
-    { name: 'Concluídas', value: allActivities.filter(a => a.status === 'Concluído').length, color: '#10B981' },
-    { name: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: '#2563EB' },
-    { name: 'Atrasadas', value: allActivities.filter(a => a.status === 'Atrasado').length, color: '#EF4444' },
-    { name: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: '#94A3B8' },
+    { name: 'Concluídas', value: allActivities.filter(a => a.status === 'Concluído').length, color: 'var(--success)' },
+    { name: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: 'var(--brand)' },
+    { name: 'Atrasadas', value: allActivities.filter(a => a.status === 'Atrasado').length, color: 'var(--danger)' },
+    { name: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: 'var(--ink-5)' },
   ].filter(d => d.value > 0);
 
   const goalProgressData = project.goals.map(g => {
@@ -61,26 +61,26 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
   });
 
   const financialData = [
-    { name: 'Aprovado', value: project.budgetApproved, fill: '#BFDBFE' },
-    { name: 'Executado', value: project.budgetExecuted, fill: '#2563EB' },
-    { name: 'Saldo', value: project.budgetApproved - project.budgetExecuted, fill: '#A7F3D0' },
+    { name: 'Aprovado', value: project.budgetApproved, fill: 'var(--brand-soft-border)' },
+    { name: 'Executado', value: project.budgetExecuted, fill: 'var(--brand)' },
+    { name: 'Saldo', value: project.budgetApproved - project.budgetExecuted, fill: 'var(--success-soft-border)' },
   ];
 
   const riskData = [
-    { name: 'Baixo', value: project.risks.filter(r => r.severity < 4).length, color: '#10B981' },
-    { name: 'Médio', value: project.risks.filter(r => r.severity >= 4 && r.severity < 9).length, color: '#F59E0B' },
-    { name: 'Alto', value: project.risks.filter(r => r.severity >= 9 && r.severity < 15).length, color: '#EF4444' },
-    { name: 'Crítico', value: project.risks.filter(r => r.severity >= 15).length, color: '#7C3AED' },
+    { name: 'Baixo', value: project.risks.filter(r => r.severity < 4).length, color: 'var(--success)' },
+    { name: 'Médio', value: project.risks.filter(r => r.severity >= 4 && r.severity < 9).length, color: 'var(--warning)' },
+    { name: 'Alto', value: project.risks.filter(r => r.severity >= 9 && r.severity < 15).length, color: 'var(--danger)' },
+    { name: 'Crítico', value: project.risks.filter(r => r.severity >= 15).length, color: 'var(--info)' },
   ].filter(d => d.value > 0);
 
   return (
     <div className="flex flex-col gap-5 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Relatórios do Projeto
           </h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', marginTop: 2 }}>
             {project.name} · {project.code}
           </p>
         </div>
@@ -88,7 +88,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
           <button
             onClick={printReport}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]"
-            style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
           >
             <Download size={12} /> PDF
           </button>
@@ -105,10 +105,10 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
       {/* KPI row */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Execução Física', value: `${project.progress}%`, color: project.status === 'Atrasado' ? '#DC2626' : '#2563EB' },
-          { label: 'Execução Financeira', value: `${project.budgetApproved > 0 ? Math.round((project.budgetExecuted / project.budgetApproved) * 100) : 0}%`, color: '#059669' },
-          { label: 'Riscos Abertos', value: project.risks.filter(r => r.status !== 'Encerrado').length, color: '#D97706' },
-          { label: 'Mudanças Pendentes', value: project.changes.filter(c => c.approval === 'Pendente').length, color: '#7C3AED' },
+          { label: 'Execução Física', value: `${project.progress}%`, color: project.status === 'Atrasado' ? 'var(--danger)' : 'var(--brand)' },
+          { label: 'Execução Financeira', value: `${project.budgetApproved > 0 ? Math.round((project.budgetExecuted / project.budgetApproved) * 100) : 0}%`, color: 'var(--success)' },
+          { label: 'Riscos Abertos', value: project.risks.filter(r => r.status !== 'Encerrado').length, color: 'var(--warning)' },
+          { label: 'Mudanças Pendentes', value: project.changes.filter(c => c.approval === 'Pendente').length, color: 'var(--info)' },
         ].map(k => (
           <div
             key={k.label}
@@ -118,7 +118,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
             <div style={{ fontSize: '1.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: k.color }}>
               {k.value}
             </div>
-            <div style={{ fontSize: '0.73rem', color: '#64748B', marginTop: 4 }}>{k.label}</div>
+            <div style={{ fontSize: '0.73rem', color: 'var(--ink-4)', marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
@@ -130,14 +130,14 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
           className="bg-card rounded-xl border p-5"
           style={{ borderColor: 'var(--border)' }}
         >
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
             Resumo Financeiro
           </h3>
           <ResponsiveContainer width="100%" height={170}>
             <BarChart data={financialData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-2)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--ink-5)' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--ink-5)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip formatter={(v: number) => [fmt(v), '']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                 {financialData.map((entry, i) => (
@@ -154,7 +154,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
             className="bg-card rounded-xl border p-5"
             style={{ borderColor: 'var(--border)' }}
           >
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
               Status das Atividades
             </h3>
             <div className="flex items-center gap-4">
@@ -168,11 +168,11 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
               <div className="flex flex-col gap-2">
                 {activityStatusData.map(d => (
                   <div key={d.name} className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1.5 text-[12px]" style={{ color: '#475569' }}>
+                    <span className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--ink-3)' }}>
                       <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
                       {d.name}
                     </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>
                       {d.value}
                     </span>
                   </div>
@@ -185,7 +185,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
             className="bg-card rounded-xl border p-5 flex items-center justify-center"
             style={{ borderColor: 'var(--border)' }}
           >
-            <p style={{ color: '#94A3B8', fontSize: '0.825rem' }}>Sem atividades para visualizar</p>
+            <p style={{ color: 'var(--ink-5)', fontSize: '0.825rem' }}>Sem atividades para visualizar</p>
           </div>
         )}
       </div>
@@ -198,16 +198,16 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
               className="bg-card rounded-xl border p-5"
               style={{ borderColor: 'var(--border)' }}
             >
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
                 Progresso por Meta
               </h3>
               <ResponsiveContainer width="100%" height={150}>
                 <BarChart data={goalProgressData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#475569' }} axisLine={false} tickLine={false} width={80} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-2)" horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--ink-5)' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'var(--ink-3)' }} axisLine={false} tickLine={false} width={80} />
                   <Tooltip formatter={(v: number) => [`${v}%`, 'Progresso']} contentStyle={{ borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="progresso" fill="#2563EB" radius={[0, 3, 3, 0]} />
+                  <Bar dataKey="progresso" fill="var(--brand)" radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -218,7 +218,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
               className="bg-card rounded-xl border p-5"
               style={{ borderColor: 'var(--border)' }}
             >
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
                 Distribuição de Riscos
               </h3>
               <div className="flex items-center gap-4">
@@ -232,11 +232,11 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
                 <div className="flex flex-col gap-2.5">
                   {riskData.map(d => (
                     <div key={d.name} className="flex items-center justify-between gap-4">
-                      <span className="flex items-center gap-2 text-[12px]" style={{ color: '#475569' }}>
+                      <span className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--ink-3)' }}>
                         <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
                         {d.name}
                       </span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: '#0F172A' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>
                         {d.value}
                       </span>
                     </div>
@@ -253,7 +253,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
         className="bg-card rounded-xl border p-5"
         style={{ borderColor: 'var(--border)' }}
       >
-        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
           Exportações
         </h3>
         <div className="grid grid-cols-3 gap-3">
@@ -273,14 +273,14 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left hover:border-blue-300 transition-colors"
                 style={{ borderColor: 'var(--border)' }}
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#EFF6FF' }}>
-                  <Icon size={13} color="#2563EB" />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--brand-soft)' }}>
+                  <Icon size={13} color="var(--brand)" />
                 </div>
                 <div className="flex-1">
-                  <div style={{ fontSize: '0.75rem', fontWeight: 500, color: '#0F172A' }}>{r.label}</div>
-                  <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{r.format}</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--ink-1)' }}>{r.label}</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>{r.format}</div>
                 </div>
-                <Download size={12} color="#94A3B8" />
+                <Download size={12} color="var(--ink-5)" />
               </button>
             );
           })}

@@ -12,9 +12,9 @@ import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 
 const statusColor: Record<DiagnosticStatus, { bg: string; color: string }> = {
-  'Rascunho':        { bg: '#F3F4F6', color: '#6B7280' },
-  'Em preenchimento':{ bg: '#EFF6FF', color: '#2563EB' },
-  'Concluído':       { bg: '#ECFDF5', color: '#059669' },
+  'Rascunho':        { bg: 'var(--surface-2)', color: 'var(--ink-4)' },
+  'Em preenchimento':{ bg: 'var(--brand-soft)', color: 'var(--brand)' },
+  'Concluído':       { bg: 'var(--success-soft)', color: 'var(--success)' },
 };
 
 const ROUNDS: { id: RoundId; label: string }[] = [
@@ -130,11 +130,11 @@ export function DiagnosticoPage() {
                         </span>
                         {proj && (
                           <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
-                            style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                            style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
                             <Link2 size={10} /> {proj.code}
                           </span>
                         )}
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#B45309' }}>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--warning-soft)', color: 'var(--warning-strong-text)' }}>
                           Rodadas: {finalized}/3
                         </span>
                       </div>
@@ -168,7 +168,7 @@ export function DiagnosticoPage() {
 
       {showNew && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowNew(false)}>
-          <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-card rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3>Novo diagnóstico</h3>
               <button onClick={() => setShowNew(false)}><X size={18} /></button>
@@ -293,11 +293,11 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                   {diagnostic.status}
                 </span>
                 {community && <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
-                  style={{ background: '#F0FDF4', color: '#166534' }}>
+                  style={{ background: 'var(--success-soft)', color: 'var(--success-strong-text)' }}>
                   <Building2 size={10} /> {community.code} · {community.nome}
                 </span>}
                 {proj && <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
-                  style={{ background: '#EFF6FF', color: '#2563EB' }}>
+                  style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
                   <Link2 size={10} /> {proj.code} · {proj.name}
                 </span>}
               </div>
@@ -356,7 +356,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                 return (
                   <button key={s.id} onClick={() => setActiveSection(s.id)}
                     className="w-full text-left px-3 py-2 rounded-md text-sm transition-colors"
-                    style={{ background: activeSec ? 'var(--primary)' : 'transparent', color: activeSec ? '#fff' : 'var(--foreground)' }}>
+                    style={{ background: activeSec ? 'var(--primary)' : 'transparent', color: activeSec ? 'var(--primary-foreground)' : 'var(--foreground)' }}>
                     <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>{s.chapter}</div>
                     <div className="flex items-center justify-between">
                       <span>{s.title}</span>
@@ -394,7 +394,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                 return (
                   <button key={r.id} onClick={() => setActiveRound(r.id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md"
-                    style={{ background: active ? 'var(--primary)' : 'var(--muted)', color: active ? '#fff' : 'var(--foreground)', fontWeight: active ? 600 : 400 }}>
+                    style={{ background: active ? 'var(--primary)' : 'var(--muted)', color: active ? 'var(--primary-foreground)' : 'var(--foreground)', fontWeight: active ? 600 : 400 }}>
                     {r.label}
                     {meta?.finalized && <Lock size={11} />}
                     {meta && !meta.finalized && meta.evaluator && <CheckCircle2 size={11} />}
@@ -408,7 +408,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                 </button>
                 {roundReady && !roundLocked && (
                   <button onClick={() => { setRound(diagnostic.id, activeRound, { finalized: true }); record('finalizar rodada', ROUNDS.find(r => r.id === activeRound)?.label ?? activeRound); }}
-                    className="text-xs px-3 py-1.5 rounded-md text-white" style={{ background: '#059669' }}>
+                    className="text-xs px-3 py-1.5 rounded-md text-white" style={{ background: 'var(--success)' }}>
                     Finalizar rodada
                   </button>
                 )}
@@ -416,13 +416,13 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
             </div>
 
             {!roundReady && (
-              <div className="rounded-lg p-4 mb-4 text-sm" style={{ background: '#FEF3C7', border: '1px solid #FCD34D', color: '#92400E' }}>
+              <div className="rounded-lg p-4 mb-4 text-sm" style={{ background: 'var(--warning-soft)', border: '1px solid var(--warning-soft-border)', color: 'var(--warning-strong-text)' }}>
                 Informe o <b>avaliador</b> e a <b>data</b> da rodada antes de marcar índices.
                 <button onClick={() => setShowRoundForm(activeRound)} className="ml-2 underline">Preencher agora</button>
               </div>
             )}
             {roundLocked && (
-              <div className="rounded-lg p-4 mb-4 text-sm flex items-center gap-2" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B' }}>
+              <div className="rounded-lg p-4 mb-4 text-sm flex items-center gap-2" style={{ background: 'var(--danger-soft)', border: '1px solid var(--danger-soft-border)', color: 'var(--danger-strong-text)' }}>
                 <Lock size={14} /> Rodada finalizada — alterações requerem autenticação administrativa.
               </div>
             )}
@@ -468,7 +468,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
                               {[1, 2, 3, 4, 5].map(n => (
                                 <button key={n} onClick={() => requestMaturity(key, n)}
                                   className="flex-1 h-8 rounded text-xs font-medium transition-colors"
-                                  style={{ background: val >= n ? 'var(--primary)' : 'var(--muted)', color: val >= n ? '#fff' : 'var(--muted-foreground)' }}>
+                                  style={{ background: val >= n ? 'var(--primary)' : 'var(--muted)', color: val >= n ? 'var(--primary-foreground)' : 'var(--muted-foreground)' }}>
                                   {n}
                                 </button>
                               ))}
@@ -530,7 +530,7 @@ function RoundForm({ round, meta, onSave, onClose }: {
   const [date, setDate] = useState(meta?.date ?? new Date().toISOString().slice(0, 10));
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-card rounded-lg max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3>{ROUNDS.find(r => r.id === round)?.label}</h3>
           <button onClick={onClose}><X size={18} /></button>
@@ -606,7 +606,7 @@ function QuestionField({ question: q, value, onChange, onLog }: {
                 onLog?.(next);
               }}
                 className="px-3 py-1.5 text-xs rounded-full transition-colors"
-                style={{ background: checked ? 'var(--primary)' : 'var(--muted)', color: checked ? '#fff' : 'var(--foreground)', border: '1px solid var(--border)' }}>
+                style={{ background: checked ? 'var(--primary)' : 'var(--muted)', color: checked ? 'var(--primary-foreground)' : 'var(--foreground)', border: '1px solid var(--border)' }}>
                 {o}
               </button>
             );

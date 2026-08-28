@@ -42,35 +42,35 @@ export function AdminUnlockDialog({ title = 'Ação restrita', description = 'In
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: '#FEF3C7' }}>
-              <ShieldCheck size={17} color="#D97706" />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--warning-soft)' }}>
+              <ShieldCheck size={17} color="var(--warning)" />
             </div>
             <div>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: '#0F172A' }}>{title}</h3>
-              <p style={{ fontSize: '0.72rem', color: '#64748B', marginTop: 2 }}>{description}</p>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>{title}</h3>
+              <p style={{ fontSize: '0.72rem', color: 'var(--ink-4)', marginTop: 2 }}>{description}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-slate-100">
-            <X size={14} color="#64748B" />
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={14} color="var(--ink-4)" />
           </button>
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1.5">
-            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Login administrador</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Login administrador</span>
             <input autoFocus className="ci" value={login} onChange={e => setLogin(e.target.value)} />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senha</span>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senha</span>
             <input className="ci" type="password" value={password} onChange={e => setPassword(e.target.value)} />
           </label>
           {error && (
-            <div style={{ fontSize: '0.72rem', color: '#DC2626', background: '#FEF2F2', padding: '7px 10px', borderRadius: 8 }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '7px 10px', borderRadius: 8 }}>
               {error}
             </div>
           )}
           <div className="flex justify-end gap-2 mt-1">
-            <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] font-medium border" style={{ borderColor: 'var(--border)', color: '#475569' }}>
+            <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-lg text-[12px] font-medium border" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
               Cancelar
             </button>
             <button type="submit" className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
@@ -79,8 +79,8 @@ export function AdminUnlockDialog({ title = 'Ação restrita', description = 'In
           </div>
         </form>
 
-        <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-        .ci:focus{border-color:var(--primary);background:#fff}`}</style>
+        <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+        .ci:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
       </div>
     </div>
   );

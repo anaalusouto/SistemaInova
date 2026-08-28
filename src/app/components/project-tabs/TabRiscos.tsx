@@ -13,17 +13,17 @@ const RISK_STATUSES: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 
 const RISK_CATEGORIES = ['Operacional', 'Técnico', 'Financeiro', 'Externo', 'Estratégico'];
 
 const statusConfig: Record<RiskStatus, { color: string; bg: string }> = {
-  'Aberto':       { color: '#DC2626', bg: '#FEF2F2' },
-  'Em mitigação': { color: '#D97706', bg: '#FFFBEB' },
-  'Monitorando':  { color: '#2563EB', bg: '#EFF6FF' },
-  'Encerrado':    { color: '#059669', bg: '#ECFDF5' },
+  'Aberto':       { color: 'var(--danger)', bg: 'var(--danger-soft)' },
+  'Em mitigação': { color: 'var(--warning)', bg: 'var(--warning-soft)' },
+  'Monitorando':  { color: 'var(--brand)', bg: 'var(--brand-soft)' },
+  'Encerrado':    { color: 'var(--success)', bg: 'var(--success-soft)' },
 };
 
 function getSeverityColor(severity: number) {
-  if (severity >= 15) return { bg: '#DC2626', text: '#fff', label: 'Crítico' };
-  if (severity >= 9)  return { bg: '#F59E0B', text: '#fff', label: 'Alto' };
-  if (severity >= 4)  return { bg: '#FCD34D', text: '#92400E', label: 'Médio' };
-  return { bg: '#86EFAC', text: '#14532D', label: 'Baixo' };
+  if (severity >= 15) return { bg: 'var(--danger)', text: 'var(--primary-foreground)', label: 'Crítico' };
+  if (severity >= 9)  return { bg: 'var(--warning)', text: 'var(--primary-foreground)', label: 'Alto' };
+  if (severity >= 4)  return { bg: 'var(--warning-soft-border)', text: 'var(--warning-strong-text)', label: 'Médio' };
+  return { bg: 'var(--success-soft-border)', text: 'var(--success-strong-text)', label: 'Baixo' };
 }
 
 const PROB_LABELS = ['Muito Baixa', 'Baixa', 'Média', 'Alta', 'Muito Alta'];
@@ -31,10 +31,10 @@ const IMPACT_LABELS = ['Muito Baixo', 'Baixo', 'Médio', 'Alto', 'Muito Alto'];
 
 function matrixColor(p: number, i: number) {
   const val = p * i;
-  if (val >= 15) return '#FEE2E2';
-  if (val >= 9)  return '#FEF3C7';
-  if (val >= 4)  return '#FEF9C3';
-  return '#DCFCE7';
+  if (val >= 15) return 'var(--danger-soft)';
+  if (val >= 9)  return 'var(--warning-soft)';
+  if (val >= 4)  return 'var(--warning-soft)';
+  return 'var(--success-soft)';
 }
 
 interface TabRiscosProps { project: Project }
@@ -103,10 +103,10 @@ export function TabRiscos({ project }: TabRiscosProps) {
     <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Gestão de Riscos
           </h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', marginTop: 2 }}>
             {p.risks.length} riscos · {p.risks.filter(r => r.severity >= 15).length} críticos
           </p>
         </div>
@@ -123,20 +123,20 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
       {/* Filtros */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ borderColor: 'var(--border)', background: '#fff' }}>
-          <Search size={13} color="#94A3B8" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
+          <Search size={13} color="var(--ink-5)" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Buscar risco, responsável, estratégia…"
             className="outline-none bg-transparent"
-            style={{ fontSize: '0.78rem', width: 260, color: '#0F172A' }}
+            style={{ fontSize: '0.78rem', width: 260, color: 'var(--ink-1)' }}
           />
         </div>
         {(['Todos', ...RISK_STATUSES] as const).map(s => {
           const active = statusFilter === s;
           const count = s === 'Todos' ? p.risks.length : p.risks.filter(r => r.status === s).length;
-          const cfg = s === 'Todos' ? { color: '#475569', bg: '#F1F5F9' } : statusConfig[s];
+          const cfg = s === 'Todos' ? { color: 'var(--ink-3)', bg: 'var(--surface-2)' } : statusConfig[s];
           return (
             <button
               key={s}
@@ -157,18 +157,18 @@ export function TabRiscos({ project }: TabRiscosProps) {
       <div className="grid grid-cols-12 gap-4 items-start">
         {/* Matriz */}
         <div className="col-span-4 bg-card rounded-xl border p-5 sticky top-0" style={{ borderColor: 'var(--border)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: '#0F172A', marginBottom: 14 }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
             Matriz de Risco
           </h3>
           <div className="relative">
-            <div className="absolute -left-5 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-medium" style={{ color: '#94A3B8', transformOrigin: 'center' }}>
+            <div className="absolute -left-5 top-1/2 -translate-y-1/2 -rotate-90 text-[10px] font-medium" style={{ color: 'var(--ink-5)', transformOrigin: 'center' }}>
               Probabilidade
             </div>
             <div className="ml-4">
               <div className="flex flex-col-reverse gap-0.5">
                 {[1, 2, 3, 4, 5].map(prob => (
                   <div key={prob} className="flex items-center gap-0.5">
-                    <span className="text-[9px] w-16 text-right pr-1" style={{ color: '#94A3B8' }}>{PROB_LABELS[prob - 1]}</span>
+                    <span className="text-[9px] w-16 text-right pr-1" style={{ color: 'var(--ink-5)' }}>{PROB_LABELS[prob - 1]}</span>
                     {[1, 2, 3, 4, 5].map(impact => {
                       const cell = p.risks.filter(r => r.probability === prob && r.impact === impact);
                       return (
@@ -181,7 +181,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
                           {cell.length > 0 ? (
                             <span
                               className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                              style={{ background: getSeverityColor(prob * impact).bg === '#86EFAC' ? '#22C55E' : getSeverityColor(prob * impact).bg }}
+                              style={{ background: getSeverityColor(prob * impact).bg === 'var(--success-soft-border)' ? 'var(--success)' : getSeverityColor(prob * impact).bg }}
                             >{cell.length}</span>
                           ) : (
                             <span style={{ color: 'rgba(0,0,0,0.3)', fontSize: '0.6rem' }}>{prob * impact}</span>
@@ -194,20 +194,20 @@ export function TabRiscos({ project }: TabRiscosProps) {
               </div>
               <div className="flex gap-0.5 mt-1 ml-[68px]">
                 {IMPACT_LABELS.map(l => (
-                  <span key={l} className="w-9 text-center" style={{ fontSize: '0.55rem', color: '#94A3B8' }}>{l.split(' ').pop()}</span>
+                  <span key={l} className="w-9 text-center" style={{ fontSize: '0.55rem', color: 'var(--ink-5)' }}>{l.split(' ').pop()}</span>
                 ))}
               </div>
-              <div className="text-center mt-1 ml-16" style={{ fontSize: '10px', color: '#94A3B8' }}>Impacto</div>
+              <div className="text-center mt-1 ml-16" style={{ fontSize: '10px', color: 'var(--ink-5)' }}>Impacto</div>
             </div>
           </div>
           <div className="flex items-center gap-3 mt-3 flex-wrap">
             {[
-              { color: '#DCFCE7', label: 'Baixo (1–3)' },
-              { color: '#FEF9C3', label: 'Médio (4–8)' },
-              { color: '#FEF3C7', label: 'Alto (9–14)' },
-              { color: '#FEE2E2', label: 'Crítico (≥15)' },
+              { color: 'var(--success-soft)', label: 'Baixo (1–3)' },
+              { color: 'var(--warning-soft)', label: 'Médio (4–8)' },
+              { color: 'var(--warning-soft)', label: 'Alto (9–14)' },
+              { color: 'var(--danger-soft)', label: 'Crítico (≥15)' },
             ].map(l => (
-              <span key={l.label} className="flex items-center gap-1 text-[10px]" style={{ color: '#475569' }}>
+              <span key={l.label} className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--ink-3)' }}>
                 <span className="w-3 h-3 rounded" style={{ background: l.color, border: '1px solid rgba(0,0,0,0.1)' }} />
                 {l.label}
               </span>
@@ -218,9 +218,9 @@ export function TabRiscos({ project }: TabRiscosProps) {
         {/* Lista fluida de riscos */}
         <div className="col-span-8 flex flex-col gap-2">
           {filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 rounded-xl border" style={{ borderColor: 'var(--border)', background: '#fff' }}>
-              <ShieldAlert size={40} color="#CBD5E1" />
-              <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Nenhum risco encontrado.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-16 rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
+              <ShieldAlert size={40} color="var(--line-2)" />
+              <p style={{ color: 'var(--ink-5)', fontSize: '0.85rem' }}>Nenhum risco encontrado.</p>
             </div>
           )}
           {filtered.map(risk => {
@@ -229,39 +229,39 @@ export function TabRiscos({ project }: TabRiscosProps) {
             const isOpen = expanded === risk.id;
             const goal = p.goals.find(g => g.id === risk.goalId);
             return (
-              <div key={risk.id} className="bg-card rounded-xl border" style={{ borderColor: isOpen ? '#BFDBFE' : 'var(--border)' }}>
+              <div key={risk.id} className="bg-card rounded-xl border" style={{ borderColor: isOpen ? 'var(--brand-soft-border)' : 'var(--border)' }}>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <button onClick={() => setExpanded(isOpen ? null : risk.id)}>
-                    {isOpen ? <ChevronDown size={15} color="#64748B" /> : <ChevronRight size={15} color="#64748B" />}
+                    {isOpen ? <ChevronDown size={15} color="var(--ink-4)" /> : <ChevronRight size={15} color="var(--ink-4)" />}
                   </button>
                   <span className="px-2 py-0.5 rounded-md text-[11px] font-bold flex-shrink-0" style={{ background: sev.bg, color: sev.text }}>
                     {risk.severity}
                   </span>
-                  <span className="flex-1 min-w-0 truncate" style={{ fontSize: '0.82rem', color: '#0F172A', fontWeight: 500 }}>
+                  <span className="flex-1 min-w-0 truncate" style={{ fontSize: '0.82rem', color: 'var(--ink-1)', fontWeight: 500 }}>
                     {risk.description}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0" style={{ background: '#F1F5F9', color: '#475569' }}>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0" style={{ background: 'var(--surface-2)', color: 'var(--ink-3)' }}>
                     {risk.category}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 whitespace-nowrap" style={{ color: sCfg.color, background: sCfg.bg }}>
                     {risk.status}
                   </span>
                   <button onClick={() => remove(risk)} className="p-1 rounded hover:bg-red-50 flex-shrink-0" title="Excluir risco">
-                    <Trash2 size={13} color="#DC2626" />
+                    <Trash2 size={13} color="var(--danger)" />
                   </button>
                 </div>
 
                 {isOpen && (
                   <div className="px-5 pb-4 pt-1 border-t grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
                     {(risk.stage || risk.spec) && (
-                      <div className="col-span-2 rounded-lg border p-3 grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+                      <div className="col-span-2 rounded-lg border p-3 grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
                         <div>
-                          <span className="text-[10px] font-semibold uppercase" style={{ color: '#94A3B8' }}>Etapa vinculada</span>
-                          <p style={{ fontSize: '0.75rem', color: '#0F172A' }}>{risk.stage || '—'}</p>
+                          <span className="text-[10px] font-semibold uppercase" style={{ color: 'var(--ink-5)' }}>Etapa vinculada</span>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--ink-1)' }}>{risk.stage || '—'}</p>
                         </div>
                         <div>
-                          <span className="text-[10px] font-semibold uppercase" style={{ color: '#94A3B8' }}>Especificação (métricas e resultados)</span>
-                          <p style={{ fontSize: '0.75rem', color: '#0F172A' }}>{risk.spec || '—'}</p>
+                          <span className="text-[10px] font-semibold uppercase" style={{ color: 'var(--ink-5)' }}>Especificação (métricas e resultados)</span>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--ink-1)' }}>{risk.spec || '—'}</p>
                         </div>
                       </div>
                     )}
@@ -277,7 +277,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
                         <option value="">—</option>
                         {p.goals.map((g, i) => <option key={g.id} value={g.id}>{`Meta ${i + 1} — ${g.name.slice(0, 50)}`}</option>)}
                       </select>
-                      {goal && <span style={{ fontSize: '0.66rem', color: '#94A3B8' }}>{goal.name}</span>}
+                      {goal && <span style={{ fontSize: '0.66rem', color: 'var(--ink-5)' }}>{goal.name}</span>}
                     </Field>
                     <Field label="Categoria">
                       <select className="ipt" value={risk.category} onChange={e => edit(risk, 'categoria', risk.category, e.target.value)}>
@@ -318,7 +318,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
             );
           })}
           {!isAdmin && (
-            <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+            <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
               Criações, edições e exclusões feitas por estagiários passam a valer após a aprovação de um administrador.
             </p>
           )}
@@ -327,8 +327,8 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
       {showForm && <RiskForm goals={p.goals} onClose={() => setShowForm(false)} onSave={create} />}
 
-      <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.ipt:focus{border-color:var(--primary);background:#fff}`}</style>
+      <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.ipt:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
     </div>
   );
 }
@@ -336,7 +336,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
-      <span className="text-[11px] font-medium" style={{ color: '#64748B' }}>{label}</span>
+      <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
   );
@@ -367,10 +367,10 @@ function RiskForm({ goals, onClose, onSave }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Cadastrar Risco</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
@@ -400,11 +400,11 @@ function RiskForm({ goals, onClose, onSave }: {
           </Field>
         </div>
         <div className="flex items-center justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>
-        <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.ipt:focus{border-color:var(--primary);background:#fff}`}</style>
+        <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.ipt:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
       </form>
     </div>
   );

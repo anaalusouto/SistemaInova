@@ -35,7 +35,7 @@ const bottomItems = [
   { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
-  { id: 'settings' as NavItem, label: 'Configurações', icon: Settings, adminOnly: true },
+  { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: SidebarProps) {
@@ -59,7 +59,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         style={{
           padding: indent ? '8px 12px 8px 30px' : '8px 12px',
           background: isActive ? 'var(--sidebar-primary)' : 'transparent',
-          color: isActive ? '#fff' : 'var(--sidebar-foreground)',
+          color: isActive ? 'var(--primary-foreground)' : 'var(--sidebar-foreground)',
           opacity: isActive ? 1 : 0.78,
         }}
         onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLButtonElement).style.background = 'var(--sidebar-accent)'; (e.currentTarget as HTMLButtonElement).style.opacity = '1'; } }}
@@ -87,15 +87,15 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         }`}
         style={{ background: 'var(--sidebar)' }}
       >
-      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)', background: '#FFFFFF' }}>
+      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: 'var(--sidebar-border)', background: 'var(--surface-0)' }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sidebar-primary)' }}>
-          <LayoutDashboard size={16} color="#fff" />
+          <LayoutDashboard size={16} color="var(--primary-foreground)" />
         </div>
         <div>
-          <div style={{ color: '#000000', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
+          <div style={{ color: 'var(--ink-1)', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
             Sistema Inova
           </div>
-          <div style={{ color: '#000000', fontSize: '0.7rem', opacity: 0.7 }}>
+          <div style={{ color: 'var(--ink-1)', fontSize: '0.7rem', opacity: 0.7 }}>
             Gestão de Projetos
           </div>
         </div>
@@ -103,10 +103,10 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
 
       <div className="px-3 pt-4 pb-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors"
-          style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--sidebar-foreground)' }}>
+          style={{ background: 'var(--sidebar-accent)', color: 'var(--sidebar-foreground)' }}>
           <Search size={13} style={{ opacity: 0.5 }} />
           <span style={{ fontSize: '0.78rem', opacity: 0.5 }}>Buscar...</span>
-          <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>⌘K</kbd>
+          <kbd className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--sidebar-border)', color: 'var(--sidebar-foreground)', opacity: 0.6 }}>⌘K</kbd>
         </div>
       </div>
 
@@ -114,24 +114,24 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         {topItems.map(i => renderBtn(i))}
 
         <div className="mt-1">
-          {bottomItems.filter(i => !i.adminOnly || isAdmin).map(i => renderBtn(i))}
+          {bottomItems.map(i => renderBtn(i))}
         </div>
 
       </nav>
 
       <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
         <div className="flex items-center gap-3 px-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: 'var(--sidebar-primary)', color: '#fff' }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0" style={{ background: 'var(--sidebar-primary)', color: 'var(--primary-foreground)' }}>
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="truncate" style={{ color: '#E2E8F0', fontSize: '0.78rem', fontWeight: 500 }}>{user?.displayName ?? '—'}</div>
-            <div style={{ color: 'rgba(203,213,225,0.45)', fontSize: '0.68rem' }}>
+            <div className="truncate" style={{ color: 'var(--sidebar-foreground)', fontSize: '0.78rem', fontWeight: 500 }}>{user?.displayName ?? '—'}</div>
+            <div style={{ color: 'var(--sidebar-foreground)', opacity: 0.6, fontSize: '0.68rem' }}>
               {isAdmin ? 'Administrador' : 'Estagiário'}
             </div>
           </div>
           <button onClick={signOut} title="Sair" className="flex-shrink-0">
-            <LogOut size={14} style={{ color: 'rgba(203,213,225,0.5)' }} />
+            <LogOut size={14} style={{ color: 'var(--sidebar-foreground)', opacity: 0.6 }} />
           </button>
         </div>
       </div>

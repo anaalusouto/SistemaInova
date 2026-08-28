@@ -7,11 +7,11 @@ import { useAuth } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
 
 const typeConfig = {
-  PDF:       { icon: FileText, color: '#DC2626', bg: '#FEF2F2' },
-  Imagem:    { icon: Image,    color: '#7C3AED', bg: '#F5F3FF' },
-  Vídeo:     { icon: Video,    color: '#D97706', bg: '#FFFBEB' },
-  Link:      { icon: Link2,    color: '#2563EB', bg: '#EFF6FF' },
-  Documento: { icon: File,     color: '#059669', bg: '#ECFDF5' },
+  PDF:       { icon: FileText, color: 'var(--danger)', bg: 'var(--danger-soft)' },
+  Imagem:    { icon: Image,    color: 'var(--info)', bg: 'var(--info-soft)' },
+  Vídeo:     { icon: Video,    color: 'var(--warning)', bg: 'var(--warning-soft)' },
+  Link:      { icon: Link2,    color: 'var(--brand)', bg: 'var(--brand-soft)' },
+  Documento: { icon: File,     color: 'var(--success)', bg: 'var(--success-soft)' },
 } as const;
 
 type FilterType = 'Todos' | Evidence['type'];
@@ -72,18 +72,18 @@ export function TabEvidencias({ project }: Props) {
     <div className="flex flex-col gap-5 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>Evidências</h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>{project.evidences.length} arquivos vinculados</p>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>Evidências</h2>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', marginTop: 2 }}>{project.evidences.length} arquivos vinculados</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-white" style={{ borderColor: 'var(--border)' }}>
-            <Search size={13} color="#94A3B8" />
-            <input className="outline-none text-[12px] bg-transparent w-32" placeholder="Buscar arquivo..." value={q} onChange={e => setQ(e.target.value)} style={{ color: '#0F172A' }} />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-card" style={{ borderColor: 'var(--border)' }}>
+            <Search size={13} color="var(--ink-5)" />
+            <input className="outline-none text-[12px] bg-transparent w-32" placeholder="Buscar arquivo..." value={q} onChange={e => setQ(e.target.value)} style={{ color: 'var(--ink-1)' }} />
           </div>
           <button
             onClick={() => setShowLinkForm(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[12px]"
-            style={{ borderColor: 'var(--border)', color: '#475569', background: '#fff' }}
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
           >
             <Link2 size={12} /> Link
           </button>
@@ -112,8 +112,8 @@ export function TabEvidencias({ project }: Props) {
             className="px-3 py-1 rounded-md border text-[12px] transition-all"
             style={{
               borderColor: filter === t ? 'var(--primary)' : 'var(--border)',
-              background: filter === t ? '#EFF6FF' : '#fff',
-              color: filter === t ? '#2563EB' : '#64748B',
+              background: filter === t ? 'var(--brand-soft)' : 'var(--surface-0)',
+              color: filter === t ? 'var(--brand)' : 'var(--ink-4)',
             }}
           >
             {t}
@@ -127,14 +127,14 @@ export function TabEvidencias({ project }: Props) {
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
           className="flex-1 flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed py-16 cursor-pointer hover:border-blue-300 transition-colors"
-          style={{ borderColor: '#CBD5E1' }}
+          style={{ borderColor: 'var(--line-2)' }}
         >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#EFF6FF' }}>
-            <Upload size={24} color="#2563EB" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--brand-soft)' }}>
+            <Upload size={24} color="var(--brand)" />
           </div>
           <div className="text-center">
-            <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0F172A' }}>Solte arquivos aqui</p>
-            <p style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: 4 }}>PDF, imagens, vídeos, links e documentos</p>
+            <p style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>Solte arquivos aqui</p>
+            <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)', marginTop: 4 }}>PDF, imagens, vídeos, links e documentos</p>
             <button
               type="button"
               className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white mx-auto"
@@ -162,19 +162,19 @@ export function TabEvidencias({ project }: Props) {
                         onClick={() => { if (window.confirm('Excluir evidência?')) { deleteEvidence(project.id, ev.id); record('excluir evidência', ev.name); toast.success('Excluída.'); } }}
                         className="p-1 rounded hover:bg-red-50 opacity-0 group-hover:opacity-100"
                       >
-                        <Trash2 size={12} color="#DC2626" />
+                        <Trash2 size={12} color="var(--danger)" />
                       </button>
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 500, color: '#0F172A', lineHeight: 1.4 }} title={ev.name}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--ink-1)', lineHeight: 1.4 }} title={ev.name}>
                       {ev.name.length > 40 ? ev.name.slice(0, 40) + '…' : ev.name}
                     </div>
-                    <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: 3 }}>{ev.relatedActivity}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 3 }}>{ev.relatedActivity}</div>
                   </div>
                   <div className="flex items-center justify-between border-t pt-2.5" style={{ borderColor: 'var(--border)' }}>
-                    <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>{ev.uploadDate}</span>
-                    <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{ev.size}</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>{ev.uploadDate}</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{ev.size}</span>
                   </div>
                 </div>
               );
@@ -186,10 +186,10 @@ export function TabEvidencias({ project }: Props) {
             onDragOver={e => e.preventDefault()}
             onDrop={e => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
             className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer hover:border-blue-300 transition-colors mt-1"
-            style={{ borderColor: '#CBD5E1' }}
+            style={{ borderColor: 'var(--line-2)' }}
           >
-            <Upload size={16} color="#94A3B8" />
-            <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
+            <Upload size={16} color="var(--ink-5)" />
+            <span style={{ fontSize: '0.78rem', color: 'var(--ink-5)' }}>
               Arraste arquivos ou <span style={{ color: 'var(--primary)' }}>clique para adicionar</span>
             </span>
           </div>
@@ -225,21 +225,21 @@ function LinkForm({ onClose, onSave }: { onClose: () => void; onSave: (url: stri
       <form
         onSubmit={e => { e.preventDefault(); if (!url) { toast.error('Informe o URL.'); return; } onSave(url, title); }}
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl border p-6 w-full max-w-md"
+        className="bg-card rounded-2xl border p-6 w-full max-w-md"
         style={{ borderColor: 'var(--border)' }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Vincular Link</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
         <div className="flex flex-col gap-3">
-          <label className="text-[11px] font-medium" style={{ color: '#64748B' }}>URL *</label>
+          <label className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>URL *</label>
           <input value={url} onChange={e => setUrl(e.target.value)} className="border rounded-lg px-3 py-2 text-sm outline-none" style={{ borderColor: 'var(--border)' }} placeholder="https://..." />
-          <label className="text-[11px] font-medium" style={{ color: '#64748B' }}>Título (opcional)</label>
+          <label className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>Título (opcional)</label>
           <input value={title} onChange={e => setTitle(e.target.value)} className="border rounded-lg px-3 py-2 text-sm outline-none" style={{ borderColor: 'var(--border)' }} />
         </div>
         <div className="flex items-center justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Vincular</button>
         </div>
       </form>

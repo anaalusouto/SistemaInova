@@ -198,7 +198,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     const vinculavel = a.vinculavel ?? ids.length > 0;
     return (
       <div key={a.id}>
-        <div className="flex hover:bg-slate-50 group" style={{ borderBottom: '1px solid #F1F5F9' }}>
+        <div className="flex hover:bg-accent group" style={{ borderBottom: '1px solid var(--surface-2)' }}>
           <div className={`pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
             style={{ paddingLeft: 32 + depth * 20, width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
             <button
@@ -209,35 +209,35 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               }}
               title={vinculavel ? 'Vinculável a projetos/comunidades' : 'Marcar para vincular a projetos/comunidades'}
               className="mt-0.5 shrink-0 inline-flex items-center justify-center rounded-sm"
-              style={{ width: 13, height: 13, border: `1px solid ${vinculavel ? 'var(--primary)' : '#CBD5E1'}`, background: vinculavel ? 'var(--primary)' : '#fff' }}>
-              {vinculavel && <Check size={9} color="#fff" />}
+              style={{ width: 13, height: 13, border: `1px solid ${vinculavel ? 'var(--primary)' : 'var(--line-2)'}`, background: vinculavel ? 'var(--primary)' : 'var(--surface-0)' }}>
+              {vinculavel && <Check size={9} color="var(--primary-foreground)" />}
             </button>
             {vinculavel ? (
               <button onClick={() => setLinking(a.id)}
                 title="Vincular projetos / comunidades" className="mt-0.5 shrink-0"
-                style={{ color: ids.length ? '#1D4ED8' : '#94A3B8' }}>
+                style={{ color: ids.length ? 'var(--brand-text)' : 'var(--ink-5)' }}>
                 <Link2 size={12} />
               </button>
             ) : <span className="mt-0.5 w-3 shrink-0" />}
             {!subs.length ? (
               <button onClick={() => setOpenActivity(isTrackOpen ? null : a.id)}
-                title="Ver acompanhamento por projeto" className="mt-0.5 text-slate-400 hover:text-slate-700">
+                title="Ver acompanhamento por projeto" className="mt-0.5 text-muted-foreground hover:text-foreground">
                 <ListChecks size={12} />
               </button>
-            ) : <span className="mt-0.5 text-slate-300"><ListChecks size={12} /></span>}
+            ) : <span className="mt-0.5 text-muted-foreground"><ListChecks size={12} /></span>}
             <div className="flex-1 min-w-0">
-              {a.grupo && <div className="text-[9px] uppercase tracking-wide text-slate-400 truncate">{a.grupo}</div>}
+              {a.grupo && <div className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">{a.grupo}</div>}
               <button onClick={() => setEditing({ kind: 'atividade', id: a.id })}
-                className="text-[11px] text-left leading-tight text-slate-700 hover:text-primary block">
+                className="text-[11px] text-left leading-tight text-foreground hover:text-primary block">
                 {a.atividade}
               </button>
               <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
                 {br(a.inicio)} → {br(a.fim)}{a.responsavel ? ` · ${a.responsavel}` : ''} · {prog}%
-                {a.comentario && <MessageSquare size={10} className="text-slate-400" />}
+                {a.comentario && <MessageSquare size={10} className="text-muted-foreground" />}
                 {ids.length > 0 && (
                   <button onClick={() => setLinking(a.id)}
                     className="px-1.5 py-0.5 rounded text-[9px] font-medium flex items-center gap-1"
-                    style={{ background: '#EEF2FF', color: '#1D4ED8' }}>
+                    style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
                     <Link2 size={9} />
                     {ids.length === projects.length
                       ? 'Todos os projetos'
@@ -253,11 +253,11 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                       placeholder="Nome da subatividade"
                       className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
                     <button onClick={() => handleAddSub(a.id)} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
-                    <button onClick={() => { setAddingSubTo(null); setNovaSub(''); }} className="text-[10px] px-1.5 py-1 text-slate-500">Cancelar</button>
+                    <button onClick={() => { setAddingSubTo(null); setNovaSub(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                   </div>
                 ) : (
                   <button onClick={() => setAddingSubTo(a.id)}
-                    className="mt-1 text-[10px] text-slate-500 hover:text-primary flex items-center gap-1">
+                    className="mt-1 text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
                     <Plus size={10} /> Subatividade
                   </button>
                 )
@@ -265,13 +265,13 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
             </div>
             {isAdmin && projectId == null && (
               <button onClick={() => handleDelete(a)} title="Remover"
-                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 mt-0.5">
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-600 mt-0.5">
                 <Trash2 size={12} />
               </button>
             )}
           </div>
           {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 34 }}>
-            {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+            {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: 'var(--danger)', opacity: 0.5 }} />}
             <GanttBar left={pctPos(a.inicio)} width={barWidth(a.inicio, a.fim)}
               color={ganttStatusColors[a.status]} progress={prog}
               label={`${br(a.inicio)} – ${br(a.fim)}`}
@@ -282,7 +282,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         {subs.map(s => renderRow(s, depth + 1))}
 
         {isTrackOpen && !subs.length && (
-          <div className="flex" style={{ borderBottom: '1px solid var(--border)', background: '#FCFDFF' }}>
+          <div className="flex" style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-1)' }}>
             <div className="px-3 py-3 sticky left-0" style={{ width: 'min(1100px, 100%)' }}>
               {a.descricao && <p className="text-[11px] text-muted-foreground mb-2">{a.descricao}</p>}
               <TrackingTable
@@ -306,11 +306,11 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Kpi label="Entregas" value={kpis.entregas} color="#1A5C3A" />
-        <Kpi label="Atividades" value={kpis.atividades} color="#0D6E8A" />
-        <Kpi label="Validadas em todos" value={kpis.concluidas} color="#22C55E" />
-        <Kpi label="Fora do prazo" value={kpis.atrasadas} color="#EF4444" />
-        <Kpi label="Progresso" value={`${kpis.prog}%`} color="#7C3AED" />
+        <Kpi label="Entregas" value={kpis.entregas} color="var(--success-strong-text)" />
+        <Kpi label="Atividades" value={kpis.atividades} color="var(--info)" />
+        <Kpi label="Validadas em todos" value={kpis.concluidas} color="var(--success)" />
+        <Kpi label="Fora do prazo" value={kpis.atrasadas} color="var(--danger)" />
+        <Kpi label="Progresso" value={`${kpis.prog}%`} color="var(--info)" />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -322,7 +322,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         </div>
         {projectId == null && (
           <select value={String(filterProject)} onChange={e => setFilterProject(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)', background: '#fff' }}>
+            className="px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}>
             <option value="all">Todos os projetos ({projects.length})</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.org ? `${p.org} · ` : ''}{p.name}</option>)}
           </select>
@@ -334,14 +334,14 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
       </div>
 
       <div className="rounded-lg overflow-hidden flex flex-col flex-1 min-h-0" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}>
+        <div className="px-5 py-3 border-b flex items-center justify-between flex-wrap gap-2" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
             <GanttChart size={14} className="inline mr-1.5" />Cronograma Executivo — INOVA SOCIOBIO II
           </h3>
           <div className="flex items-center gap-3 text-[11px] flex-wrap">
             <button onClick={() => setShowGantt(v => !v)}
               className="px-2.5 py-1 rounded-md text-[11px] font-medium"
-              style={{ border: '1px solid var(--border)', background: showGantt ? 'var(--primary)' : '#fff', color: showGantt ? '#fff' : 'var(--foreground)' }}>
+              style={{ border: '1px solid var(--border)', background: showGantt ? 'var(--primary)' : 'var(--surface-0)', color: showGantt ? 'var(--primary-foreground)' : 'var(--foreground)' }}>
               <GanttChart size={11} className="inline mr-1" />{showGantt ? 'Ocultar Gantt' : 'Mostrar Gantt'}
             </button>
             {STATUS_LIST.map(s => (
@@ -355,15 +355,15 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         <div className="overflow-auto flex-1 min-h-0">
           <div style={{ minWidth: showGantt ? LEFT_COL + timelineWidth : '100%' }}>
             {/* Cabeçalho da timeline */}
-            <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: '#F1F5F9', borderBottom: '1px solid var(--border)' }}>
+            <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
               <div className={showGantt ? 'shrink-0 px-3 py-2 font-semibold' : 'flex-1 px-3 py-2 font-semibold'}
                 style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                 Bloco / Entrega / Atividade
               </div>
               {showGantt && <div className="relative" style={{ width: timelineWidth, height: 32 }}>
                 {weeks.map((w, i) => (
-                  <div key={i} className="absolute top-0 bottom-0 flex items-center pl-1 text-slate-500"
-                    style={{ left: pctPos(fmtDate(w)), width: 7 * DAY_PX, borderLeft: '1px solid #E2E8F0' }}>
+                  <div key={i} className="absolute top-0 bottom-0 flex items-center pl-1 text-muted-foreground"
+                    style={{ left: pctPos(fmtDate(w)), width: 7 * DAY_PX, borderLeft: '1px solid var(--line-1)' }}>
                     {i % 2 === 0 ? `${String(w.getDate()).padStart(2, '0')}/${String(w.getMonth() + 1).padStart(2, '0')}` : ''}
                   </div>
                 ))}
@@ -372,8 +372,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
 
             {visibleGantt.map(b => (
               <div key={b.id}>
-                <div className="flex" style={{ background: '#ECFEFF', borderBottom: '1px solid var(--border)' }}>
-                  <div className={`px-3 py-2 text-xs font-bold text-slate-700 flex items-center gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
+                <div className="flex" style={{ background: 'var(--info-soft)', borderBottom: '1px solid var(--border)' }}>
+                  <div className={`px-3 py-2 text-xs font-bold text-foreground flex items-center gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
                     style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
                     {editingBloco === b.id ? (
                       <>
@@ -385,14 +385,14 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                           className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
                         <button onClick={() => { if (blocoNome.trim()) { updateGanttBloco(b.id, blocoNome.trim()); audit('renomear bloco', blocoNome.trim()); toast.success('Bloco renomeado.'); } setEditingBloco(null); }}
                           className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
-                        <button onClick={() => setEditingBloco(null)} className="text-[10px] text-slate-500">Cancelar</button>
+                        <button onClick={() => setEditingBloco(null)} className="text-[10px] text-muted-foreground">Cancelar</button>
                       </>
                     ) : (
                       <>
                         <span className="flex-1 min-w-0">{b.bloco}</span>
                         {isAdmin && projectId == null && (
                           <button onClick={() => { setEditingBloco(b.id); setBlocoNome(b.bloco); }}
-                            title="Renomear bloco" className="text-slate-400 hover:text-slate-700"><Pencil size={11} /></button>
+                            title="Renomear bloco" className="text-muted-foreground hover:text-foreground"><Pencil size={11} /></button>
                         )}
                       </>
                     )}
@@ -405,21 +405,21 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                   const enProg = entregaProgress(en.atividades);
                   return (
                     <div key={en.id}>
-                      <div className="flex hover:bg-slate-50" style={{ borderBottom: '1px solid var(--border)' }}>
+                      <div className="flex hover:bg-accent" style={{ borderBottom: '1px solid var(--border)' }}>
                         <div className={`px-3 py-2 flex items-start gap-1.5 ${showGantt ? 'shrink-0' : 'flex-1'}`}
                           style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
-                          <button onClick={() => toggle(en.id)} className="mt-0.5 text-slate-400 hover:text-slate-700">
+                          <button onClick={() => toggle(en.id)} className="mt-0.5 text-muted-foreground hover:text-foreground">
                             <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 150ms' }} />
                           </button>
                           <div className="flex-1 min-w-0">
                             <button onClick={() => setEditing({ kind: 'entrega', id: en.id })}
-                              className="text-[12px] font-semibold text-left leading-tight text-slate-800 hover:text-primary block">
+                              className="text-[12px] font-semibold text-left leading-tight text-foreground hover:text-primary block">
                               {en.entrega}
                             </button>
                             <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
                               <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: ganttStatusColors[en.status] }} />
                               {br(en.inicio)} → {br(en.fim)} · {en.responsavel} · {enProg}%
-                              {en.comentario && <MessageSquare size={10} className="text-slate-400" />}
+                              {en.comentario && <MessageSquare size={10} className="text-muted-foreground" />}
                             </div>
                             {isAdmin && (
                               addingTo === en.id ? (
@@ -429,11 +429,11 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                                     placeholder="Nome da atividade"
                                     className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
                                   <button onClick={() => handleAdd(en.id)} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
-                                  <button onClick={() => { setAddingTo(null); setNovaAtividade(''); }} className="text-[10px] px-1.5 py-1 text-slate-500">Cancelar</button>
+                                  <button onClick={() => { setAddingTo(null); setNovaAtividade(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                                 </div>
                               ) : (
                                 <button onClick={() => { setAddingTo(en.id); setExpanded(prev => new Set(prev).add(en.id)); }}
-                                  className="mt-1 text-[10px] text-slate-500 hover:text-primary flex items-center gap-1">
+                                  className="mt-1 text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
                                   <Plus size={10} /> Atividade
                                 </button>
                               )
@@ -441,7 +441,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                           </div>
                         </div>
                         {showGantt && <div className="relative" style={{ width: timelineWidth, minHeight: 44 }}>
-                          {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: '#EF4444', opacity: 0.5 }} />}
+                          {todayPx != null && <div className="absolute top-0 bottom-0" style={{ left: todayPx, width: 1, background: 'var(--danger)', opacity: 0.5 }} />}
                           <GanttBar left={pctPos(en.inicio)} width={barWidth(en.inicio, en.fim)}
                             color={ganttStatusColors[en.status]} progress={enProg} bold
                             label={`${br(en.inicio)} – ${br(en.fim)}`}
@@ -541,7 +541,7 @@ function VinculoModal({ atividade, initial, projects, canEdit, onSave, onClose }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-card rounded-lg max-w-lg w-full p-6 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-base font-semibold">Vincular projetos / comunidades</h3>
           <button onClick={onClose}><X size={18} /></button>
@@ -573,11 +573,11 @@ function VinculoModal({ atividade, initial, projects, canEdit, onSave, onClose }
             const on = ids.includes(p.id);
             return (
               <button key={p.id} onClick={() => toggle(p.id)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-slate-50"
-                style={{ borderBottom: '1px solid #F1F5F9' }}>
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-accent"
+                style={{ borderBottom: '1px solid var(--surface-2)' }}>
                 <span className="inline-flex items-center justify-center rounded-sm shrink-0"
-                  style={{ width: 14, height: 14, border: `1px solid ${on ? 'var(--primary)' : '#CBD5E1'}`, background: on ? 'var(--primary)' : '#fff' }}>
-                  {on && <Check size={10} color="#fff" />}
+                  style={{ width: 14, height: 14, border: `1px solid ${on ? 'var(--primary)' : 'var(--line-2)'}`, background: on ? 'var(--primary)' : 'var(--surface-0)' }}>
+                  {on && <Check size={10} color="var(--primary-foreground)" />}
                 </span>
                 {p.label}
               </button>
@@ -623,13 +623,13 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
     <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--border)' }}>
       <table className="w-full text-[12px]">
         <thead>
-          <tr style={{ background: '#F8FAFC' }}>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B' }}>Projeto / Comunidade</th>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B', width: 160 }}>Status</th>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B', width: 130 }}>Início</th>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B', width: 130 }}>Fim</th>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B', width: 170 }}>Responsável</th>
-            <th className="text-left px-3 py-2 font-semibold" style={{ color: '#64748B' }}>Observação</th>
+          <tr style={{ background: 'var(--surface-1)' }}>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)' }}>Projeto / Comunidade</th>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)', width: 160 }}>Status</th>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)', width: 130 }}>Início</th>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)', width: 130 }}>Fim</th>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)', width: 170 }}>Responsável</th>
+            <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)' }}>Observação</th>
           </tr>
         </thead>
         <tbody>
@@ -637,9 +637,9 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
             const t = track(fallback.id, p.id);
             const c = internalStatusColors[t.status];
             return (
-              <tr key={p.id} style={{ borderTop: '1px solid var(--border)', background: '#fff' }}>
+              <tr key={p.id} style={{ borderTop: '1px solid var(--border)', background: 'var(--surface-0)' }}>
                 <td className="px-3 py-1.5">
-                  {p.org && <span className="text-[10px] font-bold mr-1.5" style={{ color: '#1D4ED8' }}>{p.org}</span>}
+                  {p.org && <span className="text-[10px] font-bold mr-1.5" style={{ color: 'var(--brand-text)' }}>{p.org}</span>}
                   <span>{p.name}</span>
                 </td>
                 <td className="px-3 py-1.5">
@@ -659,7 +659,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
                 </td>
                 <td className="px-3 py-1.5">
                   <select value={t.responsavel ?? fallback.responsavel ?? ''} onChange={e => onTrack(p.id, { responsavel: e.target.value })}
-                    className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)', background: '#fff' }}>
+                    className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}>
                     <option value="">—</option>
                     {APP_PEOPLE.map(pe => <option key={pe.login} value={pe.name}>{pe.name}</option>)}
                     {t.responsavel && !APP_PEOPLE.some(pe => pe.name === t.responsavel) && <option value={t.responsavel}>{t.responsavel}</option>}
@@ -708,7 +708,7 @@ function GanttEditModal({ title, item, canRename, projectOptions, onSave, onClos
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-card rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">{title}</h3>
           <button onClick={onClose}><X size={18} /></button>
@@ -719,7 +719,7 @@ function GanttEditModal({ title, item, canRename, projectOptions, onSave, onClos
             {canRename ? (
               <textarea value={f.nome} onChange={e => setF({ ...f, nome: e.target.value })} rows={2}
                 className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
-            ) : <div className="text-sm text-slate-700">{f.nome}</div>}
+            ) : <div className="text-sm text-foreground">{f.nome}</div>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

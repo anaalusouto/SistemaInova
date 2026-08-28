@@ -11,17 +11,17 @@ import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 const CHANGE_TYPES: ChangeType[] = ['Escopo', 'Prazo', 'Financeiro', 'Equipe', 'Técnico'];
 
 const approvalConfig: Record<ApprovalStatus, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
-  'Aprovado':  { color: '#059669', bg: '#ECFDF5', icon: CheckCircle2 },
-  'Pendente':  { color: '#D97706', bg: '#FFFBEB', icon: Clock },
-  'Reprovado': { color: '#DC2626', bg: '#FEF2F2', icon: XCircle },
+  'Aprovado':  { color: 'var(--success)', bg: 'var(--success-soft)', icon: CheckCircle2 },
+  'Pendente':  { color: 'var(--warning)', bg: 'var(--warning-soft)', icon: Clock },
+  'Reprovado': { color: 'var(--danger)', bg: 'var(--danger-soft)', icon: XCircle },
 };
 
 const typeColors: Record<ChangeType, { color: string; bg: string }> = {
-  'Escopo':     { color: '#7C3AED', bg: '#F5F3FF' },
-  'Prazo':      { color: '#2563EB', bg: '#EFF6FF' },
-  'Financeiro': { color: '#D97706', bg: '#FFFBEB' },
-  'Equipe':     { color: '#059669', bg: '#ECFDF5' },
-  'Técnico':    { color: '#6B7280', bg: '#F3F4F6' },
+  'Escopo':     { color: 'var(--info)', bg: 'var(--info-soft)' },
+  'Prazo':      { color: 'var(--brand)', bg: 'var(--brand-soft)' },
+  'Financeiro': { color: 'var(--warning)', bg: 'var(--warning-soft)' },
+  'Equipe':     { color: 'var(--success)', bg: 'var(--success-soft)' },
+  'Técnico':    { color: 'var(--ink-4)', bg: 'var(--surface-2)' },
 };
 
 interface Props { project: Project }
@@ -90,10 +90,10 @@ export function TabMudancas({ project }: Props) {
     <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Gestão de Mudanças
           </h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', marginTop: 2 }}>
             {p.changes.length} mudanças registradas
           </p>
         </div>
@@ -109,20 +109,20 @@ export function TabMudancas({ project }: Props) {
       <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['mudanca']} />
 
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ borderColor: 'var(--border)', background: '#fff' }}>
-          <Search size={13} color="#94A3B8" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
+          <Search size={13} color="var(--ink-5)" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Buscar mudança…"
             className="outline-none bg-transparent"
-            style={{ fontSize: '0.78rem', width: 240, color: '#0F172A' }}
+            style={{ fontSize: '0.78rem', width: 240, color: 'var(--ink-1)' }}
           />
         </div>
         {[
-          { label: 'Pendentes', count: pending, color: '#D97706', bg: '#FFFBEB' },
-          { label: 'Aprovadas', count: approved, color: '#059669', bg: '#ECFDF5' },
-          { label: 'Reprovadas', count: rejected, color: '#DC2626', bg: '#FEF2F2' },
+          { label: 'Pendentes', count: pending, color: 'var(--warning)', bg: 'var(--warning-soft)' },
+          { label: 'Aprovadas', count: approved, color: 'var(--success)', bg: 'var(--success-soft)' },
+          { label: 'Reprovadas', count: rejected, color: 'var(--danger)', bg: 'var(--danger-soft)' },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: s.bg }}>
             <span style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: s.color }}>{s.count}</span>
@@ -133,8 +133,8 @@ export function TabMudancas({ project }: Props) {
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <GitBranch size={40} color="#CBD5E1" />
-          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Nenhuma mudança registrada.</p>
+          <GitBranch size={40} color="var(--line-2)" />
+          <p style={{ color: 'var(--ink-5)', fontSize: '0.875rem' }}>Nenhuma mudança registrada.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -144,21 +144,21 @@ export function TabMudancas({ project }: Props) {
             const ApprIcon = aCfg.icon;
             const isOpen = expanded === change.id;
             return (
-              <div key={change.id} className="bg-card rounded-xl border" style={{ borderColor: isOpen ? '#BFDBFE' : 'var(--border)' }}>
+              <div key={change.id} className="bg-card rounded-xl border" style={{ borderColor: isOpen ? 'var(--brand-soft-border)' : 'var(--border)' }}>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <button onClick={() => setExpanded(isOpen ? null : change.id)}>
-                    {isOpen ? <ChevronDown size={15} color="#64748B" /> : <ChevronRight size={15} color="#64748B" />}
+                    {isOpen ? <ChevronDown size={15} color="var(--ink-4)" /> : <ChevronRight size={15} color="var(--ink-4)" />}
                   </button>
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#EFF6FF' }}>
-                    <GitBranch size={13} color="#2563EB" />
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
+                    <GitBranch size={13} color="var(--brand)" />
                   </div>
-                  <span className="flex-1 min-w-0 truncate" style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0F172A' }}>{change.description}</span>
+                  <span className="flex-1 min-w-0 truncate" style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink-1)' }}>{change.description}</span>
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0" style={{ color: tCfg.color, background: tCfg.bg }}>{change.type}</span>
                   <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0" style={{ color: aCfg.color, background: aCfg.bg }}>
                     <ApprIcon size={10} /> {change.approval}
                   </span>
                   <button onClick={() => remove(change)} className="p-1 rounded hover:bg-red-50 flex-shrink-0" title="Excluir mudança">
-                    <Trash2 size={13} color="#DC2626" />
+                    <Trash2 size={13} color="var(--danger)" />
                   </button>
                 </div>
 
@@ -214,22 +214,22 @@ export function TabMudancas({ project }: Props) {
       <div
         onClick={() => setShowForm(true)}
         className="rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-blue-300 transition-colors"
-        style={{ borderColor: '#CBD5E1' }}
+        style={{ borderColor: 'var(--line-2)' }}
       >
-        <Plus size={20} color="#94A3B8" />
-        <span style={{ fontSize: '0.825rem', color: '#94A3B8' }}>Registrar nova mudança</span>
+        <Plus size={20} color="var(--ink-5)" />
+        <span style={{ fontSize: '0.825rem', color: 'var(--ink-5)' }}>Registrar nova mudança</span>
       </div>
 
       {!isAdmin && (
-        <p style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+        <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
           Criações, edições e exclusões feitas por estagiários passam a valer após a aprovação de um administrador.
         </p>
       )}
 
       {showForm && <ChangeForm goals={p.goals} onClose={() => setShowForm(false)} onSave={create} />}
 
-      <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.ipt:focus{border-color:var(--primary);background:#fff}`}</style>
+      <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.ipt:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
     </div>
   );
 }
@@ -237,7 +237,7 @@ export function TabMudancas({ project }: Props) {
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
-      <span className="text-[11px] font-medium" style={{ color: '#64748B' }}>{label}</span>
+      <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
   );
@@ -266,10 +266,10 @@ function ChangeForm({ goals, onClose, onSave }: {
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={onClose}>
-      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
+      <form onSubmit={submit} onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Registrar Mudança</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
@@ -300,11 +300,11 @@ function ChangeForm({ goals, onClose, onSave }: {
           <Field label="Justificativa" full><textarea className="ipt min-h-[70px]" value={f.justification} onChange={e => setF({ ...f, justification: e.target.value })} /></Field>
         </div>
         <div className="flex items-center justify-end gap-2 mt-5">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+          <button type="button" onClick={onClose} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
           <button type="submit" className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
         </div>
-        <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.ipt:focus{border-color:var(--primary);background:#fff}`}</style>
+        <style>{`.ipt{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.ipt:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
       </form>
     </div>
   );

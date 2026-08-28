@@ -38,10 +38,10 @@ const tabs: { id: TabId; label: string; icon: typeof LayoutGrid }[] = [
 ];
 
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
-  'Em andamento': { color: '#2563EB', bg: '#EFF6FF', dot: '#2563EB' },
-  'Concluído':    { color: '#059669', bg: '#ECFDF5', dot: '#10B981' },
-  'Atrasado':     { color: '#DC2626', bg: '#FEF2F2', dot: '#EF4444' },
-  'Não iniciado': { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' },
+  'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
+  'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
+  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
 };
 
 interface ProjectViewProps {
@@ -60,7 +60,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const driveLink = (project as ProjectExt).driveLink ?? '';
   const budgetLink = (project as ProjectExt).budgetLink ?? '';
   const termoFomentoLink = (project as ProjectExt).termoFomentoLink ?? '';
-  const cfg = statusConfig[project.status] ?? { color: '#6B7280', bg: '#F3F4F6', dot: '#9CA3AF' };
+  const cfg = statusConfig[project.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
 
   const renderTab = () => {
     switch (activeTab) {
@@ -78,19 +78,19 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       {/* Project header */}
       <div
         className="flex-shrink-0 border-b px-6 pt-5 pb-0"
-        style={{ borderColor: 'var(--border)', background: '#fff' }}
+        style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}
       >
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 mb-3">
           <button
             onClick={onBack}
             className="flex items-center gap-1 text-[12px] transition-colors hover:text-blue-600"
-            style={{ color: '#64748B' }}
+            style={{ color: 'var(--ink-4)' }}
           >
             <ArrowLeft size={12} /> Projetos
           </button>
-          <ChevronRight size={11} color="#CBD5E1" />
-          <span style={{ fontSize: '0.75rem', color: '#0F172A', fontWeight: 500 }}>
+          <ChevronRight size={11} color="var(--line-2)" />
+          <span style={{ fontSize: '0.75rem', color: 'var(--ink-1)', fontWeight: 500 }}>
             {project.name}
           </span>
         </div>
@@ -105,19 +105,19 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                     fontFamily: 'var(--font-heading)',
                     fontWeight: 700,
                     fontSize: '1.25rem',
-                    color: '#0F172A',
+                    color: 'var(--ink-1)',
                     lineHeight: 1.3,
                   }}
                 >
                   {project.name}
                 </h1>
                 {(project as ProjectExt).org && (
-                  <span className="px-2 py-1 rounded-md text-[11px] font-bold" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
+                  <span className="px-2 py-1 rounded-md text-[11px] font-bold" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
                     {(project as ProjectExt).org}
                   </span>
                 )}
                 {(project as ProjectExt).segmento && (
-                  <span className="px-2 py-1 rounded-md text-[11px] font-medium" style={{ background: '#F1F5F9', color: '#475569' }}>
+                  <span className="px-2 py-1 rounded-md text-[11px] font-medium" style={{ background: 'var(--surface-2)', color: 'var(--ink-3)' }}>
                     {(project as ProjectExt).segmento}
                   </span>
                 )}
@@ -136,7 +136,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                    style={{ color: '#0F766E', background: '#ECFDF5' }}
+                    style={{ color: 'var(--info)', background: 'var(--success-soft)' }}
                   >
                     <ExternalLink size={11} /> Plano de Trabalho (Drive)
                   </a>
@@ -144,7 +144,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 <button
                   onClick={() => setEditLink({ kind: 'driveLink', value: driveLink })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                 >
                   <Link2 size={11} /> {driveLink ? 'Editar plano' : 'Link do Plano de Trabalho'}
                 </button>
@@ -155,7 +155,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                    style={{ color: '#B45309', background: '#FFFBEB' }}
+                    style={{ color: 'var(--warning-strong-text)', background: 'var(--warning-soft)' }}
                   >
                     <ExternalLink size={11} /> Orçamento Realizado
                   </a>
@@ -163,7 +163,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 <button
                   onClick={() => setEditLink({ kind: 'budgetLink', value: budgetLink })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                 >
                   <Link2 size={11} /> {budgetLink ? 'Editar orçamento' : 'Link do Orçamento Realizado'}
                 </button>
@@ -174,7 +174,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                    style={{ color: '#7C3AED', background: '#F5F3FF' }}
+                    style={{ color: 'var(--info)', background: 'var(--info-soft)' }}
                   >
                     <ExternalLink size={11} /> Termo de Fomento
                   </a>
@@ -182,21 +182,21 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 <button
                   onClick={() => setEditLink({ kind: 'termoFomentoLink', value: termoFomentoLink })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                  style={{ borderColor: 'var(--border)', color: '#475569' }}
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                 >
                   <Link2 size={11} /> {termoFomentoLink ? 'Editar termo' : 'Link do Termo de Fomento'}
                 </button>
               </div>
               <div className="flex items-center gap-3 mt-1">
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
                   {project.code}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>·</span>
-                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>·</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>
                   {project.coordinator}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>·</span>
-                <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>·</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>
                   {project.financier}
                 </span>
               </div>
@@ -208,24 +208,24 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
             <button
               onClick={() => setPanel('riscos')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-              style={{ borderColor: '#FECACA', color: '#DC2626', background: '#FEF2F2' }}
+              style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
             >
               <ShieldAlert size={13} /> Riscos ({project.risks.length})
             </button>
             <button
               onClick={() => setPanel('mudancas')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-              style={{ borderColor: '#BFDBFE', color: '#2563EB', background: '#EFF6FF' }}
+              style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand)', background: 'var(--brand-soft)' }}
             >
               <GitBranch size={13} /> Mudanças ({project.changes.length})
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-28 h-2 rounded-full" style={{ background: '#E2E8F0' }}>
+              <div className="w-28 h-2 rounded-full" style={{ background: 'var(--line-1)' }}>
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${project.progress}%`,
-                    background: project.status === 'Atrasado' ? '#EF4444' : project.status === 'Concluído' ? '#10B981' : '#2563EB',
+                    background: project.status === 'Atrasado' ? 'var(--danger)' : project.status === 'Concluído' ? 'var(--success)' : 'var(--brand)',
                   }}
                 />
               </div>
@@ -234,7 +234,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                   fontSize: '0.85rem',
                   fontWeight: 700,
                   fontFamily: 'var(--font-mono)',
-                  color: project.status === 'Atrasado' ? '#DC2626' : '#0F172A',
+                  color: project.status === 'Atrasado' ? 'var(--danger)' : 'var(--ink-1)',
                 }}
               >
                 {project.progress}%
@@ -255,7 +255,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                 className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 transition-all whitespace-nowrap"
                 style={{
                   borderBottomColor: isActive ? 'var(--primary)' : 'transparent',
-                  color: isActive ? 'var(--primary)' : '#64748B',
+                  color: isActive ? 'var(--primary)' : 'var(--ink-4)',
                   fontWeight: isActive ? 600 : 400,
                   background: 'transparent',
                 }}
@@ -278,7 +278,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setPanel(null)}>
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white h-full w-full max-w-4xl flex flex-col"
+            className="bg-card h-full w-full max-w-4xl flex flex-col"
           >
             <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
               <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem' }}>
@@ -296,7 +296,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       {/* Modal de links do Drive */}
       {editLink !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
+          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
             <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
               {editLink.kind === 'driveLink'
                 ? 'Plano de Trabalho no Drive'
@@ -307,13 +307,13 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
             <input
               autoFocus
               className="w-full border rounded-lg px-3 py-2 text-[13px]"
-              style={{ borderColor: 'var(--border)', background: '#F8FAFC' }}
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
               placeholder="https://drive.google.com/..."
               value={editLink.value}
               onChange={e => setEditLink({ ...editLink, value: e.target.value })}
             />
             <div className="flex items-center justify-end gap-2 mt-4">
-              <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+              <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
               <button
                 onClick={() => {
                   updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);

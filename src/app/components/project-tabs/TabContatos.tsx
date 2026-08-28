@@ -62,10 +62,10 @@ export function TabContatos({ project }: { project: Project }) {
     <div className="p-6 space-y-5 overflow-y-auto h-full">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Contatos — Registro de Comunicação
           </h2>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 2 }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-4)', marginTop: 2 }}>
             {logs.length} interações registradas com {p.org || p.name}
           </p>
         </div>
@@ -82,10 +82,10 @@ export function TabContatos({ project }: { project: Project }) {
         <div style={{ overflowX: 'auto' }}>
           <table className="w-full" style={{ minWidth: 1180 }}>
             <thead>
-              <tr style={{ background: '#F1F5F9' }}>
+              <tr style={{ background: 'var(--surface-2)' }}>
                 {COLS.map(h => (
                   <th key={h} className="px-3 py-2 text-left"
-                    style={{ fontSize: '0.66rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
+                    style={{ fontSize: '0.66rem', fontWeight: 700, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>
                     {h}
                   </th>
                 ))}
@@ -95,27 +95,27 @@ export function TabContatos({ project }: { project: Project }) {
               {logs.length === 0 ? (
                 <tr>
                   <td colSpan={COLS.length} className="py-12 text-center">
-                    <MessageSquare size={32} color="#CBD5E1" className="mx-auto mb-2" />
-                    <span style={{ color: '#94A3B8', fontSize: '0.82rem' }}>Nenhuma comunicação registrada ainda.</span>
+                    <MessageSquare size={32} color="var(--line-2)" className="mx-auto mb-2" />
+                    <span style={{ color: 'var(--ink-5)', fontSize: '0.82rem' }}>Nenhuma comunicação registrada ainda.</span>
                   </td>
                 </tr>
               ) : logs.map(l => (
-                <tr key={l.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50">
-                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{br(l.data)}</td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: '#475569' }}>{l.hora}</td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', fontWeight: 600, color: '#0F172A' }}>{l.instituicao}</td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: '#475569' }}>{l.representante || '—'}</td>
+                <tr key={l.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-accent">
+                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{br(l.data)}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{l.hora}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--ink-1)' }}>{l.instituicao}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-3)' }}>{l.representante || '—'}</td>
                   <td className="px-3 py-2" style={{ fontSize: '0.72rem' }}>
-                    <span className="px-2 py-0.5 rounded-md" style={{ background: '#EFF6FF', color: '#1D4ED8' }}>{l.meio}</span>
+                    <span className="px-2 py-0.5 rounded-md" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>{l.meio}</span>
                   </td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: '#475569' }}>{l.quemRealizou || '—'}</td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: '#0F172A', minWidth: 280 }}>{l.registro}</td>
-                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', color: '#64748B', minWidth: 200 }}>{l.saida || '—'}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-3)' }}>{l.quemRealizou || '—'}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-1)', minWidth: 280 }}>{l.registro}</td>
+                  <td className="px-3 py-2" style={{ fontSize: '0.74rem', color: 'var(--ink-4)', minWidth: 200 }}>{l.saida || '—'}</td>
                   <td className="px-2 py-2 whitespace-nowrap">
                     {!readOnly && (
                       <span className="flex items-center gap-1">
-                        <button onClick={() => setForm({ ...l })} className="p-1 rounded hover:bg-slate-100" title="Editar">
-                          <Pencil size={12} color="#475569" />
+                        <button onClick={() => setForm({ ...l })} className="p-1 rounded hover:bg-accent" title="Editar">
+                          <Pencil size={12} color="var(--ink-3)" />
                         </button>
                         <button
                           onClick={() => {
@@ -125,7 +125,7 @@ export function TabContatos({ project }: { project: Project }) {
                             toast.success('Registro excluído.');
                           }}
                           className="p-1 rounded hover:bg-red-50" title="Excluir"
-                        ><Trash2 size={12} color="#DC2626" /></button>
+                        ><Trash2 size={12} color="var(--danger)" /></button>
                       </span>
                     )}
                   </td>
@@ -138,7 +138,7 @@ export function TabContatos({ project }: { project: Project }) {
 
       {form && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setForm(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
+          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between mb-4">
               <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>
                 {form.id != null ? 'Editar registro' : 'Novo registro de comunicação'}
@@ -177,11 +177,11 @@ export function TabContatos({ project }: { project: Project }) {
               </Field>
             </div>
             <div className="flex items-center justify-end gap-2 mt-5">
-              <button onClick={() => setForm(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: '#475569' }}>Cancelar</button>
+              <button onClick={() => setForm(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
               <button onClick={save} className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
             </div>
-            <style>{`.inp{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-.inp:focus{border-color:var(--primary);background:#fff}`}</style>
+            <style>{`.inp{border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+.inp:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
           </div>
         </div>
       )}
@@ -192,7 +192,7 @@ export function TabContatos({ project }: { project: Project }) {
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
     <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
-      <span className="text-[11px] font-medium" style={{ color: '#64748B' }}>{label}</span>
+      <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
   );

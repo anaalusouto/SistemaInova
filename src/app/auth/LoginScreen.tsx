@@ -32,13 +32,13 @@ export function LoginScreen() {
       <div className="relative w-full max-w-sm bg-card rounded-2xl border p-7 flex flex-col gap-5" style={{ borderColor: 'var(--border)' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary)' }}>
-            <ShieldCheck size={22} color="#fff" />
+            <ShieldCheck size={22} color="var(--primary-foreground)" />
           </div>
           <div className="text-center">
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: '#0F172A' }}>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: 'var(--ink-1)' }}>
               Sistema Inova
             </h1>
-            <p style={{ fontSize: '0.78rem', color: '#64748B', marginTop: 3 }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 3 }}>
               Acesse o portfólio de projetos institucionais
             </p>
           </div>
@@ -46,7 +46,7 @@ export function LoginScreen() {
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1.5">
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</span>
             <input
               className="ci"
               value={login}
@@ -57,7 +57,7 @@ export function LoginScreen() {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senha</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senha</span>
             <input
               className="ci"
               type="password"
@@ -67,13 +67,13 @@ export function LoginScreen() {
             />
           </label>
 
-          <label className="flex items-center gap-2 mt-0.5" style={{ fontSize: '0.75rem', color: '#475569' }}>
+          <label className="flex items-center gap-2 mt-0.5" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>
             <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} />
             Lembrar de mim neste computador
           </label>
 
           {error && (
-            <div style={{ fontSize: '0.75rem', color: '#DC2626', background: '#FEF2F2', padding: '8px 10px', borderRadius: 8 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--danger)', background: 'var(--danger-soft)', padding: '8px 10px', borderRadius: 8 }}>
               {error}
             </div>
           )}
@@ -86,12 +86,12 @@ export function LoginScreen() {
           </button>
         </form>
 
-        <div style={{ fontSize: '0.7rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.6 }}>
+        <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textAlign: 'center', lineHeight: 1.6 }}>
           Acesso restrito · Todos os acessos são registrados
         </div>
 
-        <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%;background:#F8FAFC;color:#0F172A}
-        .ci:focus{border-color:var(--primary);background:#fff}`}</style>
+        <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
+        .ci:focus{border-color:var(--primary);background:var(--surface-0)}`}</style>
       </div>
     </div>
   );
