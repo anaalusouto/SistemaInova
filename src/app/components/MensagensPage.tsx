@@ -5,6 +5,10 @@ import { useAuth, usePeople } from '../auth/authStore';
 import { useStore } from '../store';
 import { useMensagens } from '../mensagens/useMensagens';
 import { buildMentionOptions, searchMentionOptions, mentionToken, getMentionQuery, renderMessageText, extractAssignments, type MentionOption } from '../mensagens/mentionUtils';
+import { useAgenda } from '../agenda/useAgenda';
+import { AgendaPage } from './AgendaPage';
+
+type PageTab = 'mural' | 'agenda';
 
 function formatMsgTime(iso: string) {
   try {
@@ -17,8 +21,11 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
   const people = usePeople();
   const { projects } = useStore();
   const { mensagens, loading, send } = useMensagens();
+  const { paraMim } = useAgenda();
   const options = useMemo(() => buildMentionOptions(projects, people.map(p => ({ login: p.login, name: p.name }))), [projects, people]);
+  const pendentes = useMemo(() => paraMim.filter(a => !a.concluidaEm).length, [paraMim]);
 
+  const [pageTab, setPageTab] = useState<PageTab>('mural');
   const [text, setText] = useState('');
   const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -90,11 +97,40 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
           Mensagens
         </h2>
         <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 2 }}>
-          Mural interno, visível para toda a equipe. Digite @ para referenciar um projeto, tarefa ou pessoa —
-          mencionar alguém já avisa a pessoa; mencione uma tarefa junto para virar uma atribuição na Agenda dela.
+          {pageTab === 'mural'
+            ? 'Mural interno, visível para toda a equipe. Digite @ para referenciar um projeto, tarefa ou pessoa — mencionar alguém já avisa a pessoa; mencione uma tarefa junto para virar uma atribuição na Agenda dela.'
+            : 'Tarefas atribuídas a você (e por você) dentro do mural de mensagens.'}
         </p>
       </div>
 
+      <div className="flex items-center gap-1">
+        {([
+          { id: 'mural' as PageTab, label: 'Mural', count: 0 },
+          { id: 'agenda' as PageTab, label: 'Agenda', count: pendentes },
+        ]).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setPageTab(t.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors"
+            style={{
+              background: pageTab === t.id ? 'var(--brand-soft)' : 'transparent',
+              color: pageTab === t.id ? 'var(--brand-text)' : 'var(--ink-4)',
+            }}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: 'var(--warning-soft)', color: 'var(--warning-strong-text)' }}>
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {pageTab === 'agenda' ? (
+        <AgendaPage onOpenProject={onOpenProject} />
+      ) : (
+        <>
       <div ref={listRef} className="flex-1 overflow-y-auto flex flex-col gap-4 bg-card rounded-xl border p-4" style={{ borderColor: 'var(--border)' }}>
         {loading ? (
           <div className="py-10 text-center" style={{ fontSize: '0.8rem', color: 'var(--ink-5)' }}>Carregando…</div>
@@ -158,6 +194,8 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
           </button>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -9,7 +9,6 @@ import {
   ClipboardList,
   LogOut,
   MessageSquare,
-  ListChecks,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
@@ -21,7 +20,6 @@ export type NavItem =
   | 'diagnostics'
   | 'reports'
   | 'messages'
-  | 'agenda'
   | 'settings';
 
 interface SidebarProps {
@@ -41,7 +39,6 @@ const bottomItems = [
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
   { id: 'messages' as NavItem, label: 'Mensagens', icon: MessageSquare },
-  { id: 'agenda' as NavItem, label: 'Agenda', icon: ListChecks },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
@@ -76,7 +73,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
       >
         <Icon size={15} />
         <span style={{ fontSize: '0.825rem', fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
-        {item.id === 'agenda' && pendentes > 0 && (
+        {item.id === 'messages' && pendentes > 0 && (
           <span
             className="ml-auto flex items-center justify-center rounded-full text-white font-bold flex-shrink-0"
             style={{ minWidth: 16, height: 16, fontSize: '9px', padding: '0 4px', background: 'var(--danger)' }}

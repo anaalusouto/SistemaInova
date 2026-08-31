@@ -38,16 +38,7 @@ export function AgendaPage({ onOpenProject }: { onOpenProject: (projectId: numbe
   const pendentesParaMim = useMemo(() => paraMim.filter(a => !a.concluidaEm).length, [paraMim]);
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto p-6 gap-4">
-      <div>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.125rem', color: 'var(--ink-1)' }}>
-          Agenda
-        </h2>
-        <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 2 }}>
-          Tarefas atribuídas a você (e por você) dentro do mural de mensagens.
-        </p>
-      </div>
-
+    <div className="flex flex-col h-full gap-3">
       <div className="flex items-center gap-1">
         {([
           { id: 'paraMim' as Tab, label: 'Para mim', count: pendentesParaMim },
