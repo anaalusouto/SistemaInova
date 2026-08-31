@@ -10,7 +10,9 @@ import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
 import { CronogramaPage } from './components/CronogramaPage';
 import { MensagensPage } from './components/MensagensPage';
+import { AgendaPage } from './components/AgendaPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
+import { useMentionToasts } from './mensagens/useMentionToasts';
 import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
@@ -43,6 +45,7 @@ function AppShell() {
   const { log } = useAudit();
   const [greeting] = useState(() => greetingFor(user?.displayName ?? ''));
   useApprovalToasts();
+  useMentionToasts();
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +83,8 @@ function AppShell() {
         return <ReportsPage />;
       case 'messages':
         return <MensagensPage onOpenProject={handleSelectProject} />;
+      case 'agenda':
+        return <AgendaPage onOpenProject={handleSelectProject} />;
       case 'settings':
         return <ConfiguracoesPage />;
 

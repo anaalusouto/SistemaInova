@@ -36,18 +36,20 @@ export const listarMensagens = createServerFn({ method: 'GET' }).handler(async (
   return (data ?? []).map(toMensagem).reverse();
 });
 
-/** Envia uma mensagem para o mural (visível a todos). */
+/** Envia uma mensagem para o mural (visível a todos). Retorna o id — usado para
+ * vincular atribuições de tarefa (ver src/app/atribuicoes.server.ts) à mensagem. */
 export const enviarMensagem = createServerFn({ method: 'POST' })
   .validator((d: { autorLogin: string; autorNome: string; texto: string }) => d)
-  .handler(async ({ data }): Promise<void> => {
+  .handler(async ({ data }): Promise<{ id: string }> => {
     const texto = data.texto.trim();
     if (!texto) throw new Error('Mensagem vazia.');
     if (texto.length > MAX_TEXTO) throw new Error('Mensagem muito longa.');
     const supabaseAdmin = await getAdmin();
-    const { error } = await supabaseAdmin.from('mensagens').insert({
+    const { data: inserted, error } = await supabaseAdmin.from('mensagens').insert({
       autor_login: data.autorLogin.trim(),
       autor_nome: data.autorNome.trim(),
       texto,
-    });
+    }).select('id').single();
     if (error) throw new Error(error.message);
+    return { id: inserted.id };
   });

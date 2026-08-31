@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Hash, CheckSquare } from 'lucide-react';
-import { useAuth } from '../auth/authStore';
+import { Send, Hash, CheckSquare, User } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth, usePeople } from '../auth/authStore';
 import { useStore } from '../store';
 import { useMensagens } from '../mensagens/useMensagens';
-import { buildMentionOptions, searchMentionOptions, mentionToken, getMentionQuery, renderMessageText, type MentionOption } from '../mensagens/mentionUtils';
+import { buildMentionOptions, searchMentionOptions, mentionToken, getMentionQuery, renderMessageText, extractAssignments, type MentionOption } from '../mensagens/mentionUtils';
 
 function formatMsgTime(iso: string) {
   try {
@@ -13,9 +14,10 @@ function formatMsgTime(iso: string) {
 
 export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: number) => void }) {
   const { user } = useAuth();
+  const people = usePeople();
   const { projects } = useStore();
   const { mensagens, loading, send } = useMensagens();
-  const options = useMemo(() => buildMentionOptions(projects), [projects]);
+  const options = useMemo(() => buildMentionOptions(projects, people.map(p => ({ login: p.login, name: p.name }))), [projects, people]);
 
   const [text, setText] = useState('');
   const [mention, setMention] = useState<{ start: number; query: string } | null>(null);
@@ -55,7 +57,12 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
     if (!value || sending) return;
     setSending(true);
     try {
-      await send(value);
+      const assignments = extractAssignments(value, options);
+      await send(value, assignments);
+      if (assignments.length) {
+        const nomes = [...new Set(assignments.map(a => a.pessoaNome))].join(', ');
+        toast.success(`Tarefa atribuída a ${nomes}. Acompanhe na Agenda.`);
+      }
       setText('');
       setMention(null);
     } finally {
@@ -83,7 +90,8 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
           Mensagens
         </h2>
         <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 2 }}>
-          Mural interno, visível para toda a equipe. Digite @ para referenciar um projeto ou tarefa.
+          Mural interno, visível para toda a equipe. Digite @ para referenciar um projeto, tarefa ou pessoa —
+          mencionar alguém já avisa a pessoa; mencione uma tarefa junto para virar uma atribuição na Agenda dela.
         </p>
       </div>
 
@@ -120,7 +128,7 @@ export function MensagensPage({ onOpenProject }: { onOpenProject: (projectId: nu
                 onClick={() => insertMention(o)}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent"
               >
-                {o.kind === 'proj' ? <Hash size={13} color="var(--brand)" /> : <CheckSquare size={13} color="var(--success)" />}
+                {o.kind === 'proj' ? <Hash size={13} color="var(--brand)" /> : o.kind === 'pessoa' ? <User size={13} color="var(--warning-strong-text)" /> : <CheckSquare size={13} color="var(--success)" />}
                 <div className="flex-1 min-w-0">
                   <div className="truncate" style={{ fontSize: '0.8rem', color: 'var(--ink-1)' }}>{o.label}</div>
                   {o.sublabel && <div className="truncate" style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>{o.sublabel}</div>}
