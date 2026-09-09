@@ -135,7 +135,7 @@ export function TabCadastro({ project }: Props) {
       </div>
 
       <Section title="I — Apresentação" defaultOpen>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <F label="Código Interno"><input className="ci" value={form.code} readOnly disabled /></F>
           <F label="Situação">
             <select className="ci" value={form.status} onChange={e => setForm({ ...form, status: e.target.value as ProjectStatus })}>
@@ -184,7 +184,7 @@ export function TabCadastro({ project }: Props) {
 
       {P_FIELDS.map(group => (
         <Section key={group.title} title={group.title}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {group.fields.map(f => (
               <F key={String(f.key)} label={f.label} full={f.type === 'textarea'}>
                 {f.type === 'textarea' ? (
@@ -229,7 +229,7 @@ function Section({ title, children, defaultOpen }: { title: string; children: Re
 
 function F({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
-    <label className={`flex flex-col gap-1.5 ${full ? 'col-span-2' : ''}`}>
+    <label className={`flex flex-col gap-1.5 ${full ? 'sm:col-span-2' : ''}`}>
       <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
       {children}
     </label>

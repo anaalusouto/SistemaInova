@@ -103,7 +103,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Execução Física', value: `${project.progress}%`, color: project.status === 'Atrasado' ? 'var(--danger)' : 'var(--brand)' },
           { label: 'Execução Financeira', value: `${project.budgetApproved > 0 ? Math.round((project.budgetExecuted / project.budgetApproved) * 100) : 0}%`, color: 'var(--success)' },
@@ -124,7 +124,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Financial */}
         <div
           className="bg-card rounded-xl border p-5"
@@ -192,7 +192,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
 
       {/* Goal progress + Risks */}
       {(goalProgressData.length > 0 || riskData.length > 0) && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {goalProgressData.length > 0 && (
             <div
               className="bg-card rounded-xl border p-5"
@@ -256,7 +256,7 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
         <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
           Exportações
         </h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { label: 'Relatório de Acompanhamento', format: 'PDF', icon: FileText },
             { label: 'Planilha de Atividades', format: 'XLSX', icon: FileText },

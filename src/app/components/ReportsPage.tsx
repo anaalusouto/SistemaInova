@@ -81,7 +81,7 @@ export function ReportsPage() {
       </div>
 
       {/* Builder */}
-      <div className="grid grid-cols-3 gap-4 print:hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
         <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
             Título
@@ -139,7 +139,7 @@ export function ReportsPage() {
         {has('financeiro') && (
           <section>
             <SectionTitle>Resumo Financeiro Consolidado</SectionTitle>
-            <div className="grid grid-cols-3 gap-3 mt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
               <StatCard label="Aprovado" value={fmt(totals.budget)} color="var(--brand)" />
               <StatCard label="Executado" value={fmt(totals.executed)} color="var(--success)" />
               <StatCard label="Saldo" value={fmt(totals.balance)} color="var(--warning)" />
@@ -261,7 +261,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 
 function KV({ items }: { items: [string, string][] }) {
   return (
-    <div className="grid grid-cols-3 gap-x-4 gap-y-1 mt-2">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2">
       {items.map(([k, v]) => (
         <div key={k}>
           <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{k}: </span>

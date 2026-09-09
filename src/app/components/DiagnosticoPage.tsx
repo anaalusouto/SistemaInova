@@ -281,11 +281,11 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
   return (
     <div className="h-full overflow-y-auto">
       <div className="sticky top-0 z-10 border-b" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-        <div className="max-w-7xl mx-auto px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4">
           <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground mb-2 hover:text-foreground">
             <ArrowLeft size={14} /> Voltar
           </button>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium"
@@ -304,7 +304,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
               <h2>{diagnostic.title}</h2>
               <div className="text-xs text-muted-foreground">{pct}% preenchido</div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-md"
                 style={{ border: '1px solid var(--border)' }}>
                 <Download size={14} /> Exportar CSV
@@ -318,7 +318,8 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
             </div>
           </div>
 
-          <div className="flex gap-1 mt-4">
+          <div className="overflow-x-auto">
+          <div className="flex gap-1 mt-4 w-max">
             {[
               { id: 'questoes', label: 'Questionário', icon: FileText },
               { id: 'maturidade', label: 'Índices de Maturidade', icon: TrendingUp },
@@ -329,7 +330,7 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
               const active = tab === t.id;
               return (
                 <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors whitespace-nowrap"
                   style={{
                     background: active ? 'var(--accent)' : 'transparent',
                     color: active ? 'var(--accent-foreground)' : 'var(--muted-foreground)',
@@ -340,12 +341,13 @@ function DiagnosticEditor({ diagnostic, onBack }: { diagnostic: Diagnostic; onBa
               );
             })}
           </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-8">
         {tab === 'questoes' && (
-          <div className="grid grid-cols-[220px_1fr] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
             <div className="space-y-1">
               {sections.map(s => {
                 const activeSec = activeSection === s.id;
@@ -666,6 +668,7 @@ function ProdutosTab({ diagnostic, onAdd, onDelete }: {
       </div>
 
       <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead style={{ background: 'var(--muted)' }}>
             <tr className="text-left text-xs">
@@ -700,6 +703,7 @@ function ProdutosTab({ diagnostic, onAdd, onDelete }: {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -731,6 +735,7 @@ function ResumoTab({ diagnostic }: { diagnostic: Diagnostic }) {
       {/* Comparativo por rodada */}
       <div className="rounded-lg p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
         <h3 className="mb-4">Comparativo — Índices de Maturidade</h3>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-muted-foreground border-b" style={{ borderColor: 'var(--border)' }}>
@@ -753,6 +758,7 @@ function ResumoTab({ diagnostic }: { diagnostic: Diagnostic }) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -180,7 +180,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map(p => {
           const cfg = statusConfig[p.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
           const progressColor =
@@ -395,7 +395,7 @@ function NewProjectModal({
             <X size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Nome *" full>
             <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input" />
           </Field>

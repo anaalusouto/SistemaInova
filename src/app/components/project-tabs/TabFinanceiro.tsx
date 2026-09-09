@@ -206,7 +206,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
     <div className="space-y-5 p-6 overflow-y-auto h-full">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Planilha Orçamentária do Projeto
@@ -215,7 +215,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
             Total da linha (previsto) = Qtd × Qtd. de unidades × Valor unitário · execução, prestação de contas e registro por linha
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}>
             <Download size={12} /> Exportar CSV
           </button>
@@ -231,7 +231,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
       <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['financeiro']} />
 
       {/* Executive summary */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total do Projeto', value: fmt(totalPlanned), icon: DollarSign, color: 'var(--brand)', bg: 'var(--brand-soft)', sub: `${items.length} itens em ${byMeta.length} metas` },
           { label: 'Executado', value: fmt(totalExecuted), icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-soft)', sub: `${pctExec}% do orçamento` },
@@ -288,6 +288,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
             Resumo por Categoria de Gastos
           </h3>
         </div>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr style={{ background: 'var(--surface-1)' }}>
@@ -317,6 +318,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
 
       {/* Itens por Meta */}
@@ -347,6 +349,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                       Executado: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--success)' }}>{fmt(subtotalE)}</span>
                     </span>
                   </div>
+                  <div className="overflow-x-auto">
                   <table className="w-full" style={{ minWidth: 1420 }}>
                     <thead>
                       <tr style={{ background: 'var(--surface-1)' }}>
@@ -448,6 +451,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               );
             })
@@ -480,6 +484,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
               <p style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>Nenhuma contrapartida cadastrada.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr style={{ background: 'var(--surface-1)' }}>
@@ -513,6 +518,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -533,7 +539,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-px" style={{ background: 'var(--border)' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'var(--border)' }}>
           {(() => {
             const ent = aportes.filter(a => a.tipo === 'Entrada').reduce((x, a) => x + a.valor, 0);
             const sai = aportes.filter(a => a.tipo === 'Saída').reduce((x, a) => x + a.valor, 0);
@@ -553,6 +559,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         </div>
 
         {aportes.length > 0 && (
+          <div className="overflow-x-auto">
           <table className="w-full" style={{ borderTop: '1px solid var(--border)' }}>
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
@@ -584,6 +591,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -672,7 +680,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>{initial ? 'Realizar alteração no item' : 'Novo Item Orçamentário'}</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <FieldLabel>Meta</FieldLabel>
             <select className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })}>
@@ -686,7 +694,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
               {BUDGET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FieldLabel>Descrição</FieldLabel>
             <input className={inputCls} style={inputStyle} value={f.item} onChange={e => setF({ ...f, item: e.target.value })} placeholder="Descrição detalhada do item / serviço" />
           </div>
@@ -706,7 +714,7 @@ function ItemForm({ existingMetas, initial, onClose, onSave }: {
             <FieldLabel>Valor unitário (R$)</FieldLabel>
             <input type="number" step="0.01" min="0" className={inputCls} style={inputStyle} value={f.valorUnitario} onChange={e => setF({ ...f, valorUnitario: e.target.value })} placeholder="0,00" />
           </div>
-          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
+          <div className="sm:col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)', fontWeight: 600 }}>Total da linha — previsto (Qtd × Qtd. de unidades × Valor unitário):</span>
             <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(total)}</span>
           </div>
@@ -781,7 +789,7 @@ function CpForm({ existingMetas, onClose, onSave }: {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Nova Contrapartida</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <FieldLabel>Meta Associada</FieldLabel>
             <input list="cp-metas" className={inputCls} style={inputStyle} value={f.meta} onChange={e => setF({ ...f, meta: e.target.value })} />
@@ -796,7 +804,7 @@ function CpForm({ existingMetas, onClose, onSave }: {
               <option value="Econômica">Econômica</option>
             </select>
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FieldLabel>Descrição</FieldLabel>
             <input className={inputCls} style={inputStyle} value={f.descricao} onChange={e => setF({ ...f, descricao: e.target.value })} />
           </div>
@@ -808,11 +816,11 @@ function CpForm({ existingMetas, onClose, onSave }: {
             <FieldLabel>Unidade</FieldLabel>
             <input className={inputCls} style={inputStyle} value={f.unidade} onChange={e => setF({ ...f, unidade: e.target.value })} />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FieldLabel>Valor Unitário (R$)</FieldLabel>
             <input type="number" step="0.01" min="0" className={inputCls} style={inputStyle} value={f.valorUnitario} onChange={e => setF({ ...f, valorUnitario: e.target.value })} />
           </div>
-          <div className="col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
+          <div className="sm:col-span-2 rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)', fontWeight: 600 }}>Total da contrapartida:</span>
             <span style={{ fontSize: '1rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(total)}</span>
           </div>
@@ -857,7 +865,7 @@ function AporteForm({ onClose, onSave }: {
         <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)', marginBottom: 12 }}>
           Entradas e saídas fora do termo. O valor recebido do termo continua inalterado.
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <FieldLabel>Data</FieldLabel>
             <input type="date" className={inputCls} style={inputStyle} value={f.data} onChange={e => setF({ ...f, data: e.target.value })} />
@@ -877,7 +885,7 @@ function AporteForm({ onClose, onSave }: {
             <FieldLabel>Valor (R$)</FieldLabel>
             <input type="number" step="0.01" className={inputCls} style={inputStyle} value={f.valor} onChange={e => setF({ ...f, valor: e.target.value })} placeholder="0,00" />
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <FieldLabel>Descrição</FieldLabel>
             <input className={inputCls} style={inputStyle} value={f.descricao} onChange={e => setF({ ...f, descricao: e.target.value })} placeholder="Do que se trata este recurso" />
           </div>

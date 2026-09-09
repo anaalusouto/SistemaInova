@@ -155,9 +155,9 @@ export function TabRiscos({ project }: TabRiscosProps) {
         })}
       </div>
 
-      <div className="grid grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Matriz */}
-        <div className="col-span-4 bg-card rounded-xl border p-5 sticky top-0" style={{ borderColor: 'var(--border)' }}>
+        <div className="lg:col-span-4 bg-card rounded-xl border p-5 sticky top-0" style={{ borderColor: 'var(--border)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)', marginBottom: 14 }}>
             Matriz de Risco
           </h3>
@@ -217,7 +217,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
         </div>
 
         {/* Lista fluida de riscos */}
-        <div className="col-span-8 flex flex-col gap-2">
+        <div className="lg:col-span-8 flex flex-col gap-2">
           {filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-3 py-16 rounded-xl border" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
               <ShieldAlert size={40} color="var(--line-2)" />
@@ -253,9 +253,9 @@ export function TabRiscos({ project }: TabRiscosProps) {
                 </div>
 
                 {isOpen && (
-                  <div className="px-5 pb-4 pt-1 border-t grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
+                  <div className="px-5 pb-4 pt-1 border-t grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
                     {(risk.stage || risk.spec) && (
-                      <div className="col-span-2 rounded-lg border p-3 grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
+                      <div className="sm:col-span-2 rounded-lg border p-3 grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
                         <div>
                           <span className="text-[10px] font-semibold uppercase" style={{ color: 'var(--ink-5)' }}>Etapa vinculada</span>
                           <p style={{ fontSize: '0.75rem', color: 'var(--ink-1)' }}>{risk.stage || '—'}</p>
@@ -336,7 +336,7 @@ export function TabRiscos({ project }: TabRiscosProps) {
 
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
-    <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
+    <label className={`flex flex-col gap-1 ${full ? 'sm:col-span-2' : ''}`}>
       <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
@@ -374,7 +374,7 @@ function RiskForm({ goals, onClose, onSave }: {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Cadastrar Risco</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
             <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: e.target.value })}>
               {goals.length === 0 && <option value="">Nenhuma meta cadastrada</option>}

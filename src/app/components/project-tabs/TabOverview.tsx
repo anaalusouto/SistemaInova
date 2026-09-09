@@ -74,7 +74,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
           />
         </div>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { icon: Users, label: 'Coordenador', value: project.coordinator },
             { icon: Building2, label: 'Financiador', value: project.financier },
@@ -96,7 +96,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Valor Aprovado', value: fmt(project.budgetApproved), icon: DollarSign, color: 'var(--brand)', bg: 'var(--brand-soft)' },
           { label: 'Valor Executado', value: `${fmt(project.budgetExecuted)} (${pctExec}%)`, icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-soft)' },
@@ -123,7 +123,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
       </div>
 
       {/* Middle: activities + risks summary */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Activities summary */}
         <div
           className="bg-card rounded-xl border p-5"

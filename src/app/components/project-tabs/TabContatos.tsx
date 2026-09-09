@@ -146,7 +146,7 @@ export function TabContatos({ project }: { project: Project }) {
               </h3>
               <button onClick={() => setForm(null)}><X size={16} /></button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Data">
                 <input type="date" className="inp" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} />
               </Field>
@@ -192,7 +192,7 @@ export function TabContatos({ project }: { project: Project }) {
 
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
-    <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
+    <label className={`flex flex-col gap-1 ${full ? 'sm:col-span-2' : ''}`}>
       <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>

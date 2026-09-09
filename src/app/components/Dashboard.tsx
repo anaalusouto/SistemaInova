@@ -119,7 +119,7 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
       </div>
 
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: 'Total de Projetos',
@@ -196,7 +196,7 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
       </div>
 
       {/* Financial KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Valor Previsto Total', value: fmt(kpiData.totalBudget), sub: '6 projetos ativos', icon: DollarSign, color: 'var(--brand)', bg: 'var(--brand-soft)' },
           { label: 'Valor Executado', value: fmt(kpiData.totalExecuted), sub: `${pctExecutado}% do previsto`, icon: TrendingUp, color: 'var(--success)', bg: 'var(--success-soft)' },
@@ -228,10 +228,10 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
       </div>
 
       {/* Middle row: Chart + Pie + Alerts */}
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Area Chart */}
         <div
-          className="col-span-7 bg-card rounded-xl p-5 border"
+          className="lg:col-span-7 bg-card rounded-xl p-5 border"
           style={{ borderColor: 'var(--border)' }}
         >
           <div className="flex items-center justify-between mb-4">
@@ -276,7 +276,7 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
         </div>
 
         {/* Pie + Risk Alerts */}
-        <div className="col-span-5 flex flex-col gap-4">
+        <div className="lg:col-span-5 flex flex-col gap-4">
           {/* Pie */}
           <div
             className="bg-card rounded-xl p-5 border flex-1"
@@ -345,10 +345,10 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
       </div>
 
       {/* Bottom row: Project Table + Deadlines */}
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Project Table */}
         <div
-          className="col-span-8 bg-card rounded-xl border overflow-hidden"
+          className="lg:col-span-8 bg-card rounded-xl border overflow-hidden"
           style={{ borderColor: 'var(--border)' }}
         >
           <div
@@ -366,6 +366,7 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
               Ver todos <ArrowRight size={12} />
             </button>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
@@ -433,11 +434,12 @@ export function Dashboard({ onSelectProject, onGoToProjects }: DashboardProps) {
               })}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Upcoming Deadlines */}
         <div
-          className="col-span-4 bg-card rounded-xl border overflow-hidden"
+          className="lg:col-span-4 bg-card rounded-xl border overflow-hidden"
           style={{ borderColor: 'var(--border)' }}
         >
           <div

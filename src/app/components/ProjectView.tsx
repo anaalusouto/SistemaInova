@@ -96,9 +96,9 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         </div>
 
         {/* Project title row */}
-        <div className="flex items-start justify-between mb-4 gap-4">
-          <div className="flex items-start gap-3">
-            <div>
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between mb-4 gap-3 lg:gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1
                   style={{
@@ -187,7 +187,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
                   <Link2 size={11} /> {termoFomentoLink ? 'Editar termo' : 'Link do Termo de Fomento'}
                 </button>
               </div>
-              <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-x-3 gap-y-1 mt-1 flex-wrap">
                 <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
                   {project.code}
                 </span>
@@ -204,7 +204,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
           </div>
 
           {/* Registros + progresso */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap lg:flex-shrink-0">
             <button
               onClick={() => setPanel('riscos')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
@@ -244,7 +244,8 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         </div>
 
         {/* Tab bar */}
-        <div className="flex items-end gap-0 -mb-px">
+        <div className="overflow-x-auto -mb-px">
+        <div className="flex items-end gap-0 w-max">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -265,6 +266,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
               </button>
             );
           })}
+        </div>
         </div>
       </div>
 

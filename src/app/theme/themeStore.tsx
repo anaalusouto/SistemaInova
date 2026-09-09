@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 export type ThemeMode = 'light' | 'dark';
 export type AccentColor = 'azul' | 'rosa' | 'verde' | 'amarelo';
+export type FontScale = 'sm' | 'md' | 'lg' | 'xl';
 
 export const ACCENT_LABEL: Record<AccentColor, string> = {
   azul: 'Azul',
@@ -18,10 +19,27 @@ export const ACCENT_SWATCH: Record<AccentColor, string> = {
   amarelo: '#CA8A04',
 };
 
+export const FONT_SCALE_ORDER: FontScale[] = ['sm', 'md', 'lg', 'xl'];
+
+export const FONT_SCALE_LABEL: Record<FontScale, string> = {
+  sm: 'Pequeno',
+  md: 'Padrão',
+  lg: 'Grande',
+  xl: 'Extra grande',
+};
+
+/** Fator aplicado como `zoom` no <html> — escala texto, ícones e espaçamentos juntos, sem quebrar o layout. */
+export const FONT_SCALE_VALUE: Record<FontScale, number> = {
+  sm: 0.925,
+  md: 1,
+  lg: 1.1,
+  xl: 1.25,
+};
+
 const KEY = 'pp-theme-v1';
 
-interface ThemePrefs { mode: ThemeMode; accent: AccentColor }
-const DEFAULT_PREFS: ThemePrefs = { mode: 'light', accent: 'azul' };
+interface ThemePrefs { mode: ThemeMode; accent: AccentColor; fontScale: FontScale }
+const DEFAULT_PREFS: ThemePrefs = { mode: 'light', accent: 'azul', fontScale: 'md' };
 
 function readPrefs(): ThemePrefs {
   try {
@@ -31,6 +49,7 @@ function readPrefs(): ThemePrefs {
     return {
       mode: parsed.mode === 'dark' ? 'dark' : 'light',
       accent: (['azul', 'rosa', 'verde', 'amarelo'] as const).includes(parsed.accent) ? parsed.accent : 'azul',
+      fontScale: FONT_SCALE_ORDER.includes(parsed.fontScale) ? parsed.fontScale : 'md',
     };
   } catch { return DEFAULT_PREFS; }
 }
@@ -39,14 +58,19 @@ function applyToDocument(prefs: ThemePrefs) {
   const root = document.documentElement;
   root.classList.toggle('dark', prefs.mode === 'dark');
   root.dataset.accent = prefs.accent;
+  root.style.setProperty('zoom', String(FONT_SCALE_VALUE[prefs.fontScale]));
 }
 
 interface Ctx {
   mode: ThemeMode;
   accent: AccentColor;
+  fontScale: FontScale;
   setMode: (m: ThemeMode) => void;
   setAccent: (a: AccentColor) => void;
+  setFontScale: (f: FontScale) => void;
   toggleMode: () => void;
+  increaseFontScale: () => void;
+  decreaseFontScale: () => void;
 }
 
 const ThemeContext = createContext<Ctx | null>(null);
@@ -70,9 +94,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = useCallback((m: ThemeMode) => setPrefs(p => ({ ...p, mode: m })), []);
   const setAccent = useCallback((a: AccentColor) => setPrefs(p => ({ ...p, accent: a })), []);
+  const setFontScale = useCallback((f: FontScale) => setPrefs(p => ({ ...p, fontScale: f })), []);
   const toggleMode = useCallback(() => setPrefs(p => ({ ...p, mode: p.mode === 'dark' ? 'light' : 'dark' })), []);
+  const increaseFontScale = useCallback(() => setPrefs(p => {
+    const i = FONT_SCALE_ORDER.indexOf(p.fontScale);
+    return { ...p, fontScale: FONT_SCALE_ORDER[Math.min(i + 1, FONT_SCALE_ORDER.length - 1)] };
+  }), []);
+  const decreaseFontScale = useCallback(() => setPrefs(p => {
+    const i = FONT_SCALE_ORDER.indexOf(p.fontScale);
+    return { ...p, fontScale: FONT_SCALE_ORDER[Math.max(i - 1, 0)] };
+  }), []);
 
-  const value = useMemo<Ctx>(() => ({ mode: prefs.mode, accent: prefs.accent, setMode, setAccent, toggleMode }), [prefs, setMode, setAccent, toggleMode]);
+  const value = useMemo<Ctx>(() => ({
+    mode: prefs.mode, accent: prefs.accent, fontScale: prefs.fontScale,
+    setMode, setAccent, setFontScale, toggleMode, increaseFontScale, decreaseFontScale,
+  }), [prefs, setMode, setAccent, setFontScale, toggleMode, increaseFontScale, decreaseFontScale]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

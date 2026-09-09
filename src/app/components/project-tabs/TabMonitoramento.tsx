@@ -82,7 +82,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
             <ArrowDown size={12} /> Ver detalhamento
           </button>
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Situação', value: project.status },
             { label: 'Progresso', value: `${project.progress}%` },
@@ -213,6 +213,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
 
                         {isDelExpanded && (
                           <div className="border-t" style={{ borderColor: 'var(--border)' }}>
+                            <div className="overflow-x-auto">
                             <table className="w-full">
                               <thead>
                                 <tr style={{ background: 'var(--surface-1)' }}>
@@ -300,6 +301,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
                                 })}
                               </tbody>
                             </table>
+                            </div>
                             <div className="p-3">
                               <button
                                 onClick={() => toast.info("Adição de atividades: será liberada na aba Cadastro.")}

@@ -164,7 +164,7 @@ export function TabMudancas({ project }: Props) {
                 </div>
 
                 {isOpen && (
-                  <div className="px-5 pb-4 pt-1 border-t grid grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
+                  <div className="px-5 pb-4 pt-1 border-t grid grid-cols-1 sm:grid-cols-2 gap-3" style={{ borderColor: 'var(--border)' }}>
                     <Field label="Descrição" full>
                       <input className="ipt" defaultValue={change.description} onBlur={e => edit(change, 'descrição', change.description, e.target.value)} />
                     </Field>
@@ -237,7 +237,7 @@ export function TabMudancas({ project }: Props) {
 
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
-    <label className={`flex flex-col gap-1 ${full ? 'col-span-2' : ''}`}>
+    <label className={`flex flex-col gap-1 ${full ? 'sm:col-span-2' : ''}`}>
       <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>
@@ -273,7 +273,7 @@ function ChangeForm({ goals, onClose, onSave }: {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>Registrar Mudança</h3>
           <button type="button" onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={16} /></button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Meta vinculada *" full>
             <select className="ipt" value={f.goalId} onChange={e => setF({ ...f, goalId: e.target.value })}>
               {goals.length === 0 && <option value="">Nenhuma meta cadastrada</option>}

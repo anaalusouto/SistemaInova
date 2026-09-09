@@ -9,7 +9,7 @@ import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type Ma
 import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
 import { useAudit } from '../audit/auditStore';
 import { useStore } from '../store';
-import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, type AccentColor } from '../theme/themeStore';
+import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, FONT_SCALE_LABEL, FONT_SCALE_ORDER, type AccentColor, type FontScale } from '../theme/themeStore';
 
 const NOTIF_KEY = 'pp-notificacoes-v1';
 
@@ -65,15 +65,15 @@ export function ConfiguracoesPage() {
   ];
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
       {/* Left nav */}
-      <div className="w-52 border-r flex-shrink-0 py-6 px-3 flex flex-col" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
-        <div className="px-3 mb-4">
+      <div className="w-full lg:w-52 border-b lg:border-b-0 lg:border-r flex-shrink-0 py-3 lg:py-6 px-3 flex flex-col" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
+        <div className="px-3 mb-2 lg:mb-4 hidden lg:block">
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
             Configurações
           </h1>
         </div>
-        <nav className="flex flex-col gap-0.5 flex-1">
+        <nav className="flex flex-row lg:flex-col gap-0.5 lg:flex-1 overflow-x-auto lg:overflow-visible">
           {sections.map(s => {
             const Icon = s.icon;
             const isActive = activeSection === s.id;
@@ -81,7 +81,7 @@ export function ConfiguracoesPage() {
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all"
+                className="flex-shrink-0 whitespace-nowrap lg:w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all"
                 style={{
                   background: isActive ? 'var(--brand-soft)' : 'transparent',
                   color: isActive ? 'var(--brand)' : 'var(--ink-3)',
@@ -90,7 +90,7 @@ export function ConfiguracoesPage() {
               >
                 <Icon size={14} />
                 <span style={{ fontSize: '0.825rem' }}>{s.label}</span>
-                {isActive && <ChevronRight size={12} className="ml-auto" />}
+                {isActive && <ChevronRight size={12} className="ml-auto hidden lg:inline-block" />}
               </button>
             );
           })}
@@ -98,7 +98,7 @@ export function ConfiguracoesPage() {
 
         <button
           onClick={() => { signOut(); toast.success('Sessão encerrada.'); }}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all mt-4"
+          className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all mt-4"
           style={{ color: 'var(--danger)', fontSize: '0.8rem' }}
         >
           <LogOut size={13} /> Sair
@@ -106,7 +106,7 @@ export function ConfiguracoesPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
         {activeSection === 'profile' && (
           <div className="max-w-3xl flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -150,6 +150,7 @@ export function ConfiguracoesPage() {
               Equipe
             </h2>
             <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
@@ -197,6 +198,7 @@ export function ConfiguracoesPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         )}
@@ -244,7 +246,7 @@ export function ConfiguracoesPage() {
 const ACCENT_OPTIONS: AccentColor[] = ['azul', 'rosa', 'verde', 'amarelo'];
 
 function AparenciaSection() {
-  const { mode, accent, setMode, setAccent } = useTheme();
+  const { mode, accent, fontScale, setMode, setAccent, setFontScale } = useTheme();
 
   return (
     <div className="max-w-xl flex flex-col gap-6">
@@ -321,12 +323,40 @@ function AparenciaSection() {
         </div>
       </div>
 
+      <div className="bg-card rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: 'var(--border)' }}>
+        <div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-1)' }}>Tamanho do texto</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)', marginTop: 2 }}>
+            Ajusta o tamanho das letras e dos ícones em toda a plataforma.
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {FONT_SCALE_ORDER.map(f => (
+            <button
+              key={f}
+              onClick={() => setFontScale(f)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[13px] font-medium border transition-colors"
+              style={{
+                borderColor: fontScale === f ? 'var(--brand)' : 'var(--border)',
+                background: fontScale === f ? 'var(--brand-soft)' : 'transparent',
+                color: fontScale === f ? 'var(--brand-text)' : 'var(--ink-3)',
+              }}
+            >
+              <span style={{ fontSize: FONT_SIZE_PREVIEW[f] }}>A</span>
+              {FONT_SCALE_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <p style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
         As preferências de aparência ficam salvas neste dispositivo.
       </p>
     </div>
   );
 }
+
+const FONT_SIZE_PREVIEW: Record<FontScale, string> = { sm: '0.75rem', md: '0.9rem', lg: '1.05rem', xl: '1.2rem' };
 
 /** Editor inline genérico de um campo de identidade (nome, login, e-mail…): mostra o valor, e ao
  * salvar exige a senha atual antes de chamar onSave. */
@@ -755,6 +785,7 @@ function UsuariosSection() {
       </div>
 
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
@@ -806,6 +837,7 @@ function UsuariosSection() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {showNew && (
@@ -915,7 +947,7 @@ function RegistrosArea({ projects, entries }: {
             Todo o histórico de alterações do sistema fica concentrado aqui. A cada 7 dias os registros são consolidados e enviados por e-mail aos administradores.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button onClick={() => setView('projetos')} className="bg-card rounded-xl border p-5 text-left hover:shadow-md transition-all" style={{ borderColor: 'var(--border)' }}>
             <FolderKanban size={20} color="var(--brand)" />
             <div className="mt-2" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink-1)' }}>Registro de projetos</div>
@@ -936,7 +968,7 @@ function RegistrosArea({ projects, entries }: {
       return (
         <div className="max-w-4xl flex flex-col gap-4">
           <Back onClick={() => setView('menu')} label="Registro de projetos" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {projects.map(p => (
               <button key={p.id} onClick={() => setProjectId(p.id)} className="bg-card rounded-xl border p-4 text-left hover:shadow-md transition-all" style={{ borderColor: 'var(--border)' }}>
                 <div className="flex items-center gap-2 mb-1">
@@ -1018,6 +1050,7 @@ function RegistroProjeto({ project, entries, onBack }: {
       </div>
 
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr style={{ background: 'var(--surface-1)' }}>
@@ -1040,6 +1073,7 @@ function RegistroProjeto({ project, entries, onBack }: {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -1076,7 +1110,7 @@ function AcompanhamentoIndividual({ entries, projects, onBack }: {
         <input type="date" value={day} onChange={e => setDay(e.target.value)} className="px-3 py-2 rounded-lg border text-[13px]" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Panel title="Campos acessados" count={acessos.length} color="var(--brand)">
           {acessos.map(e => (
             <Row key={e.id} left={formatTs(e.timestamp)} main={e.area} sub={e.detail ?? e.action} />

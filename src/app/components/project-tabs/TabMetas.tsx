@@ -427,7 +427,7 @@ export function TabMetas({ project }: Props) {
               <div className="p-6 flex flex-col gap-5">
                 <section>
                   <SectionTitle>Indicadores gerais</SectionTitle>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
                       { label: 'Etapas', value: String(g.deliverables.length) },
                       { label: 'Especificações', value: String(acts.length) },
@@ -445,6 +445,7 @@ export function TabMetas({ project }: Props) {
                 <section>
                   <SectionTitle>Etapas da meta</SectionTitle>
                   <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                    <div className="overflow-x-auto">
                     <table className="w-full" style={{ borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ background: 'var(--surface-1)' }}>
@@ -469,12 +470,14 @@ export function TabMetas({ project }: Props) {
                         })}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </section>
 
                 <section>
                   <SectionTitle>Especificações / cronograma físico</SectionTitle>
                   <div className="rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                    <div className="overflow-x-auto">
                     <table className="w-full" style={{ borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ background: 'var(--surface-1)' }}>
@@ -504,6 +507,7 @@ export function TabMetas({ project }: Props) {
                         }))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </section>
               </div>

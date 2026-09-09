@@ -452,7 +452,8 @@ function MonthView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Ca
   const today = new Date();
 
   return (
-    <div>
+    <div className="overflow-x-auto">
+      <div className="min-w-[640px]">
       <div className="grid grid-cols-7 border-b text-[11px] font-semibold text-muted-foreground" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         {weekDays.map(w => <div key={w} className="px-2 py-1.5 text-center">{w}</div>)}
       </div>
@@ -486,6 +487,7 @@ function MonthView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Ca
           );
         })}
       </div>
+      </div>
     </div>
   );
 }
@@ -496,7 +498,8 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate() + i); return d; });
   const today = new Date();
   return (
-    <div className="grid grid-cols-7">
+    <div className="overflow-x-auto">
+    <div className="grid grid-cols-7 min-w-[700px]">
       {days.map(d => {
         const key = fmtDate(d);
         const list = events.filter(e => e.date === key).sort((a, b) => (a.startTime ?? '').localeCompare(b.startTime ?? ''));
@@ -525,6 +528,7 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
           </div>
         );
       })}
+    </div>
     </div>
   );
 }
@@ -598,7 +602,7 @@ function EventForm({ initial, prefillDate, routes, communities, onSave, onClose,
             <label className="text-xs font-medium block mb-1">Título</label>
             <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label className="text-xs font-medium block mb-1">Data</label>
               <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
@@ -612,7 +616,7 @@ function EventForm({ initial, prefillDate, routes, communities, onSave, onClose,
               <input type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} className="w-full px-2 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium block mb-1">Tipo</label>
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value as CalendarEventType })} className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }}>

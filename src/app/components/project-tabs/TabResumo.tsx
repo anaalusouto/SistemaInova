@@ -40,7 +40,7 @@ export function TabResumo({ project }: { project: Project }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {cards.map(c => (
           <div key={c.label} className="bg-card rounded-xl border p-4" style={{ borderColor: 'var(--border)' }}>
             <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.label}</div>

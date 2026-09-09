@@ -548,7 +548,7 @@ function VinculoModal({ atividade, initial, projects, canEdit, onSave, onClose }
         </div>
         <p className="text-[11px] text-muted-foreground mb-3">{atividade.atividade}</p>
 
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
             <label className="text-xs font-medium block mb-1">Início</label>
             <input type="date" value={inicio} onChange={e => setInicio(e.target.value)} disabled={!canEdit}
@@ -622,6 +622,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
   const APP_PEOPLE = usePeople();
   return (
     <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+      <div className="overflow-x-auto">
       <table className="w-full text-[12px]">
         <thead>
           <tr style={{ background: 'var(--surface-1)' }}>
@@ -675,6 +676,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -723,7 +725,7 @@ function GanttEditModal({ title, item, canRename, projectOptions, onSave, onClos
                 className="w-full px-3 py-2 rounded-md text-sm" style={{ border: '1px solid var(--border)' }} />
             ) : <div className="text-sm text-foreground">{f.nome}</div>}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium block mb-1">Início</label>
               <input type="date" value={f.inicio} onChange={e => setF({ ...f, inicio: e.target.value })}

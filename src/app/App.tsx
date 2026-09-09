@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Menu, Moon, Sun } from 'lucide-react';
+import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -16,7 +16,7 @@ import { ProjectsProvider, useStore } from './store';
 import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
 import { AuditProvider, useAudit } from './audit/auditStore';
-import { ThemeProvider, useTheme } from './theme/themeStore';
+import { ThemeProvider, useTheme, FONT_SCALE_LABEL } from './theme/themeStore';
 import { LoginScreen } from './auth/LoginScreen';
 
 const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
@@ -113,12 +113,44 @@ function AppShell() {
           <span className="text-sm font-semibold text-foreground lg:hidden">Sistema Inova</span>
           <span className="hidden lg:inline text-sm font-medium" style={{ color: 'var(--ink-1)' }}>{greeting}</span>
           <div className="flex-1" />
+          <FontSizeControl />
           <ThemeToggleButton />
           <NotificationsBell onOpenProject={handleSelectProject} />
         </header>
         <main className="flex-1 overflow-y-auto">{renderMain()}</main>
       </div>
       <Toaster position="top-right" richColors closeButton />
+    </div>
+  );
+}
+
+function FontSizeControl() {
+  const { fontScale, increaseFontScale, decreaseFontScale } = useTheme();
+  return (
+    <div
+      className="hidden sm:flex items-center rounded-full"
+      style={{ height: 34, border: '1px solid var(--border)', color: 'var(--ink-3)' }}
+      title={`Tamanho do texto: ${FONT_SCALE_LABEL[fontScale]}`}
+    >
+      <button
+        onClick={decreaseFontScale}
+        disabled={fontScale === 'sm'}
+        aria-label="Diminuir tamanho do texto"
+        className="flex items-center justify-center rounded-full disabled:opacity-30"
+        style={{ width: 30, height: 30 }}
+      >
+        <Minus size={13} />
+      </button>
+      <span style={{ fontSize: '0.68rem', fontWeight: 600, width: 20, textAlign: 'center' }}>A</span>
+      <button
+        onClick={increaseFontScale}
+        disabled={fontScale === 'xl'}
+        aria-label="Aumentar tamanho do texto"
+        className="flex items-center justify-center rounded-full disabled:opacity-30"
+        style={{ width: 30, height: 30 }}
+      >
+        <Plus size={13} />
+      </button>
     </div>
   );
 }

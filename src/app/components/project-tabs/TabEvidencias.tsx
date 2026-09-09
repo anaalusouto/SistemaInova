@@ -146,7 +146,7 @@ export function TabEvidencias({ project }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {filtered.map(ev => {
               const cfg = typeConfig[ev.type] ?? typeConfig['Documento'];
               const Icon = cfg.icon;
