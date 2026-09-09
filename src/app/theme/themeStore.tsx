@@ -28,7 +28,12 @@ export const FONT_SCALE_LABEL: Record<FontScale, string> = {
   xl: 'Extra grande',
 };
 
-/** Fator aplicado como `zoom` no <html> — escala texto, ícones e espaçamentos juntos, sem quebrar o layout. */
+/**
+ * Fator aplicado como `font-size` (percentual) no <html> — escala só o texto (que no app é
+ * quase todo definido em `rem`, relativo à raiz). Botões, ícones, cards e espaçamentos usam a
+ * escala `--spacing` do Tailwind, fixada em px em styles.css, então NÃO acompanham esse fator —
+ * só as letras aumentam/diminuem, o layout fica do mesmo tamanho.
+ */
 export const FONT_SCALE_VALUE: Record<FontScale, number> = {
   sm: 0.925,
   md: 1,
@@ -58,7 +63,7 @@ function applyToDocument(prefs: ThemePrefs) {
   const root = document.documentElement;
   root.classList.toggle('dark', prefs.mode === 'dark');
   root.dataset.accent = prefs.accent;
-  root.style.setProperty('zoom', String(FONT_SCALE_VALUE[prefs.fontScale]));
+  root.style.fontSize = `${FONT_SCALE_VALUE[prefs.fontScale] * 100}%`;
 }
 
 interface Ctx {

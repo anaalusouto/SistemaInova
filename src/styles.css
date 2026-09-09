@@ -62,7 +62,12 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  /* Fixados em px (não rem) de propósito: o controle "Tamanho do texto" muda o font-size da
+     raiz para escalar só as letras — se --spacing/--radius ficassem em rem, botões, ícones,
+     cards e espaçamentos (que usam a escala do Tailwind, baseada em --spacing) cresceriam
+     junto, e o pedido foi só aumentar o texto. */
+  --spacing: 4px;
+  --radius: 10px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);

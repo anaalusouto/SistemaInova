@@ -327,7 +327,7 @@ function AparenciaSection() {
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-1)' }}>Tamanho do texto</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)', marginTop: 2 }}>
-            Ajusta o tamanho das letras e dos ícones em toda a plataforma.
+            Ajusta o tamanho do texto em toda a plataforma, sem mudar o tamanho de botões, ícones e cards.
           </div>
         </div>
         <div className="flex items-center gap-2">
