@@ -6,6 +6,7 @@ import { Dashboard } from './components/Dashboard';
 import { ProjectsPage } from './components/ProjectsPage';
 import { ProjectView } from './components/ProjectView';
 import { ReportsPage } from './components/ReportsPage';
+import { GestaoPage } from './components/GestaoPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoPage } from './components/DiagnosticoPage';
 import { CronogramaPage } from './components/CronogramaPage';
@@ -80,6 +81,8 @@ function AppShell() {
         return <DiagnosticoPage />;
       case 'reports':
         return <ReportsPage />;
+      case 'management':
+        return <GestaoPage />;
       case 'messages':
         return <MensagensPage onOpenProject={handleSelectProject} />;
       case 'settings':

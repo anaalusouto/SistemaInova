@@ -9,6 +9,7 @@ import {
   ClipboardList,
   LogOut,
   MessageSquare,
+  Kanban,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
@@ -19,6 +20,7 @@ export type NavItem =
   | 'schedule'
   | 'diagnostics'
   | 'reports'
+  | 'management'
   | 'messages'
   | 'settings';
 
@@ -38,6 +40,7 @@ const bottomItems = [
   { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
+  { id: 'management' as NavItem, label: 'Gestão Interna', icon: Kanban },
   { id: 'messages' as NavItem, label: 'Mensagens', icon: MessageSquare },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
