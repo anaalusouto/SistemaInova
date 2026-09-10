@@ -11,8 +11,11 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { Download, FileText, Calendar } from 'lucide-react';
+import { Download, FileText, FileCode2, Calendar } from 'lucide-react';
 import { type Project } from '../../data/mockData';
+import { buildReportModel, exportReportCsv, exportReportPdf, exportReportXml } from '../../lib/reportExport';
+
+const ALL_FIELDS = ['cadastro', 'situacao', 'objetivo', 'equipe', 'metas', 'financeiro', 'contrapart', 'riscos', 'mudancas', 'evidencias'];
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -22,29 +25,21 @@ interface TabRelatoriosProps {
 }
 
 export function TabRelatorios({ project }: TabRelatoriosProps) {
-  const printReport = () => { toast.info('Abrindo diálogo de impressão…'); setTimeout(() => window.print(), 200); };
-  const exportProjectCsv = (label: string) => {
-    const rows = [
-      ['Seção', 'Item', 'Valor'],
-      ['Projeto', 'Nome', project.name],
-      ['Projeto', 'Código', project.code],
-      ['Projeto', 'Coordenador', project.coordinator],
-      ['Projeto', 'Financiador', project.financier],
-      ['Projeto', 'Status', project.status],
-      ['Projeto', 'Progresso %', project.progress],
-      ['Financeiro', 'Aprovado', project.budgetApproved],
-      ['Financeiro', 'Executado', project.budgetExecuted],
-      ...project.risks.map(r => ['Risco', r.description, `${r.severity} (${r.status})`]),
-      ...project.changes.map(c => ['Mudança', c.description, `${c.type} · ${c.approval}`]),
-    ];
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `${label}-${project.code}.csv`; a.click();
-    URL.revokeObjectURL(url);
+  const buildModel = () => buildReportModel(`Relatório — ${project.name}`, [project], ALL_FIELDS);
+
+  const exportProjectPdf = () => {
+    exportReportPdf(buildModel());
+    toast.success('PDF gerado.');
+  };
+  const exportProjectCsv = () => {
+    exportReportCsv(buildModel());
     toast.success('CSV gerado.');
   };
+  const exportProjectXml = () => {
+    exportReportXml(buildModel());
+    toast.success('XML gerado.');
+  };
+
   const allActivities = project.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
 
   const activityStatusData = [
@@ -86,14 +81,21 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={printReport}
+            onClick={exportProjectPdf}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]"
             style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
           >
-            <Download size={12} /> PDF
+            <FileText size={12} /> PDF
           </button>
           <button
-            onClick={() => exportProjectCsv("relatorio")}
+            onClick={exportProjectXml}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px]"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
+          >
+            <FileCode2 size={12} /> XML
+          </button>
+          <button
+            onClick={exportProjectCsv}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
             style={{ background: 'var(--primary)' }}
           >
@@ -258,18 +260,19 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { label: 'Relatório de Acompanhamento', format: 'PDF', icon: FileText },
-            { label: 'Planilha de Atividades', format: 'XLSX', icon: FileText },
-            { label: 'Relatório Financeiro', format: 'PDF', icon: FileText },
-            { label: 'Cronograma', format: 'PDF', icon: Calendar },
-            { label: 'Matriz de Riscos', format: 'PDF', icon: FileText },
-            { label: 'Prestação de Contas', format: 'PDF', icon: FileText },
+            { label: 'Relatório de Acompanhamento', format: 'PDF' as const, icon: FileText },
+            { label: 'Planilha de Atividades', format: 'CSV' as const, icon: FileText },
+            { label: 'Relatório Financeiro', format: 'PDF' as const, icon: FileText },
+            { label: 'Cronograma', format: 'PDF' as const, icon: Calendar },
+            { label: 'Matriz de Riscos', format: 'PDF' as const, icon: FileText },
+            { label: 'Prestação de Contas', format: 'CSV' as const, icon: FileText },
           ].map(r => {
             const Icon = r.icon;
+            const onClick = r.format === 'PDF' ? exportProjectPdf : exportProjectCsv;
             return (
               <button
                 key={r.label}
-                onClick={() => exportProjectCsv(r.label.toLowerCase().replace(/\s+/g, "-"))}
+                onClick={onClick}
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left hover:border-blue-300 transition-colors"
                 style={{ borderColor: 'var(--border)' }}
               >

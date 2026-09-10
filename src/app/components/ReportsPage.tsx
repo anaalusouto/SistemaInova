@@ -1,7 +1,14 @@
-import { useMemo, useState } from 'react';
-import { Download, FileText, Printer } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Download, FileCode2, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStore } from '../store';
+import { buildReportModel, exportReportCsv, exportReportPdf, exportReportXml } from '../lib/reportExport';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -31,6 +38,16 @@ export function ReportsPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>(['cadastro', 'situacao', 'metas', 'financeiro', 'riscos']);
   const [title, setTitle] = useState('Relatório Consolidado');
 
+  // Projetos chegam de forma assíncrona (Supabase); quando o primeiro lote carrega
+  // após o mount, seleciona todos por padrão em vez de manter a seleção vazia do useState inicial.
+  const didInitSelection = useRef(false);
+  useEffect(() => {
+    if (!didInitSelection.current && projects.length > 0) {
+      didInitSelection.current = true;
+      setSelectedProjects(projects.map(p => p.id));
+    }
+  }, [projects]);
+
   const included = useMemo(() => projects.filter(p => selectedProjects.includes(p.id)), [projects, selectedProjects]);
   const has = (f: string) => selectedFields.includes(f);
 
@@ -51,6 +68,24 @@ export function ReportsPage() {
     setTimeout(() => window.print(), 200);
   };
 
+  const handleExportPdf = () => {
+    if (included.length === 0) { toast.error('Selecione ao menos um projeto para exportar.'); return; }
+    exportReportPdf(buildReportModel(title, included, selectedFields));
+    toast.success('PDF gerado.');
+  };
+
+  const handleExportCsv = () => {
+    if (included.length === 0) { toast.error('Selecione ao menos um projeto para exportar.'); return; }
+    exportReportCsv(buildReportModel(title, included, selectedFields));
+    toast.success('CSV gerado.');
+  };
+
+  const handleExportXml = () => {
+    if (included.length === 0) { toast.error('Selecione ao menos um projeto para exportar.'); return; }
+    exportReportXml(buildReportModel(title, included, selectedFields));
+    toast.success('XML gerado.');
+  };
+
   return (
     <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
       <div className="flex items-center justify-between print:hidden">
@@ -68,15 +103,29 @@ export function ReportsPage() {
             className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium border"
             style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
           >
-            <Printer size={13} /> Imprimir / PDF
+            <Printer size={13} /> Imprimir
           </button>
-          <button
-            onClick={() => toast.info('Exportação para Excel disponível em breve.')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium text-white"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Download size={13} /> Exportar
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium text-white"
+                style={{ background: 'var(--primary)' }}
+              >
+                <Download size={13} /> Exportar <ChevronDown size={13} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportPdf} className="gap-2">
+                <FileText size={13} /> PDF (relatório completo)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCsv} className="gap-2">
+                <FileSpreadsheet size={13} /> CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportXml} className="gap-2">
+                <FileCode2 size={13} /> XML
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
