@@ -168,6 +168,8 @@ type Ctx = {
   updateGanttEntrega: (entregaId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; entrega?: string; comentario?: string }) => void;
   updateGanttBloco: (blocoId: number, bloco: string) => void;
   updateGanttAtividade: (atividadeId: number, patch: { status?: GanttStatus; progress?: number; inicio?: string; fim?: string; responsavel?: string; atividade?: string; comentario?: string; observacao?: string; projetoId?: number | null; projetoIds?: number[]; vinculavel?: boolean }) => void;
+  addGanttBloco: (bloco: string) => void;
+  addGanttEntrega: (blocoId: number, entrega: string) => void;
   addGanttAtividade: (entregaId: number, atividade: string) => void;
   addGanttSubatividade: (atividadeId: number, atividade: string) => void;
   deleteGanttAtividade: (atividadeId: number) => { entregaId: number; index: number; atividade: GanttActivity; parentId?: number } | null;
@@ -222,8 +224,13 @@ function loadInitialLocal(): PersistedLocal {
 }
 
 function nextGanttId(blocos: GanttBloco[]): number {
-  const ids = blocos.flatMap(b => b.entregas.flatMap(e =>
-    e.atividades.flatMap(a => [a.id, ...(a.subatividades ?? []).map(s => s.id)])));
+  const ids = blocos.flatMap(b => [
+    b.id,
+    ...b.entregas.flatMap(e => [
+      e.id,
+      ...e.atividades.flatMap(a => [a.id, ...(a.subatividades ?? []).map(s => s.id)]),
+    ]),
+  ]);
   return ids.reduce((m, x) => Math.max(m, x), 0) + 1;
 }
 
@@ -353,6 +360,25 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       return next;
     }),
     updateGanttBloco: (blocoId, bloco) => setGantt(prev => { const next = prev.map(b => (b.id === blocoId ? { ...b, bloco } : b)); persistLocal({ gantt: next }); return next; }),
+    addGanttBloco: (bloco) => setGantt(prev => {
+      const nextId = nextGanttId(prev);
+      const next = [...prev, { id: nextId, bloco, entregas: [] }];
+      persistLocal({ gantt: next });
+      return next;
+    }),
+    addGanttEntrega: (blocoId, entrega) => setGantt(prev => {
+      const nextId = nextGanttId(prev);
+      const hoje = new Date().toISOString().slice(0, 10);
+      const next = prev.map(b => b.id !== blocoId ? b : {
+        ...b,
+        entregas: [...b.entregas, {
+          id: nextId, entrega, inicio: hoje, fim: hoje,
+          responsavel: '', status: 'Não iniciado' as GanttStatus, progress: 0, atividades: [],
+        }],
+      });
+      persistLocal({ gantt: next });
+      return next;
+    }),
     updateGanttAtividade: (atividadeId, patchData) => setGantt(prev => {
       const next = prev.map(b => ({
         ...b,

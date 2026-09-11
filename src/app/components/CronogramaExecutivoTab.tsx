@@ -21,6 +21,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const {
     projects, gantt, ganttTracking, setGanttTracking,
     updateGanttEntrega, updateGanttAtividade, updateGanttBloco,
+    addGanttBloco, addGanttEntrega,
     addGanttAtividade, addGanttSubatividade, deleteGanttAtividade, restoreGanttAtividade,
   } = useStore();
   const { user, isAdmin } = useAuth();
@@ -39,6 +40,10 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
   const [linking, setLinking] = useState<number | null>(null);
   const [editingBloco, setEditingBloco] = useState<number | null>(null);
   const [blocoNome, setBlocoNome] = useState('');
+  const [addingBloco, setAddingBloco] = useState(false);
+  const [novoBloco, setNovoBloco] = useState('');
+  const [addingEntregaTo, setAddingEntregaTo] = useState<number | null>(null);
+  const [novaEntrega, setNovaEntrega] = useState('');
 
   const activeProject = projectId ?? (filterProject === 'all' ? null : filterProject);
   const scopeProjects = activeProject != null ? projects.filter(p => p.id === activeProject) : projects;
@@ -102,9 +107,12 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               .filter(a => !q || norm(`${a.grupo ?? ''} ${a.atividade}`).includes(q)
                 || (a.subatividades ?? []).some(s => norm(s.atividade).includes(q))),
           }))
-          .filter(en => en.atividades.length || (q ? norm(en.entrega).includes(q) : false)),
+          // Uma entrega sem atividades ainda (recém-criada) só some quando há um
+          // projeto específico selecionado (nada dela pertence a esse projeto) ou
+          // quando uma busca ativa não bate com o nome dela — nunca por estar vazia.
+          .filter(en => en.atividades.length > 0 || (pid == null && (!q || norm(en.entrega).includes(q)))),
       }))
-      .filter(b => b.entregas.length || (q ? norm(b.bloco).includes(q) : false));
+      .filter(b => b.entregas.length > 0 || (pid == null && (!q || norm(b.bloco).includes(q))));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gantt, search, activeProject]);
 
@@ -188,6 +196,26 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     toast.success('Subatividade adicionada.');
     setNovaSub('');
     setAddingSubTo(null);
+  };
+
+  const handleAddBloco = () => {
+    const nome = novoBloco.trim();
+    if (!nome) return;
+    addGanttBloco(nome);
+    audit('adicionar bloco', nome);
+    toast.success('Bloco adicionado.');
+    setNovoBloco('');
+    setAddingBloco(false);
+  };
+
+  const handleAddEntrega = (blocoId: number) => {
+    const nome = novaEntrega.trim();
+    if (!nome) return;
+    addGanttEntrega(blocoId, nome);
+    audit('adicionar entrega', nome);
+    toast.success('Entrega adicionada.');
+    setNovaEntrega('');
+    setAddingEntregaTo(null);
   };
 
   const renderRow = (a: GanttActivity, depth: number) => {
@@ -454,8 +482,51 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                     </div>
                   );
                 })}
+
+                {isAdmin && projectId == null && activeProject == null && (
+                  <div className="flex" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <div className={showGantt ? 'shrink-0' : 'flex-1'}
+                      style={{ width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
+                      {addingEntregaTo === b.id ? (
+                        <div className="flex items-center gap-1 px-3 py-2">
+                          <input autoFocus value={novaEntrega} onChange={e => setNovaEntrega(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleAddEntrega(b.id); if (e.key === 'Escape') { setAddingEntregaTo(null); setNovaEntrega(''); } }}
+                            placeholder="Nome da entrega"
+                            className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
+                          <button onClick={() => handleAddEntrega(b.id)} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                          <button onClick={() => { setAddingEntregaTo(null); setNovaEntrega(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setAddingEntregaTo(b.id)}
+                          className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
+                          <Plus size={10} /> Nova entrega
+                        </button>
+                      )}
+                    </div>
+                    {showGantt && <div style={{ width: timelineWidth }} />}
+                  </div>
+                )}
               </div>
             ))}
+
+            {isAdmin && projectId == null && activeProject == null && (
+              addingBloco ? (
+                <div className="flex items-center gap-1 px-3 py-2.5" style={{ background: 'var(--info-soft)', borderBottom: '1px solid var(--border)' }}>
+                  <input autoFocus value={novoBloco} onChange={e => setNovoBloco(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAddBloco(); if (e.key === 'Escape') { setAddingBloco(false); setNovoBloco(''); } }}
+                    placeholder="Nome do bloco"
+                    className="flex-1 px-2 py-1 text-[11px] rounded" style={{ border: '1px solid var(--border)' }} />
+                  <button onClick={handleAddBloco} className="text-[10px] px-2 py-1 rounded text-white" style={{ background: 'var(--primary)' }}>Salvar</button>
+                  <button onClick={() => { setAddingBloco(false); setNovoBloco(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
+                </div>
+              ) : (
+                <button onClick={() => setAddingBloco(true)}
+                  className="w-full px-3 py-2.5 text-left text-[11px] font-semibold flex items-center gap-1.5 hover:bg-accent"
+                  style={{ color: 'var(--ink-4)' }}>
+                  <Plus size={12} /> Novo bloco
+                </button>
+              )
+            )}
           </div>
         </div>
       </div>
