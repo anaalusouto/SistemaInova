@@ -380,7 +380,7 @@ export const cronogramaExecutivoSeed: GanttBloco[] = [
             "id": 1033,
             "atividade": "Implementar estrutura",
             "inicio": "2026-08-14",
-            "fim": "2026-08-13",
+            "fim": "2026-08-14",
             "responsavel": "SEMAS",
             "status": "No prazo"
           },
@@ -481,7 +481,7 @@ export const cronogramaExecutivoSeed: GanttBloco[] = [
             "id": 1043,
             "atividade": "Retomar contato com as instituições e agendar encontros preliminares",
             "inicio": "2026-08-06",
-            "fim": "2026-07-31",
+            "fim": "2026-08-06",
             "responsavel": "CESUPA",
             "status": "Não iniciado",
             "observacao": "Ligação > Vídeo"

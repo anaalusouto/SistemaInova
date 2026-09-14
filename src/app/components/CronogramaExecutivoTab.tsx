@@ -398,6 +398,19 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               </div>}
             </div>
 
+            {projectId != null && visibleGantt.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
+                <Link2 size={28} className="text-muted-foreground" />
+                <p style={{ fontSize: '0.85rem', color: 'var(--ink-2)', fontWeight: 500 }}>
+                  Nenhuma atividade do Cronograma Executivo foi vinculada a este projeto ainda.
+                </p>
+                <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)', maxWidth: 420 }}>
+                  Para vincular: vá em <b>Cronograma 2026</b> no menu lateral, encontre o bloco/entrega/atividade
+                  desejada e use o ícone de vínculo (<Link2 size={11} className="inline" />) pra selecionar este projeto.
+                </p>
+              </div>
+            )}
+
             {visibleGantt.map(b => (
               <div key={b.id}>
                 <div className="flex" style={{ background: 'var(--info-soft)', borderBottom: '1px solid var(--border)' }}>

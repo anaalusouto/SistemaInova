@@ -67,7 +67,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       case 'resumo':      return <TabResumo project={project} />;
       case 'metas':       return <TabMetas project={project} />;
       case 'financeiro':  return <TabFinanceiro project={project} />;
-      case 'cronograma':  return <div className="p-6"><CronogramaExecutivoTab projectId={project.id} /></div>;
+      case 'cronograma':  return <div className="h-full min-h-0 p-6"><CronogramaExecutivoTab projectId={project.id} /></div>;
       case 'contatos':    return <TabContatos project={project} />;
       default:            return null;
     }

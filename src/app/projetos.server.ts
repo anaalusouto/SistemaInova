@@ -41,7 +41,8 @@ function mapAtividade(a: any): Activity {
 function mapEntrega(e: any): Deliverable {
   return {
     id: e.id, name: e.nome, expectedResult: e.resultado_esperado ?? '',
-    activities: (e.atividades ?? []).map(mapAtividade),
+    // Soft-deleted (excluido_em preenchido) não aparece mais na UI, mas continua no banco.
+    activities: (e.atividades ?? []).filter((a: any) => !a.excluido_em).map(mapAtividade),
   };
 }
 function mapMeta(m: any): Goal {
@@ -161,7 +162,13 @@ const SELECT_PROJETO = `
 
 export const listarProjetos = createServerFn({ method: 'GET' }).handler(async (): Promise<ProjectExt[]> => {
   const supabaseAdmin = await getAdmin();
-  const { data, error } = await supabaseAdmin.from('projetos').select(SELECT_PROJETO).order('id');
+  const { data, error } = await supabaseAdmin
+    .from('projetos')
+    .select(SELECT_PROJETO)
+    .order('id')
+    .order('ordem', { referencedTable: 'metas' })
+    .order('ordem', { referencedTable: 'metas.entregas' })
+    .order('ordem', { referencedTable: 'metas.entregas.atividades' });
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapProjeto);
 });
@@ -267,6 +274,30 @@ function lineTotal(qtd: number, qtdUnidades: number, valorUnitario: number) {
   return qtd * qtdUnidades * valorUnitario;
 }
 
+/**
+ * Calcula a `ordem` de um novo irmão dentro de uma lista (Meta/Etapa/Atividade),
+ * permitindo inserir "no meio" sem reindexar nada: usa o ponto médio entre o
+ * irmão indicado (`afterId`) e o próximo, ou +1 se for o último/não houver
+ * próximo. Sem `afterId`, insere no fim (max(ordem) + 1).
+ */
+async function computeOrdemInsercao(
+  supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>,
+  tabela: 'metas' | 'entregas' | 'atividades',
+  colunaPai: 'projeto_id' | 'meta_id' | 'entrega_id',
+  paiId: string | number,
+  afterId?: string,
+): Promise<number> {
+  const { data: irmaos, error } = await supabaseAdmin.from(tabela).select('id, ordem').eq(colunaPai, paiId).order('ordem');
+  if (error) throw new Error(error.message);
+  const lista = irmaos ?? [];
+  if (!afterId) return lista.length ? Math.max(...lista.map(i => Number(i.ordem))) + 1 : 1;
+  const idx = lista.findIndex(i => i.id === afterId);
+  if (idx === -1 || idx === lista.length - 1) {
+    return lista.length ? Math.max(...lista.map(i => Number(i.ordem))) + 1 : 1;
+  }
+  return (Number(lista[idx].ordem) + Number(lista[idx + 1].ordem)) / 2;
+}
+
 async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, projetoId: number, op: ProjectOp): Promise<void> {
   const field = op.field ?? 'nome';
   const to = op.to ?? '';
@@ -275,7 +306,8 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
   switch (op.entity) {
     case 'meta': {
       if (op.action === 'criar') {
-        const { error } = await supabaseAdmin.from('metas').insert({ projeto_id: projetoId, nome: str(payload.name, to || 'Nova meta') });
+        const ordem = await computeOrdemInsercao(supabaseAdmin, 'metas', 'projeto_id', projetoId, str(payload.afterId, '') || undefined);
+        const { error } = await supabaseAdmin.from('metas').insert({ projeto_id: projetoId, nome: str(payload.name, to || 'Nova meta'), ordem });
         if (error) throw new Error(error.message);
       } else if (op.action === 'excluir') {
         const { error } = await supabaseAdmin.from('metas').delete().eq('id', op.targetId);
@@ -288,8 +320,9 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
     }
     case 'etapa': {
       if (op.action === 'criar') {
+        const ordem = await computeOrdemInsercao(supabaseAdmin, 'entregas', 'meta_id', op.parentId!, str(payload.afterId, '') || undefined);
         const { error } = await supabaseAdmin.from('entregas').insert({
-          meta_id: op.parentId, nome: str(payload.name, to || 'Nova etapa'), resultado_esperado: str(payload.expectedResult, ''),
+          meta_id: op.parentId, nome: str(payload.name, to || 'Nova etapa'), resultado_esperado: str(payload.expectedResult, ''), ordem,
         });
         if (error) throw new Error(error.message);
       } else if (op.action === 'excluir') {
@@ -304,18 +337,24 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
     }
     case 'especificacao': {
       if (op.action === 'criar') {
+        const ordem = await computeOrdemInsercao(supabaseAdmin, 'atividades', 'entrega_id', op.parentId!, str(payload.afterId, '') || undefined);
         const { error } = await supabaseAdmin.from('atividades').insert({
           entrega_id: op.parentId, nome: str(payload.name, to || 'Nova atividade'), responsavel: str(payload.responsible, '') || null,
           data_planejada: str(payload.plannedDate, '') || null,
           data_inicio: payload.startDate ? String(payload.startDate) : null,
           data_conclusao: payload.conclusionDate ? String(payload.conclusionDate) : null,
           progresso: num(payload.progress, 0), status: str(payload.status, 'Não iniciado'),
-          observacoes: str(payload.observations, '') || null,
+          observacoes: str(payload.observations, '') || null, ordem,
         });
         if (error) throw new Error(error.message);
         return;
       }
-      if (op.action === 'excluir') return; // exclusão de atividade não é permitida — apenas registro
+      if (op.action === 'excluir') {
+        // Soft delete: preserva o registro pra histórico/auditoria, some da UI (mapEntrega filtra excluido_em).
+        const { error } = await supabaseAdmin.from('atividades').update({ excluido_em: new Date().toISOString() }).eq('id', op.targetId);
+        if (error) throw new Error(error.message);
+        return;
+      }
       const patch: Record<string, unknown> = {};
       switch (field) {
         case 'status': {

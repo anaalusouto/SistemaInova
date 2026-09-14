@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import {
   ChevronDown, ChevronRight, Info, Target, Pencil, Check, X, Plus, Trash2,
   Minus,
@@ -31,22 +31,43 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-/** Campo de texto editável em linha (salva no blur / Enter). */
-function CellInput({ value, onSave, placeholder, mono }: { value: string; onSave: (v: string) => void; placeholder?: string; mono?: boolean }) {
+/** Campo de texto editável em linha (salva no blur / Enter). `multiline` vira textarea (Enter quebra linha, salva só no blur). */
+function CellInput({ value, onSave, placeholder, mono, multiline }: { value: string; onSave: (v: string) => void; placeholder?: string; mono?: boolean; multiline?: boolean }) {
   const [v, setV] = useState(value);
   const [focused, setFocused] = useState(false);
   if (!focused && v !== value) setV(value);
+  const commonProps = {
+    value: v,
+    placeholder,
+    onFocus: () => setFocused(true),
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setV(e.target.value),
+    onBlur: () => { setFocused(false); if (v !== value) onSave(v); },
+    className: 'w-full bg-transparent rounded px-1.5 py-1 border border-transparent hover:border-border focus:border-blue-300 focus:bg-card outline-none',
+    style: { fontSize: '0.7rem', color: 'var(--ink-3)', fontFamily: mono ? 'var(--font-mono)' : undefined },
+  };
+  if (multiline) {
+    return <textarea {...commonProps} rows={2} style={{ ...commonProps.style, resize: 'vertical', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} />;
+  }
   return (
     <input
-      value={v}
-      placeholder={placeholder}
-      onFocus={() => setFocused(true)}
-      onChange={e => setV(e.target.value)}
-      onBlur={() => { setFocused(false); if (v !== value) onSave(v); }}
+      {...commonProps}
       onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-      className="w-full bg-transparent rounded px-1.5 py-1 border border-transparent hover:border-border focus:border-blue-300 focus:bg-card outline-none"
-      style={{ fontSize: '0.7rem', color: 'var(--ink-3)', fontFamily: mono ? 'var(--font-mono)' : undefined }}
     />
+  );
+}
+
+/** Faixa discreta entre duas linhas que permite inserir um item novo naquela posição. */
+function InsertBetween({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      className="flex items-center justify-center w-full opacity-30 hover:opacity-100 transition-opacity"
+      style={{ height: 14 }}
+    >
+      <Plus size={11} color="var(--ink-4)" />
+    </button>
   );
 }
 
@@ -61,6 +82,13 @@ export function TabMetas({ project }: Props) {
   const [openStep, setOpenStep] = useState<string[]>(project.goals.flatMap(g => g.deliverables.map(d => d.id)));
   const [infoGoal, setInfoGoal] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ key: string; value: string } | null>(null);
+  const [creating, setCreating] = useState<{
+    level: 'meta' | 'etapa' | 'especificacao';
+    parentId?: string;
+    afterId?: string;
+    parentPath: string;
+    value: string;
+  } | null>(null);
 
   const log = p.metaLog ?? [];
 
@@ -77,6 +105,7 @@ export function TabMetas({ project }: Props) {
       kind: result === 'pendente' ? 'pendencia' : 'alteracao',
     });
     setEditing(null);
+    setCreating(null);
     if (silent) return;
     if (result === 'pendente') toast.info('Alteração enviada para validação de um administrador.');
     else toast.success('Alteração registrada.');
@@ -87,10 +116,23 @@ export function TabMetas({ project }: Props) {
     submit(edit);
   };
 
-  const askCreate = (label: string, base: Omit<MetaEdit, 'to' | 'action'>) => {
-    const name = window.prompt(label);
-    if (!name || !name.trim()) return;
-    submit({ ...base, action: 'criar', to: name.trim(), payload: { name: name.trim() } });
+  /** Abre o campo inline de criação. `afterId` = id do irmão logo acima (undefined = insere no fim/único). */
+  const startCreate = (level: 'meta' | 'etapa' | 'especificacao', parentId: string | undefined, afterId: string | undefined, parentPath: string) => {
+    setCreating({ level, parentId, afterId, parentPath, value: '' });
+  };
+  const cancelCreate = () => setCreating(null);
+  const submitCreate = () => {
+    if (!creating) return;
+    const name = creating.value.trim();
+    if (!name) { setCreating(null); return; }
+    const payload = { name, afterId: creating.afterId ?? null };
+    if (creating.level === 'meta') {
+      submit({ entity: 'meta', action: 'criar', targetPath: 'Nova meta', to: name, payload });
+    } else if (creating.level === 'etapa') {
+      submit({ entity: 'etapa', action: 'criar', parentId: creating.parentId, targetPath: creating.parentPath, to: name, payload });
+    } else {
+      submit({ entity: 'especificacao', action: 'criar', parentId: creating.parentId, targetPath: creating.parentPath, to: name, payload });
+    }
   };
 
   const askDelete = (label: string, base: Omit<MetaEdit, 'action'>) => {
@@ -107,6 +149,27 @@ export function TabMetas({ project }: Props) {
     return map;
   }, [p.goals]);
 
+  const lastMetaId = p.goals.length ? p.goals[p.goals.length - 1].id : undefined;
+
+  const renderMetaCreateRow = () => {
+    if (creating?.level !== 'meta') return null;
+    return (
+      <div className="bg-card rounded-xl border p-3 flex items-center gap-2" style={{ borderColor: 'var(--primary)' }}>
+        <input
+          autoFocus
+          value={creating.value}
+          onChange={e => setCreating(c => (c ? { ...c, value: e.target.value } : c))}
+          onKeyDown={e => { if (e.key === 'Enter') submitCreate(); if (e.key === 'Escape') cancelCreate(); }}
+          placeholder="Nome da nova meta"
+          className="flex-1 border rounded-md px-2 py-1.5 text-[13px]"
+          style={{ borderColor: 'var(--border)' }}
+        />
+        <button onClick={submitCreate}><Check size={15} color="var(--success)" /></button>
+        <button onClick={cancelCreate}><X size={15} color="var(--danger)" /></button>
+      </div>
+    );
+  };
+
   const header = (
     <div className="flex items-center justify-between gap-3">
       <div>
@@ -121,7 +184,7 @@ export function TabMetas({ project }: Props) {
       </div>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => askCreate('Nome da nova meta:', { entity: 'meta', targetPath: 'Nova meta' })}
+          onClick={() => startCreate('meta', undefined, lastMetaId, 'Nova meta')}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
           style={{ background: 'var(--primary)' }}
         >
@@ -136,12 +199,14 @@ export function TabMetas({ project }: Props) {
       <div className="flex flex-col gap-4 p-6 overflow-y-auto h-full">
         {header}
         <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['meta', 'etapa', 'especificacao']} />
-        <div className="flex flex-col items-center justify-center gap-3 py-20">
-          <Target size={44} color="var(--line-2)" />
-          <p style={{ color: 'var(--ink-5)', fontSize: '0.875rem' }}>
-            Nenhuma meta cadastrada. Use “Nova meta” para começar.
-          </p>
-        </div>
+        {creating?.level === 'meta' ? renderMetaCreateRow() : (
+          <div className="flex flex-col items-center justify-center gap-3 py-20">
+            <Target size={44} color="var(--line-2)" />
+            <p style={{ color: 'var(--ink-5)', fontSize: '0.875rem' }}>
+              Nenhuma meta cadastrada. Use “Nova meta” para começar.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -157,7 +222,8 @@ export function TabMetas({ project }: Props) {
         const prog = goalProgress[g.id] ?? 0;
         const editKey = `meta-${g.id}`;
         return (
-          <div key={g.id} className="bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+        <Fragment key={g.id}>
+          <div className="bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-start gap-3 px-5 py-4 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
               <button onClick={() => setOpen(prev => prev.includes(g.id) ? prev.filter(x => x !== g.id) : [...prev, g.id])} className="mt-0.5">
                 {isOpen ? <ChevronDown size={16} color="var(--ink-4)" /> : <ChevronRight size={16} color="var(--ink-4)" />}
@@ -207,7 +273,7 @@ export function TabMetas({ project }: Props) {
                 </div>
               </div>
               <button
-                onClick={() => askCreate('Nome da nova etapa:', { entity: 'etapa', parentId: g.id, targetPath: `Meta ${gi + 1}` })}
+                onClick={() => startCreate('etapa', g.id, g.deliverables.length ? g.deliverables[g.deliverables.length - 1].id : undefined, `Meta ${gi + 1}`)}
                 className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border"
                 style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
               >
@@ -220,8 +286,23 @@ export function TabMetas({ project }: Props) {
 
             {isOpen && (
               <div className="p-4 flex flex-col gap-3">
-                {g.deliverables.length === 0 && (
+                {g.deliverables.length === 0 && creating?.level !== 'etapa' && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>Nenhuma etapa cadastrada nesta meta.</div>
+                )}
+                {g.deliverables.length === 0 && creating?.level === 'etapa' && creating.parentId === g.id && (
+                  <div className="rounded-lg border p-2.5 flex items-center gap-2" style={{ borderColor: 'var(--primary)' }}>
+                    <input
+                      autoFocus
+                      value={creating.value}
+                      onChange={e => setCreating(c => (c ? { ...c, value: e.target.value } : c))}
+                      onKeyDown={e => { if (e.key === 'Enter') submitCreate(); if (e.key === 'Escape') cancelCreate(); }}
+                      placeholder="Nome da nova etapa"
+                      className="flex-1 border rounded-md px-2 py-1 text-[12.5px]"
+                      style={{ borderColor: 'var(--border)' }}
+                    />
+                    <button onClick={submitCreate}><Check size={14} color="var(--success)" /></button>
+                    <button onClick={cancelCreate}><X size={14} color="var(--danger)" /></button>
+                  </div>
                 )}
                 {g.deliverables.map((d, di) => {
                   const stepOpen = openStep.includes(d.id);
@@ -230,7 +311,8 @@ export function TabMetas({ project }: Props) {
                   const dKey = `etapa-${d.id}`;
                   const dPath = `Meta ${gi + 1} › Etapa ${gi + 1}.${di + 1}`;
                   return (
-                    <div key={d.id} className="rounded-lg border" style={{ borderColor: 'var(--border)' }}>
+                  <Fragment key={d.id}>
+                    <div className="rounded-lg border" style={{ borderColor: 'var(--border)' }}>
                       <div className="flex items-center gap-2 px-4 py-2.5">
                         <button onClick={() => setOpenStep(prev => prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id])}>
                           {stepOpen ? <ChevronDown size={14} color="var(--ink-4)" /> : <ChevronRight size={14} color="var(--ink-4)" />}
@@ -267,7 +349,7 @@ export function TabMetas({ project }: Props) {
                           </>
                         )}
                         <button
-                          onClick={() => askCreate('Nome da nova especificação (atividade):', { entity: 'especificacao', parentId: d.id, targetPath: dPath })}
+                          onClick={() => startCreate('especificacao', d.id, acts.length ? acts[acts.length - 1].id : undefined, dPath)}
                           className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border"
                           style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                         >
@@ -281,8 +363,22 @@ export function TabMetas({ project }: Props) {
 
                       {stepOpen && (
                         <div className="border-t overflow-x-auto" style={{ borderColor: 'var(--border)' }}>
-                          {acts.length === 0 ? (
+                          {acts.length === 0 && !(creating?.level === 'especificacao' && creating.parentId === d.id) ? (
                             <div className="px-4 py-3" style={{ fontSize: '0.73rem', color: 'var(--ink-5)' }}>Sem especificações cadastradas.</div>
+                          ) : acts.length === 0 ? (
+                            <div className="px-4 py-3 flex items-center gap-2">
+                              <input
+                                autoFocus
+                                value={creating!.value}
+                                onChange={e => setCreating(c => (c ? { ...c, value: e.target.value } : c))}
+                                onKeyDown={e => { if (e.key === 'Enter') submitCreate(); if (e.key === 'Escape') cancelCreate(); }}
+                                placeholder="Nome da nova especificação"
+                                className="flex-1 border rounded-md px-2 py-1 text-[12px]"
+                                style={{ borderColor: 'var(--border)' }}
+                              />
+                              <button onClick={submitCreate}><Check size={13} color="var(--success)" /></button>
+                              <button onClick={cancelCreate}><X size={13} color="var(--danger)" /></button>
+                            </div>
                           ) : (
                             <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 940 }}>
                               <thead>
@@ -302,7 +398,8 @@ export function TabMetas({ project }: Props) {
                                   const field = (f: string, from: string, to: string) =>
                                     submit({ entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: f, from, to }, true);
                                   return (
-                                    <tr key={a.id} style={{ borderBottom: '1px solid var(--surface-2)' }}>
+                                  <Fragment key={a.id}>
+                                    <tr style={{ borderBottom: '1px solid var(--surface-2)' }}>
                                       <td className="px-3 py-2 w-9">
                                         <button
                                           title="1 clique: em andamento · 2 cliques: concluído · 3: não iniciado"
@@ -319,15 +416,23 @@ export function TabMetas({ project }: Props) {
                                           {done ? <Check size={11} color="var(--primary-foreground)" /> : doing ? <Minus size={11} color="var(--brand)" /> : null}
                                         </button>
                                       </td>
-                                      <td className="px-3 py-2 min-w-[240px]">
+                                      <td className="px-3 py-2 max-w-[260px]">
                                         {editing?.key === aKey ? (
-                                          <div className="flex items-center gap-1.5">
-                                            <input
+                                          <div className="flex items-start gap-1.5">
+                                            <textarea
                                               autoFocus
+                                              rows={2}
                                               className="flex-1 border rounded-md px-2 py-1 text-[12px]"
-                                              style={{ borderColor: 'var(--border)' }}
+                                              style={{ borderColor: 'var(--border)', resize: 'vertical', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                                               value={editing.value}
                                               onChange={e => setEditing({ key: aKey, value: e.target.value })}
+                                              onKeyDown={e => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                  e.preventDefault();
+                                                  submitRename({ entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value });
+                                                }
+                                                if (e.key === 'Escape') setEditing(null);
+                                              }}
                                             />
                                             <button onClick={() => submitRename({ entity: 'especificacao', action: 'editar', targetId: a.id, targetPath: path, field: 'nome', from: a.name, to: editing.value })}>
                                               <Check size={13} color="var(--success)" />
@@ -336,12 +441,18 @@ export function TabMetas({ project }: Props) {
                                           </div>
                                         ) : (
                                           <div className="flex items-start gap-1.5">
-                                            <span style={{ fontSize: '0.76rem', color: 'var(--ink-2)', textDecoration: done ? 'line-through' : 'none' }}>
+                                            <span style={{ fontSize: '0.76rem', color: 'var(--ink-2)', textDecoration: done ? 'line-through' : 'none', whiteSpace: 'normal', wordBreak: 'break-word' }}>
                                               <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-5)', marginRight: 6 }}>{gi + 1}.{di + 1}.{ai + 1}</span>
                                               {a.name}
                                             </span>
                                             <button onClick={() => setEditing({ key: aKey, value: a.name })} title="Editar especificação">
                                               <Pencil size={11} color="var(--line-2)" />
+                                            </button>
+                                            <button
+                                              onClick={() => askDelete(`Excluir a especificação ${gi + 1}.${di + 1}.${ai + 1}?`, { entity: 'especificacao', targetId: a.id, targetPath: path, from: a.name })}
+                                              title="Excluir especificação"
+                                            >
+                                              <Trash2 size={11} color="var(--danger)" />
                                             </button>
                                           </div>
                                         )}
@@ -382,10 +493,41 @@ export function TabMetas({ project }: Props) {
                                           {a.status}
                                         </span>
                                       </td>
-                                      <td className="px-2 py-2 min-w-[140px]">
-                                        <CellInput value={a.observations || ''} placeholder="—" onSave={v => field('observações', a.observations || '', v)} />
+                                      <td className="px-2 py-2 max-w-[200px]">
+                                        <CellInput multiline value={a.observations || ''} placeholder="—" onSave={v => field('observações', a.observations || '', v)} />
                                       </td>
                                     </tr>
+                                    {creating?.level === 'especificacao' && creating.parentId === d.id && creating.afterId === a.id && (
+                                      <tr style={{ borderBottom: '1px solid var(--surface-2)' }}>
+                                        <td colSpan={9} className="px-3 py-2">
+                                          <div className="flex items-center gap-1.5">
+                                            <textarea
+                                              autoFocus
+                                              rows={1}
+                                              value={creating.value}
+                                              onChange={e => setCreating(c => (c ? { ...c, value: e.target.value } : c))}
+                                              onKeyDown={e => {
+                                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitCreate(); }
+                                                if (e.key === 'Escape') cancelCreate();
+                                              }}
+                                              placeholder="Nome da nova especificação"
+                                              className="flex-1 border rounded-md px-2 py-1 text-[12px]"
+                                              style={{ borderColor: 'var(--border)', resize: 'vertical' }}
+                                            />
+                                            <button onClick={submitCreate}><Check size={13} color="var(--success)" /></button>
+                                            <button onClick={cancelCreate}><X size={13} color="var(--danger)" /></button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                    {!creating && ai < acts.length - 1 && (
+                                      <tr>
+                                        <td colSpan={9} className="p-0">
+                                          <InsertBetween label="Inserir especificação aqui" onClick={() => startCreate('especificacao', d.id, a.id, dPath)} />
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </Fragment>
                                   );
                                 })}
                               </tbody>
@@ -394,11 +536,35 @@ export function TabMetas({ project }: Props) {
                         </div>
                       )}
                     </div>
+                    {creating?.level === 'etapa' && creating.parentId === g.id && creating.afterId === d.id && (
+                      <div className="rounded-lg border p-2.5 flex items-center gap-2" style={{ borderColor: 'var(--primary)' }}>
+                        <input
+                          autoFocus
+                          value={creating.value}
+                          onChange={e => setCreating(c => (c ? { ...c, value: e.target.value } : c))}
+                          onKeyDown={e => { if (e.key === 'Enter') submitCreate(); if (e.key === 'Escape') cancelCreate(); }}
+                          placeholder="Nome da nova etapa"
+                          className="flex-1 border rounded-md px-2 py-1 text-[12.5px]"
+                          style={{ borderColor: 'var(--border)' }}
+                        />
+                        <button onClick={submitCreate}><Check size={14} color="var(--success)" /></button>
+                        <button onClick={cancelCreate}><X size={14} color="var(--danger)" /></button>
+                      </div>
+                    )}
+                    {!creating && di < g.deliverables.length - 1 && (
+                      <InsertBetween label="Inserir etapa aqui" onClick={() => startCreate('etapa', g.id, d.id, `Meta ${gi + 1}`)} />
+                    )}
+                  </Fragment>
                   );
                 })}
               </div>
             )}
           </div>
+          {creating?.level === 'meta' && creating.afterId === g.id && renderMetaCreateRow()}
+          {!creating && gi < p.goals.length - 1 && (
+            <InsertBetween label="Inserir meta aqui" onClick={() => startCreate('meta', undefined, g.id, 'Nova meta')} />
+          )}
+        </Fragment>
         );
       })}
 
