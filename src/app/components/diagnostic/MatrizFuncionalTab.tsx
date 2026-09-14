@@ -82,7 +82,11 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
   };
 
   const toggleAtuacao = (opcao: string) =>
-    setDraft(d => ({ ...d, atuacao: d.atuacao.includes(opcao) ? d.atuacao.filter(x => x !== opcao) : [...d.atuacao, opcao] }));
+    setDraft(d => {
+      const atuacao = d.atuacao.includes(opcao) ? d.atuacao.filter(x => x !== opcao) : [...d.atuacao, opcao];
+      // "Quem executa" só faz sentido quando a organização marcou que não realiza a função.
+      return { ...d, atuacao, quemExecuta: atuacao.includes('Não realiza') ? d.quemExecuta : null };
+    });
 
   return (
     <div className="flex flex-col gap-3 max-w-4xl">
@@ -129,7 +133,9 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
                     {answered ? (
                       <>
                         <Campo label="Atuação" valor={resposta!.atuacao.join(', ') || '—'} />
-                        <Campo label="Quem executa" valor={resposta!.quemExecuta ?? '—'} />
+                        {resposta!.atuacao.includes('Não realiza') && (
+                          <Campo label="Quem executa" valor={resposta!.quemExecuta ?? '—'} />
+                        )}
                         <Campo label="Interesse" valor={resposta!.interesse ?? '—'} />
                         <Campo label="Criticidade" valor={CRITICIDADE_OPCOES.find(o => o.valor === resposta!.criticidade)?.label ?? '—'} />
                         <Campo label="Abrangência" valor={ABRANGENCIA_OPCOES.find(o => o.valor === resposta!.abrangencia)?.label ?? resposta!.abrangencia ?? '—'} />
@@ -155,11 +161,13 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
                         <Chip key={o} active={draft.atuacao.includes(o)} onClick={() => toggleAtuacao(o)}>{o}</Chip>
                       ))}
                     </OpcaoGroup>
-                    <OpcaoGroup label="Caso não execute, quem executa?">
-                      {QUEM_EXECUTA_OPCOES.map(o => (
-                        <Chip key={o} active={draft.quemExecuta === o} onClick={() => setDraft(d => ({ ...d, quemExecuta: d.quemExecuta === o ? null : o }))}>{o}</Chip>
-                      ))}
-                    </OpcaoGroup>
+                    {draft.atuacao.includes('Não realiza') && (
+                      <OpcaoGroup label="Caso não execute, quem executa?">
+                        {QUEM_EXECUTA_OPCOES.map(o => (
+                          <Chip key={o} active={draft.quemExecuta === o} onClick={() => setDraft(d => ({ ...d, quemExecuta: d.quemExecuta === o ? null : o }))}>{o}</Chip>
+                        ))}
+                      </OpcaoGroup>
+                    )}
                     <OpcaoGroup label="Interesse da organização na atuação desta função">
                       {INTERESSE_OPCOES.map(o => (
                         <Chip key={o} active={draft.interesse === o} onClick={() => setDraft(d => ({ ...d, interesse: d.interesse === o ? null : o }))}>{o}</Chip>
