@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Search,
@@ -10,7 +10,6 @@ import {
   DollarSign,
   Users,
   Trash2,
-  Check,
   X,
 } from 'lucide-react';
 import { type Project, type ProjectStatus } from '../data/mockData';
@@ -18,6 +17,8 @@ import type { ProjectExt } from '../store';
 import { useStore } from '../store';
 import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
+import { Chip, FilterGroup } from './portfolio/PortfolioFilters';
+import { getExercicios, getOrgOptions, STATUS_OPTIONS } from '../lib/portfolioFilters';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -35,7 +36,9 @@ interface ProjectsPageProps {
 }
 
 /** Filtros preservados enquanto a sessão estiver aberta (entrar/sair de um projeto não limpa). */
-const filterMemory: { search: string; categories: string[]; open: boolean } = { search: '', categories: [], open: false };
+const filterMemory: { search: string; categories: string[]; status: string[]; org: string[]; exercicio: string | null; open: boolean } = {
+  search: '', categories: [], status: [], org: [], exercicio: null, open: false,
+};
 
 export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
   const { projects, addProject, deleteProject } = useStore();
@@ -45,17 +48,39 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
     audit({ userLogin: user?.login ?? '—', area: 'projetos', action, detail, projectId, projectName, kind: 'alteracao' });
   const [search, setSearchState] = useState(filterMemory.search);
   const [selected, setSelectedState] = useState<string[]>(filterMemory.categories);
+  const [statusSelected, setStatusSelectedState] = useState<string[]>(filterMemory.status);
+  const [orgSelected, setOrgSelectedState] = useState<string[]>(filterMemory.org);
+  const [exercicioSelected, setExercicioSelectedState] = useState<string | null>(filterMemory.exercicio);
   const [showModal, setShowModal] = useState(false);
-  const [showFilters, setShowFiltersState] = useState(filterMemory.open || filterMemory.categories.length > 0);
+  const [showFilters, setShowFiltersState] = useState(
+    filterMemory.open || filterMemory.categories.length > 0 || filterMemory.status.length > 0 || filterMemory.org.length > 0,
+  );
 
   const setSearch = (v: string) => { filterMemory.search = v; setSearchState(v); };
   const setSelected = (v: string[]) => { filterMemory.categories = v; setSelectedState(v); };
+  const setStatusSelected = (v: string[]) => { filterMemory.status = v; setStatusSelectedState(v); };
+  const setOrgSelected = (v: string[]) => { filterMemory.org = v; setOrgSelectedState(v); };
+  const setExercicioSelected = (v: string | null) => { filterMemory.exercicio = v; setExercicioSelectedState(v); };
   const setShowFilters = (v: boolean) => { filterMemory.open = v; setShowFiltersState(v); };
 
   const categories = ['Comunidades tradicionais', 'Comunidades quilombolas', 'Comunidades indígenas', 'Agricultura familiar'];
+  const orgOptions = useMemo(() => getOrgOptions(projects), [projects]);
+  const exercicios = useMemo(() => getExercicios(projects), [projects]);
 
   const toggleCategory = (c: string) =>
     setSelected(selected.includes(c) ? selected.filter(x => x !== c) : [...selected, c]);
+  const toggleStatus = (s: string) =>
+    setStatusSelected(statusSelected.includes(s) ? statusSelected.filter(x => x !== s) : [...statusSelected, s]);
+  const toggleOrg = (o: string) =>
+    setOrgSelected(orgSelected.includes(o) ? orgSelected.filter(x => x !== o) : [...orgSelected, o]);
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setSelected([]);
+    setStatusSelected([]);
+    setOrgSelected([]);
+    setExercicioSelected(null);
+  };
 
   const normalized = (s: string) =>
     s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -71,8 +96,18 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
       normalized(p.financier).includes(q) ||
       normalized(p.code).includes(q);
     const matchCategory = selected.length === 0 || selected.includes((p as ProjectExt).segmento ?? '');
-    return matchSearch && matchCategory;
+    const matchStatus = statusSelected.length === 0 || statusSelected.includes(p.status);
+    const matchOrg = orgSelected.length === 0 || orgSelected.includes((p as ProjectExt).org ?? '');
+    const matchExercicio = (() => {
+      if (!exercicioSelected) return true;
+      const startYear = p.startDate?.match(/(\d{4})$/)?.[1];
+      const endYear = p.endDate?.match(/(\d{4})$/)?.[1];
+      return !!startYear && !!endYear && `${startYear}-${endYear}` === exercicioSelected;
+    })();
+    return matchSearch && matchCategory && matchStatus && matchOrg && matchExercicio;
   });
+
+  const activeFilterCount = selected.length + statusSelected.length + orgSelected.length + (exercicioSelected ? 1 : 0);
 
   const handleDelete = (e: React.MouseEvent, id: number, name: string) => {
     e.stopPropagation();
@@ -126,56 +161,59 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
               background: showFilters ? 'var(--brand-soft)' : 'var(--surface-0)',
             }}
           >
-            <Filter size={12} /> Filtros{selected.length > 0 ? ` (${selected.length})` : ''}
+            <Filter size={12} /> Filtros{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
           </button>
         </div>
       </div>
 
       {showFilters && (
-        <div className="p-3 rounded-lg border bg-card" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setSelected([])}
-              className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
-              style={{
-                background: selected.length === 0 ? 'var(--primary)' : 'var(--surface-0)',
-                color: selected.length === 0 ? 'var(--primary-foreground)' : 'var(--ink-4)',
-                border: `1px solid ${selected.length === 0 ? 'var(--primary)' : 'var(--border)'}`,
-              }}
-            >
-              Todas
-            </button>
-            {categories.map(c => {
-              const on = selected.includes(c);
-              return (
-                <button
-                  key={c}
-                  onClick={() => toggleCategory(c)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
-                  style={{
-                    background: on ? 'var(--primary)' : 'var(--surface-0)',
-                    color: on ? 'var(--primary-foreground)' : 'var(--ink-4)',
-                    border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
-                  }}
+        <div className="p-3 rounded-lg border bg-card flex flex-col gap-3" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-wrap items-start gap-5">
+            {exercicios.length > 1 && (
+              <FilterGroup label="Exercício">
+                <select
+                  value={exercicioSelected ?? ''}
+                  onChange={e => setExercicioSelected(e.target.value || null)}
+                  className="px-2.5 py-1.5 rounded-md border text-[12px] bg-transparent"
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
                 >
-                  <span className="inline-flex items-center justify-center rounded-sm"
-                    style={{ width: 12, height: 12, border: `1px solid ${on ? 'var(--surface-0)' : 'var(--line-2)'}`, background: on ? 'var(--surface-0)' : 'transparent' }}>
-                    {on && <Check size={9} color="var(--brand)" />}
-                  </span>
-                  {c}
-                </button>
-              );
-            })}
+                  <option value="">Todos</option>
+                  {exercicios.map(ex => (
+                    <option key={ex.key} value={ex.key}>{ex.label}</option>
+                  ))}
+                </select>
+              </FilterGroup>
+            )}
+
+            <FilterGroup label="Status">
+              {STATUS_OPTIONS.map(s => (
+                <Chip key={s} active={statusSelected.includes(s)} onClick={() => toggleStatus(s)}>{s}</Chip>
+              ))}
+            </FilterGroup>
+
+            <FilterGroup label="Organização">
+              {orgOptions.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>—</span>}
+              {orgOptions.map(o => (
+                <Chip key={o} active={orgSelected.includes(o)} onClick={() => toggleOrg(o)}>{o}</Chip>
+              ))}
+            </FilterGroup>
+
+            <FilterGroup label="Classificação">
+              {categories.map(c => (
+                <Chip key={c} active={selected.includes(c)} onClick={() => toggleCategory(c)}>{c}</Chip>
+              ))}
+            </FilterGroup>
+
             <button
-              onClick={() => { setSearch(''); setSelected([]); }}
-              className="text-[12px] px-2 py-1.5 rounded border ml-auto"
+              onClick={clearAllFilters}
+              className="text-[12px] px-2 py-1.5 rounded border ml-auto flex-shrink-0"
               style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
             >
               Limpar filtros
             </button>
           </div>
-          <p className="mt-2" style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
-            Você pode marcar mais de uma categoria. Os filtros continuam ativos ao entrar e sair de um projeto — use “Todas” ou “Limpar filtros” para zerar.
+          <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
+            Você pode marcar mais de uma opção em cada filtro. Os filtros continuam ativos ao entrar e sair de um projeto — use “Limpar filtros” para zerar.
           </p>
         </div>
       )}

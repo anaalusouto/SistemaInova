@@ -200,21 +200,3 @@ export function buildKpi(list: Project[]) {
   return computeKpi(list);
 }
 
-export const upcomingDeadlines = [
-  { project: 'Farinha Tauari Premium: Agroindústria Inovadora e Empoderamento de Mulheres Rurais', milestone: 'Aquisição de equipamentos', date: '30/06/2026', daysLeft: 175, status: 'Não iniciado' },
-  { project: 'Produção sustentável e inclusão comunitária com quintais agroecológicos e apicultura no Nordeste Paraense', milestone: 'Implantação dos quintais', date: '30/05/2026', daysLeft: 144, status: 'Não iniciado' },
-  { project: 'Produção sustentável e inclusão comunitária com quintais agroecológicos e apicultura no Nordeste Paraense', milestone: 'Distribuição de baldes agroecológicos', date: '31/12/2026', daysLeft: 359, status: 'Não iniciado' },
-  { project: 'Farinha Tauari Premium: Agroindústria Inovadora e Empoderamento de Mulheres Rurais', milestone: 'Encerramento do plano', date: '31/12/2026', daysLeft: 359, status: 'Não iniciado' },
-];
-
-export const monthlyFinancial = [
-  { month: 'Jan/26', previsto: 27380, executado: 0 },
-  { month: 'Fev/26', previsto: 27380, executado: 0 },
-  { month: 'Mar/26', previsto: 27380, executado: 0 },
-  { month: 'Abr/26', previsto: 27380, executado: 0 },
-  { month: 'Mai/26', previsto: 27380, executado: 0 },
-  { month: 'Jun/26', previsto: 27380, executado: 0 },
-  { month: 'Jul/26', previsto: 27380, executado: 0 },
-  { month: 'Ago/26', previsto: 27380, executado: 0 },
-  { month: 'Set/26', previsto: 27380, executado: 0 },
-];

@@ -2,19 +2,17 @@ import { useEffect, useState } from 'react';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
-import { ProjectsPage } from './components/ProjectsPage';
+import { ProjectsModule } from './components/ProjectsModule';
 import { ProjectView } from './components/ProjectView';
-import { ReportsPage } from './components/ReportsPage';
+import { ReportsModule } from './components/ReportsModule';
 import { GestaoPage } from './components/GestaoPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
-import { DiagnosticoPage } from './components/DiagnosticoPage';
+import { DiagnosticoModule } from './components/DiagnosticoModule';
 import { CronogramaPage } from './components/CronogramaPage';
 import { MensagensPage } from './components/MensagensPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
 import { ProjectsProvider, useStore } from './store';
-import { DiagnosticProvider } from './diagnostic/store';
 import { AuthProvider, useAuth } from './auth/authStore';
 import { AuditProvider, useAudit } from './audit/auditStore';
 import { ThemeProvider, useTheme, FONT_SCALE_LABEL } from './theme/themeStore';
@@ -37,7 +35,7 @@ function greetingFor(displayName: string): string {
 }
 
 function AppShell() {
-  const [activeNav, setActiveNav] = useState<NavItem>('dashboard');
+  const [activeNav, setActiveNav] = useState<NavItem>('projects');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { getProject } = useStore();
@@ -71,16 +69,14 @@ function AppShell() {
     }
 
     switch (activeNav) {
-      case 'dashboard':
-        return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
       case 'projects':
-        return <ProjectsPage onSelectProject={(p) => handleSelectProject(p.id)} />;
+        return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
       case 'schedule':
         return <CronogramaPage />;
       case 'diagnostics':
-        return <DiagnosticoPage />;
+        return <DiagnosticoModule />;
       case 'reports':
-        return <ReportsPage />;
+        return <ReportsModule />;
       case 'management':
         return <GestaoPage />;
       case 'messages':
@@ -89,7 +85,7 @@ function AppShell() {
         return <ConfiguracoesPage />;
 
       default:
-        return <Dashboard onSelectProject={(p) => handleSelectProject(p.id)} onGoToProjects={() => handleNavigate('projects')} />;
+        return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
     }
   };
 
@@ -200,9 +196,7 @@ export default function App() {
       <AuthProvider>
         <AuditProvider>
           <ProjectsProvider>
-            <DiagnosticProvider>
-              <Gated />
-            </DiagnosticProvider>
+            <Gated />
           </ProjectsProvider>
         </AuditProvider>
       </AuthProvider>

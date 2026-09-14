@@ -15,7 +15,6 @@ import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
 
 export type NavItem =
-  | 'dashboard'
   | 'projects'
   | 'schedule'
   | 'diagnostics'
@@ -31,9 +30,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-const topItems = [
-  { id: 'dashboard' as NavItem, label: 'Dashboard', icon: LayoutDashboard },
-];
+const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] = [];
 
 const bottomItems = [
   { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
