@@ -5,15 +5,22 @@
 -- Técnico) — dropamos e recriamos do zero. `comunidades` já existe com o schema
 -- certo (onda 2, também stub) e vira a entidade "Organização"; só ganha dados
 -- reais (seed) e CRUD (`comunidades.server.ts`) nesta migration/rodada.
-DROP TABLE IF EXISTS public.diagnostico_produtos CASCADE;
-DROP TABLE IF EXISTS public.diagnosticos CASCADE;
-
+--
+-- Nota (2026-09-14): os `DROP TABLE` originais desta migration (que existiam
+-- só para descartar o modelo antigo, uma única vez) foram removidos depois que
+-- a migration já tinha rodado com sucesso em produção e os instrumentos novos
+-- já tinham dados reais. Mantê-los faria o pipeline "Supabase Preview" do
+-- GitHub (que reaplica migrations "pendentes" segundo seu próprio histórico,
+-- desalinhado do nosso porque aplicamos isso via SQL Editor manual, não via
+-- CLI) apagar diagnósticos reais toda vez que rodasse de novo. Toda a migration
+-- agora é idempotente (IF NOT EXISTS / DROP...IF EXISTS antes de recriar).
+--
 -- ---------------------------------------------------------------------------
 -- Cabeçalho do diagnóstico: Organização (comunidades) + Aplicação (data) +
 -- versão. O versionamento é do diagnóstico completo — nunca por instrumento
 -- isolado (RF-02.08). `diagnostico_anterior_id` encadeia o histórico de versões.
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnosticos (
+CREATE TABLE IF NOT EXISTS public.diagnosticos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   comunidade_id UUID NOT NULL REFERENCES public.comunidades(id) ON DELETE CASCADE,
   data_aplicacao DATE NOT NULL,
@@ -24,7 +31,7 @@ CREATE TABLE public.diagnosticos (
   criado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   atualizado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
-CREATE INDEX idx_diagnosticos_comunidade ON public.diagnosticos(comunidade_id);
+CREATE INDEX IF NOT EXISTS idx_diagnosticos_comunidade ON public.diagnosticos(comunidade_id);
 DROP TRIGGER IF EXISTS set_diagnosticos_updated_at ON public.diagnosticos;
 CREATE TRIGGER set_diagnosticos_updated_at BEFORE UPDATE ON public.diagnosticos
 FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
@@ -35,7 +42,7 @@ ALTER TABLE public.diagnosticos ENABLE ROW LEVEL SECURITY;
 -- fixo em src/app/diagnostic/catalog/matrizFuncional.ts, referenciado por
 -- funcao_id). Função/Descrição/Exemplo são fixos no catálogo, não no banco.
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_matriz (
+CREATE TABLE IF NOT EXISTS public.diagnostico_matriz (
   diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   funcao_id TEXT NOT NULL,
   atuacao TEXT[] NOT NULL DEFAULT '{}',
@@ -55,7 +62,7 @@ ALTER TABLE public.diagnostico_matriz ENABLE ROW LEVEL SECURITY;
 -- perguntas sem resposta simplesmente não têm linha (não contam como 0 no
 -- cálculo — ver src/app/diagnostic/ieoCalculation.ts).
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_ieo (
+CREATE TABLE IF NOT EXISTS public.diagnostico_ieo (
   diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   pergunta_id TEXT NOT NULL,
   nivel SMALLINT NOT NULL CHECK (nivel BETWEEN 1 AND 4),
@@ -71,7 +78,7 @@ ALTER TABLE public.diagnostico_ieo ENABLE ROW LEVEL SECURITY;
 -- (catálogo em src/app/diagnostic/catalog/cestaProdutos.ts) fica em `respostas`
 -- (chaveado por slug do campo), mesmo padrão de `answers` do diagnóstico antigo.
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_produtos (
+CREATE TABLE IF NOT EXISTS public.diagnostico_produtos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   nome TEXT NOT NULL,
@@ -81,7 +88,7 @@ CREATE TABLE public.diagnostico_produtos (
   criado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   atualizado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
-CREATE INDEX idx_diagnostico_produtos_diagnostico ON public.diagnostico_produtos(diagnostico_id);
+CREATE INDEX IF NOT EXISTS idx_diagnostico_produtos_diagnostico ON public.diagnostico_produtos(diagnostico_id);
 ALTER TABLE public.diagnostico_produtos ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
@@ -89,7 +96,7 @@ ALTER TABLE public.diagnostico_produtos ENABLE ROW LEVEL SECURITY;
 -- catálogo em src/app/diagnostic/catalog/parecerComplementar.ts) em JSONB;
 -- Parte 2 (análise técnica) tem 5 campos fixos, cada um vira coluna própria.
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_parecer (
+CREATE TABLE IF NOT EXISTS public.diagnostico_parecer (
   diagnostico_id UUID PRIMARY KEY REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   respostas_complementares JSONB NOT NULL DEFAULT '{}'::jsonb,
   sintese TEXT,
@@ -106,7 +113,7 @@ ALTER TABLE public.diagnostico_parecer ENABLE ROW LEVEL SECURITY;
 -- Checklist documental (parte do Parecer) — 8 itens fixos (catálogo em
 -- src/app/diagnostic/catalog/checklistDocumental.ts).
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_checklist_itens (
+CREATE TABLE IF NOT EXISTS public.diagnostico_checklist_itens (
   diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   item_id SMALLINT NOT NULL,
   disponivel TEXT CHECK (disponivel IN ('Sim', 'Não', 'N/A')),
@@ -123,7 +130,7 @@ ALTER TABLE public.diagnostico_checklist_itens ENABLE ROW LEVEL SECURITY;
 -- foi enviado (RF-02.50) — cada versão nova reaponta pro mesmo anexo_id em vez
 -- de reenviar o arquivo (é a mesma evidência).
 -- ---------------------------------------------------------------------------
-CREATE TABLE public.diagnostico_anexos (
+CREATE TABLE IF NOT EXISTS public.diagnostico_anexos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
   checklist_item_id SMALLINT,
@@ -136,6 +143,8 @@ CREATE TABLE public.diagnostico_anexos (
 );
 ALTER TABLE public.diagnostico_anexos ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.diagnostico_checklist_itens
+  DROP CONSTRAINT IF EXISTS diagnostico_checklist_itens_anexo_fk;
 ALTER TABLE public.diagnostico_checklist_itens
   ADD CONSTRAINT diagnostico_checklist_itens_anexo_fk
   FOREIGN KEY (anexo_id) REFERENCES public.diagnostico_anexos(id) ON DELETE SET NULL;
