@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter, GanttChart, ChevronDown, MessageSquare } from 'lucide-react';
+import { Plus, Trash2, Save, CalendarDays, Route as RouteIcon, X, ChevronLeft, ChevronRight, MapPin, Filter, GanttChart, Kanban as KanbanIcon, MessageSquare } from 'lucide-react';
 import { useStore } from '../store';
 import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 import { CronogramaExecutivoTab } from './CronogramaExecutivoTab';
+import { GestaoPage } from './GestaoPage';
+import { MensagensPage } from './MensagensPage';
 import 'leaflet/dist/leaflet.css';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
@@ -26,26 +28,34 @@ const DEFAULT_TIPO_COLOR = 'var(--ink-4)';
 const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 
-export function CronogramaPage() {
-  const [tab, setTab] = useState<'rotas' | 'calendario' | 'executivo'>('executivo');
-  return (
-    <div className={`h-full min-h-0 p-6 flex flex-col ${tab === 'executivo' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-      <div className="max-w-[1500px] mx-auto w-full flex flex-col flex-1 min-h-0">
-        <div className="mb-3">
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem' }}>Cronograma 2026</h1>
-          <p className="text-sm text-muted-foreground">Cronograma executivo, rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
-        </div>
+type GestaoInternaTab = 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 
-        <div className="flex gap-2 mb-3 shrink-0">
+export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: number) => void }) {
+  const [tab, setTab] = useState<GestaoInternaTab>('executivo');
+  const nestedPage = tab === 'kanban' || tab === 'mensagens';
+
+  return (
+    <div className={`h-full min-h-0 flex flex-col ${nestedPage ? 'overflow-hidden' : 'p-6 overflow-y-auto'}`}>
+      <div className={`w-full flex flex-col flex-1 min-h-0 ${nestedPage ? '' : 'max-w-[1500px] mx-auto'}`}>
+        {!nestedPage && (
+          <div className="mb-3">
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem' }}>Gestão Interna</h1>
+            <p className="text-sm text-muted-foreground">Cronograma executivo, rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
+          </div>
+        )}
+
+        <div className={`flex gap-2 mb-3 shrink-0 flex-wrap ${nestedPage ? 'px-6 pt-6' : ''}`}>
           {[
             { id: 'executivo', label: 'Cronograma Executivo', icon: GanttChart },
             { id: 'rotas', label: 'Rotas', icon: RouteIcon },
             { id: 'calendario', label: 'Calendário 2026', icon: CalendarDays },
+            { id: 'kanban', label: 'Kanban', icon: KanbanIcon },
+            { id: 'mensagens', label: 'Mensagens', icon: MessageSquare },
           ].map(t => {
             const Icon = t.icon;
             const active = tab === t.id;
             return (
-              <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
+              <button key={t.id} onClick={() => setTab(t.id as GestaoInternaTab)}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-md transition-colors"
                 style={{ background: active ? 'var(--primary)' : 'var(--card)', color: active ? 'var(--primary-foreground)' : 'var(--foreground)', border: '1px solid var(--border)', fontWeight: active ? 600 : 400 }}>
                 <Icon size={14} /> {t.label}
@@ -59,6 +69,12 @@ export function CronogramaPage() {
         )}
         {tab === 'rotas' && <RotasTab />}
         {tab === 'calendario' && <CalendarioTab />}
+        {tab === 'kanban' && (
+          <div className="flex-1 min-h-0"><GestaoPage /></div>
+        )}
+        {tab === 'mensagens' && (
+          <div className="flex-1 min-h-0"><MensagensPage onOpenProject={onOpenProject} /></div>
+        )}
       </div>
     </div>
   );

@@ -5,11 +5,9 @@ import { Sidebar, type NavItem } from './components/Sidebar';
 import { ProjectsModule } from './components/ProjectsModule';
 import { ProjectView } from './components/ProjectView';
 import { ReportsModule } from './components/ReportsModule';
-import { GestaoPage } from './components/GestaoPage';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoModule } from './components/DiagnosticoModule';
 import { CronogramaPage } from './components/CronogramaPage';
-import { MensagensPage } from './components/MensagensPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
 import { ProjectsProvider, useStore } from './store';
@@ -72,15 +70,11 @@ function AppShell() {
       case 'projects':
         return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
       case 'schedule':
-        return <CronogramaPage />;
+        return <CronogramaPage onOpenProject={handleSelectProject} />;
       case 'diagnostics':
         return <DiagnosticoModule />;
       case 'reports':
         return <ReportsModule />;
-      case 'management':
-        return <GestaoPage />;
-      case 'messages':
-        return <MensagensPage onOpenProject={handleSelectProject} />;
       case 'settings':
         return <ConfiguracoesPage />;
 

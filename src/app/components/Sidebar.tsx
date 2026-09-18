@@ -1,14 +1,12 @@
 import {
   LayoutDashboard,
   FolderKanban,
-  CalendarDays,
   BarChart3,
   Settings,
   ChevronRight,
   Search,
   ClipboardList,
   LogOut,
-  MessageSquare,
   Kanban,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
@@ -19,8 +17,6 @@ export type NavItem =
   | 'schedule'
   | 'diagnostics'
   | 'reports'
-  | 'management'
-  | 'messages'
   | 'settings';
 
 interface SidebarProps {
@@ -34,11 +30,9 @@ const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] =
 
 const bottomItems = [
   { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
-  { id: 'schedule' as NavItem, label: 'Cronograma 2026', icon: CalendarDays },
+  { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
-  { id: 'management' as NavItem, label: 'Gestão Interna', icon: Kanban },
-  { id: 'messages' as NavItem, label: 'Mensagens', icon: MessageSquare },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
@@ -73,7 +67,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
       >
         <Icon size={15} />
         <span style={{ fontSize: '0.825rem', fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
-        {item.id === 'messages' && pendentes > 0 && (
+        {item.id === 'schedule' && pendentes > 0 && (
           <span
             className="ml-auto flex items-center justify-center rounded-full text-white font-bold flex-shrink-0"
             style={{ minWidth: 16, height: 16, fontSize: '9px', padding: '0 4px', background: 'var(--danger)' }}

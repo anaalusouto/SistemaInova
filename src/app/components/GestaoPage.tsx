@@ -98,7 +98,7 @@ export function GestaoPage() {
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
-            Gestão Interna
+            Kanban
           </h1>
           <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
             Quadro de tarefas por pessoa — arraste um card ou use o seletor para reatribuir.
