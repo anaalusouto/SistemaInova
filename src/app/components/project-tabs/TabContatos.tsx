@@ -45,7 +45,29 @@ export function TabContatos({ project }: { project: Project }) {
 
   const save = () => {
     if (!form) return;
-    if (!form.registro.trim()) { toast.error('Descreva o registro de comunicação.'); return; }
+
+    // RF-008: data, hora, instituição, representante, meio, autor e relato são
+    // obrigatórios; saída é opcional. Antes só o relato era conferido, e um
+    // registro sem data ou sem quem participou não serve ao acompanhamento —
+    // é justamente esse conjunto que permite retomar a conversa depois.
+    const faltando = ([
+      ['data', 'a data'],
+      ['hora', 'a hora'],
+      ['instituicao', 'a instituição'],
+      ['representante', 'o representante'],
+      ['meio', 'o meio'],
+      ['quemRealizou', 'quem realizou'],
+      ['registro', 'o registro de comunicação'],
+    ] as const).filter(([campo]) => !String(form[campo] ?? '').trim()).map(([, rotulo]) => rotulo);
+
+    if (faltando.length) {
+      toast.error(
+        faltando.length === 1
+          ? `Informe ${faltando[0]}.`
+          : `Informe ${faltando.slice(0, -1).join(', ')} e ${faltando[faltando.length - 1]}.`,
+      );
+      return;
+    }
     if (form.id != null) {
       updateCommLog(p.id, form.id, form);
       record('editar registro de comunicação', `${br(form.data)} · ${form.representante || form.instituicao}`);
@@ -162,33 +184,33 @@ export function TabContatos({ project }: { project: Project }) {
               <button onClick={() => setForm(null)}><X size={16} /></button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Data">
+              <Field label="Data *">
                 <input type="date" className="inp" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} />
               </Field>
-              <Field label="Hora">
+              <Field label="Hora *">
                 <input type="time" className="inp" value={form.hora} onChange={e => setForm({ ...form, hora: e.target.value })} />
               </Field>
-              <Field label="Instituição">
+              <Field label="Instituição *">
                 <input className="inp" value={form.instituicao} onChange={e => setForm({ ...form, instituicao: e.target.value })} />
               </Field>
-              <Field label="Representante">
+              <Field label="Representante *">
                 <input className="inp" value={form.representante} onChange={e => setForm({ ...form, representante: e.target.value })} placeholder="Nome(s)" />
               </Field>
-              <Field label="Meio">
+              <Field label="Meio *">
                 <select className="inp" value={form.meio} onChange={e => setForm({ ...form, meio: e.target.value })}>
                   {COMM_MEIOS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </Field>
-              <Field label="Quem realizou">
+              <Field label="Quem realizou *">
                 <input list="pessoas-app" className="inp" value={form.quemRealizou} onChange={e => setForm({ ...form, quemRealizou: e.target.value })} />
                 <datalist id="pessoas-app">
                   {APP_PEOPLE.map(pe => <option key={pe.login} value={pe.name} />)}
                 </datalist>
               </Field>
-              <Field label="Registro de Comunicação" full>
+              <Field label="Registro de Comunicação *" full>
                 <textarea className="inp min-h-[80px]" value={form.registro} onChange={e => setForm({ ...form, registro: e.target.value })} />
               </Field>
-              <Field label="Saída / encaminhamento" full>
+              <Field label="Saída / encaminhamento (opcional)" full>
                 <textarea className="inp min-h-[60px]" value={form.saida} onChange={e => setForm({ ...form, saida: e.target.value })} />
               </Field>
               <Field label="" full>
