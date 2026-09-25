@@ -17,6 +17,7 @@ import type {
   Project, Goal, Deliverable, Activity, Risk, Change, FinancialItem, ContrapartidaItem,
   Evidence, ActivityStatus, Task, Attachment, BudgetLink,
 } from './data/mockData';
+import type { ItemOrcamento } from './lib/orcamento';
 import type {
   Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp,
   ParecerTecnico, AcaoParecer,
@@ -107,6 +108,23 @@ function mapMudanca(c: any): Change {
     id: c.id, description: c.descricao, type: c.tipo, date: c.data ?? '', justification: c.justificativa ?? '',
     approval: c.aprovacao, responsible: c.responsavel ?? '', goalId: c.meta_id ?? undefined,
     nature: c.natureza ?? undefined,
+  };
+}
+function mapItemOrcamento(i: any): ItemOrcamento {
+  return {
+    id: i.id, grupo: i.grupo ?? '', ordem: n2(i.ordem),
+    categoria: i.categoria ?? '', descricao: i.item ?? '',
+    qtd: n2(i.qtd), unidade: i.unidade ?? '', qtdUnidades: n2(i.qtd_unidades),
+    valorUnitario: n2(i.valor_unitario),
+    valorProposto: n2(i.valor_proposto),
+    valorPlanejado: n2(i.valor_planejado),
+    // null preservado de propósito: ausência de execução não é zero (RF-029).
+    valorExecutado: i.valor_executado === null || i.valor_executado === undefined ? null : n2(i.valor_executado),
+    dataCompra: i.data_compra ?? null,
+    justificativaDiferenca: i.justificativa_diferenca ?? '',
+    situacao: i.situacao ?? 'Ativo',
+    motivoExclusao: i.motivo_exclusao ?? null,
+    riscoId: i.risco_id ?? null,
   };
 }
 function mapFinanceiro(i: any): FinancialItem {
@@ -221,6 +239,7 @@ function mapProjeto(row: any): ProjectExt {
     approvals: (row.aprovacoes_pendentes ?? []).map(mapAprovacao),
     aportes: (row.aportes ?? []).map(mapAporte),
     commLogs: (row.logs_comunicacao ?? []).map(mapCommLog),
+    orcamentoItens: ((row.orcamento_itens ?? []) as any[]).map(mapItemOrcamento),
     // Ordem decrescente de data (RF-033): o acompanhamento mais recente primeiro.
     pareceres: ((row.pareceres_tecnicos ?? []) as any[])
       .map(mapParecer)

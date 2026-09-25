@@ -25,6 +25,11 @@ import {
   type PeriodoEtapaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
+import {
+  registrarExecucao, excluirItemDoPlano, reverterExclusao,
+  type ExecucaoInput, type ExclusaoInput,
+} from './orcamento.server';
+import type { ItemOrcamento } from './lib/orcamento';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -89,6 +94,8 @@ export type ProjectExt = Project & {
   commLogs?: CommLog[];
   /** Pareceres técnicos de acompanhamento (RF-033). */
   pareceres?: ParecerTecnico[];
+  /** Itens do orçamento no modelo da seção 14 (execução opcional, exclusão lógica). */
+  orcamentoItens?: ItemOrcamento[];
 };
 
 /** Lançamento simples de recurso adicional — entradas e saídas fora do orçamento aprovado. */
@@ -160,6 +167,11 @@ type Ctx = {
   updateParecer: (parecerId: string, input: ParecerInput) => Promise<void>;
   deleteParecer: (parecerId: string) => Promise<void>;
   setResponsavel: (atividadeId: string, responsavel: string) => Promise<void>;
+
+  // Orçamento (RF-030, RF-039, RF-040, RF-041)
+  saveExecucao: (input: ExecucaoInput) => Promise<void>;
+  excluirItemOrcamento: (input: ExclusaoInput) => Promise<string>;
+  reverterItemOrcamento: (itemId: string, motivo: string) => Promise<void>;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
@@ -361,6 +373,9 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     updateParecer: (parecerId, input) => run(() => atualizarParecer({ data: { parecerId, dados: input } })),
     deleteParecer: parecerId => run(() => excluirParecer({ data: { parecerId } })),
     setResponsavel: (atividadeId, responsavel) => run(() => definirResponsavel({ data: { atividadeId, responsavel } })),
+    saveExecucao: input => run(() => registrarExecucao({ data: input })),
+    excluirItemOrcamento: input => run(() => excluirItemDoPlano({ data: input })),
+    reverterItemOrcamento: (itemId, motivo) => run(() => reverterExclusao({ data: { itemId, motivo } })),
 
     // author/adminName não são mais enviados: o servidor deriva quem está
     // chamando a partir da sessão (sessao.server.ts). A assinatura pública

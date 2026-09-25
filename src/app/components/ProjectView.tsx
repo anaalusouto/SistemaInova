@@ -25,6 +25,7 @@ import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabContatos } from './project-tabs/TabContatos';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
 import { PainelParecer } from './plano/PainelParecer';
+import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
@@ -305,33 +306,65 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
 }
 
 /**
- * Orçamento na forma anterior, com aviso.
+ * Aba Orçamento.
  *
- * A seção 14 do documento trata o Orçamento como etapa posterior: importação
- * de planilha (RF-037), exclusão lógica com risco vinculado (RF-040/RF-041) e
- * o par proposto/executado sem campo de saldo (RF-029) ainda não existem.
- * Até lá a tela financeira atual continua no ar — tirá-la agora removeria algo
- * que a equipe usa hoje e colocaria uma tela vazia no lugar.
+ * "Execução" é a tela da seção 14: itens vindos da planilha, com proposto e
+ * executado, exclusão lógica e histórico.
+ *
+ * "Contrapartidas e aportes" preserva a visão financeira anterior. Esses dois
+ * registros NÃO estão na especificação do Orçamento, e removê-los junto com a
+ * reformulação tiraria da equipe algo que ela usa hoje e que ninguém pediu para
+ * tirar. Ficam acessíveis e rotulados até haver decisão sobre eles.
  */
 function TabOrcamentoInterino({ project }: { project: Project }) {
+  const [sub, setSub] = useState<'execucao' | 'legado'>('execucao');
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="px-6 pt-4 flex-shrink-0">
-        <div
-          className="flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5"
-          style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
-          role="note"
-        >
-          <Info size={15} color="var(--ink-4)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <div style={{ fontSize: '0.78rem', color: 'var(--ink-3)', lineHeight: 1.5 }}>
-            Visão financeira atual. A reformulação do Orçamento — importação da planilha, exclusão
-            lógica com risco vinculado e o par proposto/executado — está prevista para uma etapa
-            posterior, conforme a seção 14 da especificação.
-          </div>
+        <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+          {([['execucao', 'Execução'], ['legado', 'Contrapartidas e aportes']] as const).map(([valor, rotulo], i) => (
+            <button
+              key={valor}
+              onClick={() => setSub(valor)}
+              className="px-3 py-1.5 text-[12px]"
+              style={{
+                background: sub === valor ? 'var(--brand-soft)' : 'transparent',
+                color: sub === valor ? 'var(--brand)' : 'var(--ink-3)',
+                fontWeight: sub === valor ? 600 : 400,
+                borderRight: i === 0 ? '1px solid var(--border)' : undefined,
+              }}
+            >
+              {rotulo}
+            </button>
+          ))}
         </div>
       </div>
+
       <div className="flex-1 min-h-0">
-        <TabFinanceiro project={project} />
+        {sub === 'execucao' ? (
+          <TabOrcamento project={project} />
+        ) : (
+          <div className="flex flex-col h-full min-h-0">
+            <div className="px-6 pt-3 flex-shrink-0">
+              <div
+                className="flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
+                role="note"
+              >
+                <Info size={15} color="var(--ink-4)" style={{ flexShrink: 0, marginTop: 1 }} />
+                <div style={{ fontSize: '0.78rem', color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                  Visão financeira anterior. Contrapartidas e aportes não fazem parte da
+                  especificação do Orçamento — continuam aqui até haver decisão sobre eles. A
+                  tabela de itens desta tela foi substituída pela aba Execução.
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              <TabFinanceiro project={project} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
