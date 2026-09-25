@@ -39,3 +39,6 @@ supabase/.temp/
 *.sw?
 .vercel
 .env*
+
+# Documentos de especificação/anexos — ficam no OneDrive, não no repositório
+DOCUMENTOS/
