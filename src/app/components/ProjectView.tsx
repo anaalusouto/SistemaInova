@@ -22,7 +22,7 @@ import { useAudit } from '../audit/auditStore';
 import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabContatos } from './project-tabs/TabContatos';
-import { TabMetas } from './project-tabs/TabMetas';
+import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
@@ -84,10 +84,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
       case 'contato':   return <TabContatos project={project} />;
-      // Interino: a visão Tabela definitiva (RF-015/RF-016), o Gantt e o Kanban
-      // entram nas próximas fases. Até lá, a tela de metas existente continua
-      // servindo os mesmos dados — nada de placeholder vazio para o usuário.
-      case 'plano':     return <TabMetas project={project} />;
+      case 'plano':     return <TabPlanoTrabalho project={project} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
       default:          return null;
     }

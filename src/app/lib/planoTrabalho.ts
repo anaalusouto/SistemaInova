@@ -11,7 +11,7 @@
  * `new Date()`: a comparação lexicográfica de ISO já é cronológica e não passa
  * por fuso horário (mesmo motivo documentado em ./dateOnly.ts).
  */
-import type { Activity, Deliverable, Goal, RiskLevel } from '../data/mockData';
+import type { Activity, Deliverable, Goal, Risk, RiskLevel } from '../data/mockData';
 
 // ---------------------------------------------------------------------------
 // Data de referência
@@ -134,6 +134,34 @@ export function faixaRisco(pontuacao: number): RiskLevel {
  * de um número só, e não uma caçada por comparações soltas pelo código.
  */
 export const PONTUACAO_RISCO_RELEVANTE = 15;
+
+/** Risco em aberto = ainda pesa. Encerrado sai das contas da linha. */
+export function riscoEmAberto(r: Pick<Risk, 'status'>): boolean {
+  return r.status !== 'Encerrado';
+}
+
+export interface RiscoDaLinha {
+  /** Maior pontuação entre os riscos abertos da etapa. */
+  pontuacao: number;
+  faixa: RiskLevel;
+  /** Quantos riscos abertos a etapa tem. */
+  quantidade: number;
+}
+
+/**
+ * Nível de risco exibido na linha de uma atividade (RN-011).
+ *
+ * O risco pertence à ETAPA, não à atividade — então a linha reflete a maior
+ * pontuação entre os riscos abertos da etapa que a contém. A tela precisa
+ * deixar claro que é risco da etapa, e não algo exclusivo daquela atividade,
+ * senão quem lê conclui que a atividade específica é que está em risco.
+ */
+export function riscoDaEtapa(riscos: Risk[], etapaId: string): RiscoDaLinha | null {
+  const abertos = riscos.filter(r => r.stageId === etapaId && riscoEmAberto(r));
+  if (abertos.length === 0) return null;
+  const pontuacao = abertos.reduce((mx, r) => Math.max(mx, Number(r.severity) || 0), 0);
+  return { pontuacao, faixa: faixaRisco(pontuacao), quantidade: abertos.length };
+}
 
 // ---------------------------------------------------------------------------
 // Períodos derivados (RN-012, RN-017)
