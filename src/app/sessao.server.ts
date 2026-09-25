@@ -19,7 +19,6 @@
  * TanStack Start.
  */
 import { createServerFn } from '@tanstack/react-start';
-import { getCookie, setCookie, deleteCookie } from '@tanstack/react-start/server';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { UserRole } from './usuarios.server';
 
@@ -30,6 +29,20 @@ const DURACAO_MS = 12 * 60 * 60 * 1000;
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
   return supabaseAdmin;
+}
+
+/**
+ * Os helpers de cookie são importados sob demanda, e não no topo do arquivo.
+ *
+ * Motivo: `authStore.tsx` roda no cliente e importa deste módulo os dois
+ * server functions (obterSessao/encerrarSessao). O sufixo .server.ts faz o
+ * TanStack trocar esses dois por stubs RPC, mas NÃO remove os imports estáticos
+ * do módulo — então `@tanstack/react-start/server` acabava no bundle do client
+ * e o import-protection do build quebrava a compilação. `tsc` não pega isso:
+ * é regra de bundler, não de tipo. Mesmo padrão já usado por getAdmin() acima.
+ */
+async function cookies() {
+  return import('@tanstack/react-start/server');
 }
 
 /**
@@ -86,6 +99,7 @@ export async function abrirSessao(usuarioId: string): Promise<void> {
   });
   if (error) throw new Error(error.message);
 
+  const { setCookie } = await cookies();
   setCookie(COOKIE, token, {
     httpOnly: true,       // inacessível a JavaScript — XSS não rouba a sessão
     sameSite: 'lax',
@@ -96,6 +110,7 @@ export async function abrirSessao(usuarioId: string): Promise<void> {
 }
 
 export async function fecharSessao(): Promise<void> {
+  const { getCookie, deleteCookie } = await cookies();
   const token = getCookie(COOKIE);
   if (token) {
     const supabaseAdmin = await getAdmin();
@@ -109,6 +124,7 @@ export async function fecharSessao(): Promise<void> {
  * está chamando — nenhum campo vindo do cliente entra nesta decisão.
  */
 export async function usuarioAtual(): Promise<UsuarioSessao | null> {
+  const { getCookie } = await cookies();
   const token = getCookie(COOKIE);
   if (!token) return null;
 
