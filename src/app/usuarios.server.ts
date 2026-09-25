@@ -325,3 +325,40 @@ export const avisarSolicitacaoDecidida = createServerFn({ method: 'POST' })
       await notificarSolicitacaoDecidida(user.email, data.aprovado, data.projetoNome, data.resumo, data.revisadoPor);
     }
   });
+
+// ---------------------------------------------------------------------------
+// Sessão exposta ao cliente
+//
+// Vivem aqui, e não em sessao.server.ts, porque o authStore (client) precisa
+// chamá-los: importar sessao.server.ts do client arrastaria os helpers de
+// cookie do TanStack para o bundle do navegador, o que build e dev recusam.
+// O import dentro do handler resolve só no servidor.
+// ---------------------------------------------------------------------------
+
+export interface UsuarioSessao {
+  id: string;
+  login: string;
+  displayName: string;
+  role: UserRole;
+  adminOverride: boolean;
+}
+
+/**
+ * Quem sou eu, segundo o servidor. O authStore usa isto para reidratar a
+ * sessão ao abrir a página, em vez de confiar no que está no localStorage — o
+ * que está guardado no navegador é conveniência de UI, não prova de identidade.
+ */
+export const obterSessao = createServerFn({ method: 'GET' }).handler(
+  async (): Promise<UsuarioSessao | null> => {
+    const { usuarioAtual } = await import('./sessao.server');
+    return usuarioAtual();
+  },
+);
+
+/** Encerra a sessão no servidor e apaga o cookie. */
+export const encerrarSessao = createServerFn({ method: 'POST' }).handler(
+  async (): Promise<void> => {
+    const { fecharSessao } = await import('./sessao.server');
+    return fecharSessao();
+  },
+);

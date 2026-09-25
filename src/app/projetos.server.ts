@@ -11,7 +11,6 @@
 // client) para o compilador do TanStack Start fazer o split client/server via
 // RPC. O sufixo .server.ts (não a pasta) é o que aciona esse split.
 import { createServerFn } from '@tanstack/react-start';
-import { exigirAdmin, exigirEscrita } from './sessao.server';
 import { progressoParaStatus, statusParaProgresso } from './lib/planoTrabalho';
 import type { ProjectExt, PlanoTrabalho, Aporte, EditAuthor } from './store';
 import type {
@@ -23,6 +22,19 @@ import type { Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp } from
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
   return supabaseAdmin;
+}
+
+// Guardas de autorização (RN-001, CA-02). Importadas sob demanda porque
+// store.tsx roda no client e importa este módulo: um import estático de
+// sessao.server.ts arrastaria os helpers de cookie do TanStack para o bundle
+// do navegador. Mesmo motivo do getAdmin() acima.
+async function exigirEscrita() {
+  const m = await import('./sessao.server');
+  return m.exigirEscrita();
+}
+async function exigirAdmin() {
+  const m = await import('./sessao.server');
+  return m.exigirAdmin();
 }
 
 const num = (v: unknown, fb = 0) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number(v) || fb);

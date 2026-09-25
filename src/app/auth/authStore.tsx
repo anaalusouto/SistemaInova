@@ -3,8 +3,8 @@ import {
   autenticar, verificarAdmin, listarPessoas, atualizarPreferenciasNotificacao, atualizarNomeExibicao, registrarPresenca,
   atualizarLogin, atualizarEmail, atualizarSenha, atualizarAvatar,
   type PublicUser, type UserRole as ServerUserRole,
+  obterSessao, encerrarSessao,
 } from '../usuarios.server';
-import { obterSessao, encerrarSessao } from '../sessao.server';
 
 export type UserRole = ServerUserRole;
 export interface AuthUser {

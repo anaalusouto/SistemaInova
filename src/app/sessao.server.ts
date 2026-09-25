@@ -18,7 +18,7 @@
  * importProtection), e é o sufixo que aciona o split client/servidor do
  * TanStack Start.
  */
-import { createServerFn } from '@tanstack/react-start';
+import { getCookie, setCookie, deleteCookie } from '@tanstack/react-start/server';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { UserRole } from './usuarios.server';
 
@@ -29,20 +29,6 @@ const DURACAO_MS = 12 * 60 * 60 * 1000;
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
   return supabaseAdmin;
-}
-
-/**
- * Os helpers de cookie são importados sob demanda, e não no topo do arquivo.
- *
- * Motivo: `authStore.tsx` roda no cliente e importa deste módulo os dois
- * server functions (obterSessao/encerrarSessao). O sufixo .server.ts faz o
- * TanStack trocar esses dois por stubs RPC, mas NÃO remove os imports estáticos
- * do módulo — então `@tanstack/react-start/server` acabava no bundle do client
- * e o import-protection do build quebrava a compilação. `tsc` não pega isso:
- * é regra de bundler, não de tipo. Mesmo padrão já usado por getAdmin() acima.
- */
-async function cookies() {
-  return import('@tanstack/react-start/server');
 }
 
 /**
@@ -99,7 +85,6 @@ export async function abrirSessao(usuarioId: string): Promise<void> {
   });
   if (error) throw new Error(error.message);
 
-  const { setCookie } = await cookies();
   setCookie(COOKIE, token, {
     httpOnly: true,       // inacessível a JavaScript — XSS não rouba a sessão
     sameSite: 'lax',
@@ -110,7 +95,6 @@ export async function abrirSessao(usuarioId: string): Promise<void> {
 }
 
 export async function fecharSessao(): Promise<void> {
-  const { getCookie, deleteCookie } = await cookies();
   const token = getCookie(COOKIE);
   if (token) {
     const supabaseAdmin = await getAdmin();
@@ -124,7 +108,6 @@ export async function fecharSessao(): Promise<void> {
  * está chamando — nenhum campo vindo do cliente entra nesta decisão.
  */
 export async function usuarioAtual(): Promise<UsuarioSessao | null> {
-  const { getCookie } = await cookies();
   const token = getCookie(COOKIE);
   if (!token) return null;
 
@@ -203,20 +186,8 @@ export function compararSegredos(a: string, b: string): boolean {
   return ba.length === bb.length && timingSafeEqual(ba, bb);
 }
 
-// ---------------------------------------------------------------------------
-// Exposto ao cliente
-// ---------------------------------------------------------------------------
-
-/**
- * Quem sou eu, segundo o servidor. O authStore usa isto para reidratar a sessão
- * ao abrir a página, em vez de confiar no que está no localStorage — o que está
- * guardado no navegador é conveniência de UI, não prova de identidade.
- */
-export const obterSessao = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<UsuarioSessao | null> => usuarioAtual(),
-);
-
-/** Encerra a sessão no servidor e apaga o cookie. */
-export const encerrarSessao = createServerFn({ method: 'POST' }).handler(
-  async (): Promise<void> => fecharSessao(),
-);
+// Os server functions que o cliente chama (obterSessao/encerrarSessao) NÃO
+// moram aqui: vivem em usuarios.server.ts, que o authStore já importa. Este
+// módulo é servidor puro — nenhum arquivo de client pode importá-lo
+// estaticamente, senão `@tanstack/react-start/server` entra no bundle do
+// navegador e tanto o build quanto o dev recusam a compilação.
