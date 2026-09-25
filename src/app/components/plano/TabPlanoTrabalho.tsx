@@ -15,7 +15,11 @@ import { Table2, GanttChartSquare, Columns3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { type ProjectExt } from '../../store';
-import { codigosHierarquicos } from '../../lib/planoTrabalho';
+import {
+  codigosHierarquicos, filtrarPlano,
+  type CriteriosFiltro, CRITERIOS_VAZIOS,
+} from '../../lib/planoTrabalho';
+import { BarraFiltros } from './BarraFiltros';
 import { VisaoTabela } from './VisaoTabela';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
@@ -41,6 +45,9 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   const [visao, setVisao] = useState<Visao>('tabela');
   const [recolhidos, setRecolhidos] = useState<Set<string>>(new Set());
   const [painel, setPainel] = useState<PainelAberto>(null);
+  // Busca, filtros e recolhimento vivem aqui, e não dentro de cada visão:
+  // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
+  const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
 
   const metas = p.goals;
   const riscos = p.risks;
@@ -49,6 +56,12 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   // filtros entrarem, eles filtram o que é exibido — nunca o que entra neste
   // cálculo, senão o código de cada registro mudaria a cada digitação.
   const codigos = useMemo(() => codigosHierarquicos(metas), [metas]);
+
+  // A lista EXIBIDA é a filtrada; a numeração continua vindo da completa.
+  const metasVisiveis = useMemo(
+    () => filtrarPlano(metas, riscos, criterios),
+    [metas, riscos, criterios],
+  );
 
   const alternarRecolhido = (id: string) =>
     setRecolhidos(atual => {
@@ -78,6 +91,11 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
     [metas],
   );
 
+  const atividadesVisiveis = useMemo(
+    () => metasVisiveis.flatMap(m => m.deliverables.flatMap(e => e.activities)).length,
+    [metasVisiveis],
+  );
+
   const abrirAnexo = (atividade: Activity) => {
     // O download por URL assinada entra junto com o upload (RF-026/RF-032).
     // Até lá, avisa em vez de abrir um link quebrado.
@@ -92,8 +110,19 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {/* Busca e filtros (RF-012) */}
+      <div className="px-6 pt-4 flex-shrink-0">
+        <BarraFiltros
+          metas={metas}
+          criterios={criterios}
+          aoMudar={setCriterios}
+          visiveis={atividadesVisiveis}
+          total={todasAtividades.length}
+        />
+      </div>
+
       {/* Seletor de visão (RF-011) */}
-      <div className="flex items-center gap-2 px-6 pt-4 pb-3 flex-shrink-0 flex-wrap">
+      <div className="flex items-center gap-2 px-6 pt-3 pb-3 flex-shrink-0 flex-wrap">
         <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {VISOES.map(v => {
             const Icone = v.icone;
@@ -121,8 +150,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
 
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
-          {metas.flatMap(m => m.deliverables).length} etapas ·{' '}
-          {todasAtividades.length} atividades
+          {metas.flatMap(m => m.deliverables).length} etapas
         </span>
       </div>
 
@@ -131,7 +159,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {visao === 'tabela' && (
             <VisaoTabela
-              metas={metas}
+              metas={metasVisiveis}
               riscos={riscos}
               recolhidos={recolhidos}
               alternarRecolhido={alternarRecolhido}

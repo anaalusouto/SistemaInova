@@ -359,6 +359,153 @@ export function codigosHierarquicos(metas: Goal[]): Map<string, string> {
 }
 
 // ---------------------------------------------------------------------------
+// Busca e filtros (RF-012, CA-03)
+// ---------------------------------------------------------------------------
+
+export type FiltroRisco = 'qualquer' | 'com' | 'sem' | RiskLevel;
+
+export interface CriteriosFiltro {
+  /** Texto livre: atividade, tarefa, etapa, responsável e risco. */
+  busca: string;
+  metaIds: string[];
+  etapaIds: string[];
+  responsaveis: string[];
+  /** Inclui 'Atrasada', que é derivado e não um status armazenado (RN-010). */
+  status: (Activity['status'] | 'Atrasada')[];
+  risco: FiltroRisco;
+  vinculoOrcamentario: Activity['budgetLink'][];
+}
+
+export const CRITERIOS_VAZIOS: CriteriosFiltro = {
+  busca: '', metaIds: [], etapaIds: [], responsaveis: [], status: [],
+  risco: 'qualquer', vinculoOrcamentario: [],
+};
+
+export function temFiltroAtivo(c: CriteriosFiltro): boolean {
+  return (
+    c.busca.trim() !== '' || c.metaIds.length > 0 || c.etapaIds.length > 0 ||
+    c.responsaveis.length > 0 || c.status.length > 0 || c.risco !== 'qualquer' ||
+    c.vinculoOrcamentario.length > 0
+  );
+}
+
+/** Normaliza para busca tolerante a acento e caixa. */
+function normalizar(v: string): string {
+  return v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+function atividadeCasaBusca(a: Activity, termo: string): boolean {
+  if (normalizar(a.name).includes(termo)) return true;
+  if (a.responsible && normalizar(a.responsible).includes(termo)) return true;
+  return a.tasks.some(t => normalizar(t.title).includes(termo));
+}
+
+/**
+ * Aplica busca e filtros combinados por INTERSEÇÃO (RF-012): a atividade
+ * precisa satisfazer todos os critérios ativos, não qualquer um deles.
+ *
+ * Devolve uma árvore nova com os mesmos objetos das folhas — nunca cópias
+ * modificadas. Quem desenha continua recebendo as MESMAS atividades, e a
+ * numeração segue vindo de `codigosHierarquicos` sobre a lista completa
+ * (RN-004, CA-03): filtrar muda o que aparece, jamais o código de cada item.
+ *
+ * Etapa cujo nome casa com a busca é mantida inteira, com suas atividades —
+ * quem procura pelo nome da etapa quer ver o que há dentro dela.
+ */
+export function filtrarPlano(metas: Goal[], riscos: Risk[], criterios: CriteriosFiltro): Goal[] {
+  if (!temFiltroAtivo(criterios)) return metas;
+
+  const termo = normalizar(criterios.busca);
+  const metasPermitidas = new Set(criterios.metaIds);
+  const etapasPermitidas = new Set(criterios.etapaIds);
+  const responsaveis = new Set(criterios.responsaveis);
+  const statusAceitos = new Set(criterios.status);
+  const vinculos = new Set(criterios.vinculoOrcamentario);
+  const hoje = hojeISO();
+
+  // Risco casa por etapa, porque é da etapa que ele é (RN-011).
+  const riscoPorEtapa = new Map<string, RiscoDaLinha | null>();
+  const buscaCasaRiscoDaEtapa = new Map<string, boolean>();
+  for (const meta of metas) {
+    for (const etapa of meta.deliverables) {
+      riscoPorEtapa.set(etapa.id, riscoDaEtapa(riscos, etapa.id));
+      buscaCasaRiscoDaEtapa.set(
+        etapa.id,
+        termo !== '' && riscos.some(r =>
+          r.stageId === etapa.id &&
+          (normalizar(r.title ?? '').includes(termo) || normalizar(r.description ?? '').includes(termo))),
+      );
+    }
+  }
+
+  const resultado: Goal[] = [];
+
+  for (const meta of metas) {
+    if (metasPermitidas.size > 0 && !metasPermitidas.has(meta.id)) continue;
+
+    const etapasMantidas: Deliverable[] = [];
+
+    for (const etapa of meta.deliverables) {
+      if (etapasPermitidas.size > 0 && !etapasPermitidas.has(etapa.id)) continue;
+
+      const risco = riscoPorEtapa.get(etapa.id) ?? null;
+
+      // Filtro de risco vale para a etapa inteira: o risco não é da atividade.
+      if (criterios.risco === 'com' && !risco) continue;
+      if (criterios.risco === 'sem' && risco) continue;
+      if (criterios.risco !== 'qualquer' && criterios.risco !== 'com' && criterios.risco !== 'sem') {
+        if (!risco || risco.faixa !== criterios.risco) continue;
+      }
+
+      const etapaCasaBusca =
+        termo === '' ||
+        normalizar(etapa.name).includes(termo) ||
+        (buscaCasaRiscoDaEtapa.get(etapa.id) ?? false);
+
+      const atividades = etapa.activities.filter(a => {
+        if (responsaveis.size > 0 && !responsaveis.has(a.responsible || '')) return false;
+        if (vinculos.size > 0 && !vinculos.has(a.budgetLink)) return false;
+        if (statusAceitos.size > 0) {
+          const atrasada = estaAtrasada(a, hoje);
+          const casaStatus = statusAceitos.has(a.status);
+          const casaAtraso = statusAceitos.has('Atrasada') && atrasada;
+          if (!casaStatus && !casaAtraso) return false;
+        }
+        // A etapa já casou a busca: suas atividades entram sem precisar casar
+        // de novo, senão procurar pelo nome da etapa devolveria etapa vazia.
+        if (termo !== '' && !etapaCasaBusca && !atividadeCasaBusca(a, termo)) return false;
+        return true;
+      });
+
+      // Etapa sem atividade sobrevivente só continua visível quando ela
+      // própria casou a busca — caso contrário, some.
+      if (atividades.length === 0 && !(etapaCasaBusca && termo !== '')) continue;
+
+      etapasMantidas.push({ ...etapa, activities: atividades });
+    }
+
+    if (etapasMantidas.length > 0) {
+      resultado.push({ ...meta, deliverables: etapasMantidas });
+    }
+  }
+
+  return resultado;
+}
+
+/** Responsáveis presentes no plano, para alimentar o filtro sem inventar nomes. */
+export function responsaveisDoPlano(metas: Goal[]): string[] {
+  const nomes = new Set<string>();
+  for (const meta of metas) {
+    for (const etapa of meta.deliverables) {
+      for (const a of etapa.activities) {
+        if (a.responsible?.trim()) nomes.add(a.responsible.trim());
+      }
+    }
+  }
+  return [...nomes].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+// ---------------------------------------------------------------------------
 // Limites de data da atividade (RN-014, RN-015)
 // ---------------------------------------------------------------------------
 
