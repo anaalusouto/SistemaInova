@@ -7,7 +7,7 @@ import {
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
-import type { CommLog, Contact, ProjectOp, MetaChangeLog, PendingApproval } from './data/projectExtras';
+import type { CommLog, Contact, ProjectOp, MetaChangeLog, PendingApproval, ParecerTecnico } from './data/projectExtras';
 import type { InternalTracking } from './data/controleInterno';
 import {
   listarProjetos, criarProjeto, atualizarProjeto, excluirProjeto,
@@ -21,7 +21,8 @@ import {
 import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco,
-  type PeriodoEtapaInput, type AtividadeInput, type RiscoInput,
+  criarParecer, atualizarParecer, excluirParecer,
+  type PeriodoEtapaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
@@ -85,6 +86,8 @@ export type ProjectExt = Project & {
   aportes?: Aporte[];
   /** Registro de comunicação com a instituição (contatos). */
   commLogs?: CommLog[];
+  /** Pareceres técnicos de acompanhamento (RF-033). */
+  pareceres?: ParecerTecnico[];
 };
 
 /** Lançamento simples de recurso adicional — entradas e saídas fora do orçamento aprovado. */
@@ -150,6 +153,9 @@ type Ctx = {
   deleteTarefa: (tarefaId: string) => Promise<void>;
   createRisco: (input: RiscoInput) => Promise<void>;
   updateRisco: (riscoId: string, input: RiscoInput) => Promise<void>;
+  createParecer: (input: ParecerInput) => Promise<string>;
+  updateParecer: (parecerId: string, input: ParecerInput) => Promise<void>;
+  deleteParecer: (parecerId: string) => Promise<void>;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
@@ -345,6 +351,9 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     deleteTarefa: tarefaId => run(() => excluirTarefa({ data: { tarefaId } })),
     createRisco: input => run(() => criarRisco({ data: input })),
     updateRisco: (riscoId, input) => run(() => atualizarRisco({ data: { riscoId, dados: input } })),
+    createParecer: input => run(() => criarParecer({ data: input })),
+    updateParecer: (parecerId, input) => run(() => atualizarParecer({ data: { parecerId, dados: input } })),
+    deleteParecer: parecerId => run(() => excluirParecer({ data: { parecerId } })),
 
     // author/adminName não são mais enviados: o servidor deriva quem está
     // chamando a partir da sessão (sessao.server.ts). A assinatura pública

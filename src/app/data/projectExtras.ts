@@ -75,3 +75,43 @@ export interface CommLog {
   registro: string;      // Registro de comunicação
   saida: string;         // Encaminhamento / saída
 }
+
+// ---------------------------------------------------------------------------
+// Parecer técnico do projeto (RF-033, RF-034, RF-036)
+//
+// Não confundir com o parecer do Diagnóstico (diagnostico_parecer): outro
+// contexto, outro ciclo de vida. Este é o registro de acompanhamento que a
+// equipe PMO faz após visita ou reunião.
+// ---------------------------------------------------------------------------
+
+export const ORIGENS_PARECER = ['Visita técnica', 'Reunião de acompanhamento', 'Outro'] as const;
+export type OrigemParecer = (typeof ORIGENS_PARECER)[number];
+
+export type StatusAcaoParecer = 'A iniciar' | 'Em andamento' | 'Concluído';
+
+/** Ação derivada do parecer. Id estável e ordem própria (RN-029). */
+export interface AcaoParecer {
+  id: string;
+  ordem: number;
+  descricao: string;
+  responsavel: string;
+  prazo: string | null;
+  status: StatusAcaoParecer;
+}
+
+export interface ParecerTecnico {
+  id: string;
+  data: string;               // AAAA-MM-DD
+  origem: OrigemParecer;
+  autor: string;
+  pontosObservados: string;
+  /** Vazio significa AUSÊNCIA DE REGISTRO, nunca ausência de problema (RN-026). */
+  itensCriticos: string;
+  limitacoesOrcamentarias: string;
+  recomendacao: string;
+  /** Vínculo opcional com um registro da tela Contato do mesmo projeto. */
+  logComunicacaoId: string | null;
+  acoes: AcaoParecer[];
+  criadoEm: string;
+  atualizadoEm: string;
+}

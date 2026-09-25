@@ -6,6 +6,7 @@ import {
   DollarSign,
   ShieldAlert,
   GitBranch,
+  ClipboardCheck,
   ArrowLeft,
   ChevronRight,
   ExternalLink,
@@ -23,6 +24,7 @@ import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabContatos } from './project-tabs/TabContatos';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
+import { PainelParecer } from './plano/PainelParecer';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
@@ -57,6 +59,7 @@ interface ProjectViewProps {
 export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
   const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
+  const [parecerAberto, setParecerAberto] = useState(false);
   const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; value: string } | null>(null);
   const { getProject, updateProject } = useStore();
   const { user } = useAuth();
@@ -70,15 +73,16 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   // RF-006: o painel lateral fecha por botão E por Escape. Sem isso, quem abre
   // um detalhe sem querer fica preso ao mouse para sair.
   useEffect(() => {
-    if (!panel && editLink === null) return;
+    if (!panel && editLink === null && !parecerAberto) return;
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (editLink !== null) setEditLink(null);
+      else if (parecerAberto) setParecerAberto(false);
       else setPanel(null);
     };
     window.addEventListener('keydown', aoTeclar);
     return () => window.removeEventListener('keydown', aoTeclar);
-  }, [panel, editLink]);
+  }, [panel, editLink, parecerAberto]);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -178,6 +182,15 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
               consolidado de riscos (RF-035) passa para dentro do Plano de
               Trabalho numa fase seguinte. */}
           <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:flex-shrink-0">
+            {/* RF-033: acesso discreto ao parecer, no cabeçalho, presente em
+                todas as quatro seções — e não uma quinta aba. */}
+            <button
+              onClick={() => setParecerAberto(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+              style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
+            >
+              <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
+            </button>
             <button
               onClick={() => setPanel('riscos')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
@@ -229,6 +242,8 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       <div className="flex-1 overflow-hidden" style={{ background: 'var(--background)' }}>
         {renderTab()}
       </div>
+
+      {parecerAberto && <PainelParecer project={project} aoFechar={() => setParecerAberto(false)} />}
 
       {/* Painel de Riscos / Mudanças */}
       {panel && (

@@ -17,7 +17,10 @@ import type {
   Project, Goal, Deliverable, Activity, Risk, Change, FinancialItem, ContrapartidaItem,
   Evidence, ActivityStatus, Task, Attachment, BudgetLink,
 } from './data/mockData';
-import type { Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
+import type {
+  Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp,
+  ParecerTecnico, AcaoParecer,
+} from './data/projectExtras';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -128,6 +131,25 @@ function mapEvidencia(e: any): Evidence {
 function mapAporte(a: any): Aporte {
   return { id: a.id, data: a.data, tipo: a.tipo, origem: a.origem ?? '', descricao: a.descricao ?? '', valor: n2(a.valor), registradoPor: a.registrado_por ?? undefined };
 }
+function mapAcaoParecer(a: any): AcaoParecer {
+  return {
+    id: a.id, ordem: n2(a.ordem), descricao: a.descricao,
+    responsavel: a.responsavel ?? '', prazo: a.prazo ?? null, status: a.status,
+  };
+}
+function mapParecer(p: any): ParecerTecnico {
+  return {
+    id: p.id, data: p.data, origem: p.origem, autor: p.autor,
+    pontosObservados: p.pontos_observados ?? '',
+    // Campo em branco é ausência de REGISTRO, não ausência de problema (RN-026).
+    itensCriticos: p.itens_criticos ?? '',
+    limitacoesOrcamentarias: p.limitacoes_orcamentarias ?? '',
+    recomendacao: p.recomendacao ?? '',
+    logComunicacaoId: p.log_comunicacao_id ?? null,
+    acoes: ((p.parecer_acoes ?? []) as any[]).map(mapAcaoParecer).sort((a, b) => a.ordem - b.ordem),
+    criadoEm: p.criado_em, atualizadoEm: p.atualizado_em,
+  };
+}
 function mapContato(c: any): Contact {
   return { id: c.id, name: c.nome, role: c.cargo ?? '', org: c.organizacao ?? '', phone: c.telefone ?? '', email: c.email ?? '', notes: c.notas ?? '' };
 }
@@ -191,6 +213,10 @@ function mapProjeto(row: any): ProjectExt {
     approvals: (row.aprovacoes_pendentes ?? []).map(mapAprovacao),
     aportes: (row.aportes ?? []).map(mapAporte),
     commLogs: (row.logs_comunicacao ?? []).map(mapCommLog),
+    // Ordem decrescente de data (RF-033): o acompanhamento mais recente primeiro.
+    pareceres: ((row.pareceres_tecnicos ?? []) as any[])
+      .map(mapParecer)
+      .sort((a, b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : (a.criadoEm < b.criadoEm ? 1 : -1))),
   };
 }
 
@@ -200,7 +226,8 @@ const SELECT_PROJETO = `
   metas(id, nome, ordem, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
   plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
   evidencias(*), aportes(*), contatos(*), logs_comunicacao(*),
-  log_alteracoes_meta(*), aprovacoes_pendentes(*)
+  log_alteracoes_meta(*), aprovacoes_pendentes(*),
+  pareceres_tecnicos(*, parecer_acoes(*))
 `;
 
 export const listarProjetos = createServerFn({ method: 'GET' }).handler(async (): Promise<ProjectExt[]> => {
