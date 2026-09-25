@@ -23,6 +23,7 @@ import { BarraFiltros } from './BarraFiltros';
 import { VisaoTabela } from './VisaoTabela';
 import { VisaoGantt } from './VisaoGantt';
 import { RegistroDeRiscos } from './RegistroDeRiscos';
+import { abrirAnexo } from './CampoAnexo';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
@@ -100,14 +101,9 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
     [metasVisiveis],
   );
 
-  const abrirAnexo = (atividade: Activity) => {
-    // O download por URL assinada entra junto com o upload (RF-026/RF-032).
-    // Até lá, avisa em vez de abrir um link quebrado.
-    toast.info(
-      atividade.attachment
-        ? `Anexo "${atividade.attachment.fileName}" — abertura de arquivo entra na próxima entrega.`
-        : 'Esta atividade não tem anexo.',
-    );
+  const abrirAnexoDaAtividade = (atividade: Activity) => {
+    if (!atividade.attachment) { toast.info('Esta atividade não tem anexo.'); return; }
+    void abrirAnexo(atividade.attachment.id);
   };
 
   const fechar = () => setPainel(null);
@@ -206,7 +202,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
-              aoAbrirAnexo={abrirAnexo}
+              aoAbrirAnexo={abrirAnexoDaAtividade}
             />
           )}
 
@@ -220,7 +216,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               codigos={codigos}
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
-              aoAbrirAnexo={abrirAnexo}
+              aoAbrirAnexo={abrirAnexoDaAtividade}
             />
           )}
         </div>
@@ -266,10 +262,10 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
             etapa={alvo.etapa}
             meta={alvo.meta}
             codigo={codigos.get(alvo.atividade.id) ?? ''}
+            projetoId={p.id}
             riscoOrigem={origem}
             aoFechar={fechar}
             aoAbrirRisco={r => setPainel({ tipo: 'risco', riscoId: r.id })}
-            aoAbrirAnexo={abrirAnexo}
           />
         );
       })()}

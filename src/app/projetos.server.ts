@@ -154,7 +154,15 @@ function mapContato(c: any): Contact {
   return { id: c.id, name: c.nome, role: c.cargo ?? '', org: c.organizacao ?? '', phone: c.telefone ?? '', email: c.email ?? '', notes: c.notas ?? '' };
 }
 function mapCommLog(c: any): CommLog {
-  return { id: c.id, data: c.data, hora: c.hora ?? '', instituicao: c.instituicao ?? '', representante: c.representante ?? '', meio: c.meio ?? '', quemRealizou: c.quem_realizou ?? '', registro: c.registro ?? '', saida: c.retorno ?? '' };
+  // Um arquivo por registro (RF-009); o join vem como lista, e o mais recente
+  // é o que vale — substituir apaga o anterior, então só deve haver um.
+  const anexos = (c.projeto_anexos ?? []) as any[];
+  return {
+    id: c.id, data: c.data, hora: c.hora ?? '', instituicao: c.instituicao ?? '',
+    representante: c.representante ?? '', meio: c.meio ?? '', quemRealizou: c.quem_realizou ?? '',
+    registro: c.registro ?? '', saida: c.retorno ?? '',
+    anexo: anexos.length ? mapAnexo(anexos[anexos.length - 1]) : null,
+  };
 }
 function mapMetaLog(l: any): MetaChangeLog {
   return { id: l.id, entity: l.entidade, action: l.acao, targetId: l.target_id ?? undefined, parentId: l.parent_id ?? undefined, targetPath: l.target_path, field: l.campo ?? undefined, from: l.de_valor ?? undefined, to: l.para_valor ?? undefined, payload: l.payload ?? undefined, author: l.autor, authorRole: l.autor_papel, date: l.data, approvedBy: l.aprovado_por ?? null };
@@ -225,7 +233,7 @@ const SELECT_PROJETO = `
   projeto_equipe(nome),
   metas(id, nome, ordem, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
   plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
-  evidencias(*), aportes(*), contatos(*), logs_comunicacao(*),
+  evidencias(*), aportes(*), contatos(*), logs_comunicacao(*, projeto_anexos(*)),
   log_alteracoes_meta(*), aprovacoes_pendentes(*),
   pareceres_tecnicos(*, parecer_acoes(*))
 `;

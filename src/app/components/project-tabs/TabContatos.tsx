@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Plus, Trash2, X, Pencil, MessageSquare } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, MessageSquare, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project } from '../../data/mockData';
 import { COMM_MEIOS, type CommLog } from '../../data/projectExtras';
 import { useStore, type ProjectExt } from '../../store';
 import { useAuth, usePeople } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
+import { CampoAnexo, abrirAnexo } from '../plano/CampoAnexo';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const br = (d: string) => (d ? new Date(`${d}T00:00:00`).toLocaleDateString('pt-BR') : '—');
@@ -21,7 +22,7 @@ const emptyLog = (org: string): Omit<CommLog, 'id'> => ({
   saida: '',
 });
 
-const COLS = ['Data', 'Hora', 'Instituição', 'Representante', 'Meio', 'Quem realizou', 'Registro de Comunicação', 'Saída', ''];
+const COLS = ['Data', 'Hora', 'Instituição', 'Representante', 'Meio', 'Quem realizou', 'Registro de Comunicação', 'Saída', 'Anexo', ''];
 
 export function TabContatos({ project }: { project: Project }) {
   const { getProject, addCommLog, updateCommLog, deleteCommLog } = useStore();
@@ -112,6 +113,20 @@ export function TabContatos({ project }: { project: Project }) {
                   <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-3)' }}>{l.quemRealizou || '—'}</td>
                   <td className="px-3 py-2" style={{ fontSize: '0.76rem', color: 'var(--ink-1)', minWidth: 280 }}>{l.registro}</td>
                   <td className="px-3 py-2" style={{ fontSize: '0.74rem', color: 'var(--ink-4)', minWidth: 200 }}>{l.saida || '—'}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {l.anexo ? (
+                      <button
+                        onClick={() => abrirAnexo(l.anexo!.id)}
+                        className="inline-flex items-center gap-1 hover:underline"
+                        style={{ fontSize: '0.72rem', color: 'var(--info)' }}
+                        title={l.anexo.fileName}
+                      >
+                        <Paperclip size={11} /> abrir
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--ink-5)' }}>—</span>
+                    )}
+                  </td>
                   <td className="px-2 py-2 whitespace-nowrap">
                     {!readOnly && (
                       <span className="flex items-center gap-1">
@@ -175,6 +190,16 @@ export function TabContatos({ project }: { project: Project }) {
               </Field>
               <Field label="Saída / encaminhamento" full>
                 <textarea className="inp min-h-[60px]" value={form.saida} onChange={e => setForm({ ...form, saida: e.target.value })} />
+              </Field>
+              <Field label="" full>
+                {/* RF-009: um arquivo por registro. Só aparece na edição porque
+                    o anexo precisa de um registro já gravado a que se vincular. */}
+                <CampoAnexo
+                  projetoId={p.id}
+                  logComunicacaoId={form.id}
+                  anexo={form.id ? logs.find(l => l.id === form.id)?.anexo : null}
+                  rotulo="Anexar arquivo ao registro"
+                />
               </Field>
             </div>
             <div className="flex items-center justify-end gap-2 mt-5">

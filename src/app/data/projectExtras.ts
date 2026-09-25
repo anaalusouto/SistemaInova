@@ -74,6 +74,8 @@ export interface CommLog {
   quemRealizou: string;
   registro: string;      // Registro de comunicação
   saida: string;         // Encaminhamento / saída
+  /** Um arquivo opcional por registro (RF-009). Null quando não há. */
+  anexo?: import('./mockData').Attachment | null;
 }
 
 // ---------------------------------------------------------------------------

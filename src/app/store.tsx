@@ -24,6 +24,7 @@ import {
   criarParecer, atualizarParecer, excluirParecer,
   type PeriodoEtapaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
+import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -153,6 +154,8 @@ type Ctx = {
   deleteTarefa: (tarefaId: string) => Promise<void>;
   createRisco: (input: RiscoInput) => Promise<void>;
   updateRisco: (riscoId: string, input: RiscoInput) => Promise<void>;
+  uploadAnexo: (input: AnexoInput) => Promise<string>;
+  deleteAnexo: (anexoId: string) => Promise<void>;
   createParecer: (input: ParecerInput) => Promise<string>;
   updateParecer: (parecerId: string, input: ParecerInput) => Promise<void>;
   deleteParecer: (parecerId: string) => Promise<void>;
@@ -351,6 +354,8 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     deleteTarefa: tarefaId => run(() => excluirTarefa({ data: { tarefaId } })),
     createRisco: input => run(() => criarRisco({ data: input })),
     updateRisco: (riscoId, input) => run(() => atualizarRisco({ data: { riscoId, dados: input } })),
+    uploadAnexo: input => run(() => enviarAnexo({ data: input })),
+    deleteAnexo: anexoId => run(() => removerAnexo({ data: { anexoId } })),
     createParecer: input => run(() => criarParecer({ data: input })),
     updateParecer: (parecerId, input) => run(() => atualizarParecer({ data: { parecerId, dados: input } })),
     deleteParecer: parecerId => run(() => excluirParecer({ data: { parecerId } })),

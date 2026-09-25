@@ -7,7 +7,7 @@
  * excluída, para não deixar anexo órfão nem romper vínculo de risco.
  */
 import { useState } from 'react';
-import { Pencil, Trash2, Plus, Check, X as XIcon, Paperclip, CornerDownRight } from 'lucide-react';
+import { Pencil, Trash2, Plus, Check, X as XIcon, CornerDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { useStore } from '../../store';
@@ -17,6 +17,7 @@ import { estaAtrasada, NAO_INFORMADO } from '../../lib/planoTrabalho';
 import { Painel, Linha, Periodo, Ausente, BotaoAcao } from './PainelBase';
 import { ConfirmarExclusao } from './camposFormulario';
 import { FormularioAtividade } from './FormularioAtividade';
+import { CampoAnexo } from './CampoAnexo';
 
 /** Lista de tarefas com adicionar, renomear e excluir no lugar (RF-025). */
 function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string }) {
@@ -136,13 +137,12 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
 }
 
 export function PainelAtividade({
-  atividade, etapa, meta, codigo, riscoOrigem, aoFechar, aoAbrirRisco, aoAbrirAnexo,
+  atividade, etapa, meta, codigo, projetoId, riscoOrigem, aoFechar, aoAbrirRisco,
 }: {
-  atividade: Activity; etapa: Deliverable; meta: Goal; codigo: string;
+  atividade: Activity; etapa: Deliverable; meta: Goal; codigo: string; projetoId: number;
   riscoOrigem?: Risk;
   aoFechar: () => void;
   aoAbrirRisco: (r: Risk) => void;
-  aoAbrirAnexo: (a: Activity) => void;
 }) {
   const { deleteAtividade } = useStore();
   const { readOnly } = useAuth();
@@ -211,15 +211,13 @@ export function PainelAtividade({
             </Linha>
 
             <Linha rotulo="Anexo">
-              {atividade.attachment ? (
-                <button
-                  onClick={() => aoAbrirAnexo(atividade)}
-                  className="inline-flex items-center gap-1.5 hover:underline"
-                  style={{ color: 'var(--info)', fontSize: '0.78rem' }}
-                >
-                  <Paperclip size={12} /> {atividade.attachment.fileName}
-                </button>
-              ) : <Ausente />}
+              {/* RF-026: anexar, abrir, substituir e remover no painel. */}
+              <CampoAnexo
+                projetoId={projetoId}
+                atividadeId={atividade.id}
+                anexo={atividade.attachment}
+                rotulo="Anexar foto ou documento"
+              />
             </Linha>
 
             {riscoOrigem && (
