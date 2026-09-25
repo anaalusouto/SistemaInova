@@ -13,7 +13,7 @@
  */
 import { Fragment, useMemo, useState } from 'react';
 import {
-  ChevronDown, ChevronRight, Search, ShieldAlert, Info, Trash2, RotateCcw, History,
+  ChevronDown, ChevronRight, Search, ShieldAlert, Info, Trash2, RotateCcw, History, Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal } from '../../data/mockData';
@@ -27,6 +27,7 @@ import {
 import { FormularioExecucao } from './FormularioExecucao';
 import { DialogoExclusaoItem } from './DialogoExclusaoItem';
 import { PainelHistoricoItem } from './PainelHistoricoItem';
+import { DialogoImportacao } from './DialogoImportacao';
 
 type FiltroSituacao = 'ativos' | 'excluidos' | 'todos';
 
@@ -66,6 +67,7 @@ export function TabOrcamento({ project }: { project: Project }) {
   const [historico, setHistorico] = useState<ItemOrcamento | null>(null);
   const [revertendo, setRevertendo] = useState<ItemOrcamento | null>(null);
   const [motivoReversao, setMotivoReversao] = useState('');
+  const [importando, setImportando] = useState(false);
 
   const itens = p.orcamentoItens ?? [];
 
@@ -119,6 +121,20 @@ export function TabOrcamento({ project }: { project: Project }) {
             executado, a data da compra e a justificativa de diferença.
           </div>
         </div>
+
+        {!readOnly && (
+          <button
+            onClick={() => setImportando(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12.5px] self-start mt-3"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
+          >
+            <Upload size={13} /> Importar planilha
+          </button>
+        )}
+
+        {importando && (
+          <DialogoImportacao projetoId={p.id} aoFechar={() => setImportando(false)} />
+        )}
       </div>
     );
   }
@@ -207,6 +223,15 @@ export function TabOrcamento({ project }: { project: Project }) {
         >
           <ShieldAlert size={13} /> Com risco
         </button>
+        {!readOnly && (
+          <button
+            onClick={() => setImportando(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px]"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
+          >
+            <Upload size={13} /> Importar planilha
+          </button>
+        )}
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }} aria-live="polite">
           {filtrados.length} de {itens.length} itens
         </span>
@@ -372,6 +397,10 @@ export function TabOrcamento({ project }: { project: Project }) {
 
       {historico && (
         <PainelHistoricoItem item={historico} aoFechar={() => setHistorico(null)} />
+      )}
+
+      {importando && (
+        <DialogoImportacao projetoId={p.id} aoFechar={() => setImportando(false)} />
       )}
 
       {revertendo && (
