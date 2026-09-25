@@ -18,6 +18,11 @@ import {
   addAporte, deleteAporte, addCommLog, updateCommLog, deleteCommLog,
   addContato, updateContato, deleteContato,
 } from './projetos.server';
+import {
+  salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
+  criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco,
+  type PeriodoEtapaInput, type AtividadeInput, type RiscoInput,
+} from './planoTrabalho.server';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -132,6 +137,19 @@ type Ctx = {
   addCommLog: (projectId: number, c: Omit<CommLog, 'id'>) => Promise<void>;
   updateCommLog: (projectId: number, id: string, patch: Partial<CommLog>) => Promise<void>;
   deleteCommLog: (projectId: number, id: string) => Promise<void>;
+
+  // Plano de Trabalho — escritas com validação no servidor (RF-022 a RF-025).
+  // Recebem o input já montado porque as regras de data moram no servidor: a
+  // store só encaminha e revalida a lista.
+  savePeriodoEtapa: (input: PeriodoEtapaInput) => Promise<void>;
+  createAtividade: (input: AtividadeInput) => Promise<string>;
+  updateAtividade: (atividadeId: string, input: AtividadeInput) => Promise<void>;
+  deleteAtividade: (atividadeId: string) => Promise<void>;
+  createTarefa: (atividadeId: string, titulo: string) => Promise<void>;
+  renameTarefa: (tarefaId: string, titulo: string) => Promise<void>;
+  deleteTarefa: (tarefaId: string) => Promise<void>;
+  createRisco: (input: RiscoInput) => Promise<void>;
+  updateRisco: (riscoId: string, input: RiscoInput) => Promise<void>;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
@@ -317,6 +335,16 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     addContact: (projectId, c) => run(() => addContato({ data: { projectId, contato: c } })),
     updateContact: (_projectId, id, patch) => run(() => updateContato({ data: { contatoId: id, patch } })),
     deleteContact: (_projectId, id) => run(() => deleteContato({ data: { contatoId: id } })),
+
+    savePeriodoEtapa: input => run(() => salvarPeriodoDaEtapa({ data: input })),
+    createAtividade: input => run(() => criarAtividade({ data: input })),
+    updateAtividade: (atividadeId, input) => run(() => atualizarAtividade({ data: { atividadeId, dados: input } })),
+    deleteAtividade: atividadeId => run(() => excluirAtividade({ data: { atividadeId } })),
+    createTarefa: (atividadeId, titulo) => run(() => criarTarefa({ data: { atividadeId, titulo } })),
+    renameTarefa: (tarefaId, titulo) => run(() => renomearTarefa({ data: { tarefaId, titulo } })),
+    deleteTarefa: tarefaId => run(() => excluirTarefa({ data: { tarefaId } })),
+    createRisco: input => run(() => criarRisco({ data: input })),
+    updateRisco: (riscoId, input) => run(() => atualizarRisco({ data: { riscoId, dados: input } })),
 
     // author/adminName não são mais enviados: o servidor deriva quem está
     // chamando a partir da sessão (sessao.server.ts). A assinatura pública

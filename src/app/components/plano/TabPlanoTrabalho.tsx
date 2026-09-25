@@ -17,7 +17,9 @@ import { type Project, type Goal, type Deliverable, type Activity, type Risk } f
 import { type ProjectExt } from '../../store';
 import { codigosHierarquicos } from '../../lib/planoTrabalho';
 import { VisaoTabela } from './VisaoTabela';
-import { PainelEtapa, PainelAtividade, PainelRisco } from './PaineisPlano';
+import { PainelEtapa } from './PainelEtapa';
+import { PainelAtividade } from './PainelAtividade';
+import { PainelRisco } from './PainelRisco';
 
 type Visao = 'tabela' | 'gantt' | 'kanban';
 
@@ -153,6 +155,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
             meta={alvo.meta}
             riscos={riscos}
             codigo={codigos.get(alvo.etapa.id) ?? ''}
+            projetoId={p.id}
             aoFechar={fechar}
             aoAbrirRisco={r => setPainel({ tipo: 'risco', riscoId: r.id })}
             aoAbrirAtividade={a => setPainel({ tipo: 'atividade', atividadeId: a.id })}
@@ -190,6 +193,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
             etapa={alvo?.etapa}
             meta={alvo?.meta}
             codigoEtapa={alvo ? codigos.get(alvo.etapa.id) : undefined}
+            projetoId={p.id}
             acoesDeResposta={todasAtividades.filter(a => a.riskOriginId === risco.id)}
             aoFechar={fechar}
             aoAbrirAtividade={a => setPainel({ tipo: 'atividade', atividadeId: a.id })}
