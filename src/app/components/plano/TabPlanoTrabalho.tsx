@@ -7,14 +7,14 @@
  * distintas por visão, porque é assim que duas telas passam a discordar uma da
  * outra sobre o mesmo projeto.
  *
- * Nesta entrega existe a visão Tabela; Gantt e Kanban entram nas próximas, e o
- * seletor já está montado para recebê-las.
+ * As três visões leem a mesma lista filtrada, a mesma numeração e o mesmo
+ * estado de recolhimento — trocar de visão não reinicia nada.
  */
 import { useMemo, useState } from 'react';
 import { Table2, GanttChartSquare, Columns3, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
-import { type ProjectExt } from '../../store';
+import { useStore, type ProjectExt } from '../../store';
 import {
   codigosHierarquicos, filtrarPlano,
   type CriteriosFiltro, CRITERIOS_VAZIOS, type EscalaGantt,
@@ -24,6 +24,7 @@ import { VisaoTabela } from './VisaoTabela';
 import { VisaoGantt } from './VisaoGantt';
 import { RegistroDeRiscos } from './RegistroDeRiscos';
 import { abrirAnexo } from './CampoAnexo';
+import { VisaoKanban, type AgrupamentoKanban } from './VisaoKanban';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
@@ -33,7 +34,7 @@ type Visao = 'tabela' | 'gantt' | 'kanban';
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: 'tabela', rotulo: 'Tabela', icone: Table2, disponivel: true },
   { id: 'gantt',  rotulo: 'Gantt',  icone: GanttChartSquare, disponivel: true },
-  { id: 'kanban', rotulo: 'Kanban', icone: Columns3, disponivel: false },
+  { id: 'kanban', rotulo: 'Kanban', icone: Columns3, disponivel: true },
 ];
 
 /** Qual painel está aberto. Um de cada vez — abrir dois empilhados confunde a origem. */
@@ -45,6 +46,7 @@ type PainelAberto =
 
 export function TabPlanoTrabalho({ project }: { project: Project }) {
   const p = project as ProjectExt;
+  const { updateActivityStatus, setResponsavel } = useStore();
   const [visao, setVisao] = useState<Visao>('tabela');
   const [recolhidos, setRecolhidos] = useState<Set<string>>(new Set());
   const [painel, setPainel] = useState<PainelAberto>(null);
@@ -53,6 +55,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
   const [escala, setEscala] = useState<EscalaGantt>('mes');
   const [registroAberto, setRegistroAberto] = useState(false);
+  const [agrupamento, setAgrupamento] = useState<AgrupamentoKanban>('status');
 
   const metas = p.goals;
   const riscos = p.risks;
@@ -107,6 +110,27 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   };
 
   const fechar = () => setPainel(null);
+
+  // RN-009: mover o cartão atualiza status E progresso de forma consistente —
+  // a normalização mora no servidor, então o quadro não pode produzir a
+  // incoerência que a constraint do banco recusa.
+  const moverStatus = async (atividade: Activity, status: Activity['status']) => {
+    try {
+      await updateActivityStatus(p.id, atividade.id, status);
+      toast.success(`"${atividade.name}" agora está em ${status}.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível mover o cartão.');
+    }
+  };
+
+  const moverResponsavel = async (atividade: Activity, responsavel: string) => {
+    try {
+      await setResponsavel(atividade.id, responsavel);
+      toast.success(responsavel ? `"${atividade.name}" atribuída a ${responsavel}.` : `"${atividade.name}" ficou sem responsável.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível reatribuir o cartão.');
+    }
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -169,6 +193,27 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
           </div>
         )}
 
+        {/* RF-019: agrupamento só faz sentido no Kanban. */}
+        {visao === 'kanban' && (
+          <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+            {([['status', 'Por status'], ['responsavel', 'Por responsável']] as const).map(([valor, rotulo], i) => (
+              <button
+                key={valor}
+                onClick={() => setAgrupamento(valor)}
+                className="px-2.5 py-1.5 text-[12px]"
+                style={{
+                  background: agrupamento === valor ? 'var(--brand-soft)' : 'transparent',
+                  color: agrupamento === valor ? 'var(--brand)' : 'var(--ink-3)',
+                  fontWeight: agrupamento === valor ? 600 : 400,
+                  borderRight: i === 0 ? '1px solid var(--border)' : undefined,
+                }}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* RF-035: acesso compacto ao registro consolidado — um botão, não um
             cartão grande no resumo. */}
         <button
@@ -217,6 +262,21 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirAnexo={abrirAnexoDaAtividade}
+            />
+          )}
+
+          {visao === 'kanban' && (
+            <VisaoKanban
+              metas={metasVisiveis}
+              riscos={riscos}
+              agrupamento={agrupamento}
+              recolhidos={recolhidos}
+              codigos={codigos}
+              aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
+              aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
+              aoAbrirAnexo={abrirAnexoDaAtividade}
+              aoMoverStatus={moverStatus}
+              aoMoverResponsavel={moverResponsavel}
             />
           )}
         </div>

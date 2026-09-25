@@ -536,3 +536,23 @@ export const excluirParecer = createServerFn({ method: 'POST' })
     const { error } = await supabaseAdmin.from('pareceres_tecnicos').delete().eq('id', parecerId);
     if (error) throw new Error(error.message);
   });
+
+/**
+ * Troca só o responsável da atividade (RF-020).
+ *
+ * Existe separado de `atualizarAtividade` porque arrastar um cartão entre
+ * colunas de responsável não deve reexecutar a validação de datas: a pessoa
+ * não tocou em data nenhuma, e recusar o arraste por causa de uma divergência
+ * preexistente seria incompreensível para quem só queria reatribuir a tarefa.
+ */
+export const definirResponsavel = createServerFn({ method: 'POST' })
+  .validator((d: { atividadeId: string; responsavel: string }) => d)
+  .handler(async ({ data: { atividadeId, responsavel } }): Promise<void> => {
+    await exigirEscrita();
+    const supabaseAdmin = await getAdmin();
+    const { error } = await supabaseAdmin
+      .from('atividades')
+      .update({ responsavel: vazioParaNulo(responsavel) })
+      .eq('id', atividadeId);
+    if (error) throw new Error(error.message);
+  });

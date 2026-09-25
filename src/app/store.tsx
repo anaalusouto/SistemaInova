@@ -21,7 +21,7 @@ import {
 import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco,
-  criarParecer, atualizarParecer, excluirParecer,
+  criarParecer, atualizarParecer, excluirParecer, definirResponsavel,
   type PeriodoEtapaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
@@ -159,6 +159,7 @@ type Ctx = {
   createParecer: (input: ParecerInput) => Promise<string>;
   updateParecer: (parecerId: string, input: ParecerInput) => Promise<void>;
   deleteParecer: (parecerId: string) => Promise<void>;
+  setResponsavel: (atividadeId: string, responsavel: string) => Promise<void>;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
@@ -359,6 +360,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     createParecer: input => run(() => criarParecer({ data: input })),
     updateParecer: (parecerId, input) => run(() => atualizarParecer({ data: { parecerId, dados: input } })),
     deleteParecer: parecerId => run(() => excluirParecer({ data: { parecerId } })),
+    setResponsavel: (atividadeId, responsavel) => run(() => definirResponsavel({ data: { atividadeId, responsavel } })),
 
     // author/adminName não são mais enviados: o servidor deriva quem está
     // chamando a partir da sessão (sessao.server.ts). A assinatura pública
