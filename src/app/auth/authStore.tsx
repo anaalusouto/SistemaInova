@@ -4,6 +4,7 @@ import {
   atualizarLogin, atualizarEmail, atualizarSenha, atualizarAvatar,
   type PublicUser, type UserRole as ServerUserRole,
 } from '../usuarios.server';
+import { obterSessao, encerrarSessao } from '../sessao.server';
 
 export type UserRole = ServerUserRole;
 export interface AuthUser {
@@ -70,16 +71,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [people, setPeople] = useState<PublicUser[]>([]);
 
   useEffect(() => {
+    let cancelado = false;
+
+    // O que está no navegador é conveniência de UI, não prova de identidade:
+    // quem autoriza é o cookie httpOnly (ver sessao.server.ts). Restaura a tela
+    // rápido a partir do storage e, em seguida, reconcilia com o servidor —
+    // sem isso, um cookie expirado deixaria a interface "logada" enquanto toda
+    // escrita seria recusada.
+    let local: AuthUser | null = null;
     try {
       // "Lembrar de mim" => localStorage (persiste entre acessos no mesmo computador).
       // Sem lembrar => sessionStorage (login obrigatório a cada novo acesso).
       const raw = window.localStorage.getItem(KEY) ?? window.sessionStorage.getItem(KEY);
       if (raw) {
-        setUser(JSON.parse(raw));
+        local = JSON.parse(raw) as AuthUser;
+        setUser(local);
         setRemember(!!window.localStorage.getItem(KEY));
       }
     } catch { /* ignore */ }
-    setHydrated(true);
+
+    (async () => {
+      try {
+        const sessao = await obterSessao();
+        if (cancelado) return;
+        if (!sessao) {
+          // Sem sessão no servidor: derruba o estado local, seja porque expirou,
+          // seja porque alguém editou o storage à mão.
+          if (local) setUser(null);
+        } else if (local && (local.login !== sessao.login || local.role !== sessao.role)) {
+          // Papel trocado pelo administrador desde o último acesso: o servidor manda.
+          setUser({ ...local, login: sessao.login, displayName: sessao.displayName, role: sessao.role, adminOverride: sessao.adminOverride });
+        }
+      } catch { /* rede indisponível: mantém o estado local e deixa a escrita falhar com mensagem do servidor */ }
+      finally { if (!cancelado) setHydrated(true); }
+    })();
+
+    return () => { cancelado = true; };
   }, []);
 
   const refreshPeople = useCallback(async () => {
@@ -129,6 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     setRemember(false);
     setUser(null);
+    // Apaga a sessão no servidor também — limpar só o storage deixaria o cookie
+    // válido para uma chamada direta à API.
+    void encerrarSessao().catch(() => { /* ignore */ });
   }, []);
 
   const verifyAdmin = useCallback(async (login: string, password: string) => {

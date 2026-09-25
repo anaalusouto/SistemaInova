@@ -8,7 +8,7 @@ import type { Atribuicao } from '../atribuicoes.server';
 type Tab = 'paraMim' | 'porMim';
 
 const statusConfig: Record<string, { color: string; bg: string }> = {
-  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)' },
+  'A iniciar': { color: 'var(--ink-4)', bg: 'var(--surface-2)' },
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)' },
   'Concluído': { color: 'var(--success)', bg: 'var(--success-soft)' },
   'Atrasado': { color: 'var(--danger)', bg: 'var(--danger-soft)' },
@@ -73,7 +73,7 @@ export function AgendaPage({ onOpenProject }: { onOpenProject: (projectId: numbe
               : 'Você ainda não atribuiu nenhuma tarefa a alguém — mencione uma tarefa e uma pessoa juntas numa mensagem.'}
           </div>
         ) : itens.map(item => {
-          const st = statusConfig[item.atividadeStatus] ?? statusConfig['Não iniciado'];
+          const st = statusConfig[item.atividadeStatus] ?? statusConfig['A iniciar'];
           const done = !!item.concluidaEm;
           return (
             <div

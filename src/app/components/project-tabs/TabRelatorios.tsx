@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { Download, FileText, FileCode2, Calendar } from 'lucide-react';
 import { type Project } from '../../data/mockData';
+import { estaAtrasada } from '../../lib/planoTrabalho';
 import { buildReportModel, exportReportCsv, exportReportPdf, exportReportXml } from '../../lib/reportExport';
 
 const ALL_FIELDS = ['cadastro', 'situacao', 'objetivo', 'equipe', 'metas', 'financeiro', 'contrapart', 'riscos', 'mudancas', 'evidencias'];
@@ -45,8 +46,9 @@ export function TabRelatorios({ project }: TabRelatoriosProps) {
   const activityStatusData = [
     { name: 'Concluídas', value: allActivities.filter(a => a.status === 'Concluído').length, color: 'var(--success)' },
     { name: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: 'var(--brand)' },
-    { name: 'Atrasadas', value: allActivities.filter(a => a.status === 'Atrasado').length, color: 'var(--danger)' },
-    { name: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: 'var(--ink-5)' },
+    // RN-010: atraso é derivado do fim previsto, não um status armazenado.
+    { name: 'Atrasadas', value: allActivities.filter(a => estaAtrasada(a)).length, color: 'var(--danger)' },
+    { name: 'A iniciar', value: allActivities.filter(a => a.status === 'A iniciar').length, color: 'var(--ink-5)' },
   ].filter(d => d.value > 0);
 
   const goalProgressData = project.goals.map(g => {

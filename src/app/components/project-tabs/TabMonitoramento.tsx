@@ -10,10 +10,9 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
 const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: string }> = {
-  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
+  'A iniciar':    { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
   'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
 };
 
 interface TabMonitoramentoProps {
@@ -114,7 +113,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-3">
-            {(['Não iniciado', 'Em andamento', 'Concluído', 'Atrasado'] as ActivityStatus[]).map(s => {
+            {(['A iniciar', 'Em andamento', 'Concluído'] as ActivityStatus[]).map(s => {
               const count = allActivities.filter(a => a.status === s).length;
               const cfg = statusConfig[s];
               return (
@@ -286,7 +285,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
                                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap border-0 outline-none cursor-pointer"
                                           style={{ color: sCfg.color, background: sCfg.bg }}
                                         >
-                                          {(['Não iniciado', 'Em andamento', 'Concluído', 'Atrasado'] as ActivityStatus[]).map(s => (
+                                          {(['A iniciar', 'Em andamento', 'Concluído'] as ActivityStatus[]).map(s => (
                                             <option key={s} value={s}>{s}</option>
                                           ))}
                                         </select>

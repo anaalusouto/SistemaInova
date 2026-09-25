@@ -11,15 +11,14 @@ import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 
 const statusConfig: Record<ActivityStatus, { color: string; bg: string; dot: string }> = {
-  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
+  'A iniciar':    { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
   'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
 };
 
-/** Ciclo do check: Não iniciado → Em andamento → Concluído → Não iniciado. */
+/** Ciclo do check: A iniciar → Em andamento → Concluído → A iniciar. */
 const nextStatus = (s: ActivityStatus): ActivityStatus =>
-  s === 'Concluído' ? 'Não iniciado' : s === 'Em andamento' ? 'Concluído' : 'Em andamento';
+  s === 'Concluído' ? 'A iniciar' : s === 'Em andamento' ? 'Concluído' : 'Em andamento';
 
 interface Props { project: Project }
 

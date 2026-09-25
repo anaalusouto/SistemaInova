@@ -80,6 +80,11 @@ export const autenticar = createServerFn({ method: 'POST' })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data || !verifyPassword(senha, data.senha_hash)) return null;
+    // Abre a sessão do lado do servidor (cookie httpOnly). O objeto devolvido
+    // aqui alimenta a UI, mas quem autoriza escrita é o cookie — ver
+    // sessao.server.ts e RN-001.
+    const { abrirSessao } = await import('./sessao.server');
+    await abrirSessao(data.id);
     return toSessionUser(data);
   });
 

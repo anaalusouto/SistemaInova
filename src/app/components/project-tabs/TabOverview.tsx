@@ -1,5 +1,6 @@
 import { TrendingUp, DollarSign, ShieldAlert, GitBranch, Calendar, Users, Building2, Target } from 'lucide-react';
 import { type Project } from '../../data/mockData';
+import { estaAtrasada } from '../../lib/planoTrabalho';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -32,7 +33,8 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
   );
   const totalActs = allActivities.length;
   const doneActs = allActivities.filter(a => a.status === 'Concluído').length;
-  const lateActs = allActivities.filter(a => a.status === 'Atrasado').length;
+  // RN-010: atraso é derivado do fim previsto, não um status armazenado.
+  const lateActs = allActivities.filter(a => estaAtrasada(a)).length;
 
   return (
     <div className="flex flex-col gap-5 p-6 overflow-y-auto h-full">
@@ -148,7 +150,7 @@ export function TabOverview({ project, onTabChange }: TabOverviewProps) {
                 { label: 'Concluídas', value: doneActs, color: 'var(--success)', bg: 'var(--success-soft)' },
                 { label: 'Em andamento', value: allActivities.filter(a => a.status === 'Em andamento').length, color: 'var(--brand)', bg: 'var(--brand-soft)' },
                 { label: 'Atrasadas', value: lateActs, color: 'var(--danger)', bg: 'var(--danger-soft)' },
-                { label: 'Não iniciadas', value: allActivities.filter(a => a.status === 'Não iniciado').length, color: 'var(--ink-5)', bg: 'var(--surface-2)' },
+                { label: 'A iniciar', value: allActivities.filter(a => a.status === 'A iniciar').length, color: 'var(--ink-5)', bg: 'var(--surface-2)' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-3">
                   <span

@@ -11,10 +11,12 @@
 // client) para o compilador do TanStack Start fazer o split client/server via
 // RPC. O sufixo .server.ts (não a pasta) é o que aciona esse split.
 import { createServerFn } from '@tanstack/react-start';
+import { exigirAdmin, exigirEscrita } from './sessao.server';
+import { progressoParaStatus, statusParaProgresso } from './lib/planoTrabalho';
 import type { ProjectExt, PlanoTrabalho, Aporte, EditAuthor } from './store';
 import type {
   Project, Goal, Deliverable, Activity, Risk, Change, FinancialItem, ContrapartidaItem,
-  Evidence, ActivityStatus,
+  Evidence, ActivityStatus, Task, Attachment, BudgetLink,
 } from './data/mockData';
 import type { Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp } from './data/projectExtras';
 
@@ -31,28 +33,57 @@ const n2 = (v: unknown): number => (v == null ? 0 : Number(v));
 // Mapeamento linha do banco (snake_case) -> ProjectExt (camelCase), o shape
 // que os componentes de project-tabs já esperam.
 // ---------------------------------------------------------------------------
-function mapAtividade(a: any): Activity {
+function mapTarefa(t: any): Task {
+  return { id: t.id, title: t.titulo, order: n2(t.ordem) };
+}
+function mapAnexo(x: any): Attachment {
   return {
-    id: a.id, name: a.nome, responsible: a.responsavel ?? '', plannedDate: a.data_planejada ?? '',
-    startDate: a.data_inicio ?? null, conclusionDate: a.data_conclusao ?? null,
-    progress: n2(a.progresso), status: a.status as ActivityStatus, observations: a.observacoes ?? '',
+    id: x.id, fileName: x.nome_arquivo, mimeType: x.tipo_mime ?? null,
+    sizeBytes: x.tamanho_bytes ?? null, uploadedBy: x.enviado_por ?? '', uploadedAt: x.criado_em,
   };
 }
-function mapEntrega(e: any): Deliverable {
+function mapAtividade(a: any): Activity {
+  // O anexo vem como lista pelo join, mas a atividade exibe um arquivo por vez
+  // (RF-026) — o mais recente é o que vale.
+  const anexos = (a.projeto_anexos ?? []) as any[];
+  const anexo = anexos.length ? mapAnexo(anexos[anexos.length - 1]) : null;
   return {
-    id: e.id, name: e.nome, expectedResult: e.resultado_esperado ?? '',
+    id: a.id, name: a.nome, responsible: a.responsavel ?? '',
+    progress: n2(a.progresso), status: a.status as ActivityStatus, observations: a.observacoes ?? '',
+    order: n2(a.ordem),
+    plannedStart: a.inicio_previsto ?? null, plannedEnd: a.fim_previsto ?? null,
+    actualStart: a.inicio_realizado ?? null, actualEnd: a.fim_realizado ?? null,
+    delayJustification: a.justificativa_atraso ?? '',
+    budgetLink: (a.vinculo_orcamentario ?? 'Não informado') as BudgetLink,
+    nextStep: a.proximo_passo ?? '', nextStepOwner: a.proximo_passo_responsavel ?? '',
+    nextStepDue: a.proximo_passo_prazo ?? null,
+    riskOriginId: a.risco_origem_id ?? undefined,
+    tasks: ((a.tarefas ?? []) as any[]).map(mapTarefa).sort((x, y) => x.order - y.order),
+    attachment: anexo,
+    // Legado (ver mockData.ts): mantido só para as telas ainda não migradas.
+    plannedDate: a.data_planejada ?? '', startDate: a.data_inicio ?? null, conclusionDate: a.data_conclusao ?? null,
+  };
+}
+function mapEtapa(e: any): Deliverable {
+  return {
+    id: e.id, name: e.nome, expectedResult: e.resultado_esperado ?? '', order: n2(e.ordem),
+    plannedStart: e.inicio_previsto ?? null, plannedEnd: e.fim_previsto ?? null,
+    actualStart: e.inicio_realizado ?? null, actualEnd: e.fim_realizado ?? null,
     // Soft-deleted (excluido_em preenchido) não aparece mais na UI, mas continua no banco.
     activities: (e.atividades ?? []).filter((a: any) => !a.excluido_em).map(mapAtividade),
   };
 }
 function mapMeta(m: any): Goal {
-  return { id: m.id, name: m.nome, deliverables: (m.entregas ?? []).map(mapEntrega) };
+  return { id: m.id, name: m.nome, order: n2(m.ordem), deliverables: (m.etapas ?? []).map(mapEtapa) };
 }
 function mapRisco(r: any): Risk {
   return {
-    id: r.id, description: r.descricao, category: r.categoria ?? '', probability: n2(r.probabilidade),
+    id: r.id, title: r.titulo ?? r.descricao ?? '', description: r.descricao,
+    category: r.categoria ?? '', probability: n2(r.probabilidade),
     impact: n2(r.impacto), severity: n2(r.severidade), responseStrategy: r.estrategia_mitigacao ?? '',
-    responsible: r.responsavel ?? '', status: r.status, goalId: r.meta_id ?? undefined,
+    responsible: r.responsavel ?? '', status: r.status,
+    stageId: r.etapa_id ?? undefined, specification: r.especificacao ?? r.especificacao_legado ?? undefined,
+    goalId: r.meta_id ?? undefined,
     stage: r.etapa_nome_legado ?? undefined, spec: r.especificacao_legado ?? undefined,
   };
 }
@@ -154,7 +185,7 @@ function mapProjeto(row: any): ProjectExt {
 const SELECT_PROJETO = `
   *,
   projeto_equipe(nome),
-  metas(id, nome, entregas(id, nome, resultado_esperado, atividades(*))),
+  metas(id, nome, ordem, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
   plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
   evidencias(*), aportes(*), contatos(*), logs_comunicacao(*),
   log_alteracoes_meta(*), aprovacoes_pendentes(*)
@@ -167,8 +198,8 @@ export const listarProjetos = createServerFn({ method: 'GET' }).handler(async ()
     .select(SELECT_PROJETO)
     .order('id')
     .order('ordem', { referencedTable: 'metas' })
-    .order('ordem', { referencedTable: 'metas.entregas' })
-    .order('ordem', { referencedTable: 'metas.entregas.atividades' });
+    .order('ordem', { referencedTable: 'metas.etapas' })
+    .order('ordem', { referencedTable: 'metas.etapas.atividades' });
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapProjeto);
 });
@@ -176,6 +207,7 @@ export const listarProjetos = createServerFn({ method: 'GET' }).handler(async ()
 export const criarProjeto = createServerFn({ method: 'POST' })
   .validator((d: Partial<ProjectExt> & { team?: string[] }) => d)
   .handler(async ({ data }): Promise<ProjectExt> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const year = new Date().getFullYear();
     const { data: existing } = await supabaseAdmin.from('projetos').select('code').ilike('code', `%-${year}`);
@@ -221,6 +253,7 @@ const PLANO_COLUMNS: Record<keyof PlanoTrabalho, string> = {
 export const atualizarProjeto = createServerFn({ method: 'POST' })
   .validator((d: { id: number; patch: Partial<ProjectExt> }) => d)
   .handler(async ({ data: { id, patch } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const row: Record<string, unknown> = {};
     if (patch.name !== undefined) row.nome = patch.name;
@@ -260,6 +293,7 @@ export const atualizarProjeto = createServerFn({ method: 'POST' })
 export const excluirProjeto = createServerFn({ method: 'POST' })
   .validator((d: { id: number }) => d)
   .handler(async ({ data: { id } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('projetos').delete().eq('id', id);
     if (error) throw new Error(error.message);
@@ -282,8 +316,8 @@ function lineTotal(qtd: number, qtdUnidades: number, valorUnitario: number) {
  */
 async function computeOrdemInsercao(
   supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>,
-  tabela: 'metas' | 'entregas' | 'atividades',
-  colunaPai: 'projeto_id' | 'meta_id' | 'entrega_id',
+  tabela: 'metas' | 'etapas' | 'atividades',
+  colunaPai: 'projeto_id' | 'meta_id' | 'etapa_id',
   paiId: string | number,
   afterId?: string,
 ): Promise<number> {
@@ -320,37 +354,37 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
     }
     case 'etapa': {
       if (op.action === 'criar') {
-        const ordem = await computeOrdemInsercao(supabaseAdmin, 'entregas', 'meta_id', op.parentId!, str(payload.afterId, '') || undefined);
-        const { error } = await supabaseAdmin.from('entregas').insert({
+        const ordem = await computeOrdemInsercao(supabaseAdmin, 'etapas', 'meta_id', op.parentId!, str(payload.afterId, '') || undefined);
+        const { error } = await supabaseAdmin.from('etapas').insert({
           meta_id: op.parentId, nome: str(payload.name, to || 'Nova etapa'), resultado_esperado: str(payload.expectedResult, ''), ordem,
         });
         if (error) throw new Error(error.message);
       } else if (op.action === 'excluir') {
-        const { error } = await supabaseAdmin.from('entregas').delete().eq('id', op.targetId);
+        const { error } = await supabaseAdmin.from('etapas').delete().eq('id', op.targetId);
         if (error) throw new Error(error.message);
       } else {
         const col = field === 'resultado esperado' ? 'resultado_esperado' : 'nome';
-        const { error } = await supabaseAdmin.from('entregas').update({ [col]: to }).eq('id', op.targetId);
+        const { error } = await supabaseAdmin.from('etapas').update({ [col]: to }).eq('id', op.targetId);
         if (error) throw new Error(error.message);
       }
       return;
     }
     case 'especificacao': {
       if (op.action === 'criar') {
-        const ordem = await computeOrdemInsercao(supabaseAdmin, 'atividades', 'entrega_id', op.parentId!, str(payload.afterId, '') || undefined);
+        const ordem = await computeOrdemInsercao(supabaseAdmin, 'atividades', 'etapa_id', op.parentId!, str(payload.afterId, '') || undefined);
         const { error } = await supabaseAdmin.from('atividades').insert({
-          entrega_id: op.parentId, nome: str(payload.name, to || 'Nova atividade'), responsavel: str(payload.responsible, '') || null,
+          etapa_id: op.parentId, nome: str(payload.name, to || 'Nova atividade'), responsavel: str(payload.responsible, '') || null,
           data_planejada: str(payload.plannedDate, '') || null,
           data_inicio: payload.startDate ? String(payload.startDate) : null,
           data_conclusao: payload.conclusionDate ? String(payload.conclusionDate) : null,
-          progresso: num(payload.progress, 0), status: str(payload.status, 'Não iniciado'),
+          progresso: num(payload.progress, 0), status: str(payload.status, 'A iniciar'),
           observacoes: str(payload.observations, '') || null, ordem,
         });
         if (error) throw new Error(error.message);
         return;
       }
       if (op.action === 'excluir') {
-        // Soft delete: preserva o registro pra histórico/auditoria, some da UI (mapEntrega filtra excluido_em).
+        // Soft delete: preserva o registro pra histórico/auditoria, some da UI (mapEtapa filtra excluido_em).
         const { error } = await supabaseAdmin.from('atividades').update({ excluido_em: new Date().toISOString() }).eq('id', op.targetId);
         if (error) throw new Error(error.message);
         return;
@@ -363,11 +397,18 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
           const curProgress = n2(current?.progresso);
           patch.status = status;
           patch.progresso = status === 'Concluído' ? 100 : status === 'Em andamento' ? (curProgress > 0 && curProgress < 100 ? curProgress : 50) : 0;
-          patch.data_inicio = status === 'Não iniciado' ? null : (current?.data_inicio || new Date().toLocaleDateString('pt-BR'));
+          patch.data_inicio = status === 'A iniciar' ? null : (current?.data_inicio || new Date().toLocaleDateString('pt-BR'));
           patch.data_conclusao = status === 'Concluído' ? (current?.data_conclusao || new Date().toLocaleDateString('pt-BR')) : null;
           break;
         }
-        case 'progresso': patch.progresso = Math.max(0, Math.min(100, Number(to) || 0)); break;
+        case 'progresso': {
+          // RN-009: progresso e status andam juntos. Mexer num sem o outro
+          // produziria "A iniciar com 50%", que a constraint do banco recusa.
+          const pct = Math.max(0, Math.min(100, Number(to) || 0));
+          patch.progresso = pct;
+          patch.status = statusParaProgresso(pct);
+          break;
+        }
         case 'responsável': patch.responsavel = to; break;
         case 'início': patch.data_inicio = to || null; break;
         case 'conclusão': patch.data_conclusao = to || null; break;
@@ -510,8 +551,18 @@ function resumoOp(edit: ProjectOp): string {
 }
 
 export const submeterEdicaoMeta = createServerFn({ method: 'POST' })
-  .validator((d: { projectId: number; edit: ProjectOp; author: EditAuthor }) => d)
-  .handler(async ({ data: { projectId, edit, author } }): Promise<'aplicado' | 'pendente'> => {
+  .validator((d: { projectId: number; edit: ProjectOp }) => d)
+  .handler(async ({ data: { projectId, edit } }): Promise<'aplicado' | 'pendente'> => {
+    // Quem é o autor e se ele pode aplicar direto vem da SESSÃO, nunca do
+    // payload: `author.isAdmin` era um campo que o cliente preenchia, e uma
+    // chamada direta à API podia simplesmente declará-lo true para pular a
+    // fila de aprovação (RN-001, CA-02).
+    const sessao = await exigirEscrita();
+    const author: EditAuthor = {
+      name: sessao.displayName,
+      role: sessao.role,
+      isAdmin: sessao.role === 'admin' || sessao.adminOverride,
+    };
     const supabaseAdmin = await getAdmin();
     if (!author.isAdmin) {
       const { error } = await supabaseAdmin.from('aprovacoes_pendentes').insert({
@@ -540,8 +591,11 @@ export const submeterEdicaoMeta = createServerFn({ method: 'POST' })
   });
 
 export const aprovarEdicaoMeta = createServerFn({ method: 'POST' })
-  .validator((d: { projectId: number; approvalId: string; adminName: string }) => d)
-  .handler(async ({ data: { projectId, approvalId, adminName } }): Promise<void> => {
+  .validator((d: { projectId: number; approvalId: string }) => d)
+  .handler(async ({ data: { projectId, approvalId } }): Promise<void> => {
+    // Quem revisou vem da sessão: assinar a auditoria com nome recebido do
+    // cliente permitiria atribuir a aprovação a outra pessoa (RN-023).
+    const adminName = (await exigirAdmin()).displayName;
     const supabaseAdmin = await getAdmin();
     const { data: req, error: reqError } = await supabaseAdmin.from('aprovacoes_pendentes').select('*').eq('id', approvalId).single();
     if (reqError) throw new Error(reqError.message);
@@ -568,8 +622,9 @@ export const aprovarEdicaoMeta = createServerFn({ method: 'POST' })
   });
 
 export const rejeitarEdicaoMeta = createServerFn({ method: 'POST' })
-  .validator((d: { approvalId: string; adminName: string }) => d)
-  .handler(async ({ data: { approvalId, adminName } }): Promise<void> => {
+  .validator((d: { approvalId: string }) => d)
+  .handler(async ({ data: { approvalId } }): Promise<void> => {
+    const adminName = (await exigirAdmin()).displayName;
     const supabaseAdmin = await getAdmin();
     const { data: req, error: reqError } = await supabaseAdmin.from('aprovacoes_pendentes').select('*').eq('id', approvalId).single();
     if (reqError) throw new Error(reqError.message);
@@ -593,6 +648,7 @@ export const rejeitarEdicaoMeta = createServerFn({ method: 'POST' })
 export const addRisco = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; risco: Omit<Risk, 'id' | 'severity'> }) => d)
   .handler(async ({ data: { projectId, risco } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('plano_riscos').insert({
       projeto_id: projectId, meta_id: risco.goalId ?? null, descricao: risco.description, categoria: risco.category,
@@ -605,6 +661,7 @@ export const addRisco = createServerFn({ method: 'POST' })
 export const deleteRisco = createServerFn({ method: 'POST' })
   .validator((d: { riskId: string }) => d)
   .handler(async ({ data: { riskId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('plano_riscos').delete().eq('id', riskId);
     if (error) throw new Error(error.message);
@@ -613,6 +670,7 @@ export const deleteRisco = createServerFn({ method: 'POST' })
 export const addMudanca = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; mudanca: Omit<Change, 'id'> }) => d)
   .handler(async ({ data: { projectId, mudanca } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('mudancas').insert({
       projeto_id: projectId, meta_id: mudanca.goalId ?? null, descricao: mudanca.description, tipo: mudanca.type,
@@ -625,6 +683,7 @@ export const addMudanca = createServerFn({ method: 'POST' })
 export const updateMudancaAprovacao = createServerFn({ method: 'POST' })
   .validator((d: { changeId: string; approval: Change['approval'] }) => d)
   .handler(async ({ data: { changeId, approval } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('mudancas').update({ aprovacao: approval }).eq('id', changeId);
     if (error) throw new Error(error.message);
@@ -633,6 +692,7 @@ export const updateMudancaAprovacao = createServerFn({ method: 'POST' })
 export const deleteMudanca = createServerFn({ method: 'POST' })
   .validator((d: { changeId: string }) => d)
   .handler(async ({ data: { changeId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('mudancas').delete().eq('id', changeId);
     if (error) throw new Error(error.message);
@@ -641,6 +701,7 @@ export const deleteMudanca = createServerFn({ method: 'POST' })
 export const addFinanceiro = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; item: Omit<FinancialItem, 'id'> }) => d)
   .handler(async ({ data: { projectId, item } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('orcamento_itens').insert({
       projeto_id: projectId, meta_texto: item.meta, categoria: item.category, item: item.item, qtd: item.qtd,
@@ -655,6 +716,7 @@ export const addFinanceiro = createServerFn({ method: 'POST' })
 export const updateFinanceiroExecutado = createServerFn({ method: 'POST' })
   .validator((d: { itemId: string; executedValue: number; date?: string; supplier?: string; document?: string }) => d)
   .handler(async ({ data: { itemId, executedValue, date, supplier, document } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const patch: Record<string, unknown> = { valor_executado: executedValue };
     if (date !== undefined) patch.data = date;
@@ -667,6 +729,7 @@ export const updateFinanceiroExecutado = createServerFn({ method: 'POST' })
 export const deleteFinanceiro = createServerFn({ method: 'POST' })
   .validator((d: { itemId: string }) => d)
   .handler(async ({ data: { itemId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('orcamento_itens').delete().eq('id', itemId);
     if (error) throw new Error(error.message);
@@ -675,6 +738,7 @@ export const deleteFinanceiro = createServerFn({ method: 'POST' })
 export const addContrapartida = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; item: Omit<ContrapartidaItem, 'id'> }) => d)
   .handler(async ({ data: { projectId, item } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('orcamento_contrapartidas').insert({
       projeto_id: projectId, meta_texto: item.meta, descricao: item.descricao, tipo: item.tipo,
@@ -686,6 +750,7 @@ export const addContrapartida = createServerFn({ method: 'POST' })
 export const deleteContrapartida = createServerFn({ method: 'POST' })
   .validator((d: { itemId: string }) => d)
   .handler(async ({ data: { itemId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('orcamento_contrapartidas').delete().eq('id', itemId);
     if (error) throw new Error(error.message);
@@ -694,6 +759,7 @@ export const deleteContrapartida = createServerFn({ method: 'POST' })
 export const addEvidencia = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; evidencia: Omit<Evidence, 'id'> }) => d)
   .handler(async ({ data: { projectId, evidencia } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('evidencias').insert({
       projeto_id: projectId, nome: evidencia.name, tipo: evidencia.type,
@@ -705,6 +771,7 @@ export const addEvidencia = createServerFn({ method: 'POST' })
 export const deleteEvidencia = createServerFn({ method: 'POST' })
   .validator((d: { evidenciaId: string }) => d)
   .handler(async ({ data: { evidenciaId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('evidencias').delete().eq('id', evidenciaId);
     if (error) throw new Error(error.message);
@@ -713,12 +780,15 @@ export const deleteEvidencia = createServerFn({ method: 'POST' })
 export const updateAtividadeStatus = createServerFn({ method: 'POST' })
   .validator((d: { activityId: string; status: ActivityStatus; progress?: number }) => d)
   .handler(async ({ data: { activityId, status, progress } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
+    // O progresso recebido é normalizado contra o status (RN-009): 'Concluído
+    // com 50%' seria recusado pela constraint, e silenciar o erro esconderia
+    // uma incoerência real do cliente.
     const patch: Record<string, unknown> = {
-      status, progresso: progress ?? (status === 'Concluído' ? 100 : status === 'Não iniciado' ? 0 : undefined),
+      status, progresso: progressoParaStatus(status, progress ?? 0),
     };
     if (status === 'Concluído') patch.data_conclusao = new Date().toLocaleDateString('pt-BR');
-    if (patch.progresso === undefined) delete patch.progresso;
     const { error } = await supabaseAdmin.from('atividades').update(patch).eq('id', activityId);
     if (error) throw new Error(error.message);
   });
@@ -726,6 +796,7 @@ export const updateAtividadeStatus = createServerFn({ method: 'POST' })
 export const addAporte = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; aporte: Omit<Aporte, 'id'> }) => d)
   .handler(async ({ data: { projectId, aporte } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('aportes').insert({
       projeto_id: projectId, data: aporte.data, tipo: aporte.tipo, origem: aporte.origem || null,
@@ -737,6 +808,7 @@ export const addAporte = createServerFn({ method: 'POST' })
 export const deleteAporte = createServerFn({ method: 'POST' })
   .validator((d: { aporteId: string }) => d)
   .handler(async ({ data: { aporteId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('aportes').delete().eq('id', aporteId);
     if (error) throw new Error(error.message);
@@ -745,6 +817,7 @@ export const deleteAporte = createServerFn({ method: 'POST' })
 export const addCommLog = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; log: Omit<CommLog, 'id'> }) => d)
   .handler(async ({ data: { projectId, log } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('logs_comunicacao').insert({
       projeto_id: projectId, data: log.data, hora: log.hora || null, instituicao: log.instituicao || null,
@@ -757,6 +830,7 @@ export const addCommLog = createServerFn({ method: 'POST' })
 export const updateCommLog = createServerFn({ method: 'POST' })
   .validator((d: { logId: string; patch: Partial<CommLog> }) => d)
   .handler(async ({ data: { logId, patch } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const row: Record<string, unknown> = {};
     if (patch.data !== undefined) row.data = patch.data;
@@ -774,6 +848,7 @@ export const updateCommLog = createServerFn({ method: 'POST' })
 export const deleteCommLog = createServerFn({ method: 'POST' })
   .validator((d: { logId: string }) => d)
   .handler(async ({ data: { logId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('logs_comunicacao').delete().eq('id', logId);
     if (error) throw new Error(error.message);
@@ -782,6 +857,7 @@ export const deleteCommLog = createServerFn({ method: 'POST' })
 export const addContato = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; contato: Omit<Contact, 'id'> }) => d)
   .handler(async ({ data: { projectId, contato } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('contatos').insert({
       projeto_id: projectId, nome: contato.name, cargo: contato.role || null, organizacao: contato.org || null,
@@ -793,6 +869,7 @@ export const addContato = createServerFn({ method: 'POST' })
 export const updateContato = createServerFn({ method: 'POST' })
   .validator((d: { contatoId: string; patch: Partial<Contact> }) => d)
   .handler(async ({ data: { contatoId, patch } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const row: Record<string, unknown> = {};
     if (patch.name !== undefined) row.nome = patch.name;
@@ -808,6 +885,7 @@ export const updateContato = createServerFn({ method: 'POST' })
 export const deleteContato = createServerFn({ method: 'POST' })
   .validator((d: { contatoId: string }) => d)
   .handler(async ({ data: { contatoId } }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('contatos').delete().eq('id', contatoId);
     if (error) throw new Error(error.message);

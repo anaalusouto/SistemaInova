@@ -318,9 +318,12 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     updateContact: (_projectId, id, patch) => run(() => updateContato({ data: { contatoId: id, patch } })),
     deleteContact: (_projectId, id) => run(() => deleteContato({ data: { contatoId: id } })),
 
-    submitMetaEdit: (projectId, edit, author) => run(() => submeterEdicaoMeta({ data: { projectId, edit, author } })),
-    approveMetaEdit: (projectId, approvalId, adminName) => run(() => aprovarEdicaoMeta({ data: { projectId, approvalId, adminName } })),
-    rejectMetaEdit: (_projectId, approvalId, adminName) => run(() => rejeitarEdicaoMeta({ data: { approvalId, adminName } })),
+    // author/adminName não são mais enviados: o servidor deriva quem está
+    // chamando a partir da sessão (sessao.server.ts). A assinatura pública
+    // mantém os parâmetros porque a UI ainda os usa para feedback otimista.
+    submitMetaEdit: (projectId, edit) => run(() => submeterEdicaoMeta({ data: { projectId, edit } })),
+    approveMetaEdit: (projectId, approvalId) => run(() => aprovarEdicaoMeta({ data: { projectId, approvalId } })),
+    rejectMetaEdit: (_projectId, approvalId) => run(() => rejeitarEdicaoMeta({ data: { approvalId } })),
 
     // Comunidades — ainda local (migração onda 2)
     communities,
