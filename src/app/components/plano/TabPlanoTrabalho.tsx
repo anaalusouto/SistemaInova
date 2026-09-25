@@ -17,10 +17,11 @@ import { type Project, type Goal, type Deliverable, type Activity, type Risk } f
 import { type ProjectExt } from '../../store';
 import {
   codigosHierarquicos, filtrarPlano,
-  type CriteriosFiltro, CRITERIOS_VAZIOS,
+  type CriteriosFiltro, CRITERIOS_VAZIOS, type EscalaGantt,
 } from '../../lib/planoTrabalho';
 import { BarraFiltros } from './BarraFiltros';
 import { VisaoTabela } from './VisaoTabela';
+import { VisaoGantt } from './VisaoGantt';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
@@ -29,7 +30,7 @@ type Visao = 'tabela' | 'gantt' | 'kanban';
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: 'tabela', rotulo: 'Tabela', icone: Table2, disponivel: true },
-  { id: 'gantt',  rotulo: 'Gantt',  icone: GanttChartSquare, disponivel: false },
+  { id: 'gantt',  rotulo: 'Gantt',  icone: GanttChartSquare, disponivel: true },
   { id: 'kanban', rotulo: 'Kanban', icone: Columns3, disponivel: false },
 ];
 
@@ -48,6 +49,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   // Busca, filtros e recolhimento vivem aqui, e não dentro de cada visão:
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
+  const [escala, setEscala] = useState<EscalaGantt>('mes');
 
   const metas = p.goals;
   const riscos = p.risks;
@@ -148,6 +150,27 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
           })}
         </div>
 
+        {/* RF-018: escala só faz sentido no Gantt. */}
+        {visao === 'gantt' && (
+          <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+            {([['mes', 'Mês'], ['trimestre', 'Trimestre']] as const).map(([valor, rotulo], i) => (
+              <button
+                key={valor}
+                onClick={() => setEscala(valor)}
+                className="px-2.5 py-1.5 text-[12px]"
+                style={{
+                  background: escala === valor ? 'var(--brand-soft)' : 'transparent',
+                  color: escala === valor ? 'var(--brand)' : 'var(--ink-3)',
+                  fontWeight: escala === valor ? 600 : 400,
+                  borderRight: i === 0 ? '1px solid var(--border)' : undefined,
+                }}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
+        )}
+
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
           {metas.flatMap(m => m.deliverables).length} etapas
@@ -167,6 +190,20 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
+              aoAbrirAnexo={abrirAnexo}
+            />
+          )}
+
+          {visao === 'gantt' && (
+            <VisaoGantt
+              metas={metasVisiveis}
+              riscos={riscos}
+              escala={escala}
+              recolhidos={recolhidos}
+              alternarRecolhido={alternarRecolhido}
+              codigos={codigos}
+              aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
+              aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirAnexo={abrirAnexo}
             />
           )}

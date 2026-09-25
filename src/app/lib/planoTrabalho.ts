@@ -327,6 +327,158 @@ export function divergenciaDeCronograma(
 }
 
 // ---------------------------------------------------------------------------
+// Linha do tempo do Gantt (RF-017, RF-018, RN-012)
+// ---------------------------------------------------------------------------
+
+/**
+ * Dias desde 1970 para uma data 'AAAA-MM-DD'.
+ *
+ * Usa Date.UTC a partir dos componentes já separados: passar a string direto
+ * para `new Date()` a interpreta como meia-noite UTC e, em fusos atrás de UTC,
+ * desloca o dia — o mesmo problema documentado em ./dateOnly.ts.
+ */
+export function diasDesdeEpoca(iso: string): number {
+  const [a, m, d] = iso.slice(0, 10).split('-').map(Number);
+  return Math.floor(Date.UTC(a, m - 1, d) / 86_400_000);
+}
+
+function isoDeDias(dias: number): string {
+  const d = new Date(dias * 86_400_000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+export interface LimitesLinhaTempo {
+  inicio: string;
+  fim: string;
+}
+
+/**
+ * Extremos da linha do tempo, tirados das datas das ETAPAS (RF-018).
+ *
+ * Considera previsto e realizado juntos: uma execução que passou do previsto
+ * precisa caber na tela, senão a barra que mais importa fica fora do desenho.
+ * Devolve null quando não há nenhuma data — aí não há linha do tempo a montar,
+ * e inventar um intervalo arbitrário mostraria barras que não existem.
+ */
+export function limitesDaLinhaDoTempo(metas: Goal[]): LimitesLinhaTempo | null {
+  const datas: string[] = [];
+  for (const meta of metas) {
+    for (const etapa of meta.deliverables) {
+      for (const d of [etapa.plannedStart, etapa.plannedEnd, etapa.actualStart, etapa.actualEnd]) {
+        if (d) datas.push(d);
+      }
+    }
+  }
+  if (datas.length === 0) return null;
+
+  const inicio = datas.reduce((a, b) => (a < b ? a : b));
+  const fim = datas.reduce((a, b) => (a > b ? a : b));
+
+  // Arredonda para o primeiro dia do mês inicial e o último do mês final, para
+  // que a grade comece e termine em colunas inteiras.
+  const [ai, mi] = inicio.split('-').map(Number);
+  const [af, mf] = fim.split('-').map(Number);
+  const ultimoDia = new Date(Date.UTC(af, mf, 0)).getUTCDate();
+  return {
+    inicio: `${ai}-${String(mi).padStart(2, '0')}-01`,
+    fim: `${af}-${String(mf).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`,
+  };
+}
+
+export type EscalaGantt = 'mes' | 'trimestre';
+
+export interface ColunaGantt {
+  chave: string;
+  rotulo: string;
+  inicio: string;
+  fim: string;
+}
+
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/**
+ * Colunas do cabeçalho na escala escolhida (RF-018).
+ *
+ * Cabeçalho e linhas usam a MESMA grade e a mesma origem, então as barras
+ * ficam alinhadas às colunas em qualquer escala — o documento é explícito
+ * nisso, e desenhar as duas coisas com contas separadas é a forma clássica de
+ * elas saírem de registro.
+ */
+export function colunasDaLinhaDoTempo(limites: LimitesLinhaTempo, escala: EscalaGantt): ColunaGantt[] {
+  const colunas: ColunaGantt[] = [];
+  const [anoFim, mesFim] = limites.fim.split('-').map(Number);
+  let [ano, mes] = limites.inicio.split('-').map(Number);
+
+  if (escala === 'trimestre') {
+    mes = Math.floor((mes - 1) / 3) * 3 + 1;
+  }
+
+  const passo = escala === 'mes' ? 1 : 3;
+
+  while (ano < anoFim || (ano === anoFim && mes <= mesFim)) {
+    const mesFinalDoBloco = mes + passo - 1;
+    const ultimoDia = new Date(Date.UTC(ano, mesFinalDoBloco, 0)).getUTCDate();
+    colunas.push({
+      chave: `${ano}-${mes}`,
+      rotulo: escala === 'mes'
+        ? `${MESES_CURTOS[mes - 1]}/${String(ano).slice(2)}`
+        : `T${Math.floor((mes - 1) / 3) + 1}/${String(ano).slice(2)}`,
+      inicio: `${ano}-${String(mes).padStart(2, '0')}-01`,
+      fim: `${ano}-${String(mesFinalDoBloco).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`,
+    });
+    mes += passo;
+    if (mes > 12) { mes -= 12; ano += 1; }
+  }
+
+  return colunas;
+}
+
+export interface PosicaoBarra {
+  /** Percentual da largura total onde a barra começa. */
+  esquerda: number;
+  /** Percentual da largura total que a barra ocupa. */
+  largura: number;
+}
+
+/**
+ * Onde uma barra começa e quanto ocupa, em percentual da linha do tempo.
+ *
+ * Devolve null quando falta qualquer uma das pontas: RN-012 é explícito em não
+ * inventar barra para período que não existe. Uma etapa com início previsto e
+ * sem fim não vira uma barra "até hoje" — vira ausência de barra, que é a
+ * informação verdadeira.
+ */
+export function posicaoNaLinha(
+  inicio: string | null,
+  fim: string | null,
+  limites: LimitesLinhaTempo,
+): PosicaoBarra | null {
+  if (!inicio || !fim) return null;
+
+  const base = diasDesdeEpoca(limites.inicio);
+  // +1 porque o dia final é inclusivo: 01/08 a 31/08 são 31 dias, não 30.
+  const total = diasDesdeEpoca(limites.fim) - base + 1;
+  if (total <= 0) return null;
+
+  const inicioDias = Math.max(diasDesdeEpoca(inicio), base);
+  const fimDias = Math.min(diasDesdeEpoca(fim), diasDesdeEpoca(limites.fim));
+  if (fimDias < inicioDias) return null;
+
+  return {
+    esquerda: ((inicioDias - base) / total) * 100,
+    largura: ((fimDias - inicioDias + 1) / total) * 100,
+  };
+}
+
+/** Marcador de "hoje" na linha do tempo, ou null se hoje está fora dela. */
+export function posicaoDeHoje(limites: LimitesLinhaTempo, hoje = hojeISO()): number | null {
+  if (hoje < limites.inicio || hoje > limites.fim) return null;
+  const base = diasDesdeEpoca(limites.inicio);
+  const total = diasDesdeEpoca(limites.fim) - base + 1;
+  return ((diasDesdeEpoca(hoje) - base) / total) * 100;
+}
+
+// ---------------------------------------------------------------------------
 // Numeração hierárquica (RN-004)
 // ---------------------------------------------------------------------------
 
