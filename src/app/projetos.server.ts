@@ -196,9 +196,20 @@ function mapProjeto(row: any): ProjectExt {
   const progress = allActivities.length
     ? Math.round(allActivities.reduce((a, x) => a + x.progress, 0) / allActivities.length)
     : n2(row.progresso);
+  // Quando o projeto tem itens de orçamento, os totais do cabeçalho saem
+  // DELES — não das colunas `orcamento_aprovado`/`orcamento_executado`, que
+  // são fallback de projeto sem itens. Ler de fontes diferentes fazia o
+  // cabeçalho dizer "proposto: Não informado" enquanto a aba Orçamento somava
+  // R$ 100.000 para o mesmo projeto (RF-004 e RF-029 precisam concordar).
+  const itensOrcamento = (row.orcamento_itens ?? []) as any[];
   const budgetExecuted = financeiro.length
     ? financeiro.reduce((a, i) => a + i.executedValue, 0)
     : n2(row.orcamento_executado);
+  const budgetApproved = itensOrcamento.length
+    // Inclui itens excluídos: o valor original da proposta não encolhe porque
+    // a equipe decidiu não comprar algo (RF-029).
+    ? itensOrcamento.reduce((a, i) => a + n2(i.valor_proposto), 0)
+    : n2(row.orcamento_aprovado);
 
   const plano: PlanoTrabalho = {
     problematica: row.problematica ?? undefined, justificativa: row.justificativa ?? undefined,
@@ -224,7 +235,7 @@ function mapProjeto(row: any): ProjectExt {
     id: row.id, name: row.nome, code: row.code, coordinator: row.coordenador ?? '',
     team: (row.projeto_equipe ?? []).map((e: any) => e.nome),
     financier: row.financiador ?? '', objective: row.objetivo ?? '', startDate: row.data_inicio ?? '',
-    endDate: row.data_fim ?? '', status: row.status, progress, budgetApproved: n2(row.orcamento_aprovado),
+    endDate: row.data_fim ?? '', status: row.status, progress, budgetApproved,
     budgetExecuted, riskLevel: row.nivel_risco,
     goals: metas, financialItems: financeiro,
     contrapartidas: (row.orcamento_contrapartidas ?? []).map(mapContrapartida),

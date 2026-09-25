@@ -133,7 +133,7 @@ export function TabOrcamento({ project }: { project: Project }) {
             rotulo: 'Valor executado',
             valor: moeda(totaisProjeto.executadoConhecido),
             nota: totaisProjeto.itensSemExecucao > 0
-              ? `${totaisProjeto.itensSemExecucao} item(ns) sem execução informada`
+              ? `${totaisProjeto.itensSemExecucao === 1 ? '1 item' : `${totaisProjeto.itensSemExecucao} itens`} sem execução informada`
               : 'todos os itens informados',
           },
           { rotulo: 'Plano ativo', valor: moeda(totaisProjeto.ativo), nota: 'proposto menos itens excluídos' },
@@ -243,7 +243,8 @@ export function TabOrcamento({ project }: { project: Project }) {
                             proposto {moeda(totais.proposto)} · executado {moeda(totais.executadoConhecido)}
                           </span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
-                            {doGrupo.length} item{doGrupo.length === 1 ? '' : 's'}
+                            {/* "item" tem plural irregular: itens, não items. */}
+                            {doGrupo.length === 1 ? '1 item' : `${doGrupo.length} itens`}
                           </span>
                         </div>
                       </td>
