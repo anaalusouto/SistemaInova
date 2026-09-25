@@ -11,7 +11,7 @@
  * seletor já está montado para recebê-las.
  */
 import { useMemo, useState } from 'react';
-import { Table2, GanttChartSquare, Columns3 } from 'lucide-react';
+import { Table2, GanttChartSquare, Columns3, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { type ProjectExt } from '../../store';
@@ -22,6 +22,7 @@ import {
 import { BarraFiltros } from './BarraFiltros';
 import { VisaoTabela } from './VisaoTabela';
 import { VisaoGantt } from './VisaoGantt';
+import { RegistroDeRiscos } from './RegistroDeRiscos';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
@@ -50,6 +51,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
   const [escala, setEscala] = useState<EscalaGantt>('mes');
+  const [registroAberto, setRegistroAberto] = useState(false);
 
   const metas = p.goals;
   const riscos = p.risks;
@@ -171,6 +173,20 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
           </div>
         )}
 
+        {/* RF-035: acesso compacto ao registro consolidado — um botão, não um
+            cartão grande no resumo. */}
+        <button
+          onClick={() => setRegistroAberto(true)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px]"
+          style={{
+            borderColor: 'var(--danger-soft-border)',
+            color: 'var(--danger)',
+            background: 'var(--danger-soft)',
+          }}
+        >
+          <ShieldAlert size={13} /> Registro de riscos ({riscos.length})
+        </button>
+
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
           {metas.flatMap(m => m.deliverables).length} etapas
@@ -209,6 +225,16 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
           )}
         </div>
       </div>
+
+      {registroAberto && (
+        <RegistroDeRiscos
+          riscos={riscos}
+          metas={metas}
+          codigos={codigos}
+          aoFechar={() => setRegistroAberto(false)}
+          aoAbrirRisco={r => { setRegistroAberto(false); setPainel({ tipo: 'risco', riscoId: r.id }); }}
+        />
+      )}
 
       {/* Painéis (RF-022, RF-023, RF-027) */}
       {painel?.tipo === 'etapa' && (() => {

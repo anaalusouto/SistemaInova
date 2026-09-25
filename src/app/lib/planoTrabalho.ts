@@ -11,7 +11,7 @@
  * `new Date()`: a comparação lexicográfica de ISO já é cronológica e não passa
  * por fuso horário (mesmo motivo documentado em ./dateOnly.ts).
  */
-import type { Activity, Deliverable, Goal, Risk, RiskLevel } from '../data/mockData';
+import type { Activity, Deliverable, Goal, Risk, RiskLevel, RiskStatus } from '../data/mockData';
 
 // ---------------------------------------------------------------------------
 // Data de referência
@@ -161,6 +161,125 @@ export function riscoDaEtapa(riscos: Risk[], etapaId: string): RiscoDaLinha | nu
   if (abertos.length === 0) return null;
   const pontuacao = abertos.reduce((mx, r) => Math.max(mx, Number(r.severity) || 0), 0);
   return { pontuacao, faixa: faixaRisco(pontuacao), quantidade: abertos.length };
+}
+
+// ---------------------------------------------------------------------------
+// Registro consolidado e matriz 5×5 (RF-035, RN-028)
+// ---------------------------------------------------------------------------
+
+export interface CelulaMatriz {
+  probabilidade: number;
+  impacto: number;
+  pontuacao: number;
+  faixa: RiskLevel;
+  quantidade: number;
+}
+
+export interface MatrizRiscos {
+  /** 5×5, indexado por [impacto-1][probabilidade-1] — impacto na vertical. */
+  celulas: CelulaMatriz[][];
+  /** Soma das células, respeitando os filtros aplicados à entrada. */
+  totalNaMatriz: number;
+}
+
+/**
+ * Matriz 5×5 de probabilidade × impacto com a contagem de cada célula.
+ *
+ * Conta SOMENTE riscos cadastrados (RN-028) — atividade nunca vira risco, nem
+ * mesmo a ação de resposta, que é atividade comum com referência à origem
+ * (RN-020). Probabilidade ou impacto fora de 1–5 fica de fora em vez de ser
+ * ajustado para caber: um valor inválido é um dado a corrigir, não a
+ * arredondar silenciosamente.
+ */
+export function matrizDeRiscos(riscos: Risk[]): MatrizRiscos {
+  const celulas: CelulaMatriz[][] = [];
+  for (let impacto = 5; impacto >= 1; impacto--) {
+    const linha: CelulaMatriz[] = [];
+    for (let probabilidade = 1; probabilidade <= 5; probabilidade++) {
+      const pontuacao = pontuacaoRisco(probabilidade, impacto);
+      linha.push({
+        probabilidade, impacto, pontuacao,
+        faixa: faixaRisco(pontuacao),
+        quantidade: riscos.filter(r => r.probability === probabilidade && r.impact === impacto).length,
+      });
+    }
+    celulas.push(linha);
+  }
+  const totalNaMatriz = celulas.flat().reduce((s, c) => s + c.quantidade, 0);
+  return { celulas, totalNaMatriz };
+}
+
+export interface ResumoRiscos {
+  /** Todos os riscos do projeto — não muda com filtro (RN-028). */
+  total: number;
+  totalCritico: number;
+  porStatus: Record<RiskStatus, number>;
+  /** Riscos legados que a migration 0011 não conseguiu vincular a uma etapa. */
+  semEtapa: number;
+}
+
+/**
+ * Contagem geral do projeto. Deliberadamente calculada sobre TODOS os
+ * registros: o RN-028 separa "quantos riscos o projeto tem" de "quantos estão
+ * aparecendo agora". Misturar as duas coisas faria um filtro parecer que o
+ * projeto ficou menos arriscado.
+ */
+export function resumoDeRiscos(riscos: Risk[]): ResumoRiscos {
+  const porStatus = { 'Aberto': 0, 'Em mitigação': 0, 'Monitorando': 0, 'Encerrado': 0 } as Record<RiskStatus, number>;
+  for (const r of riscos) {
+    if (r.status in porStatus) porStatus[r.status] += 1;
+  }
+  return {
+    total: riscos.length,
+    totalCritico: riscos.filter(r => faixaRisco(r.severity) === 'Crítico').length,
+    porStatus,
+    semEtapa: riscos.filter(r => !r.stageId).length,
+  };
+}
+
+export interface CriteriosRisco {
+  /** Texto livre: risco, etapa, responsável e categoria. */
+  busca: string;
+  status: RiskStatus[];
+  /** Célula selecionada na matriz, como [probabilidade, impacto]. */
+  celula: [number, number] | null;
+}
+
+export const CRITERIOS_RISCO_VAZIOS: CriteriosRisco = { busca: '', status: [], celula: null };
+
+export function temFiltroDeRiscoAtivo(c: CriteriosRisco): boolean {
+  return c.busca.trim() !== '' || c.status.length > 0 || c.celula !== null;
+}
+
+/**
+ * Aplica busca, status e seleção de célula, combinados (RF-035, CA-23).
+ * A lista sai ordenada por pontuação decrescente.
+ */
+export function filtrarRiscos(
+  riscos: Risk[],
+  criterios: CriteriosRisco,
+  nomeDaEtapa: (stageId: string | undefined) => string,
+): Risk[] {
+  const termo = normalizar(criterios.busca);
+  const status = new Set(criterios.status);
+
+  return riscos
+    .filter(r => {
+      if (status.size > 0 && !status.has(r.status)) return false;
+      if (criterios.celula) {
+        const [prob, imp] = criterios.celula;
+        if (r.probability !== prob || r.impact !== imp) return false;
+      }
+      if (termo !== '') {
+        const alvo = [
+          r.title ?? '', r.description ?? '', r.category ?? '',
+          r.responsible ?? '', nomeDaEtapa(r.stageId),
+        ].map(normalizar).join(' ');
+        if (!alvo.includes(termo)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => (Number(b.severity) || 0) - (Number(a.severity) || 0));
 }
 
 // ---------------------------------------------------------------------------
