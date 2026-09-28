@@ -59,7 +59,9 @@ export class AnexoInvalido extends Error {
 }
 
 export interface AnexoInput {
-  projetoId: number;
+  /** Obrigatório para anexo de atividade. Registro de contato pertence à
+   *  organização (RC-03) e o servidor descobre qual a partir do registro. */
+  projetoId: number | null;
   /** Exatamente um dos dois — o CHECK da tabela recusa o contrário. */
   atividadeId?: string | null;
   logComunicacaoId?: string | null;
@@ -75,9 +77,9 @@ function decodificar(dataUrl: string): Buffer {
 }
 
 /** Caminho seguro: nome do arquivo saneado, nunca interpolado cru. */
-function caminho(projetoId: number, pasta: string, parentId: string, nome: string): string {
+function caminho(dono: string, pasta: string, parentId: string, nome: string): string {
   const seguro = nome.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.\-]/g, '_').slice(-80);
-  return `${projetoId}/${pasta}/${parentId}/${Date.now()}-${seguro}`;
+  return `${dono}/${pasta}/${parentId}/${Date.now()}-${seguro}`;
 }
 
 /**
@@ -112,9 +114,25 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
     }
 
     const supabaseAdmin = await getAdmin();
+
+    // O dono do arquivo sai do banco, não do que o cliente mandou: a atividade
+    // é do projeto; o registro de contato, da organização (RC-03).
+    let comunidadeId: string | null = null;
+    let dono: string;
+    if (data.logComunicacaoId) {
+      const { data: reg } = await supabaseAdmin
+        .from('logs_comunicacao').select('comunidade_id').eq('id', data.logComunicacaoId).maybeSingle();
+      if (!reg) throw new AnexoInvalido('Registro de contato não encontrado.');
+      comunidadeId = reg.comunidade_id as string;
+      dono = `org-${comunidadeId}`;
+    } else {
+      if (data.projetoId == null) throw new AnexoInvalido('O anexo da atividade precisa do projeto.');
+      dono = String(data.projetoId);
+    }
+
     const pasta = data.atividadeId ? 'atividades' : 'contatos';
     const parentId = (data.atividadeId ?? data.logComunicacaoId)!;
-    const storagePath = caminho(data.projetoId, pasta, parentId, data.nomeArquivo);
+    const storagePath = caminho(dono, pasta, parentId, data.nomeArquivo);
 
     const { error: erroUpload } = await supabaseAdmin.storage
       .from(BUCKET)
@@ -124,7 +142,8 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
     const { data: linha, error: erroLinha } = await supabaseAdmin
       .from('projeto_anexos')
       .insert({
-        projeto_id: data.projetoId,
+        projeto_id: data.logComunicacaoId ? null : data.projetoId,
+        comunidade_id: comunidadeId,
         atividade_id: data.atividadeId ?? null,
         log_comunicacao_id: data.logComunicacaoId ?? null,
         storage_path: storagePath,

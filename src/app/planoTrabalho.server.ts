@@ -382,18 +382,12 @@ export const atualizarRisco = createServerFn({ method: 'POST' })
   });
 
 // ---------------------------------------------------------------------------
-// Parecer técnico (RF-034, RF-036, RN-026, RN-029)
+// Parecer técnico (RF-034, RN-026)
+//
+// As "ações derivadas" (RF-036, RN-029) saíram do parecer: o RC-04 as
+// substitui pelos Encaminhamentos da organização (organizacoes.server.ts),
+// que valem para qualquer origem e não só para um parecer.
 // ---------------------------------------------------------------------------
-
-export interface AcaoParecerInput {
-  /** Presente ao editar; ausente numa linha nova. Manter o id é o que faz
-   *  editar uma linha não mexer nas outras (RN-029). */
-  id?: string;
-  descricao: string;
-  responsavel: string;
-  prazo: string | null;
-  status: ActivityStatus;
-}
 
 export interface ParecerInput {
   projetoId: number;
@@ -405,71 +399,15 @@ export interface ParecerInput {
   limitacoesOrcamentarias: string;
   recomendacao: string;
   logComunicacaoId: string | null;
-  acoes: AcaoParecerInput[];
 }
 
-/** Linha totalmente em branco não vira ação (RF-036). */
-function linhaVazia(a: AcaoParecerInput): boolean {
-  return !a.descricao.trim() && !a.responsavel.trim() && !a.prazo;
-}
-
-function validarParecer(data: ParecerInput): AcaoParecerInput[] {
+function validarParecer(data: ParecerInput): void {
   const erros: string[] = [];
   if (!data.data) erros.push('Informe a data da visita ou reunião.');
   if (!data.origem) erros.push('Informe a origem do registro.');
   if (!data.autor.trim()) erros.push('Informe o responsável pelo registro.');
   if (!data.pontosObservados.trim()) erros.push('Informe os pontos observados.');
-
-  // Linhas em branco somem; linha com responsável ou prazo mas sem descrição é
-  // erro, não descarte — alguém começou a preencher e a informação se perderia
-  // em silêncio (RF-036, CA-26).
-  const acoes = data.acoes.filter(a => !linhaVazia(a));
-  if (acoes.some(a => !a.descricao.trim())) {
-    erros.push('Há ação com responsável ou prazo e sem descrição. Informe a descrição ou limpe a linha.');
-  }
-
   if (erros.length) throw new DadosInvalidos(erros);
-  return acoes;
-}
-
-/**
- * Reconcilia as ações de um parecer preservando os ids existentes (RN-029).
- *
- * Não apaga tudo e reinsere: isso trocaria os ids de linhas que a pessoa nem
- * tocou, quebrando qualquer referência e o histórico. Atualiza as que vieram
- * com id, insere as novas e remove apenas as que sumiram da lista.
- */
-async function reconciliarAcoes(
-  supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>,
-  parecerId: string,
-  acoes: AcaoParecerInput[],
-): Promise<void> {
-  const { data: existentes, error: erroLer } = await supabaseAdmin
-    .from('parecer_acoes').select('id').eq('parecer_id', parecerId);
-  if (erroLer) throw new Error(erroLer.message);
-
-  const idsMantidos = new Set(acoes.map(a => a.id).filter(Boolean) as string[]);
-  const paraRemover = (existentes ?? []).map(r => r.id as string).filter(id => !idsMantidos.has(id));
-
-  if (paraRemover.length) {
-    const { error } = await supabaseAdmin.from('parecer_acoes').delete().in('id', paraRemover);
-    if (error) throw new Error(error.message);
-  }
-
-  for (const [i, acao] of acoes.entries()) {
-    const linha = {
-      parecer_id: parecerId,
-      ordem: i + 1,
-      descricao: acao.descricao.trim(),
-      responsavel: vazioParaNulo(acao.responsavel),
-      prazo: acao.prazo,
-      status: acao.status,
-    };
-    const { error } = acao.id
-      ? await supabaseAdmin.from('parecer_acoes').update(linha).eq('id', acao.id)
-      : await supabaseAdmin.from('parecer_acoes').insert(linha);
-    if (error) throw new Error(error.message);
-  }
 }
 
 function linhaParecer(data: ParecerInput) {
@@ -490,7 +428,7 @@ export const criarParecer = createServerFn({ method: 'POST' })
   .validator((d: ParecerInput) => d)
   .handler(async ({ data }): Promise<string> => {
     const sessao = await exigirEscrita();
-    const acoes = validarParecer(data);
+    validarParecer(data);
     const supabaseAdmin = await getAdmin();
 
     // O autor do registro é o que a pessoa digitou (pode ser quem fez a
@@ -501,8 +439,6 @@ export const criarParecer = createServerFn({ method: 'POST' })
       .insert({ ...linhaParecer(data), autor: data.autor.trim() || sessao.displayName })
       .select('id').single();
     if (error) throw new Error(error.message);
-
-    await reconciliarAcoes(supabaseAdmin, criado.id as string, acoes);
     return criado.id as string;
   });
 
@@ -510,19 +446,16 @@ export const atualizarParecer = createServerFn({ method: 'POST' })
   .validator((d: { parecerId: string; dados: ParecerInput }) => d)
   .handler(async ({ data: { parecerId, dados } }): Promise<void> => {
     await exigirEscrita();
-    const acoes = validarParecer(dados);
+    validarParecer(dados);
     const supabaseAdmin = await getAdmin();
 
     const { error } = await supabaseAdmin
       .from('pareceres_tecnicos').update(linhaParecer(dados)).eq('id', parecerId);
     if (error) throw new Error(error.message);
-
-    await reconciliarAcoes(supabaseAdmin, parecerId, acoes);
   });
 
 /**
- * Exclui o parecer. As ações vão junto por CASCADE — cada ação pertence a
- * exatamente um parecer (RN-029), então não há o que preservar fora dele.
+ * Exclui o parecer.
  *
  * RN-026: excluir parecer NÃO mexe em orçamento, riscos ou percentuais. O
  * parecer registra análise e encaminhamento; nada nele altera outro módulo

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   FileText,
-  Users,
   ClipboardList,
   DollarSign,
   ShieldAlert,
@@ -22,7 +21,6 @@ import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
-import { TabContatos } from './project-tabs/TabContatos';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
 import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
@@ -31,16 +29,17 @@ import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
 
 /**
- * As quatro seções do RF-001, nesta ordem. Substituem as cinco abas antigas:
+ * As seções do RF-001, nesta ordem, menos Contato (ver TabId). Substituem as cinco abas antigas:
  * o Dashboard virou o resumo compacto do cabeçalho (RF-004), Monitoramento de
  * Metas e Cronograma passam a ser as visões Tabela e Gantt dentro do Plano de
  * Trabalho, e Financeiro passa a se chamar Orçamento.
  */
-type TabId = 'descricao' | 'contato' | 'plano' | 'orcamento';
+// A aba Contato saiu (RC-03): o histórico de contatos é da organização e
+// fica na ficha dela, em Organizações.
+type TabId = 'descricao' | 'plano' | 'orcamento';
 
 const tabs: { id: TabId; label: string; icon: typeof FileText }[] = [
   { id: 'descricao',  label: 'Descrição',         icon: FileText },
-  { id: 'contato',    label: 'Contato',           icon: Users },
   { id: 'plano',      label: 'Plano de Trabalho', icon: ClipboardList },
   { id: 'orcamento',  label: 'Orçamento',         icon: DollarSign },
 ];
@@ -88,7 +87,6 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const renderTab = () => {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
-      case 'contato':   return <TabContatos project={project} />;
       case 'plano':     return <TabPlanoTrabalho project={project} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
       default:          return null;

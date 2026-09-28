@@ -7,7 +7,8 @@ import {
 import { comunidades as seedComunidades, type Comunidade } from './data/comunidades';
 import { rotas as seedRotas, calendarSeed, type RotaItem, type CalendarEvent } from './data/rotas';
 import { cronogramaExecutivoSeed, type GanttBloco, type GanttStatus, type GanttActivity } from './data/cronogramaExecutivo';
-import type { CommLog, Contact, ProjectOp, MetaChangeLog, PendingApproval, ParecerTecnico } from './data/projectExtras';
+import type { RegistroContato } from './lib/organizacoes';
+import type { Contact, ProjectOp, MetaChangeLog, PendingApproval, ParecerTecnico } from './data/projectExtras';
 import type { InternalTracking } from './data/controleInterno';
 import {
   listarProjetos, criarProjeto, atualizarProjeto, excluirProjeto,
@@ -15,7 +16,7 @@ import {
   addRisco, deleteRisco, addMudanca, updateMudancaAprovacao, deleteMudanca,
   addFinanceiro, updateFinanceiroExecutado, deleteFinanceiro,
   addContrapartida, deleteContrapartida, addEvidencia, deleteEvidencia, updateAtividadeStatus,
-  addAporte, deleteAporte, addCommLog, updateCommLog, deleteCommLog,
+  addAporte, deleteAporte,
   addContato, updateContato, deleteContato,
 } from './projetos.server';
 import {
@@ -90,8 +91,11 @@ export type ProjectExt = Project & {
   approvals?: PendingApproval[];
   /** Caderno de entradas e saídas de recursos adicionais (aportes). */
   aportes?: Aporte[];
-  /** Registro de comunicação com a instituição (contatos). */
-  commLogs?: CommLog[];
+  /** Organização executora, quando o projeto está vinculado a uma (RC-03). */
+  organizacao?: { id: string; nome: string } | null;
+  /** Registros de contato da organização do projeto. Somente leitura aqui:
+   *  pertencem à organização, e é lá que são criados e editados (RC-03). */
+  commLogs?: RegistroContato[];
   /** Pareceres técnicos de acompanhamento (RF-033). */
   pareceres?: ParecerTecnico[];
   /** Itens do orçamento no modelo da seção 14 (execução opcional, exclusão lógica). */
@@ -143,11 +147,6 @@ type Ctx = {
   // Aportes (caderno financeiro paralelo)
   addAporte: (projectId: number, a: Omit<Aporte, 'id'>) => Promise<void>;
   deleteAporte: (projectId: number, id: string) => Promise<void>;
-
-  // Registro de comunicação (contatos)
-  addCommLog: (projectId: number, c: Omit<CommLog, 'id'>) => Promise<void>;
-  updateCommLog: (projectId: number, id: string, patch: Partial<CommLog>) => Promise<void>;
-  deleteCommLog: (projectId: number, id: string) => Promise<void>;
 
   // Plano de Trabalho — escritas com validação no servidor (RF-022 a RF-025).
   // Recebem o input já montado porque as regras de data moram no servidor: a
@@ -296,7 +295,13 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     queryFn: () => listarProjetos(),
   });
 
-  const invalidate = useCallback(() => queryClient.invalidateQueries({ queryKey: ['projetos'] }), [queryClient]);
+  // Organizações entram junto: o projeto lê os registros de contato da sua
+  // organização, e um anexo enviado por aqui aparece na ficha dela.
+  const invalidate = useCallback(() => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['projetos'] }),
+    queryClient.invalidateQueries({ queryKey: ['organizacoes'] }),
+    queryClient.invalidateQueries({ queryKey: ['organizacao'] }),
+  ]), [queryClient]);
   const run = useCallback(async <T,>(fn: () => Promise<T>): Promise<T> => {
     const result = await fn();
     await invalidate();
@@ -350,9 +355,6 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     addAporte: (projectId, a) => run(() => addAporte({ data: { projectId, aporte: a } })),
     deleteAporte: (_projectId, id) => run(() => deleteAporte({ data: { aporteId: id } })),
 
-    addCommLog: (projectId, c) => run(() => addCommLog({ data: { projectId, log: c } })),
-    updateCommLog: (_projectId, id, patch) => run(() => updateCommLog({ data: { logId: id, patch } })),
-    deleteCommLog: (_projectId, id) => run(() => deleteCommLog({ data: { logId: id } })),
 
     addContact: (projectId, c) => run(() => addContato({ data: { projectId, contato: c } })),
     updateContact: (_projectId, id, patch) => run(() => updateContato({ data: { contatoId: id, patch } })),

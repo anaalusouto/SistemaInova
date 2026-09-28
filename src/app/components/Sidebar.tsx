@@ -8,11 +8,13 @@ import {
   ClipboardList,
   LogOut,
   Kanban,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
 
 export type NavItem =
+  | 'organizations'
   | 'projects'
   | 'schedule'
   | 'diagnostics'
@@ -29,6 +31,7 @@ interface SidebarProps {
 const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] = [];
 
 const bottomItems = [
+  { id: 'organizations' as NavItem, label: 'Organizações', icon: Building2 },
   { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
   { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },

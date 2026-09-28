@@ -7,6 +7,7 @@ import { ProjectView } from './components/ProjectView';
 import { ReportsModule } from './components/ReportsModule';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoModule } from './components/DiagnosticoModule';
+import { OrganizacoesModule } from './components/organizacoes/OrganizacoesModule';
 import { CronogramaPage } from './components/CronogramaPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
@@ -69,6 +70,8 @@ function AppShell() {
     switch (activeNav) {
       case 'projects':
         return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
+      case 'organizations':
+        return <OrganizacoesModule />;
       case 'schedule':
         return <CronogramaPage onOpenProject={handleSelectProject} />;
       case 'diagnostics':

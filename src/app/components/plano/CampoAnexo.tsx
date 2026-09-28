@@ -47,7 +47,8 @@ function tamanhoLegivel(bytes: number | null): string {
 export function CampoAnexo({
   projetoId, atividadeId, logComunicacaoId, anexo, rotulo = 'Anexar foto ou documento',
 }: {
-  projetoId: number;
+  /** Null para registro de contato, que pertence à organização (RC-03). */
+  projetoId: number | null;
   atividadeId?: string;
   logComunicacaoId?: string;
   anexo?: Attachment | null;

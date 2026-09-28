@@ -59,27 +59,11 @@ export interface PendingApproval extends ProjectOp {
   kind?: MetaNodeKind;
 }
 
-/** Meio de comunicação usado no contato com a instituição. */
-export type CommMeio = 'Ligação' | 'Meet (video chamada)' | 'Whatsapp (msg)' | 'E-mail' | 'Presencial' | 'Outro';
-export const COMM_MEIOS: CommMeio[] = ['Ligação', 'Meet (video chamada)', 'Whatsapp (msg)', 'E-mail', 'Presencial', 'Outro'];
-
-/** Linha do registro de comunicação (área de Contatos de cada projeto). */
-export interface CommLog {
-  id: string;
-  data: string;          // YYYY-MM-DD
-  hora: string;          // HH:MM
-  instituicao: string;
-  representante: string;
-  meio: CommMeio | string;
-  quemRealizou: string;
-  registro: string;      // Registro de comunicação
-  saida: string;         // Encaminhamento / saída
-  /** Um arquivo opcional por registro (RF-009). Null quando não há. */
-  anexo?: import('./mockData').Attachment | null;
-}
+// O registro de comunicação (CommLog) saiu daqui: desde o RC-03 ele pertence
+// à organização — ver RegistroContato em lib/organizacoes.ts.
 
 // ---------------------------------------------------------------------------
-// Parecer técnico do projeto (RF-033, RF-034, RF-036)
+// Parecer técnico do projeto (RF-033, RF-034)
 //
 // Não confundir com o parecer do Diagnóstico (diagnostico_parecer): outro
 // contexto, outro ciclo de vida. Este é o registro de acompanhamento que a
@@ -88,18 +72,6 @@ export interface CommLog {
 
 export const ORIGENS_PARECER = ['Visita técnica', 'Reunião de acompanhamento', 'Outro'] as const;
 export type OrigemParecer = (typeof ORIGENS_PARECER)[number];
-
-export type StatusAcaoParecer = 'A iniciar' | 'Em andamento' | 'Concluído';
-
-/** Ação derivada do parecer. Id estável e ordem própria (RN-029). */
-export interface AcaoParecer {
-  id: string;
-  ordem: number;
-  descricao: string;
-  responsavel: string;
-  prazo: string | null;
-  status: StatusAcaoParecer;
-}
 
 export interface ParecerTecnico {
   id: string;
@@ -111,9 +83,8 @@ export interface ParecerTecnico {
   itensCriticos: string;
   limitacoesOrcamentarias: string;
   recomendacao: string;
-  /** Vínculo opcional com um registro da tela Contato do mesmo projeto. */
+  /** Vínculo opcional com um registro de contato da organização do projeto. */
   logComunicacaoId: string | null;
-  acoes: AcaoParecer[];
   criadoEm: string;
   atualizadoEm: string;
 }

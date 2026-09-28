@@ -19,9 +19,11 @@ import type {
 } from './data/mockData';
 import type { ItemOrcamento } from './lib/orcamento';
 import type {
-  Contact, CommLog, MetaChangeLog, PendingApproval, ProjectOp,
-  ParecerTecnico, AcaoParecer,
+  Contact, MetaChangeLog, PendingApproval, ProjectOp,
+  ParecerTecnico,
 } from './data/projectExtras';
+import { mapRegistro } from './organizacoes.server';
+import { ordenarRegistros } from './lib/organizacoes';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -149,12 +151,6 @@ function mapEvidencia(e: any): Evidence {
 function mapAporte(a: any): Aporte {
   return { id: a.id, data: a.data, tipo: a.tipo, origem: a.origem ?? '', descricao: a.descricao ?? '', valor: n2(a.valor), registradoPor: a.registrado_por ?? undefined };
 }
-function mapAcaoParecer(a: any): AcaoParecer {
-  return {
-    id: a.id, ordem: n2(a.ordem), descricao: a.descricao,
-    responsavel: a.responsavel ?? '', prazo: a.prazo ?? null, status: a.status,
-  };
-}
 function mapParecer(p: any): ParecerTecnico {
   return {
     id: p.id, data: p.data, origem: p.origem, autor: p.autor,
@@ -164,23 +160,11 @@ function mapParecer(p: any): ParecerTecnico {
     limitacoesOrcamentarias: p.limitacoes_orcamentarias ?? '',
     recomendacao: p.recomendacao ?? '',
     logComunicacaoId: p.log_comunicacao_id ?? null,
-    acoes: ((p.parecer_acoes ?? []) as any[]).map(mapAcaoParecer).sort((a, b) => a.ordem - b.ordem),
     criadoEm: p.criado_em, atualizadoEm: p.atualizado_em,
   };
 }
 function mapContato(c: any): Contact {
   return { id: c.id, name: c.nome, role: c.cargo ?? '', org: c.organizacao ?? '', phone: c.telefone ?? '', email: c.email ?? '', notes: c.notas ?? '' };
-}
-function mapCommLog(c: any): CommLog {
-  // Um arquivo por registro (RF-009); o join vem como lista, e o mais recente
-  // é o que vale — substituir apaga o anterior, então só deve haver um.
-  const anexos = (c.projeto_anexos ?? []) as any[];
-  return {
-    id: c.id, data: c.data, hora: c.hora ?? '', instituicao: c.instituicao ?? '',
-    representante: c.representante ?? '', meio: c.meio ?? '', quemRealizou: c.quem_realizou ?? '',
-    registro: c.registro ?? '', saida: c.retorno ?? '',
-    anexo: anexos.length ? mapAnexo(anexos[anexos.length - 1]) : null,
-  };
 }
 function mapMetaLog(l: any): MetaChangeLog {
   return { id: l.id, entity: l.entidade, action: l.acao, targetId: l.target_id ?? undefined, parentId: l.parent_id ?? undefined, targetPath: l.target_path, field: l.campo ?? undefined, from: l.de_valor ?? undefined, to: l.para_valor ?? undefined, payload: l.payload ?? undefined, author: l.autor, authorRole: l.autor_papel, date: l.data, approvedBy: l.aprovado_por ?? null };
@@ -249,7 +233,10 @@ function mapProjeto(row: any): ProjectExt {
     metaLog: (row.log_alteracoes_meta ?? []).map(mapMetaLog),
     approvals: (row.aprovacoes_pendentes ?? []).map(mapAprovacao),
     aportes: (row.aportes ?? []).map(mapAporte),
-    commLogs: (row.logs_comunicacao ?? []).map(mapCommLog),
+    // Os registros de contato são da organização (RC-03); o projeto os lê
+    // de lá só para o parecer poder apontar para um deles.
+    organizacao: row.comunidades ? { id: row.comunidades.id, nome: row.comunidades.nome } : null,
+    commLogs: ordenarRegistros(((row.comunidades?.logs_comunicacao ?? []) as any[]).map(mapRegistro)),
     orcamentoItens: ((row.orcamento_itens ?? []) as any[]).map(mapItemOrcamento),
     // Ordem decrescente de data (RF-033): o acompanhamento mais recente primeiro.
     pareceres: ((row.pareceres_tecnicos ?? []) as any[])
@@ -263,9 +250,9 @@ const SELECT_PROJETO = `
   projeto_equipe(nome),
   metas(id, nome, ordem, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
   plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
-  evidencias(*), aportes(*), contatos(*), logs_comunicacao(*, projeto_anexos(*)),
+  evidencias(*), aportes(*), contatos(*), comunidades(id, nome, logs_comunicacao(*)),
   log_alteracoes_meta(*), aprovacoes_pendentes(*),
-  pareceres_tecnicos(*, parecer_acoes(*))
+  pareceres_tecnicos(*)
 `;
 
 export const listarProjetos = createServerFn({ method: 'GET' }).handler(async (): Promise<ProjectExt[]> => {
@@ -888,46 +875,6 @@ export const deleteAporte = createServerFn({ method: 'POST' })
     await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('aportes').delete().eq('id', aporteId);
-    if (error) throw new Error(error.message);
-  });
-
-export const addCommLog = createServerFn({ method: 'POST' })
-  .validator((d: { projectId: number; log: Omit<CommLog, 'id'> }) => d)
-  .handler(async ({ data: { projectId, log } }): Promise<void> => {
-    await exigirEscrita();
-    const supabaseAdmin = await getAdmin();
-    const { error } = await supabaseAdmin.from('logs_comunicacao').insert({
-      projeto_id: projectId, data: log.data, hora: log.hora || null, instituicao: log.instituicao || null,
-      representante: log.representante || null, meio: log.meio, quem_realizou: log.quemRealizou || null,
-      registro: log.registro || null, retorno: log.saida || null,
-    });
-    if (error) throw new Error(error.message);
-  });
-
-export const updateCommLog = createServerFn({ method: 'POST' })
-  .validator((d: { logId: string; patch: Partial<CommLog> }) => d)
-  .handler(async ({ data: { logId, patch } }): Promise<void> => {
-    await exigirEscrita();
-    const supabaseAdmin = await getAdmin();
-    const row: Record<string, unknown> = {};
-    if (patch.data !== undefined) row.data = patch.data;
-    if (patch.hora !== undefined) row.hora = patch.hora;
-    if (patch.instituicao !== undefined) row.instituicao = patch.instituicao;
-    if (patch.representante !== undefined) row.representante = patch.representante;
-    if (patch.meio !== undefined) row.meio = patch.meio;
-    if (patch.quemRealizou !== undefined) row.quem_realizou = patch.quemRealizou;
-    if (patch.registro !== undefined) row.registro = patch.registro;
-    if (patch.saida !== undefined) row.retorno = patch.saida;
-    const { error } = await supabaseAdmin.from('logs_comunicacao').update(row).eq('id', logId);
-    if (error) throw new Error(error.message);
-  });
-
-export const deleteCommLog = createServerFn({ method: 'POST' })
-  .validator((d: { logId: string }) => d)
-  .handler(async ({ data: { logId } }): Promise<void> => {
-    await exigirEscrita();
-    const supabaseAdmin = await getAdmin();
-    const { error } = await supabaseAdmin.from('logs_comunicacao').delete().eq('id', logId);
     if (error) throw new Error(error.message);
   });
 

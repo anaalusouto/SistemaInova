@@ -1,5 +1,8 @@
 /**
- * Parecer técnico do projeto (RF-033, RF-034, RF-036).
+ * Parecer técnico do projeto (RF-033, RF-034).
+ *
+ * As "ações derivadas" (RF-036) saíram daqui: o RC-04 as substitui pelos
+ * Encaminhamentos da organização, que valem para qualquer origem.
  *
  * Painel lateral acessível pelo cabeçalho, nas quatro seções. O documento é
  * explícito em NÃO criar uma quinta aba nem um cartão grande no resumo: o
@@ -18,15 +21,14 @@ import {
 import { toast } from 'sonner';
 import { type Project } from '../../data/mockData';
 import {
-  ORIGENS_PARECER, type OrigemParecer, type ParecerTecnico, type AcaoParecer,
+  ORIGENS_PARECER, type OrigemParecer, type ParecerTecnico,
 } from '../../data/projectExtras';
 import { useStore, type ProjectExt } from '../../store';
-import { useAuth, usePeople } from '../../auth/authStore';
+import { useAuth } from '../../auth/authStore';
 import { formatDateOnly } from '../../lib/dateOnly';
-import { type ParecerInput, type AcaoParecerInput } from '../../planoTrabalho.server';
+import { type ParecerInput } from '../../planoTrabalho.server';
+import { rotuloRegistro } from '../../lib/organizacoes';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes, ConfirmarExclusao } from './camposFormulario';
-
-const STATUS_ACAO = ['A iniciar', 'Em andamento', 'Concluído'] as const;
 
 /** Ausência de registro, dita como tal (RN-026). */
 function SemRegistro() {
@@ -46,81 +48,15 @@ function Bloco({ rotulo, children }: { rotulo: string; children: React.ReactNode
   );
 }
 
-// ---------------------------------------------------------------------------
-// Editor de ações derivadas (RF-036, RN-029)
-// ---------------------------------------------------------------------------
-
-function EditorAcoes({
-  acoes, aoMudar,
-}: { acoes: AcaoParecerInput[]; aoMudar: (a: AcaoParecerInput[]) => void }) {
-  const pessoas = usePeople();
-
-  const alterar = (i: number, campo: keyof AcaoParecerInput, valor: unknown) =>
-    aoMudar(acoes.map((a, idx) => (idx === i ? { ...a, [campo]: valor } : a)));
-
+/** Onde as tarefas que saem do parecer passam a ser registradas (RC-04). */
+function AvisoEncaminhamentos({ organizacao }: { organizacao?: { id: string; nome: string } | null }) {
   return (
-    <div className="flex flex-col gap-2">
-      {acoes.length === 0 && (
-        <span style={{ fontSize: '0.76rem', color: 'var(--ink-5)' }}>
-          Nenhuma ação. O parecer pode ser salvo sem ações.
-        </span>
-      )}
-
-      {acoes.map((acao, i) => (
-        <div
-          key={acao.id ?? `nova-${i}`}
-          className="rounded-lg border p-2.5 flex flex-col gap-2"
-          style={{ borderColor: 'var(--line-1)', background: 'var(--surface-1)' }}
-        >
-          <div className="flex items-start gap-2">
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 7 }}>
-              {i + 1}
-            </span>
-            <div className="flex-1 min-w-0">
-              <Texto
-                valor={acao.descricao}
-                aoMudar={v => alterar(i, 'descricao', v)}
-                placeholder="O que precisa ser feito"
-              />
-            </div>
-            <button
-              onClick={() => aoMudar(acoes.filter((_, idx) => idx !== i))}
-              aria-label={`Remover ação ${i + 1}`}
-              style={{ marginTop: 7 }}
-            >
-              <Trash2 size={13} color="var(--danger)" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2" style={{ paddingLeft: 20 }}>
-            <Campo rotulo="Responsável">
-              <select
-                className="w-full border rounded-lg px-2.5 py-1.5"
-                style={{ borderColor: 'var(--border)', background: 'var(--surface-0)', color: 'var(--ink-1)', fontSize: '0.78rem' }}
-                value={acao.responsavel}
-                onChange={e => alterar(i, 'responsavel', e.target.value)}
-              >
-                <option value="">Não informado</option>
-                {pessoas.map(p => <option key={p.login} value={p.name}>{p.name}</option>)}
-              </select>
-            </Campo>
-            <Campo rotulo="Prazo">
-              <Data valor={acao.prazo} aoMudar={v => alterar(i, 'prazo', v)} />
-            </Campo>
-            <Campo rotulo="Status">
-              <Selecao valor={acao.status} opcoes={STATUS_ACAO} aoMudar={v => alterar(i, 'status', v)} />
-            </Campo>
-          </div>
-        </div>
-      ))}
-
-      <button
-        onClick={() => aoMudar([...acoes, { descricao: '', responsavel: '', prazo: null, status: 'A iniciar' }])}
-        className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px] self-start"
-        style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
-      >
-        <Plus size={13} /> Adicionar ação
-      </button>
+    <div
+      className="rounded-lg border px-3 py-2"
+      style={{ borderColor: 'var(--line-1)', background: 'var(--surface-1)', fontSize: '0.74rem', color: 'var(--ink-3)', lineHeight: 1.5 }}
+    >
+      Tarefas que saírem deste parecer são registradas como <strong>Encaminhamentos</strong>
+      {organizacao ? <> na ficha de <strong>{organizacao.nome}</strong>, em Organizações</> : ' na ficha da organização, em Organizações'}.
     </div>
   );
 }
@@ -140,12 +76,6 @@ function paraInput(projetoId: number, parecer?: ParecerTecnico): ParecerInput {
     limitacoesOrcamentarias: parecer?.limitacoesOrcamentarias ?? '',
     recomendacao: parecer?.recomendacao ?? '',
     logComunicacaoId: parecer?.logComunicacaoId ?? null,
-    // Mantém os ids das ações existentes: é o que faz editar uma linha não
-    // mexer nas outras e remover uma retirar só ela (RN-029).
-    acoes: (parecer?.acoes ?? []).map((a: AcaoParecer) => ({
-      id: a.id, descricao: a.descricao, responsavel: a.responsavel,
-      prazo: a.prazo, status: a.status,
-    })),
   };
 }
 
@@ -171,10 +101,6 @@ function FormularioParecer({
     if (!form.data) problemas.push('Informe a data da visita ou reunião.');
     if (!form.autor.trim()) problemas.push('Informe o responsável pelo registro.');
     if (!form.pontosObservados.trim()) problemas.push('Informe os pontos observados.');
-    const preenchidas = form.acoes.filter(a => a.descricao.trim() || a.responsavel.trim() || a.prazo);
-    if (preenchidas.some(a => !a.descricao.trim())) {
-      problemas.push('Há ação com responsável ou prazo e sem descrição. Informe a descrição ou remova a linha.');
-    }
     if (problemas.length) { setErros(problemas); return; }
 
     setSalvando(true);
@@ -237,7 +163,7 @@ function FormularioParecer({
         <AreaTexto valor={form.recomendacao} aoMudar={v => alterar('recomendacao', v)} linhas={3} />
       </Campo>
 
-      <Campo rotulo="Registro de contato relacionado" dica="Opcional — vincula a um registro da aba Contato.">
+      <Campo rotulo="Registro de contato relacionado" dica="Opcional — vincula a um registro de contato da organização.">
         <select
           className="w-full border rounded-lg px-2.5 py-1.5"
           style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem' }}
@@ -247,18 +173,13 @@ function FormularioParecer({
           <option value="">Nenhum</option>
           {contatos.map(c => (
             <option key={c.id} value={c.id}>
-              {formatDateOnly(c.data)} · {c.meio} · {c.representante || c.instituicao}
+              {rotuloRegistro(c)}
             </option>
           ))}
         </select>
       </Campo>
 
-      <fieldset className="border rounded-lg p-3" style={{ borderColor: 'var(--line-1)' }}>
-        <legend style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', padding: '0 6px' }}>
-          Ações derivadas
-        </legend>
-        <EditorAcoes acoes={form.acoes} aoMudar={a => alterar('acoes', a)} />
-      </fieldset>
+      <AvisoEncaminhamentos organizacao={projeto.organizacao} />
 
       <Acoes
         aoCancelar={aoFechar}
@@ -399,12 +320,6 @@ export function PainelParecer({ project, aoFechar }: { project: Project; aoFecha
                                 <DollarSign size={10} /> orçamento
                               </span>
                             )}
-                            {parecer.acoes.length > 0 && (
-                              <span style={{ fontSize: '0.68rem', color: 'var(--ink-4)' }}>
-                                {/* "ação" e "ações" mudam a raiz: concatenar sufixo produz "açãoões". */}
-                                {parecer.acoes.length === 1 ? '1 ação' : `${parecer.acoes.length} ações`}
-                              </span>
-                            )}
                           </div>
                           <div className="truncate mt-1" style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>
                             {parecer.pontosObservados}
@@ -447,41 +362,18 @@ export function PainelParecer({ project, aoFechar }: { project: Project; aoFecha
                   {atual.recomendacao.trim() || <SemRegistro />}
                 </Bloco>
 
-                <Bloco rotulo={`Ações derivadas (${atual.acoes.length})`}>
-                  {atual.acoes.length === 0 ? (
-                    <span style={{ color: 'var(--ink-5)' }}>Nenhuma ação derivada.</span>
-                  ) : (
-                    <ol className="flex flex-col gap-2 mt-1" style={{ listStyle: 'none' }}>
-                      {atual.acoes.map((a, i) => (
-                        <li key={a.id} className="flex items-start gap-2">
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 1 }}>
-                            {i + 1}
-                          </span>
-                          <div className="min-w-0">
-                            <div style={{ fontSize: '0.79rem', color: 'var(--ink-2)' }}>{a.descricao}</div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--ink-4)' }}>
-                              {a.responsavel || 'responsável não informado'}
-                              {' · '}
-                              {a.prazo ? formatDateOnly(a.prazo) : 'prazo não informado'}
-                              {' · '}
-                              {a.status}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </Bloco>
-
                 {contatoVinculado(atual) && (
                   <Bloco rotulo="Registro de contato relacionado">
                     <span className="inline-flex items-center gap-1.5">
                       <Link2 size={12} color="var(--ink-4)" />
-                      {formatDateOnly(contatoVinculado(atual)!.data)} · {contatoVinculado(atual)!.meio} ·{' '}
-                      {contatoVinculado(atual)!.representante || contatoVinculado(atual)!.instituicao}
+                      {rotuloRegistro(contatoVinculado(atual)!)}
                     </span>
                   </Bloco>
                 )}
+
+                <div style={{ marginTop: 12 }}>
+                  <AvisoEncaminhamentos organizacao={p.organizacao} />
+                </div>
 
                 <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', marginTop: 12, lineHeight: 1.5 }}>
                   Este parecer registra análise e encaminhamento. Nada nele altera aprovações, valores do
@@ -497,8 +389,8 @@ export function PainelParecer({ project, aoFechar }: { project: Project; aoFecha
         <ConfirmarExclusao
           titulo="Excluir parecer técnico"
           descricao={
-            `O parecer de ${formatDateOnly(excluindo.data)} e suas ${excluindo.acoes.length} ` +
-            `ação(ões) derivadas serão removidos. Orçamento, riscos e percentuais do projeto não são afetados.`
+            `O parecer de ${formatDateOnly(excluindo.data)} será removido. ` +
+            'Orçamento, riscos, percentuais do projeto e encaminhamentos da organização não são afetados.'
           }
           aoCancelar={() => setExcluindo(null)}
           aoConfirmar={async () => {
