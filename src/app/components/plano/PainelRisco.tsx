@@ -44,6 +44,7 @@ export function PainelRisco({
       caminho={caminho}
       aoFechar={aoFechar}
       acoes={acoes}
+      largo
     >
       {editando && etapa ? (
         <FormularioRisco projetoId={projetoId} etapa={etapa} risco={risco} aoFechar={() => setEditando(false)} />

@@ -22,10 +22,10 @@ import { useAudit } from '../audit/auditStore';
 import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
+import { BotaoNotasEChecklist } from './organizacoes/NotasEChecklist';
 import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
-import { TabRiscos } from './project-tabs/TabRiscos';
 import { TabMudancas } from './project-tabs/TabMudancas';
 
 /**
@@ -58,7 +58,11 @@ interface ProjectViewProps {
 
 export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
-  const [panel, setPanel] = useState<'riscos' | 'mudancas' | null>(null);
+  const [panel, setPanel] = useState<'mudancas' | null>(null);
+  // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
+  // no lugar da gaveta antiga. Um contador, e não um booleano, para que clicar
+  // de novo funcione mesmo se a pessoa já tiver trocado de visão depois.
+  const [pedidoRiscos, setPedidoRiscos] = useState(0);
   const [parecerAberto, setParecerAberto] = useState(false);
   const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; value: string } | null>(null);
   const { getProject, updateProject } = useStore();
@@ -87,7 +91,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const renderTab = () => {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
-      case 'plano':     return <TabPlanoTrabalho project={project} />;
+      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
       default:          return null;
     }
@@ -103,6 +107,8 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
     // RF-033: acesso discreto ao parecer, no cabeçalho, presente em todas as
     // seções — e não uma aba a mais.
     <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
+      {/* Notas e encaminhamentos da organização executora (Anotações, opção 1). */}
+      <BotaoNotasEChecklist organizacaoId={(project as ProjectExt).organizacao?.id ?? null} />
       <button
         onClick={() => setParecerAberto(true)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
@@ -111,7 +117,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
       </button>
       <button
-        onClick={() => setPanel('riscos')}
+        onClick={() => { setActiveTab('plano'); setPedidoRiscos(n => n + 1); }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
         style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
       >
@@ -266,12 +272,12 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
           <div onClick={e => e.stopPropagation()} className="bg-card h-full w-full max-w-4xl flex flex-col">
             <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
               <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem' }}>
-                {panel === 'riscos' ? 'Registro de Riscos' : 'Registro de Mudanças'}
+                Registro de Mudanças
               </span>
               <button onClick={() => setPanel(null)} aria-label="Fechar painel"><X size={16} /></button>
             </div>
             <div className="flex-1 overflow-hidden">
-              {panel === 'riscos' ? <TabRiscos project={project} /> : <TabMudancas project={project} />}
+              <TabMudancas project={project} />
             </div>
           </div>
         </div>

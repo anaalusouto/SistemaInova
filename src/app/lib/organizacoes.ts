@@ -129,7 +129,23 @@ export interface OrganizacaoFicha extends OrganizacaoResumo {
   /** Mais recente primeiro. */
   registros: RegistroContato[];
   encaminhamentos: Encaminhamento[];
+  /** Null enquanto ninguém escreveu nada. */
+  nota: NotaOrganizacao | null;
 }
+
+/**
+ * Bloco de notas compartilhado da organização. `versao` é a que a pessoa
+ * abriu: salvar exige a mesma versão, para que duas pessoas editando ao mesmo
+ * tempo não apaguem uma o texto da outra sem perceber.
+ */
+export interface NotaOrganizacao {
+  conteudo: string;
+  versao: number;
+  atualizadoPor: string | null;
+  atualizadoEm: string;
+}
+
+export const LIMITE_NOTA = 20000;
 
 /**
  * Rótulo de um registro de contato quando ele aparece como origem.

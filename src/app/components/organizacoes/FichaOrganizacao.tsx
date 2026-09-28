@@ -7,6 +7,7 @@ import { ArrowLeft, Building2, FileText, Loader2, MessageSquare, ListChecks } fr
 import { useFichaOrganizacao } from './useOrganizacoes';
 import { AbaRegistrosContato } from './AbaRegistrosContato';
 import { AbaEncaminhamentos } from './AbaEncaminhamentos';
+import { BotaoNotasEChecklist } from './NotasEChecklist';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha } from '../../lib/organizacoes';
 
 type Aba = 'dados' | 'contatos' | 'encaminhamentos';
@@ -43,17 +44,22 @@ export function FichaOrganizacao({ organizacaoId, aoVoltar }: { organizacaoId: s
     <div className="flex flex-col h-full">
       <div className="px-4 sm:px-7 pt-5 flex flex-col gap-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border)' }}>
         <Voltar aoVoltar={aoVoltar} />
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
-            <Building2 size={18} color="var(--brand)" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
+              <Building2 size={18} color="var(--brand)" />
+            </div>
+            <div className="min-w-0">
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.2rem', color: 'var(--ink-1)' }}>
+                {org.nome}
+              </h1>
+              <p style={{ color: 'var(--ink-4)', fontSize: '0.8rem', marginTop: 2 }}>
+                {[org.categoria ?? 'Categoria não informada', org.tipo ?? 'Tipo não informado'].join(' · ')}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.2rem', color: 'var(--ink-1)' }}>
-              {org.nome}
-            </h1>
-            <p style={{ color: 'var(--ink-4)', fontSize: '0.8rem', marginTop: 2 }}>
-              {[org.categoria ?? 'Categoria não informada', org.tipo ?? 'Tipo não informado'].join(' · ')}
-            </p>
+          <div className="flex-shrink-0 self-start sm:self-auto">
+            <BotaoNotasEChecklist organizacaoId={org.id} aoVerTodos={() => setAba('encaminhamentos')} />
           </div>
         </div>
         <div className="flex gap-1 overflow-x-auto -mb-px" role="tablist">

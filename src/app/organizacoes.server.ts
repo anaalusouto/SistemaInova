@@ -13,6 +13,7 @@ import {
   validarRegistro, validarEncaminhamento, juntarErros,
   type OrganizacaoResumo, type OrganizacaoFicha, type RegistroContato, type Encaminhamento,
   type RegistroContatoInput, type EncaminhamentoInput, type PessoaReferencia,
+  LIMITE_NOTA,
 } from './lib/organizacoes';
 
 async function getAdmin() {
@@ -119,14 +120,15 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     await exigirSessao();
     const supabaseAdmin = await getAdmin();
 
-    const [org, pessoas, projetos, registros, encaminhamentos] = await Promise.all([
+    const [org, pessoas, projetos, registros, encaminhamentos, nota] = await Promise.all([
       supabaseAdmin.from('comunidades').select('*').eq('id', id).maybeSingle(),
       supabaseAdmin.from('comunidade_pessoas').select('*').eq('comunidade_id', id).order('nome'),
       supabaseAdmin.from('projetos').select('id, code, nome').eq('comunidade_id', id).order('code'),
       supabaseAdmin.from('logs_comunicacao').select('*, projeto_anexos(*)').eq('comunidade_id', id),
       supabaseAdmin.from('encaminhamentos').select('*').eq('comunidade_id', id),
+      supabaseAdmin.from('organizacao_notas').select('*').eq('comunidade_id', id).maybeSingle(),
     ]);
-    for (const r of [org, pessoas, projetos, registros, encaminhamentos]) {
+    for (const r of [org, pessoas, projetos, registros, encaminhamentos, nota]) {
       if (r.error) throw new Error(r.error.message);
     }
     if (!org.data) throw new Error('Organização não encontrada.');
@@ -146,6 +148,9 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
       projetos: (projetos.data ?? []).map((p: any) => ({ id: p.id, codigo: p.code, nome: p.nome })),
       registros: ordenarRegistros((registros.data ?? []).map(mapRegistro)),
       encaminhamentos: ordenarEncaminhamentos(encs),
+      nota: nota.data
+        ? { conteudo: nota.data.conteudo, versao: nota.data.versao, atualizadoPor: nota.data.atualizado_por ?? null, atualizadoEm: nota.data.atualizado_em }
+        : null,
     };
   });
 
@@ -288,4 +293,53 @@ export const excluirEncaminhamento = createServerFn({ method: 'POST' })
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('encaminhamentos').delete().eq('id', encaminhamentoId);
     if (error) throw new Error(error.message);
+  });
+
+// ---------------------------------------------------------------------------
+// Notas da organização (Anotações, opção 1)
+// ---------------------------------------------------------------------------
+
+export class NotaDesatualizada extends Error {
+  constructor() {
+    super('Outra pessoa salvou esta nota depois que você a abriu. Copie o seu texto, recarregue a nota e salve de novo.');
+    this.name = 'NotaDesatualizada';
+  }
+}
+
+/**
+ * Grava a nota se ninguém salvou desde que a pessoa a abriu.
+ *
+ * `versaoAberta` é 0 quando a nota ainda não existia. A troca só acontece
+ * se a versão no banco ainda for a que a pessoa viu; senão, recusa. Última
+ * gravação vence em silêncio seria o pior resultado possível num texto
+ * compartilhado: alguém perde o que escreveu sem saber.
+ */
+export const salvarNotaOrganizacao = createServerFn({ method: 'POST' })
+  .validator((d: { organizacaoId: string; conteudo: string; versaoAberta: number }) => d)
+  .handler(async ({ data: { organizacaoId, conteudo, versaoAberta } }): Promise<number> => {
+    const sessao = await exigirEscrita();
+    if (conteudo.length > LIMITE_NOTA) {
+      throw new Error(`A nota passou de ${LIMITE_NOTA.toLocaleString('pt-BR')} caracteres.`);
+    }
+    const supabaseAdmin = await getAdmin();
+
+    if (versaoAberta === 0) {
+      const { error } = await supabaseAdmin.from('organizacao_notas').insert({
+        comunidade_id: organizacaoId, conteudo, versao: 1, atualizado_por: sessao.displayName,
+      });
+      // Chave duplicada: alguém criou a nota enquanto esta pessoa escrevia.
+      if (error?.code === '23505') throw new NotaDesatualizada();
+      if (error) throw new Error(error.message);
+      return 1;
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('organizacao_notas')
+      .update({ conteudo, versao: versaoAberta + 1, atualizado_por: sessao.displayName })
+      .eq('comunidade_id', organizacaoId)
+      .eq('versao', versaoAberta)
+      .select('versao');
+    if (error) throw new Error(error.message);
+    if (!data?.length) throw new NotaDesatualizada();
+    return versaoAberta + 1;
   });

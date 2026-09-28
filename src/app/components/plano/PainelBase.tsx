@@ -11,10 +11,12 @@ import { formatDateOnly } from '../../lib/dateOnly';
 import { NAO_INFORMADO } from '../../lib/planoTrabalho';
 
 export function Painel({
-  titulo, caminho, aoFechar, acoes, children,
+  titulo, caminho, aoFechar, acoes, children, largo,
 }: {
   titulo: string; caminho: string; aoFechar: () => void;
   acoes?: ReactNode; children: ReactNode;
+  /** Painel de leitura de texto longo, como o do risco (RF02). */
+  largo?: boolean;
 }) {
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => { if (e.key === 'Escape') aoFechar(); };
@@ -26,7 +28,7 @@ export function Painel({
     <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,23,42,.5)' }} onClick={aoFechar}>
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-card h-full w-full max-w-xl flex flex-col"
+        className={`bg-card h-full w-full ${largo ? 'max-w-3xl' : 'max-w-xl'} flex flex-col`}
         role="dialog"
         aria-label={titulo}
       >
@@ -58,7 +60,8 @@ export function Linha({ rotulo, children }: { rotulo: string; children: ReactNod
       <div style={{ fontSize: '0.66rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         {rotulo}
       </div>
-      <div style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 2, lineHeight: 1.5 }}>{children}</div>
+      {/* Texto longo quebra linha e respeita parágrafos (RF02): nada é cortado. */}
+      <div style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 2, lineHeight: 1.5, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>{children}</div>
     </div>
   );
 }

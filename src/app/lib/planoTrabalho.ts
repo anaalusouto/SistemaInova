@@ -274,12 +274,31 @@ export function filtrarRiscos(
         const alvo = [
           r.title ?? '', r.description ?? '', r.category ?? '',
           r.responsible ?? '', nomeDaEtapa(r.stageId),
+          r.specification ?? '', r.responseStrategy ?? '',
         ].map(normalizar).join(' ');
         if (!alvo.includes(termo)) return false;
       }
       return true;
     })
     .sort((a, b) => (Number(b.severity) || 0) - (Number(a.severity) || 0));
+}
+
+/**
+ * Como mostrar o risco sem repetir texto (RF01, RF02).
+ *
+ * O título dos riscos migrados é o início da descrição (migration 0014).
+ * Exibir os dois lado a lado repetiria a mesma frase; nesse caso vale só a
+ * descrição inteira. Quando o título é outro texto — registro criado pelo
+ * formulário —, aparecem os dois: título como cabeça, descrição como detalhe.
+ */
+export function textoDoRisco(r: Pick<Risk, 'title' | 'description'>): { titulo: string; detalhe: string | null } {
+  const titulo = (r.title ?? '').trim();
+  const descricao = (r.description ?? '').trim();
+  if (!titulo) return { titulo: descricao, detalhe: null };
+  if (!descricao || descricao === titulo) return { titulo, detalhe: null };
+  const semReticencias = titulo.replace(/…$/, '').trim();
+  if (descricao.startsWith(semReticencias)) return { titulo: descricao, detalhe: null };
+  return { titulo, detalhe: descricao };
 }
 
 // ---------------------------------------------------------------------------

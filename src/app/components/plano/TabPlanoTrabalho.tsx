@@ -14,7 +14,7 @@
  * RC-05: a aba não tem rolagem própria. Busca, seletor de visão e a visão
  * rolam junto com a página do projeto, e só o topo do cabeçalho fica fixo.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -27,19 +27,21 @@ import {
 import { BarraFiltros } from './BarraFiltros';
 import { VisaoTabela } from './VisaoTabela';
 import { VisaoGantt } from './VisaoGantt';
-import { RegistroDeRiscos } from './RegistroDeRiscos';
+import { VisaoRiscos } from './VisaoRiscos';
 import { abrirAnexo } from './CampoAnexo';
 import { VisaoKanban, type AgrupamentoKanban } from './VisaoKanban';
 import { PainelEtapa } from './PainelEtapa';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
 
-type Visao = 'tabela' | 'gantt' | 'kanban';
+type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos';
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: 'tabela', rotulo: 'Tabela', icone: Table2, disponivel: true },
   { id: 'gantt',  rotulo: 'Gantt',  icone: GanttChartSquare, disponivel: true },
   { id: 'kanban', rotulo: 'Kanban', icone: Columns3, disponivel: true },
+  // RF01: a visão consolidada de riscos, no lugar do modal "Registro de riscos".
+  { id: 'riscos', rotulo: 'Riscos', icone: ShieldAlert, disponivel: true },
 ];
 
 /** Qual painel está aberto. Um de cada vez — abrir dois empilhados confunde a origem. */
@@ -49,7 +51,11 @@ type PainelAberto =
   | { tipo: 'risco'; riscoId: string }
   | null;
 
-export function TabPlanoTrabalho({ project }: { project: Project }) {
+export function TabPlanoTrabalho({ project, pedidoRiscos = 0 }: {
+  project: Project;
+  /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
+  pedidoRiscos?: number;
+}) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
   const [visao, setVisao] = useState<Visao>('tabela');
@@ -60,8 +66,15 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
   const [escala, setEscala] = useState<EscalaGantt>('mes');
-  const [registroAberto, setRegistroAberto] = useState(false);
   const [agrupamento, setAgrupamento] = useState<AgrupamentoKanban>('status');
+
+  // O botão Riscos do cabeçalho abre esta visão e rola até ela.
+  const seletorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (pedidoRiscos === 0) return;
+    setVisao('riscos');
+    seletorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [pedidoRiscos]);
 
   const metas = p.goals;
   const riscos = p.risks;
@@ -155,8 +168,9 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
 
   return (
     <div className="flex flex-col">
-      {/* Busca e filtros (RF-012) */}
-      <div className="px-6 pt-4">
+      {/* Busca e filtros (RF-012). Filtram atividades; a visão Riscos tem a
+          própria busca, sobre os riscos. */}
+      <div className="px-6 pt-4" hidden={visao === 'riscos'}>
         <BarraFiltros
           metas={metas}
           criterios={criterios}
@@ -168,7 +182,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
 
       {/* RC-06: um único botão, logo abaixo da busca e antes da visão. Só nas
           visões em árvore — o Kanban não recolhe nada. */}
-      {visao !== 'kanban' && recolhiveis.length > 0 && (
+      {(visao === 'tabela' || visao === 'gantt') && recolhiveis.length > 0 && (
         <div className="px-6 pt-2">
           <button
             onClick={alternarTudo}
@@ -183,9 +197,9 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
       )}
 
       {/* Seletor de visão (RF-011) */}
-      <div className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap">
+      <div ref={seletorRef} className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
         <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {VISOES.map(v => {
+          {VISOES.map((v, i) => {
             const Icone = v.icone;
             const ativa = visao === v.id;
             return (
@@ -200,7 +214,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
                   color: !v.disponivel ? 'var(--ink-5)' : ativa ? 'var(--brand)' : 'var(--ink-3)',
                   fontWeight: ativa ? 600 : 400,
                   cursor: v.disponivel ? 'pointer' : 'not-allowed',
-                  borderRight: v.id !== 'kanban' ? '1px solid var(--border)' : undefined,
+                  borderRight: i < VISOES.length - 1 ? '1px solid var(--border)' : undefined,
                 }}
               >
                 <Icone size={13} /> {v.rotulo}
@@ -250,20 +264,6 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
             ))}
           </div>
         )}
-
-        {/* RF-035: acesso compacto ao registro consolidado — um botão, não um
-            cartão grande no resumo. */}
-        <button
-          onClick={() => setRegistroAberto(true)}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px]"
-          style={{
-            borderColor: 'var(--danger-soft-border)',
-            color: 'var(--danger)',
-            background: 'var(--danger-soft)',
-          }}
-        >
-          <ShieldAlert size={13} /> Registro de riscos ({riscos.length})
-        </button>
 
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
@@ -315,18 +315,19 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               aoMoverResponsavel={moverResponsavel}
             />
           )}
+
+          {visao === 'riscos' && (
+            <VisaoRiscos
+              riscos={riscos}
+              metas={metas}
+              codigos={codigos}
+              atividades={todasAtividades}
+              aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
+              aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
+            />
+          )}
         </div>
       </div>
-
-      {registroAberto && (
-        <RegistroDeRiscos
-          riscos={riscos}
-          metas={metas}
-          codigos={codigos}
-          aoFechar={() => setRegistroAberto(false)}
-          aoAbrirRisco={r => { setRegistroAberto(false); setPainel({ tipo: 'risco', riscoId: r.id }); }}
-        />
-      )}
 
       {/* Painéis (RF-022, RF-023, RF-027) */}
       {painel?.tipo === 'etapa' && (() => {
