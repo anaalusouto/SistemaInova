@@ -7,16 +7,21 @@
  * distintas por visão, porque é assim que duas telas passam a discordar uma da
  * outra sobre o mesmo projeto.
  *
- * As três visões leem a mesma lista filtrada, a mesma numeração e o mesmo
- * estado de recolhimento — trocar de visão não reinicia nada.
+ * As três visões leem a mesma lista filtrada e a mesma numeração. Tabela e
+ * Gantt, que são árvores, também compartilham o recolhimento; o Kanban não
+ * tem hierarquia e mostra sempre todos os cartões que passam nos filtros.
+ *
+ * RC-05: a aba não tem rolagem própria. Busca, seletor de visão e a visão
+ * rolam junto com a página do projeto, e só o topo do cabeçalho fica fixo.
  */
 import { useMemo, useState } from 'react';
-import { Table2, GanttChartSquare, Columns3, ShieldAlert } from 'lucide-react';
+import { Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { useStore, type ProjectExt } from '../../store';
 import {
-  codigosHierarquicos, filtrarPlano,
+  codigosHierarquicos, filtrarPlano, temFiltroAtivo,
+  idsRecolhiveis, recolhidosDe, tudoExpandido,
   type CriteriosFiltro, CRITERIOS_VAZIOS, type EscalaGantt,
 } from '../../lib/planoTrabalho';
 import { BarraFiltros } from './BarraFiltros';
@@ -48,7 +53,8 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
   const [visao, setVisao] = useState<Visao>('tabela');
-  const [recolhidos, setRecolhidos] = useState<Set<string>>(new Set());
+  // RC-06: tudo começa recolhido. Guarda-se o que foi aberto — ver recolhidosDe().
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
   const [painel, setPainel] = useState<PainelAberto>(null);
   // Busca, filtros e recolhimento vivem aqui, e não dentro de cada visão:
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
@@ -71,12 +77,27 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
     [metas, riscos, criterios],
   );
 
+  const recolhiveis = useMemo(() => idsRecolhiveis(metas), [metas]);
+  const recolhidos = useMemo(() => recolhidosDe(recolhiveis, expandidos), [recolhiveis, expandidos]);
+  const expandidoPorInteiro = tudoExpandido(recolhiveis, expandidos);
+
+  // A expansão individual continua disponível (RC-07).
   const alternarRecolhido = (id: string) =>
-    setRecolhidos(atual => {
+    setExpandidos(atual => {
       const proximo = new Set(atual);
       if (proximo.has(id)) proximo.delete(id); else proximo.add(id);
       return proximo;
     });
+
+  const alternarTudo = () => setExpandidos(expandidoPorInteiro ? new Set() : new Set(recolhiveis));
+
+  // Com tudo recolhido, um resultado de busca ficaria escondido dentro de uma
+  // meta fechada e a busca pareceria não achar nada. Ao começar a filtrar,
+  // abre tudo; a pessoa pode recolher de novo se quiser.
+  const mudarCriterios = (c: CriteriosFiltro) => {
+    if (!temFiltroAtivo(criterios) && temFiltroAtivo(c)) setExpandidos(new Set(recolhiveis));
+    setCriterios(c);
+  };
 
   // Índices para resolver o que o painel precisa sem varrer a árvore toda a
   // cada render.
@@ -133,20 +154,36 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       {/* Busca e filtros (RF-012) */}
-      <div className="px-6 pt-4 flex-shrink-0">
+      <div className="px-6 pt-4">
         <BarraFiltros
           metas={metas}
           criterios={criterios}
-          aoMudar={setCriterios}
+          aoMudar={mudarCriterios}
           visiveis={atividadesVisiveis}
           total={todasAtividades.length}
         />
       </div>
 
+      {/* RC-06: um único botão, logo abaixo da busca e antes da visão. Só nas
+          visões em árvore — o Kanban não recolhe nada. */}
+      {visao !== 'kanban' && recolhiveis.length > 0 && (
+        <div className="px-6 pt-2">
+          <button
+            onClick={alternarTudo}
+            aria-pressed={expandidoPorInteiro}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px] font-medium"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-2)', background: 'var(--surface-0)' }}
+          >
+            {expandidoPorInteiro ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+            {expandidoPorInteiro ? 'Recolher tudo' : 'Expandir tudo'}
+          </button>
+        </div>
+      )}
+
       {/* Seletor de visão (RF-011) */}
-      <div className="flex items-center gap-2 px-6 pt-3 pb-3 flex-shrink-0 flex-wrap">
+      <div className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap">
         <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {VISOES.map(v => {
             const Icone = v.icone;
@@ -235,7 +272,7 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
       </div>
 
       {/* Visão */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6">
+      <div className="px-6 pb-6">
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {visao === 'tabela' && (
             <VisaoTabela
@@ -270,7 +307,6 @@ export function TabPlanoTrabalho({ project }: { project: Project }) {
               metas={metasVisiveis}
               riscos={riscos}
               agrupamento={agrupamento}
-              recolhidos={recolhidos}
               codigos={codigos}
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}

@@ -660,6 +660,43 @@ export function temFiltroAtivo(c: CriteriosFiltro): boolean {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Recolhimento da hierarquia (RC-06, RC-07)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tudo o que tem subitens para mostrar ou esconder: metas, etapas e as
+ * atividades que têm tarefas. Atividade sem tarefa não tem o que recolher.
+ */
+export function idsRecolhiveis(metas: Goal[]): string[] {
+  const ids: string[] = [];
+  for (const meta of metas) {
+    ids.push(meta.id);
+    for (const etapa of meta.deliverables) {
+      ids.push(etapa.id);
+      for (const atividade of etapa.activities) {
+        if (atividade.tasks.length > 0) ids.push(atividade.id);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * O estado guarda o que está EXPANDIDO, não o que está recolhido: assim
+ * "recolhido" é o padrão (RC-06) também para o que for criado depois de a
+ * tela abrir — uma etapa nova não aparece aberta só porque não existia no
+ * momento em que o conjunto foi montado.
+ */
+export function recolhidosDe(recolhiveis: string[], expandidos: ReadonlySet<string>): Set<string> {
+  return new Set(recolhiveis.filter(id => !expandidos.has(id)));
+}
+
+/** Rótulo do botão único (RC-06, RC-07): só diz "Recolher tudo" quando não resta nada fechado. */
+export function tudoExpandido(recolhiveis: string[], expandidos: ReadonlySet<string>): boolean {
+  return recolhiveis.length > 0 && recolhiveis.every(id => expandidos.has(id));
+}
+
 /** Normaliza para busca tolerante a acento e caixa. */
 function normalizar(v: string): string {
   return v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();

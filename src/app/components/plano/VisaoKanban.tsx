@@ -146,7 +146,6 @@ export interface VisaoKanbanProps {
   metas: Goal[];
   riscos: Risk[];
   agrupamento: AgrupamentoKanban;
-  recolhidos: Set<string>;
   codigos: Map<string, string>;
   aoAbrirEtapa: (etapa: Deliverable, meta: Goal) => void;
   aoAbrirAtividade: (atividade: Activity, etapa: Deliverable, meta: Goal) => void;
@@ -156,28 +155,27 @@ export interface VisaoKanbanProps {
 }
 
 export function VisaoKanban({
-  metas, riscos, agrupamento, recolhidos, codigos,
+  metas, riscos, agrupamento, codigos,
   aoAbrirEtapa, aoAbrirAtividade, aoAbrirAnexo, aoMoverStatus, aoMoverResponsavel,
 }: VisaoKanbanProps) {
   const { readOnly } = useAuth();
   const [sobre, setSobre] = useState<string | null>(null);
   const hoje = hojeISO();
 
-  // RF-021 / RF-011: o recolhimento vem das outras visões. Meta ou etapa
-  // recolhida some do quadro, em vez de duplicar hierarquia aqui.
+  // O quadro não tem hierarquia para recolher: mostra todo cartão que passa na
+  // busca e nos filtros. Antes ele herdava o recolhimento da Tabela, mas com
+  // tudo recolhido por padrão (RC-06) abriria vazio.
   const cartoes = useMemo(() => {
     const lista: CartaoDados[] = [];
     for (const meta of metas) {
-      if (recolhidos.has(meta.id)) continue;
       for (const etapa of meta.deliverables) {
-        if (recolhidos.has(etapa.id)) continue;
         for (const atividade of etapa.activities) {
           lista.push({ atividade, etapa, meta });
         }
       }
     }
     return lista;
-  }, [metas, recolhidos]);
+  }, [metas]);
 
   const colunas = useMemo(() => {
     if (agrupamento === 'status') {

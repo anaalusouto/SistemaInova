@@ -99,11 +99,44 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
     { kind: 'termoFomentoLink', valor: termoFomentoLink, rotulo: 'Termo de Fomento', rotuloVazio: 'Link do Termo de Fomento', cor: 'var(--info)', fundo: 'var(--info-soft)' },
   ];
 
+  const acoesDoCabecalho = (
+    // RF-033: acesso discreto ao parecer, no cabeçalho, presente em todas as
+    // seções — e não uma aba a mais.
+    <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
+      <button
+        onClick={() => setParecerAberto(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+        style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
+      >
+        <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
+      </button>
+      <button
+        onClick={() => setPanel('riscos')}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+        style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
+      >
+        <ShieldAlert size={13} /> Riscos ({project.risks.length})
+      </button>
+      <button
+        onClick={() => setPanel('mudancas')}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
+        style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand)', background: 'var(--brand-soft)' }}
+      >
+        <GitBranch size={13} /> Mudanças ({project.changes.length})
+      </button>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Cabeçalho do projeto */}
+      {/*
+        RC-05: só o topo fica fixo — caminho, título e a linha código ·
+        financiador. Links, resumo, abas, busca, seletor de visão e o conteúdo
+        rolam juntos, numa rolagem só. O fixo é um irmão do scroll, não um
+        sticky sobreposto: por construção nada passa por baixo dele.
+      */}
       <div
-        className="flex-shrink-0 border-b px-6 pt-5 pb-0"
+        className="flex-shrink-0 border-b px-6 pt-5 pb-3 relative z-10"
         style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}
       >
         {/* Caminho */}
@@ -150,96 +183,79 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
               <span style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>{project.financier}</span>
             </div>
 
-            {/* Links do Drive */}
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {linkChips.map(chip => (
-                <span key={chip.kind} className="inline-flex items-center gap-1">
-                  {chip.valor && (
-                    <a
-                      href={chip.valor}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                      style={{ color: chip.cor, background: chip.fundo }}
-                    >
-                      <ExternalLink size={11} /> {chip.rotulo}
-                    </a>
-                  )}
-                  <button
-                    onClick={() => setEditLink({ kind: chip.kind, value: chip.valor })}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                    style={{ borderColor: 'var(--border)', color: 'var(--ink-4)' }}
-                  >
-                    <Link2 size={11} /> {chip.valor ? 'Editar' : chip.rotuloVazio}
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* Registros — acesso aos painéis de risco e mudança. O registro
-              consolidado de riscos (RF-035) passa para dentro do Plano de
-              Trabalho numa fase seguinte. */}
-          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap lg:flex-shrink-0">
-            {/* RF-033: acesso discreto ao parecer, no cabeçalho, presente em
-                todas as quatro seções — e não uma quinta aba. */}
-            <button
-              onClick={() => setParecerAberto(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-              style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-            >
-              <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
-            </button>
-            <button
-              onClick={() => setPanel('riscos')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-              style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
-            >
-              <ShieldAlert size={13} /> Riscos ({project.risks.length})
-            </button>
-            <button
-              onClick={() => setPanel('mudancas')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-              style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand)', background: 'var(--brand-soft)' }}
-            >
-              <GitBranch size={13} /> Mudanças ({project.changes.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Resumo compacto (RF-004) */}
-        <ProjectSummaryHeader project={project} />
-
-        {/* Abas */}
-        <div className="overflow-x-auto -mb-px">
-          <div className="flex items-end gap-0 w-max">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 transition-all whitespace-nowrap"
-                  style={{
-                    borderBottomColor: isActive ? 'var(--primary)' : 'transparent',
-                    color: isActive ? 'var(--primary)' : 'var(--ink-4)',
-                    fontWeight: isActive ? 600 : 400,
-                    background: 'transparent',
-                  }}
-                >
-                  <Icon size={13} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Registros — acesso aos painéis de risco, mudança e parecer. No
+              desktop ficam ao lado do título; no celular, rolam com o conteúdo
+              para a área fixa não crescer. */}
+          <div className="hidden lg:block lg:flex-shrink-0">{acoesDoCabecalho}</div>
         </div>
       </div>
 
-      {/* Conteúdo da aba */}
-      <div className="flex-1 overflow-hidden" style={{ background: 'var(--background)' }}>
-        {renderTab()}
+      <div className="flex-1 overflow-y-auto" style={{ background: 'var(--background)' }}>
+        <div className="border-b px-6 pt-3 pb-0" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
+          <div className="lg:hidden mb-2">{acoesDoCabecalho}</div>
+
+          {/* Links do Drive */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {linkChips.map(chip => (
+              <span key={chip.kind} className="inline-flex items-center gap-1">
+                {chip.valor && (
+                  <a
+                    href={chip.valor}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
+                    style={{ color: chip.cor, background: chip.fundo }}
+                  >
+                    <ExternalLink size={11} /> {chip.rotulo}
+                  </a>
+                )}
+                <button
+                  onClick={() => setEditLink({ kind: chip.kind, value: chip.valor })}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                  style={{ borderColor: 'var(--border)', color: 'var(--ink-4)' }}
+                >
+                  <Link2 size={11} /> {chip.valor ? 'Editar' : chip.rotuloVazio}
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Resumo compacto (RF-004) */}
+          <ProjectSummaryHeader project={project} />
+
+          {/* Abas */}
+          <div className="overflow-x-auto -mb-px">
+            <div className="flex items-end gap-0 w-max">
+              {tabs.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 transition-all whitespace-nowrap"
+                    style={{
+                      borderBottomColor: isActive ? 'var(--primary)' : 'transparent',
+                      color: isActive ? 'var(--primary)' : 'var(--ink-4)',
+                      fontWeight: isActive ? 600 : 400,
+                      background: 'transparent',
+                    }}
+                  >
+                    <Icon size={13} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Conteúdo da aba */}
+        <div>
+          {renderTab()}
+        </div>
       </div>
 
       {parecerAberto && <PainelParecer project={project} aoFechar={() => setParecerAberto(false)} />}
