@@ -13,8 +13,8 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 import {
-  validarDatasDaAtividade, validarPeriodoDaEtapa, progressoParaStatus,
-  type Periodo,
+  validarDatasDaAtividade, validarPeriodoDaEtapa, validarMeta, motivoParaNaoRemoverEtapa, progressoParaStatus,
+  type MetaInput, type Periodo,
 } from './lib/planoTrabalho';
 import type { ActivityStatus, BudgetLink } from './data/mockData';
 
@@ -124,6 +124,161 @@ export const salvarPeriodoDaEtapa = createServerFn({ method: 'POST' })
       })
       .eq('id', data.etapaId);
     if (error) throw new Error(error.message);
+  });
+
+// ---------------------------------------------------------------------------
+// Meta e suas etapas (RF04.1)
+//
+// Edição direta para quem tem escrita, sem fila de aprovação (decisão da
+// equipe, 29/09/2026). Cada alteração vai para log_alteracoes_meta, o mesmo
+// histórico que o fluxo de aprovação já alimenta.
+// ---------------------------------------------------------------------------
+
+type Sessao = Awaited<ReturnType<typeof exigirEscrita>>;
+
+interface Registro {
+  projetoId: number;
+  entidade: 'meta' | 'etapa';
+  acao: 'criar' | 'editar' | 'excluir';
+  alvoId: string | null;
+  paiId: string | null;
+  caminho: string;
+  campo?: string;
+  de?: string | null;
+  para?: string | null;
+  payload?: Record<string, unknown>;
+}
+
+async function registrar(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, sessao: Sessao, r: Registro) {
+  const { error } = await supabaseAdmin.from('log_alteracoes_meta').insert({
+    projeto_id: r.projetoId, entidade: r.entidade, acao: r.acao, target_id: r.alvoId, parent_id: r.paiId,
+    target_path: r.caminho, campo: r.campo ?? null, de_valor: r.de ?? null, para_valor: r.para ?? null,
+    payload: r.payload ?? null, autor: sessao.displayName, autor_papel: sessao.role, aprovado_por: sessao.displayName,
+  });
+  if (error) throw new Error(error.message);
+}
+
+async function carregarMeta(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, metaId: string) {
+  const { data, error } = await supabaseAdmin
+    .from('metas')
+    .select('id, projeto_id, nome, responsavel, inicio_previsto, fim_previsto')
+    .eq('id', metaId)
+    .single();
+  if (error || !data) throw new Error('Meta não encontrada.');
+  return data;
+}
+
+export interface SalvarMetaInput extends MetaInput {
+  metaId: string;
+}
+
+export const salvarMeta = createServerFn({ method: 'POST' })
+  .validator((d: SalvarMetaInput) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const validacao = validarMeta(data);
+    if (!validacao.ok) throw new DadosInvalidos(validacao.erros);
+    const supabaseAdmin = await getAdmin();
+    const antes = await carregarMeta(supabaseAdmin, data.metaId);
+
+    const depois = {
+      nome: data.nome.trim(),
+      responsavel: vazioParaNulo(data.responsavel),
+      inicio_previsto: data.inicioPrevisto || null,
+      fim_previsto: data.fimPrevisto || null,
+    };
+    const { error } = await supabaseAdmin.from('metas').update(depois).eq('id', data.metaId);
+    if (error) throw new Error(error.message);
+
+    // Uma linha de histórico por campo alterado, como no fluxo de aprovação.
+    const rotulos: Record<keyof typeof depois, string> = {
+      nome: 'nome', responsavel: 'responsável', inicio_previsto: 'início previsto', fim_previsto: 'fim previsto',
+    };
+    for (const k of Object.keys(depois) as (keyof typeof depois)[]) {
+      if ((antes[k] ?? null) === depois[k]) continue;
+      await registrar(supabaseAdmin, sessao, {
+        projetoId: antes.projeto_id, entidade: 'meta', acao: 'editar', alvoId: antes.id, paiId: null,
+        caminho: `Meta ${depois.nome}`, campo: rotulos[k], de: antes[k] ?? null, para: depois[k],
+      });
+    }
+  });
+
+export const criarEtapaDaMeta = createServerFn({ method: 'POST' })
+  .validator((d: { metaId: string; nome: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const nome = data.nome.trim();
+    if (!nome) throw new DadosInvalidos(['Informe o nome da etapa.']);
+    const supabaseAdmin = await getAdmin();
+    const meta = await carregarMeta(supabaseAdmin, data.metaId);
+
+    const { data: irmas } = await supabaseAdmin.from('etapas').select('ordem').eq('meta_id', meta.id);
+    const ordens = (irmas ?? []).map(r => Number(r.ordem) || 0);
+    const { data: nova, error } = await supabaseAdmin
+      .from('etapas')
+      .insert({ meta_id: meta.id, nome, ordem: ordens.length ? Math.max(...ordens) + 1 : 1 })
+      .select('id')
+      .single();
+    if (error) throw new Error(error.message);
+
+    await registrar(supabaseAdmin, sessao, {
+      projetoId: meta.projeto_id, entidade: 'etapa', acao: 'criar', alvoId: nova.id, paiId: meta.id,
+      caminho: `Meta ${meta.nome} › ${nome}`, para: nome,
+    });
+  });
+
+export const renomearEtapa = createServerFn({ method: 'POST' })
+  .validator((d: { etapaId: string; nome: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const nome = data.nome.trim();
+    if (!nome) throw new DadosInvalidos(['Informe o nome da etapa.']);
+    const supabaseAdmin = await getAdmin();
+    const { data: etapa, error: e1 } = await supabaseAdmin
+      .from('etapas').select('id, nome, meta_id').eq('id', data.etapaId).single();
+    if (e1 || !etapa) throw new Error('Etapa não encontrada.');
+    if (etapa.nome === nome) return;
+    const meta = await carregarMeta(supabaseAdmin, etapa.meta_id);
+
+    const { error } = await supabaseAdmin.from('etapas').update({ nome }).eq('id', etapa.id);
+    if (error) throw new Error(error.message);
+    await registrar(supabaseAdmin, sessao, {
+      projetoId: meta.projeto_id, entidade: 'etapa', acao: 'editar', alvoId: etapa.id, paiId: meta.id,
+      caminho: `Meta ${meta.nome} › ${nome}`, campo: 'nome', de: etapa.nome, para: nome,
+    });
+  });
+
+/**
+ * Remove uma etapa. Só etapa sem atividade ativa e sem risco: apagar uma etapa
+ * com conteúdo levaria junto atividades e anexos (ON DELETE CASCADE), e o
+ * banco já recusa etapa com risco (ON DELETE RESTRICT). A mensagem diz o que
+ * mover ou excluir antes.
+ */
+export const excluirEtapa = createServerFn({ method: 'POST' })
+  .validator((d: { etapaId: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const supabaseAdmin = await getAdmin();
+    const { data: etapa, error: e1 } = await supabaseAdmin
+      .from('etapas').select('id, nome, meta_id').eq('id', data.etapaId).single();
+    if (e1 || !etapa) throw new Error('Etapa não encontrada.');
+
+    const [ativs, riscos] = await Promise.all([
+      supabaseAdmin.from('atividades').select('id', { count: 'exact', head: true }).eq('etapa_id', etapa.id).is('excluido_em', null),
+      supabaseAdmin.from('plano_riscos').select('id', { count: 'exact', head: true }).eq('etapa_id', etapa.id),
+    ]);
+    if (ativs.error) throw new Error(ativs.error.message);
+    if (riscos.error) throw new Error(riscos.error.message);
+    const motivo = motivoParaNaoRemoverEtapa(etapa.nome, ativs.count ?? 0, riscos.count ?? 0);
+    if (motivo) throw new DadosInvalidos([motivo]);
+
+    const meta = await carregarMeta(supabaseAdmin, etapa.meta_id);
+    const { error } = await supabaseAdmin.from('etapas').delete().eq('id', etapa.id);
+    if (error) throw new Error(error.message);
+    await registrar(supabaseAdmin, sessao, {
+      projetoId: meta.projeto_id, entidade: 'etapa', acao: 'excluir', alvoId: etapa.id, paiId: meta.id,
+      caminho: `Meta ${meta.nome} › ${etapa.nome}`, de: etapa.nome,
+    });
   });
 
 // ---------------------------------------------------------------------------

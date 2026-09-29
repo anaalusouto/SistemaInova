@@ -93,6 +93,11 @@ export interface Goal {
    *  renomeado junto com ele quando as abas antigas saírem. */
   deliverables: Deliverable[];
   order: number;
+  /** Prazo previsto próprio da meta (RF04.1, migration 0015). Nulo quando
+   *  ninguém definiu — aí vale o período calculado das etapas. */
+  plannedStart?: string | null;
+  plannedEnd?: string | null;
+  responsible?: string | null;
 }
 
 export type BudgetCategory =

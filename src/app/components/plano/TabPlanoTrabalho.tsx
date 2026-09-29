@@ -31,6 +31,7 @@ import { VisaoRiscos } from './VisaoRiscos';
 import { abrirAnexo } from './CampoAnexo';
 import { VisaoKanban, type AgrupamentoKanban } from './VisaoKanban';
 import { PainelEtapa } from './PainelEtapa';
+import { PainelMeta } from './PainelMeta';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
 
@@ -46,6 +47,7 @@ const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boo
 
 /** Qual painel está aberto. Um de cada vez — abrir dois empilhados confunde a origem. */
 type PainelAberto =
+  | { tipo: 'meta'; metaId: string }
   | { tipo: 'etapa'; etapaId: string }
   | { tipo: 'atividade'; atividadeId: string }
   | { tipo: 'risco'; riscoId: string }
@@ -281,6 +283,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0 }: {
               recolhidos={recolhidos}
               alternarRecolhido={alternarRecolhido}
               codigos={codigos}
+              aoAbrirMeta={meta => setPainel({ tipo: 'meta', metaId: meta.id })}
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
@@ -329,7 +332,22 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0 }: {
         </div>
       </div>
 
-      {/* Painéis (RF-022, RF-023, RF-027) */}
+      {/* Painéis (RF-022, RF-023, RF-027, RF04.1) */}
+      {painel?.tipo === 'meta' && (() => {
+        const meta = metas.find(m => m.id === painel.metaId);
+        if (!meta) return null;
+        return (
+          <PainelMeta
+            meta={meta}
+            riscos={riscos}
+            codigo={codigos.get(meta.id) ?? ''}
+            codigos={codigos}
+            aoFechar={fechar}
+            aoAbrirEtapa={e => setPainel({ tipo: 'etapa', etapaId: e.id })}
+          />
+        );
+      })()}
+
       {painel?.tipo === 'etapa' && (() => {
         const alvo = indice.etapas.get(painel.etapaId);
         if (!alvo) return null;

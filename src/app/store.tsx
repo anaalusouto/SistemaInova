@@ -23,7 +23,8 @@ import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco,
   criarParecer, atualizarParecer, excluirParecer, definirResponsavel,
-  type PeriodoEtapaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
+  salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa,
+  type PeriodoEtapaInput, type SalvarMetaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
 import {
@@ -152,6 +153,11 @@ type Ctx = {
   // Recebem o input já montado porque as regras de data moram no servidor: a
   // store só encaminha e revalida a lista.
   savePeriodoEtapa: (input: PeriodoEtapaInput) => Promise<void>;
+  // Editar meta (RF04.1): direto, com histórico em log_alteracoes_meta.
+  saveMeta: (input: SalvarMetaInput) => Promise<void>;
+  createEtapa: (metaId: string, nome: string) => Promise<void>;
+  renameEtapa: (etapaId: string, nome: string) => Promise<void>;
+  deleteEtapa: (etapaId: string) => Promise<void>;
   createAtividade: (input: AtividadeInput) => Promise<string>;
   updateAtividade: (atividadeId: string, input: AtividadeInput) => Promise<void>;
   deleteAtividade: (atividadeId: string) => Promise<void>;
@@ -361,6 +367,10 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     deleteContact: (_projectId, id) => run(() => deleteContato({ data: { contatoId: id } })),
 
     savePeriodoEtapa: input => run(() => salvarPeriodoDaEtapa({ data: input })),
+    saveMeta: input => run(() => salvarMeta({ data: input })),
+    createEtapa: (metaId, nome) => run(() => criarEtapaDaMeta({ data: { metaId, nome } })),
+    renameEtapa: (etapaId, nome) => run(() => renomearEtapa({ data: { etapaId, nome } })),
+    deleteEtapa: etapaId => run(() => excluirEtapa({ data: { etapaId } })),
     createAtividade: input => run(() => criarAtividade({ data: input })),
     updateAtividade: (atividadeId, input) => run(() => atualizarAtividade({ data: { atividadeId, dados: input } })),
     deleteAtividade: atividadeId => run(() => excluirAtividade({ data: { atividadeId } })),

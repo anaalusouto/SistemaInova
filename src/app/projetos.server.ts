@@ -92,7 +92,10 @@ function mapEtapa(e: any): Deliverable {
   };
 }
 function mapMeta(m: any): Goal {
-  return { id: m.id, name: m.nome, order: n2(m.ordem), deliverables: (m.etapas ?? []).map(mapEtapa) };
+  return {
+    id: m.id, name: m.nome, order: n2(m.ordem), deliverables: (m.etapas ?? []).map(mapEtapa),
+    plannedStart: m.inicio_previsto ?? null, plannedEnd: m.fim_previsto ?? null, responsible: m.responsavel ?? null,
+  };
 }
 function mapRisco(r: any): Risk {
   return {
@@ -248,7 +251,7 @@ function mapProjeto(row: any): ProjectExt {
 const SELECT_PROJETO = `
   *,
   projeto_equipe(nome),
-  metas(id, nome, ordem, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
+  metas(id, nome, ordem, responsavel, inicio_previsto, fim_previsto, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
   plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
   evidencias(*), aportes(*), contatos(*), comunidades(id, nome, logs_comunicacao(*)),
   log_alteracoes_meta(*), aprovacoes_pendentes(*),

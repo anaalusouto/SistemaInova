@@ -23,7 +23,7 @@ import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert } from
 import { type Goal, type Activity, type Risk, type Deliverable } from '../../data/mockData';
 import { formatDateOnly } from '../../lib/dateOnly';
 import {
-  estaAtrasada, hojeISO, periodoDaMeta, limitesDaLinhaDoTempo, colunasDaLinhaDoTempo,
+  estaAtrasada, hojeISO, periodoDaMeta, prazoDaMeta, limitesDaLinhaDoTempo, colunasDaLinhaDoTempo,
   posicaoNaLinha, posicaoDeHoje, riscoDaEtapa,
   type EscalaGantt, type LimitesLinhaTempo, type PosicaoBarra,
 } from '../../lib/planoTrabalho';
@@ -212,6 +212,8 @@ export function VisaoGantt({
         {metas.map(meta => {
           const metaRecolhida = recolhidos.has(meta.id);
           const per = periodoDaMeta(meta.deliverables);
+          // Previsto: o prazo próprio da meta quando houver (RF04.1).
+          per.previsto = prazoDaMeta(meta);
 
           return (
             <Fragment key={meta.id}>

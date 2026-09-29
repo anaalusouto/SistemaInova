@@ -14,13 +14,18 @@
  * criar risco e editar período vivem no painel da etapa, que abre ao clicar no
  * nome dela. Linha de tabela com três botões vira ruído e faz o olho perder a
  * informação, que é o que a tabela existe para mostrar.
+ *
+ * A linha de meta é a exceção pedida no RF04.1: um único botão "Editar meta",
+ * que abre o painel da meta — é lá que ficam título, prazo, responsável e as
+ * etapas. O clique no nome continua só recolhendo/expandindo.
  */
 import { Fragment } from 'react';
-import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert, CornerDownRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert, CornerDownRight, Pencil, Eye } from 'lucide-react';
 import { type Goal, type Activity, type Risk, type Deliverable } from '../../data/mockData';
 import { formatDateOnly } from '../../lib/dateOnly';
+import { useAuth } from '../../auth/authStore';
 import {
-  estaAtrasada, riscoDaEtapa, hojeISO,
+  estaAtrasada, riscoDaEtapa, hojeISO, prazoDaMeta, divergenciaDaMeta,
   type RiscoDaLinha,
 } from '../../lib/planoTrabalho';
 
@@ -97,6 +102,7 @@ export interface VisaoTabelaProps {
   alternarRecolhido: (id: string) => void;
   /** Numeração calculada sobre a lista COMPLETA — busca e filtro não renumeram (RN-004). */
   codigos: Map<string, string>;
+  aoAbrirMeta: (meta: Goal) => void;
   aoAbrirEtapa: (etapa: Deliverable, meta: Goal) => void;
   aoAbrirAtividade: (atividade: Activity, etapa: Deliverable, meta: Goal) => void;
   aoAbrirRisco: (risco: Risk) => void;
@@ -105,9 +111,10 @@ export interface VisaoTabelaProps {
 
 export function VisaoTabela({
   metas, riscos, recolhidos, alternarRecolhido, codigos,
-  aoAbrirEtapa, aoAbrirAtividade, aoAbrirRisco, aoAbrirAnexo,
+  aoAbrirMeta, aoAbrirEtapa, aoAbrirAtividade, aoAbrirRisco, aoAbrirAnexo,
 }: VisaoTabelaProps) {
   const hoje = hojeISO();
+  const { readOnly } = useAuth();
 
   if (metas.length === 0) {
     return (
@@ -141,11 +148,14 @@ export function VisaoTabela({
         <tbody>
           {metas.map(meta => {
             const metaRecolhida = recolhidos.has(meta.id);
+            const prazo = prazoDaMeta(meta);
+            const diverge = divergenciaDaMeta(meta).length > 0;
             return (
               <Fragment key={meta.id}>
                 {/* Linha de meta */}
                 <tr style={{ background: 'var(--surface-2)' }}>
                   <td colSpan={COLUNAS.length} className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-3 flex-wrap">
                     <button
                       onClick={() => alternarRecolhido(meta.id)}
                       className="flex items-center gap-2 text-left"
@@ -162,6 +172,33 @@ export function VisaoTabela({
                         · {meta.deliverables.length} etapa{meta.deliverables.length === 1 ? '' : 's'}
                       </span>
                     </button>
+                    {(prazo.inicio || prazo.fim || meta.responsible) && (
+                      <span style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>
+                        {(prazo.inicio || prazo.fim) && (
+                          <span style={{ fontFamily: 'var(--font-mono)' }} title={prazo.proprio ? 'Prazo da meta' : 'Calculado das etapas'}>
+                            {formatDateOnly(prazo.inicio)} – {formatDateOnly(prazo.fim)}
+                          </span>
+                        )}
+                        {meta.responsible && ` · ${meta.responsible}`}
+                      </span>
+                    )}
+                    {diverge && (
+                      <span
+                        className="inline-flex items-center gap-1"
+                        style={{ fontSize: '0.7rem', color: 'var(--warning)' }}
+                        title="Há etapas fora do prazo da meta — abra a meta para ver quais."
+                      >
+                        <AlertTriangle size={12} /> Etapas fora do prazo
+                      </span>
+                    )}
+                    <button
+                      onClick={() => aoAbrirMeta(meta)}
+                      className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11.5px] font-medium hover:bg-accent"
+                      style={{ borderColor: 'var(--border)', color: 'var(--ink-3)', background: 'var(--surface-0)' }}
+                    >
+                      {readOnly ? <><Eye size={11} /> Ver meta</> : <><Pencil size={11} /> Editar meta</>}
+                    </button>
+                    </div>
                   </td>
                 </tr>
 

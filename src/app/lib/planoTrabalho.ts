@@ -7,6 +7,10 @@
  * evita explicitamente — um registro que continua "Atrasado" depois de
  * concluído, ou uma meta com datas divergentes das próprias etapas.
  *
+ * Exceção deliberada: desde a 0015 a meta PODE ter prazo previsto próprio
+ * (RF04.1). Sem ele, vale o calculado; com ele, a divergência com as etapas é
+ * mostrada como aviso (prazoDaMeta, divergenciaDaMeta).
+ *
  * As datas circulam como 'AAAA-MM-DD' e são comparadas como string, nunca via
  * `new Date()`: a comparação lexicográfica de ISO já é cronológica e não passa
  * por fuso horário (mesmo motivo documentado em ./dateOnly.ts).
@@ -339,6 +343,68 @@ export function periodoDaMeta(etapas: Deliverable[]): { previsto: Periodo; reali
   };
 }
 
+/**
+ * Prazo previsto da meta (RF04.1). A meta pode ter prazo próprio (decisão da
+ * equipe, 29/09/2026); sem ele, vale o período calculado das etapas, como
+ * antes. `proprio` diz qual dos dois está valendo, para a tela poder dizer.
+ */
+export function prazoDaMeta(meta: Goal): Periodo & { proprio: boolean } {
+  const temProprio = !!(meta.plannedStart || meta.plannedEnd);
+  if (temProprio) return { inicio: meta.plannedStart ?? null, fim: meta.plannedEnd ?? null, proprio: true };
+  return { ...periodoDaMeta(meta.deliverables).previsto, proprio: false };
+}
+
+/**
+ * Etapas que saem do prazo próprio da meta. É aviso, não bloqueio: a meta com
+ * prazo próprio pode divergir das etapas, e quem decide o que corrigir é a
+ * equipe. Sem prazo próprio não há divergência possível — o prazo É o das etapas.
+ */
+export function divergenciaDaMeta(meta: Goal): string[] {
+  const prazo = prazoDaMeta(meta);
+  if (!prazo.proprio) return [];
+  const avisos: string[] = [];
+  for (const e of meta.deliverables) {
+    if (prazo.inicio && e.plannedStart && e.plannedStart < prazo.inicio) {
+      avisos.push(`A etapa "${e.name}" começa antes do início da meta.`);
+    }
+    if (prazo.fim && e.plannedEnd && e.plannedEnd > prazo.fim) {
+      avisos.push(`A etapa "${e.name}" termina depois do fim da meta.`);
+    }
+  }
+  return avisos;
+}
+
+export interface MetaInput {
+  nome: string;
+  responsavel: string | null;
+  inicioPrevisto: string | null;
+  fimPrevisto: string | null;
+}
+
+/** Validação da edição de meta — a mesma no formulário e no servidor. */
+export function validarMeta(m: MetaInput): ValidacaoDatas {
+  const erros: string[] = [];
+  if (!m.nome.trim()) erros.push('Informe o título da meta.');
+  if (m.inicioPrevisto && m.fimPrevisto && m.inicioPrevisto > m.fimPrevisto) {
+    erros.push('O início da meta não pode ser posterior ao fim.');
+  }
+  return { ok: erros.length === 0, erros };
+}
+
+/**
+ * Por que a etapa não pode sair, ou null se pode. Só sai etapa vazia: com
+ * atividade, o CASCADE levaria atividades e anexos junto; com risco, o banco
+ * recusa (ON DELETE RESTRICT). O painel usa isto para nem oferecer "Excluir";
+ * o servidor, para recusar de fato.
+ */
+export function motivoParaNaoRemoverEtapa(nome: string, atividades: number, riscos: number): string | null {
+  const partes: string[] = [];
+  if (atividades) partes.push(`${atividades} atividade${atividades === 1 ? '' : 's'}`);
+  if (riscos) partes.push(`${riscos} risco${riscos === 1 ? '' : 's'}`);
+  if (!partes.length) return null;
+  return `Não é possível remover "${nome}": a etapa tem ${partes.join(' e ')}. Exclua ou mova antes.`;
+}
+
 // ---------------------------------------------------------------------------
 // Ausência de dado (RF-002)
 // ---------------------------------------------------------------------------
@@ -501,6 +567,8 @@ export interface LimitesLinhaTempo {
 export function limitesDaLinhaDoTempo(metas: Goal[]): LimitesLinhaTempo | null {
   const datas: string[] = [];
   for (const meta of metas) {
+    // Prazo próprio da meta também precisa caber (RF04.1).
+    for (const d of [meta.plannedStart, meta.plannedEnd]) if (d) datas.push(d);
     for (const etapa of meta.deliverables) {
       for (const d of [etapa.plannedStart, etapa.plannedEnd, etapa.actualStart, etapa.actualEnd]) {
         if (d) datas.push(d);
