@@ -4,7 +4,7 @@ import {
   listarOrganizacoes, obterOrganizacao,
   criarRegistroContato, atualizarRegistroContato, excluirRegistroContato,
   criarEncaminhamento, atualizarEncaminhamento, excluirEncaminhamento,
-  salvarNotaOrganizacao,
+  criarNotaOrganizacao, salvarNotaOrganizacao, excluirNotaOrganizacao,
 } from '../../organizacoes.server';
 import type { RegistroContatoInput, EncaminhamentoInput } from '../../lib/organizacoes';
 
@@ -47,7 +47,10 @@ export function useEscritaOrganizacao() {
       run(() => atualizarEncaminhamento({ data: { encaminhamentoId, dados } })),
     excluirEncaminhamento: (encaminhamentoId: string) =>
       run(() => excluirEncaminhamento({ data: { encaminhamentoId } })),
-    salvarNota: (organizacaoId: string, conteudo: string, versaoAberta: number) =>
-      run(() => salvarNotaOrganizacao({ data: { organizacaoId, conteudo, versaoAberta } })),
+    criarNota: (organizacaoId: string, conteudo: string) =>
+      run(() => criarNotaOrganizacao({ data: { organizacaoId, conteudo } })),
+    salvarNota: (notaId: string, conteudo: string, versaoAberta: number) =>
+      run(() => salvarNotaOrganizacao({ data: { notaId, conteudo, versaoAberta } })),
+    excluirNota: (notaId: string) => run(() => excluirNotaOrganizacao({ data: { notaId } })),
   };
 }

@@ -170,19 +170,22 @@ export interface OrganizacaoFicha extends OrganizacaoResumo {
   /** Mais recente primeiro. */
   registros: RegistroContato[];
   encaminhamentos: Encaminhamento[];
-  /** Null enquanto ninguém escreveu nada. */
-  nota: NotaOrganizacao | null;
+  /** Notas da equipe (post-its), mais recente primeiro (0017). */
+  notas: NotaOrganizacao[];
 }
 
 /**
- * Bloco de notas compartilhado da organização. `versao` é a que a pessoa
- * abriu: salvar exige a mesma versão, para que duas pessoas editando ao mesmo
- * tempo não apaguem uma o texto da outra sem perceber.
+ * Uma nota (post-it) da organização. Desde a 0017 são várias por organização.
+ * `versao` é a que a pessoa abriu: salvar exige a mesma versão, para que duas
+ * pessoas editando a MESMA nota não apaguem uma o texto da outra sem perceber.
  */
 export interface NotaOrganizacao {
+  id: string;
   conteudo: string;
   versao: number;
+  criadoPor: string | null;
   atualizadoPor: string | null;
+  criadoEm: string;
   atualizadoEm: string;
 }
 
