@@ -22,7 +22,6 @@ import { useAudit } from '../audit/auditStore';
 import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
-import { BotaoNotasEChecklist } from './organizacoes/NotasEChecklist';
 import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
@@ -55,9 +54,11 @@ const statusConfig: Record<string, { color: string; bg: string; dot: string }> =
 interface ProjectViewProps {
   project: Project;
   onBack: () => void;
+  /** Rótulo do "voltar" no caminho. Dentro da organização, volta aos projetos dela. */
+  rotuloVoltar?: string;
 }
 
-export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
+export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos' }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
   const [panel, setPanel] = useState<'mudancas' | null>(null);
   // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
@@ -92,16 +93,16 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
   const renderTab = () => {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
-      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} />;
+      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
       default:          return null;
     }
   };
 
   const linkChips: { kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; valor: string; rotulo: string; rotuloVazio: string; cor: string; fundo: string }[] = [
-    { kind: 'driveLink', valor: driveLink, rotulo: 'Plano de Trabalho (Drive)', rotuloVazio: 'Link do Plano de Trabalho', cor: 'var(--info)', fundo: 'var(--success-soft)' },
-    { kind: 'budgetLink', valor: budgetLink, rotulo: 'Orçamento Realizado', rotuloVazio: 'Link do Orçamento Realizado', cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)' },
-    { kind: 'termoFomentoLink', valor: termoFomentoLink, rotulo: 'Termo de Fomento', rotuloVazio: 'Link do Termo de Fomento', cor: 'var(--info)', fundo: 'var(--info-soft)' },
+    { kind: 'driveLink', valor: driveLink, rotulo: 'Plano de Trabalho (Drive)', rotuloVazio: 'Link do Plano de Trabalho', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
+    { kind: 'budgetLink', valor: budgetLink, rotulo: 'Orçamento Realizado', rotuloVazio: 'Link do Orçamento Realizado', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
+    { kind: 'termoFomentoLink', valor: termoFomentoLink, rotulo: 'Termo de Fomento', rotuloVazio: 'Link do Termo de Fomento', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
   ];
 
   const riscosAbertos = project.risks.filter(riscoEmAberto);
@@ -112,8 +113,6 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
     // RF-033: acesso discreto ao parecer, no cabeçalho, presente em todas as
     // seções — e não uma aba a mais.
     <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-      {/* Notas e encaminhamentos da organização executora (Anotações, opção 1). */}
-      <BotaoNotasEChecklist organizacaoId={(project as ProjectExt).organizacao?.id ?? null} />
       <button
         onClick={() => setParecerAberto(true)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
@@ -121,8 +120,14 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       >
         <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
       </button>
+    </div>
+  );
+
+  // Slide 4: Riscos (N) e Mudanças (N) na linha do seletor de visões do Plano.
+  const acoesDaVisao = (
+    <>
       <button
-        onClick={() => { setActiveTab('plano'); setPedidoRiscos(n => n + 1); }}
+        onClick={() => setPedidoRiscos(n => n + 1)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
         // Vermelho só com risco CRÍTICO em aberto (UI/UX, 29/09/2026); sem ele,
         // o botão é neutro como os vizinhos.
@@ -141,7 +146,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       >
         <GitBranch size={13} /> Mudanças ({project.changes.length})
       </button>
-    </div>
+    </>
   );
 
   return (
@@ -163,7 +168,7 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
             className="flex items-center gap-1 text-[12px] transition-colors hover:text-blue-600"
             style={{ color: 'var(--ink-4)' }}
           >
-            <ArrowLeft size={12} /> Projetos
+            <ArrowLeft size={12} /> {rotuloVoltar}
           </button>
           <ChevronRight size={11} color="var(--line-2)" />
           <span style={{ fontSize: '0.75rem', color: 'var(--ink-1)', fontWeight: 500 }}>

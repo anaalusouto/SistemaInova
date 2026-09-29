@@ -53,11 +53,13 @@ type GrupoFiltro = 'categorias' | 'tipos' | 'ufs' | 'situacoes';
 
 interface ListaOrganizacoesProps {
   aoAbrir: (id: string) => void;
+  /** Dentro de outra página (abaixo da Visão Geral): sem rolagem própria. */
+  embutido?: boolean;
   filtros: FiltrosOrganizacao;
   aoMudarFiltros: (f: FiltrosOrganizacao) => void;
 }
 
-export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros }: ListaOrganizacoesProps) {
+export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido = false }: ListaOrganizacoesProps) {
   const { data: organizacoes = [], isLoading, error } = useListaOrganizacoes();
   const [coluna, setColuna] = useState<Coluna>('nome');
   const [asc, setAsc] = useState(true);
@@ -87,7 +89,7 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros }: ListaOrg
   };
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-7 overflow-y-auto h-full">
+    <div className={embutido ? 'flex flex-col gap-5 p-4 sm:p-7' : 'flex flex-col gap-5 p-4 sm:p-7 overflow-y-auto h-full'}>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
           <Building2 size={18} color="var(--brand)" />

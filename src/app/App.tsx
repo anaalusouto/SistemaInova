@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
-import { ProjectsModule } from './components/ProjectsModule';
 import { ProjectView } from './components/ProjectView';
 import { ReportsModule } from './components/ReportsModule';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoModule } from './components/DiagnosticoModule';
 import { OrganizacoesModule } from './components/organizacoes/OrganizacoesModule';
+import { ROTA_INICIO, type RotaOrg } from './lib/navegacaoOrg';
 import { CronogramaPage } from './components/CronogramaPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
@@ -34,8 +34,13 @@ function greetingFor(displayName: string): string {
 }
 
 function AppShell() {
-  const [activeNav, setActiveNav] = useState<NavItem>('projects');
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  // Organização é o hub (29/09/2026): o menu Projetos saiu e projeto se abre
+  // dentro da organização dele. A rota fica aqui porque o menu lateral a lê.
+  const [activeNav, setActiveNav] = useState<NavItem>('organizations');
+  const [rotaOrg, setRotaOrg] = useState<RotaOrg>(ROTA_INICIO);
+  // Projeto sem organização vinculada (em 29/09 nenhum): abre sozinho, para
+  // não ficar inacessível.
+  const [projetoAvulso, setProjetoAvulso] = useState<number | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { getProject } = useStore();
   const { user } = useAuth();
@@ -49,29 +54,40 @@ function AppShell() {
     log({ userLogin: user.login, area: activeNav, action: 'view' });
   }, [activeNav, user, log]);
 
+  /** Abre o projeto dentro da organização dele (notificações, agenda, Visão Geral). */
   const handleSelectProject = (id: number) => {
-    setSelectedProjectId(id);
-    setActiveNav('projects');
+    const orgId = getProject(id)?.organizacao?.id ?? null;
+    setActiveNav('organizations');
+    if (orgId) {
+      setProjetoAvulso(null);
+      setRotaOrg({ orgId, secao: 'projeto', projetoId: id });
+    } else {
+      setProjetoAvulso(id);
+    }
   };
 
-  const handleBackToProjects = () => setSelectedProjectId(null);
+  const navegarOrg = (rota: RotaOrg) => {
+    setProjetoAvulso(null);
+    setActiveNav('organizations');
+    setRotaOrg(rota);
+  };
 
   const handleNavigate = (item: NavItem) => {
     setActiveNav(item);
-    if (item !== 'projects') setSelectedProjectId(null);
+    setProjetoAvulso(null);
+    // "Organizações" no menu sempre leva ao início (Visão Geral + lista).
+    if (item === 'organizations') setRotaOrg(ROTA_INICIO);
   };
 
   const renderMain = () => {
-    if (activeNav === 'projects' && selectedProjectId != null) {
-      const project = getProject(selectedProjectId);
-      if (project) return <ProjectView project={project} onBack={handleBackToProjects} />;
+    if (activeNav === 'organizations' && projetoAvulso != null) {
+      const project = getProject(projetoAvulso);
+      if (project) return <ProjectView project={project} onBack={() => setProjetoAvulso(null)} rotuloVoltar="Organizações" />;
     }
 
     switch (activeNav) {
-      case 'projects':
-        return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
       case 'organizations':
-        return <OrganizacoesModule aoAbrirProjeto={handleSelectProject} />;
+        return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} aoAbrirProjeto={handleSelectProject} />;
       case 'schedule':
         return <CronogramaPage onOpenProject={handleSelectProject} />;
       case 'diagnostics':
@@ -82,7 +98,7 @@ function AppShell() {
         return <ConfiguracoesPage />;
 
       default:
-        return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
+        return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} aoAbrirProjeto={handleSelectProject} />;
     }
   };
 
@@ -91,6 +107,8 @@ function AppShell() {
       <Sidebar
         activeItem={activeNav}
         onNavigate={handleNavigate}
+        rotaOrg={rotaOrg}
+        aoNavegarOrg={navegarOrg}
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
       />

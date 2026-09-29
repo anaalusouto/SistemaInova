@@ -14,7 +14,7 @@
  * RC-05: a aba não tem rolagem própria. Busca, seletor de visão e a visão
  * rolam junto com a página do projeto, e só o topo do cabeçalho fica fixo.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -53,10 +53,12 @@ type PainelAberto =
   | { tipo: 'risco'; riscoId: string }
   | null;
 
-export function TabPlanoTrabalho({ project, pedidoRiscos = 0 }: {
+export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
   project: Project;
   /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
   pedidoRiscos?: number;
+  /** Botões à direita do seletor de visões — Riscos (N) e Mudanças (N), como no slide 4. */
+  acoesDaVisao?: ReactNode;
 }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
@@ -271,6 +273,8 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0 }: {
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
           {metas.flatMap(m => m.deliverables).length} etapas
         </span>
+
+        {acoesDaVisao && <div className="flex items-center gap-2 ml-auto flex-wrap">{acoesDaVisao}</div>}
       </div>
 
       {/* Visão */}

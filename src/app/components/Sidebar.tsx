@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  FolderKanban,
   BarChart3,
   Settings,
   ChevronRight,
@@ -9,13 +8,16 @@ import {
   LogOut,
   Kanban,
   Building2,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
+import { useListaOrganizacoes } from './organizacoes/useOrganizacoes';
+import { SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../lib/navegacaoOrg';
 
+/** O menu "Projetos" saiu (29/09/2026): projeto se abre dentro da organização. */
 export type NavItem =
   | 'organizations'
-  | 'projects'
   | 'schedule'
   | 'diagnostics'
   | 'reports'
@@ -26,20 +28,22 @@ interface SidebarProps {
   onNavigate: (item: NavItem) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  /** Organização aberta: o menu mostra, embaixo dela, seções e projetos. */
+  rotaOrg: RotaOrg;
+  aoNavegarOrg: (rota: RotaOrg) => void;
 }
 
 const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] = [];
 
 const bottomItems = [
   { id: 'organizations' as NavItem, label: 'Organizações', icon: Building2 },
-  { id: 'projects' as NavItem, label: 'Projetos', icon: FolderKanban },
   { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
   { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
   { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
-export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: SidebarProps) {
+export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaOrg, aoNavegarOrg }: SidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const { paraMim } = useAgenda();
   const pendentes = paraMim.filter(a => !a.concluidaEm).length;
@@ -125,7 +129,14 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
         {topItems.map(i => renderBtn(i))}
 
         <div className="mt-1">
-          {bottomItems.map(i => renderBtn(i))}
+          {bottomItems.map(i => (
+            <div key={i.id}>
+              {renderBtn(i)}
+              {i.id === 'organizations' && activeItem === 'organizations' && rotaOrg.orgId && (
+                <ArvoreOrganizacao rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} />
+              )}
+            </div>
+          ))}
         </div>
 
       </nav>
@@ -148,5 +159,79 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose }: Sid
       </div>
       </aside>
     </>
+  );
+}
+
+/**
+ * O "drop" da organização aberta (alteracoes-inova.pptx): seções e projetos
+ * dela, embaixo de "Organizações". O cabeçalho da organização fica fixo na
+ * página; é aqui que se troca o que aparece embaixo dele.
+ */
+function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: RotaOrg) => void }) {
+  const { data: organizacoes = [] } = useListaOrganizacoes();
+  const org = organizacoes.find(o => o.id === rota.orgId);
+  if (!org || !rota.orgId) return null;
+  const orgId = rota.orgId;
+  const ir = (parcial: Partial<RotaOrg>) => aoNavegar({ orgId, secao: 'dados', projetoId: null, ...parcial });
+
+  const item = (ativo: boolean, nivel: 1 | 2) => ({
+    className: 'w-full flex items-center gap-2 rounded-md text-left transition-colors hover:bg-[var(--sidebar-accent)]',
+    style: {
+      padding: nivel === 1 ? '6px 10px 6px 34px' : '5px 10px 5px 48px',
+      fontSize: nivel === 1 ? '0.78rem' : '0.74rem',
+      color: 'var(--sidebar-foreground)',
+      background: ativo ? 'var(--sidebar-accent)' : undefined,
+      fontWeight: ativo ? 600 : 400,
+      opacity: ativo ? 1 : 0.82,
+      boxShadow: ativo ? 'inset 2px 0 0 var(--sidebar-primary)' : undefined,
+    } as React.CSSProperties,
+    'aria-current': ativo ? ('page' as const) : undefined,
+  });
+
+  return (
+    <div className="mb-1" role="group" aria-label={`Seções de ${org.nome}`}>
+      <div
+        className="flex items-center gap-1.5 truncate"
+        style={{ padding: '6px 10px 4px 22px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--sidebar-foreground)' }}
+        title={org.nome}
+      >
+        <ChevronDown size={12} style={{ opacity: 0.7, flexShrink: 0 }} />
+        <span className="truncate">{nomeCurtoOrg(org.nome)}</span>
+      </div>
+      {SECOES_ORG.map(s => {
+        const ativo = rota.secao === s.id || (s.id === 'projetos' && rota.secao === 'projeto' && rota.projetoId == null);
+        return (
+          <div key={s.id}>
+            <button type="button" onClick={() => ir({ secao: s.id })} {...item(ativo, 1)}>
+              <span className="truncate">{s.rotulo}</span>
+              {s.id === 'projetos' && org.projetos.length > 0 && (
+                <span className="ml-auto" style={{ fontSize: '0.66rem', opacity: 0.7 }}>{org.projetos.length}</span>
+              )}
+              {s.id === 'encaminhamentos' && org.pendentes > 0 && (
+                <span
+                  className="ml-auto rounded-full px-1.5"
+                  style={{ fontSize: '0.64rem', background: 'var(--sidebar-border)' }}
+                  title={`${org.pendentes} encaminhamento(s) pendente(s)`}
+                >
+                  {org.pendentes}
+                </span>
+              )}
+            </button>
+            {s.id === 'projetos' && org.projetos.map(p => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => ir({ secao: 'projeto', projetoId: p.id })}
+                title={`${p.codigo} — ${p.nome}`}
+                {...item(rota.secao === 'projeto' && rota.projetoId === p.id, 2)}
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', flexShrink: 0 }}>{p.codigo}</span>
+                <span className="truncate">{p.nome}</span>
+              </button>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }

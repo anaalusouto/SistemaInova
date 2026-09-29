@@ -24,6 +24,7 @@ import type {
 } from './data/projectExtras';
 import { mapRegistro } from './organizacoes.server';
 import { ordenarRegistros } from './lib/organizacoes';
+import { nomeCurtoOrg } from './lib/navegacaoOrg';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -290,10 +291,18 @@ export const listarProjetos = createServerFn({ method: 'GET' }).handler(async ()
 });
 
 export const criarProjeto = createServerFn({ method: 'POST' })
-  .validator((d: Partial<ProjectExt> & { team?: string[] }) => d)
+  .validator((d: Partial<ProjectExt> & { team?: string[]; comunidadeId?: string | null }) => d)
   .handler(async ({ data }): Promise<ProjectExt> => {
     await exigirEscrita();
     const supabaseAdmin = await getAdmin();
+    // Projeto nasce dentro da organização (navegação centrada na organização):
+    // o vínculo e a sigla em `org` saem do banco, não do cliente.
+    let org = data.org ?? null;
+    if (data.comunidadeId) {
+      const { data: com } = await supabaseAdmin.from('comunidades').select('nome').eq('id', data.comunidadeId).maybeSingle();
+      if (!com) throw new Error('Organização não encontrada.');
+      org = nomeCurtoOrg(com.nome);
+    }
     const year = new Date().getFullYear();
     const { data: existing } = await supabaseAdmin.from('projetos').select('code').ilike('code', `%-${year}`);
     const seq = (existing?.length ?? 0) + 1;
@@ -302,7 +311,7 @@ export const criarProjeto = createServerFn({ method: 'POST' })
     const { data: row, error } = await supabaseAdmin
       .from('projetos')
       .insert({
-        nome: data.name ?? 'Novo projeto', code, org: data.org ?? null, segmento: data.segmento ?? null,
+        nome: data.name ?? 'Novo projeto', code, org, comunidade_id: data.comunidadeId ?? null, segmento: data.segmento ?? null,
         coordenador: data.coordinator ?? null, financiador: data.financier ?? null, objetivo: data.objective ?? null,
         data_inicio: data.startDate ?? null, data_fim: data.endDate ?? null, status: data.status ?? 'Não iniciado',
         orcamento_aprovado: data.budgetApproved ?? 0, nivel_risco: data.riskLevel ?? '—',

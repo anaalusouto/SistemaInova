@@ -105,6 +105,8 @@ function AlertRow({ icon: Icon, active, label }: { icon: typeof AlertTriangle; a
 
 interface PortfolioViewProps {
   onSelectProject: (project: Project) => void;
+  /** Dentro de outra página (início de Organizações): sem rolagem própria. */
+  embutido?: boolean;
 }
 
 /** Filtros e paginação preservados enquanto a sessão estiver aberta (entrar/sair de um projeto não limpa). */
@@ -115,7 +117,7 @@ const portfolioFilterMemory: PortfolioFilterValues & { initialized: boolean } = 
 
 const PAGE_SIZE = 15;
 
-export function PortfolioView({ onSelectProject }: PortfolioViewProps) {
+export function PortfolioView({ onSelectProject, embutido = false }: PortfolioViewProps) {
   const { projects } = useStore();
   const [filters, setFiltersState] = useState<PortfolioFilterValues>(portfolioFilterMemory);
   const [page, setPage] = useState(1);
@@ -182,7 +184,7 @@ export function PortfolioView({ onSelectProject }: PortfolioViewProps) {
   const selectedExercicio = exercicios.find(e => e.key === filters.exercicioKey);
 
   return (
-    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
+    <div className={embutido ? 'flex flex-col gap-6 p-4 sm:p-7' : 'flex flex-col gap-6 p-7 overflow-y-auto h-full'}>
       <div className="flex items-center justify-between">
         <div>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)', lineHeight: 1.3 }}>
