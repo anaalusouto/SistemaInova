@@ -71,7 +71,7 @@ function AppShell() {
       case 'projects':
         return <ProjectsModule onSelectProject={(p) => handleSelectProject(p.id)} />;
       case 'organizations':
-        return <OrganizacoesModule />;
+        return <OrganizacoesModule aoAbrirProjeto={handleSelectProject} />;
       case 'schedule':
         return <CronogramaPage onOpenProject={handleSelectProject} />;
       case 'diagnostics':

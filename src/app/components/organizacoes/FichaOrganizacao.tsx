@@ -3,16 +3,28 @@
  * Encaminhamentos.
  */
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, Building2, FileText, Loader2, MessageSquare, ListChecks } from 'lucide-react';
+import { ArrowLeft, Building2, ExternalLink, FileText, Handshake, Loader2, MessageSquare, ListChecks, Users } from 'lucide-react';
 import { useFichaOrganizacao } from './useOrganizacoes';
 import { AbaRegistrosContato } from './AbaRegistrosContato';
 import { AbaEncaminhamentos } from './AbaEncaminhamentos';
 import { BotaoNotasEChecklist } from './NotasEChecklist';
-import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha } from '../../lib/organizacoes';
+import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
 
 type Aba = 'dados' | 'contatos' | 'encaminhamentos';
 
-export function FichaOrganizacao({ organizacaoId, aoVoltar }: { organizacaoId: string; aoVoltar: () => void }) {
+/** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
+const ICONE_POR_TIPO: Record<TipoOrganizacao, typeof Building2> = {
+  'Associação': Users,
+  'Cooperativa': Handshake,
+};
+
+interface FichaOrganizacaoProps {
+  organizacaoId: string;
+  aoVoltar: () => void;
+  aoAbrirProjeto: (id: number) => void;
+}
+
+export function FichaOrganizacao({ organizacaoId, aoVoltar, aoAbrirProjeto }: FichaOrganizacaoProps) {
   const { data: org, isLoading, error } = useFichaOrganizacao(organizacaoId);
   const [aba, setAba] = useState<Aba>('dados');
 
@@ -34,6 +46,7 @@ export function FichaOrganizacao({ organizacaoId, aoVoltar }: { organizacaoId: s
     );
   }
 
+  const IconeTipo = org.tipo ? ICONE_POR_TIPO[org.tipo] : Building2;
   const abas: { id: Aba; rotulo: string; icone: typeof FileText; contagem?: number }[] = [
     { id: 'dados', rotulo: 'Dados cadastrais', icone: FileText },
     { id: 'contatos', rotulo: 'Registros de contato', icone: MessageSquare, contagem: org.registros.length },
@@ -46,8 +59,12 @@ export function FichaOrganizacao({ organizacaoId, aoVoltar }: { organizacaoId: s
         <Voltar aoVoltar={aoVoltar} />
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
-              <Building2 size={18} color="var(--brand)" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--brand-soft)' }}
+              title={org.tipo ?? 'Tipo não informado'}
+            >
+              <IconeTipo size={18} color="var(--brand)" aria-hidden />
             </div>
             <div className="min-w-0">
               <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.2rem', color: 'var(--ink-1)' }}>
@@ -97,7 +114,7 @@ export function FichaOrganizacao({ organizacaoId, aoVoltar }: { organizacaoId: s
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {aba === 'dados' && <DadosCadastrais org={org} />}
+        {aba === 'dados' && <DadosCadastrais org={org} aoAbrirProjeto={aoAbrirProjeto} />}
         {aba === 'contatos' && <AbaRegistrosContato org={org} />}
         {aba === 'encaminhamentos' && <AbaEncaminhamentos org={org} />}
       </div>
@@ -118,7 +135,7 @@ function Voltar({ aoVoltar }: { aoVoltar: () => void }) {
 // pessoas de referência. Vazio aparece como "Não informado", nunca em branco.
 // ---------------------------------------------------------------------------
 
-function DadosCadastrais({ org }: { org: OrganizacaoFicha }) {
+function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha; aoAbrirProjeto: (id: number) => void }) {
   const municipio = org.municipio ? `${org.municipio}${org.uf ? `/${org.uf}` : ''}` : null;
   return (
     <div className="p-4 sm:p-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -128,9 +145,23 @@ function DadosCadastrais({ org }: { org: OrganizacaoFicha }) {
         <Item rotulo="Tipo">{ouNaoInformado(org.tipo)}</Item>
         <Item rotulo="Situação">{ouNaoInformado(org.status)}</Item>
         <Item rotulo="Projetos">
-          {org.projetos.length
-            ? org.projetos.map(p => `${p.codigo} — ${p.nome}`).join('\n')
-            : NAO_INFORMADO}
+          {org.projetos.length ? (
+            <ul className="flex flex-col gap-1">
+              {org.projetos.map(p => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => aoAbrirProjeto(p.id)}
+                    className="inline-flex items-start gap-1 text-left hover:underline"
+                    style={{ color: 'var(--brand)', fontWeight: 500 }}
+                  >
+                    <span>{p.codigo} — {p.nome}</span>
+                    <ExternalLink size={11} className="flex-shrink-0" style={{ marginTop: 3 }} aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : NAO_INFORMADO}
         </Item>
       </Secao>
 

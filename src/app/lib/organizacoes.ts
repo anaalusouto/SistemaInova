@@ -55,8 +55,50 @@ export interface OrganizacaoResumo {
   tipo: TipoOrganizacao | null;
   municipio: string | null;
   uf: string | null;
+  /** Situação (`status_comunidade_enum`): Ativa, Em execução, Concluída… */
+  status: string | null;
   /** Encaminhamentos ainda não concluídos. */
   pendentes: number;
+  /** Projetos vinculados (`projetos.comunidade_id`). A lista usa na busca (RF01.3). */
+  projetos: ProjetoDaOrganizacao[];
+}
+
+export interface FiltrosOrganizacao {
+  busca: string;
+  categorias: string[];
+  tipos: string[];
+  ufs: string[];
+  situacoes: string[];
+}
+
+export const FILTROS_VAZIOS: FiltrosOrganizacao = { busca: '', categorias: [], tipos: [], ufs: [], situacoes: [] };
+
+/** Valor usado nos filtros para "campo vazio" — dá para filtrar quem falta preencher. */
+export const FILTRO_NAO_INFORMADO = NAO_INFORMADO;
+
+const semAcento = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/**
+ * Busca e filtros da lista (RF01.3). A busca ignora acento e caixa e olha a
+ * organização (nome, código, município) e os projetos dela (nome, código,
+ * coordenador) — é o que promete o "Buscar projeto, comunidade, coordenador".
+ * Filtros: dentro de um grupo é OU, entre grupos é E.
+ */
+export function filtrarOrganizacoes(lista: OrganizacaoResumo[], f: FiltrosOrganizacao): OrganizacaoResumo[] {
+  const q = semAcento(f.busca.trim());
+  const casa = (sel: string[], v: string | null) => sel.length === 0 || sel.includes(v ?? FILTRO_NAO_INFORMADO);
+  return lista.filter(o => {
+    if (q) {
+      const textos = [o.nome, o.codigo, o.municipio, ...o.projetos.flatMap(p => [p.nome, p.codigo, p.coordenador])];
+      if (!textos.some(t => t && semAcento(t).includes(q))) return false;
+    }
+    return casa(f.categorias, o.categoria) && casa(f.tipos, o.tipo) && casa(f.ufs, o.uf) && casa(f.situacoes, o.status);
+  });
+}
+
+/** "1 organização", "20 organizações". */
+export function contagemOrganizacoes(n: number): string {
+  return `${n} ${n === 1 ? 'organização' : 'organizações'}`;
 }
 
 export interface PessoaReferencia {
@@ -116,16 +158,15 @@ export interface ProjetoDaOrganizacao {
   id: number;
   codigo: string;
   nome: string;
+  coordenador: string | null;
 }
 
 export interface OrganizacaoFicha extends OrganizacaoResumo {
   eixo: string | null;
   localizacao: string | null;
   territorio: string | null;
-  status: string | null;
   responsavelTecnico: string | null;
   pessoas: PessoaReferencia[];
-  projetos: ProjetoDaOrganizacao[];
   /** Mais recente primeiro. */
   registros: RegistroContato[];
   encaminhamentos: Encaminhamento[];

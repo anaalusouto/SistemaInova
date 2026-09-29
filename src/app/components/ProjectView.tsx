@@ -27,6 +27,7 @@ import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabMudancas } from './project-tabs/TabMudancas';
+import { riscoEmAberto } from '../lib/planoTrabalho';
 
 /**
  * As seções do RF-001, nesta ordem, menos Contato (ver TabId). Substituem as cinco abas antigas:
@@ -121,7 +122,8 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
         style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
       >
-        <ShieldAlert size={13} /> Riscos ({project.risks.length})
+        {/* Só os em aberto: encerrado não pede ação (mesma regra do cabeçalho). */}
+        <ShieldAlert size={13} /> Riscos ({project.risks.filter(riscoEmAberto).length})
       </button>
       <button
         onClick={() => setPanel('mudancas')}

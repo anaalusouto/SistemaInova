@@ -11,7 +11,7 @@ import { createServerFn } from '@tanstack/react-start';
 import {
   categoriaDe, tipoDe, ordenarRegistros, ordenarEncaminhamentos,
   validarRegistro, validarEncaminhamento, juntarErros,
-  type OrganizacaoResumo, type OrganizacaoFicha, type RegistroContato, type Encaminhamento,
+  type OrganizacaoResumo, type OrganizacaoFicha, type ProjetoDaOrganizacao, type RegistroContato, type Encaminhamento,
   type RegistroContatoInput, type EncaminhamentoInput, type PessoaReferencia,
   LIMITE_NOTA,
 } from './lib/organizacoes';
@@ -38,7 +38,11 @@ const BUCKET_ANEXOS = 'projeto-anexos';
 // Mapeamento
 // ---------------------------------------------------------------------------
 
-function mapResumo(row: any, pendentes: number): OrganizacaoResumo {
+function mapProjeto(p: any): ProjetoDaOrganizacao {
+  return { id: p.id, codigo: p.code, nome: p.nome, coordenador: p.coordenador ?? null };
+}
+
+function mapResumo(row: any, pendentes: number, projetos: ProjetoDaOrganizacao[]): OrganizacaoResumo {
   return {
     id: row.id,
     codigo: row.code,
@@ -47,7 +51,9 @@ function mapResumo(row: any, pendentes: number): OrganizacaoResumo {
     tipo: tipoDe(row.tipo),
     municipio: row.municipio ?? null,
     uf: row.uf ?? null,
+    status: row.status ?? null,
     pendentes,
+    projetos,
   };
 }
 
@@ -103,15 +109,21 @@ export const listarOrganizacoes = createServerFn({ method: 'GET' })
   .handler(async (): Promise<OrganizacaoResumo[]> => {
     await exigirSessao();
     const supabaseAdmin = await getAdmin();
-    const [orgs, pend] = await Promise.all([
-      supabaseAdmin.from('comunidades').select('id, code, nome, segmento_social, tipo, municipio, uf').order('nome'),
+    const [orgs, pend, projs] = await Promise.all([
+      supabaseAdmin.from('comunidades').select('id, code, nome, segmento_social, tipo, municipio, uf, status').order('nome'),
       supabaseAdmin.from('encaminhamentos').select('comunidade_id').neq('status', 'Concluído'),
+      supabaseAdmin.from('projetos').select('id, code, nome, coordenador, comunidade_id').not('comunidade_id', 'is', null).order('code'),
     ]);
     if (orgs.error) throw new Error(orgs.error.message);
     if (pend.error) throw new Error(pend.error.message);
+    if (projs.error) throw new Error(projs.error.message);
     const contagem = new Map<string, number>();
     for (const r of pend.data ?? []) contagem.set(r.comunidade_id, (contagem.get(r.comunidade_id) ?? 0) + 1);
-    return (orgs.data ?? []).map(o => mapResumo(o, contagem.get(o.id) ?? 0));
+    const projetosPorOrg = new Map<string, ProjetoDaOrganizacao[]>();
+    for (const p of projs.data ?? []) {
+      projetosPorOrg.set(p.comunidade_id, [...(projetosPorOrg.get(p.comunidade_id) ?? []), mapProjeto(p)]);
+    }
+    return (orgs.data ?? []).map(o => mapResumo(o, contagem.get(o.id) ?? 0, projetosPorOrg.get(o.id) ?? []));
   });
 
 export const obterOrganizacao = createServerFn({ method: 'GET' })
@@ -123,7 +135,7 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     const [org, pessoas, projetos, registros, encaminhamentos, nota] = await Promise.all([
       supabaseAdmin.from('comunidades').select('*').eq('id', id).maybeSingle(),
       supabaseAdmin.from('comunidade_pessoas').select('*').eq('comunidade_id', id).order('nome'),
-      supabaseAdmin.from('projetos').select('id, code, nome').eq('comunidade_id', id).order('code'),
+      supabaseAdmin.from('projetos').select('id, code, nome, coordenador').eq('comunidade_id', id).order('code'),
       supabaseAdmin.from('logs_comunicacao').select('*, projeto_anexos(*)').eq('comunidade_id', id),
       supabaseAdmin.from('encaminhamentos').select('*').eq('comunidade_id', id),
       supabaseAdmin.from('organizacao_notas').select('*').eq('comunidade_id', id).maybeSingle(),
@@ -136,16 +148,14 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     const encs = (encaminhamentos.data ?? []).map(mapEncaminhamento);
     const o = org.data;
     return {
-      ...mapResumo(o, encs.filter(e => e.status !== 'Concluído').length),
+      ...mapResumo(o, encs.filter(e => e.status !== 'Concluído').length, (projetos.data ?? []).map(mapProjeto)),
       eixo: o.eixo_principal ?? null,
       localizacao: o.localizacao ?? null,
       territorio: o.territorio ?? null,
-      status: o.status ?? null,
       responsavelTecnico: o.responsavel_tecnico ?? null,
       pessoas: (pessoas.data ?? []).map((p: any): PessoaReferencia => ({
         id: p.id, nome: p.nome, funcao: p.funcao ?? null, contato: p.contato ?? null,
       })),
-      projetos: (projetos.data ?? []).map((p: any) => ({ id: p.id, codigo: p.code, nome: p.nome })),
       registros: ordenarRegistros((registros.data ?? []).map(mapRegistro)),
       encaminhamentos: ordenarEncaminhamentos(encs),
       nota: nota.data
