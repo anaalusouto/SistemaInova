@@ -15,8 +15,7 @@
  * porque ninguém preencheu o campo seria inventar uma conclusão.
  */
 import { useMemo, useState } from 'react';
-import {
-  Plus, Pencil, Trash2, X, AlertTriangle, DollarSign, ChevronLeft, Link2,
+import { Pencil, Trash2, X, AlertTriangle, DollarSign, ChevronLeft, Link2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project } from '../../data/mockData';
@@ -29,6 +28,7 @@ import { formatDateOnly } from '../../lib/dateOnly';
 import { type ParecerInput } from '../../planoTrabalho.server';
 import { rotuloRegistro } from '../../lib/organizacoes';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes, ConfirmarExclusao } from './camposFormulario';
+import { BotaoNovo } from '../BotaoNovo';
 
 /** Ausência de registro, dita como tal (RN-026). */
 function SemRegistro() {
@@ -253,13 +253,7 @@ export function PainelParecer({ project, aoFechar }: { project: Project; aoFecha
             </div>
 
             {modo.tela === 'lista' && !readOnly && (
-              <button
-                onClick={() => setModo({ tela: 'novo' })}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[12px] font-medium mt-3"
-                style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-              >
-                <Plus size={12} /> Novo parecer
-              </button>
+              <BotaoNovo onClick={() => setModo({ tela: 'novo' })} className="mt-3">Novo parecer</BotaoNovo>
             )}
 
             {modo.tela === 'detalhe' && atual && !readOnly && (

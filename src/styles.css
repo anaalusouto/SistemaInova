@@ -107,8 +107,12 @@
   --ink-1: #0F172A;
   --ink-2: #1E293B;
   --ink-3: #475569;
-  --ink-4: #64748B;
-  --ink-5: #94A3B8;
+  /* ink-4 e ink-5 escurecidos (UI/UX, 29/09/2026): #64748B e #94A3B8 davam
+     4,3:1 e 2,3:1 sobre surface-2 — abaixo do mínimo de 4,5:1 (WCAG AA) para
+     texto pequeno, e ink-5 é o cinza de "Não informado", rótulos e subtextos.
+     Os dois passam de 4,5:1 sobre surface-0/1/2 e sobre os fundos -soft. */
+  --ink-4: #526177;
+  --ink-5: #5F6E84;
   --line-1: #E2E8F0;
   --line-2: #CBD5E1;
   --surface-0: #FFFFFF;
@@ -131,6 +135,15 @@
   --danger-soft: #FEF2F2;
   --danger-soft-border: #FCA5A5;
   --danger-strong-text: #991B1B;
+  /* Alerta (laranja): atraso e risco Alto. Vermelho (--danger) fica só para
+     crítico e ação destrutiva (UI/UX, 29/09/2026). */
+  /* Azul fixo: etiqueta informativa que não segue o accent escolhido pelo
+     usuário (ex.: canal do registro de contato). */
+  --tag-blue-soft: #EFF6FF;
+  --tag-blue-text: #1D4ED8;
+  --alert: #C2410C;
+  --alert-soft: #FFF7ED;
+  --alert-soft-border: #FDBA74;
   --warning: #D97706;
   --warning-soft: #FFFBEB;
   --warning-soft-border: #FDE68A;
@@ -149,7 +162,8 @@
   --ink-2: #E2E8F0;
   --ink-3: #CBD5E1;
   --ink-4: #94A3B8;
-  --ink-5: #64748B;
+  /* Era #64748B: 3,1:1 sobre surface-0. Agora ≥ 4,8:1 em todas as superfícies. */
+  --ink-5: #8494AB;
   --line-1: rgba(255,255,255,0.12);
   --line-2: rgba(255,255,255,0.2);
   --surface-0: #1B2740;
@@ -170,6 +184,11 @@
   --danger-soft: rgba(220,38,38,0.16);
   --danger-soft-border: rgba(220,38,38,0.4);
   --danger-strong-text: #FCA5A5;
+  --tag-blue-soft: rgba(59,130,246,0.16);
+  --tag-blue-text: #93C5FD;
+  --alert: #FB923C;
+  --alert-soft: rgba(234,88,12,0.16);
+  --alert-soft-border: rgba(234,88,12,0.4);
   --warning: #FBBF24;
   --warning-soft: rgba(217,119,6,0.16);
   --warning-soft-border: rgba(217,119,6,0.4);

@@ -10,7 +10,7 @@
  */
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Paperclip, Plus, AlertTriangle } from 'lucide-react';
+import { Paperclip, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { formatDateOnly } from '../../lib/dateOnly';
@@ -19,6 +19,7 @@ import {
   type ItemOrcamento, type NotaOrcamento,
 } from '../../lib/orcamento';
 import { Campo, AreaTexto, Erros, Acoes } from '../plano/camposFormulario';
+import { BotaoNovo } from '../BotaoNovo';
 
 export function FormularioExecucao({
   item, notas, aoFechar, aoNovaNota, aoAbrirNota,
@@ -103,14 +104,7 @@ export function FormularioExecucao({
               Notas fiscais ({notas.length})
             </span>
             {!readOnly && (
-              <button
-                type="button"
-                onClick={aoNovaNota}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11.5px] font-medium"
-                style={{ borderColor: 'var(--border)', color: 'var(--brand)' }}
-              >
-                <Plus size={12} /> Nova nota
-              </button>
+              <BotaoNovo onClick={aoNovaNota}>Nova nota</BotaoNovo>
             )}
           </div>
           {notas.length === 0 ? (

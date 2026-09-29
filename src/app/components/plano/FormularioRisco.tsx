@@ -25,7 +25,7 @@ const CATEGORIAS = [
 const CORES_FAIXA: Record<string, { cor: string; fundo: string }> = {
   'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)' },
   'Médio':   { cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)' },
-  'Alto':    { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
+  'Alto':    { cor: 'var(--alert)', fundo: 'var(--alert-soft)' },
   'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
 };
 

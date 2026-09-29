@@ -34,7 +34,7 @@ const SEM_RESPONSAVEL = '__sem_responsavel__';
 const CORES_FAIXA: Record<string, string> = {
   'Baixo': 'var(--success)',
   'Médio': 'var(--warning-strong-text)',
-  'Alto': 'var(--danger)',
+  'Alto': 'var(--alert)',
   'Crítico': 'var(--danger)',
 };
 
@@ -100,11 +100,11 @@ function Cartao({
         <span style={{ color: 'var(--ink-4)' }}>
           {atividade.responsible || 'sem responsável'}
         </span>
-        <span style={{ color: atrasada ? 'var(--danger)' : 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
+        <span style={{ color: atrasada ? 'var(--alert)' : 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
           {atividade.plannedEnd ? formatDateOnly(atividade.plannedEnd) : 'sem prazo'}
         </span>
         {atrasada && (
-          <span className="inline-flex items-center gap-0.5" style={{ color: 'var(--danger)', fontWeight: 600 }}>
+          <span className="inline-flex items-center gap-0.5" style={{ color: 'var(--alert)', fontWeight: 600 }}>
             <AlertTriangle size={9} /> Atrasada
           </span>
         )}
@@ -131,7 +131,7 @@ function Cartao({
           <button
             onClick={aoAbrirAnexo}
             className="inline-flex items-center gap-0.5"
-            style={{ color: 'var(--info)' }}
+            style={{ color: 'var(--brand-text)' }}
             aria-label={`Anexo de ${atividade.name}`}
           >
             <Paperclip size={9} /> anexo

@@ -27,6 +27,11 @@ interface FichaOrganizacaoProps {
 export function FichaOrganizacao({ organizacaoId, aoVoltar, aoAbrirProjeto }: FichaOrganizacaoProps) {
   const { data: org, isLoading, error } = useFichaOrganizacao(organizacaoId);
   const [aba, setAba] = useState<Aba>('dados');
+  // Navegação cruzada registro ⇄ encaminhamento (UI/UX): o id do registro de
+  // contato em foco. Nos Registros, destaca o cartão; nos Encaminhamentos,
+  // destaca os que nasceram dele.
+  const [foco, setFoco] = useState<string | null>(null);
+  const irPara = (destino: Aba, registroId: string) => { setFoco(registroId); setAba(destino); };
 
   if (isLoading) {
     return (
@@ -115,8 +120,12 @@ export function FichaOrganizacao({ organizacaoId, aoVoltar, aoAbrirProjeto }: Fi
 
       <div className="flex-1 overflow-y-auto">
         {aba === 'dados' && <DadosCadastrais org={org} aoAbrirProjeto={aoAbrirProjeto} />}
-        {aba === 'contatos' && <AbaRegistrosContato org={org} />}
-        {aba === 'encaminhamentos' && <AbaEncaminhamentos org={org} />}
+        {aba === 'contatos' && (
+          <AbaRegistrosContato org={org} foco={foco} aoVerEncaminhamentos={id => irPara('encaminhamentos', id)} />
+        )}
+        {aba === 'encaminhamentos' && (
+          <AbaEncaminhamentos org={org} foco={foco} aoVerRegistro={id => irPara('contatos', id)} />
+        )}
       </div>
     </div>
   );

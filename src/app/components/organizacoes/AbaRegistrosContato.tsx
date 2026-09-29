@@ -7,7 +7,7 @@
  * houver, o meio.
  */
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, MessageSquare, Paperclip, X, ListChecks } from 'lucide-react';
+import { Pencil, Trash2, MessageSquare, Paperclip, X, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, usePeople } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
@@ -19,12 +19,22 @@ import {
 import { CampoAnexo, abrirAnexo } from '../plano/CampoAnexo';
 import { Campo, Texto, AreaTexto, Data, Erros, Acoes, ConfirmarExclusao } from '../plano/camposFormulario';
 import { useEscritaOrganizacao } from './useOrganizacoes';
+import { useDestaque } from './useDestaque';
+import { BotaoNovo } from '../BotaoNovo';
 
 const hoje = () => new Date().toISOString().slice(0, 10);
 
 type Form = RegistroContatoInput & { id?: string };
 
-export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
+export function AbaRegistrosContato({
+  org, foco, aoVerEncaminhamentos,
+}: {
+  org: OrganizacaoFicha;
+  /** Registro a destacar ao chegar de um encaminhamento. */
+  foco: string | null;
+  aoVerEncaminhamentos: (registroId: string) => void;
+}) {
+  const destaque = useDestaque(foco);
   const { user, readOnly } = useAuth();
   const { log: audit } = useAudit();
   const escrita = useEscritaOrganizacao();
@@ -71,13 +81,7 @@ export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
             : `${org.registros.length} ${org.registros.length === 1 ? 'registro' : 'registros'}, do mais recente para o mais antigo.`}
         </p>
         {!readOnly && (
-          <button
-            onClick={novo}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white self-start sm:self-auto"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Plus size={12} /> Novo registro
-          </button>
+          <BotaoNovo onClick={novo} className="self-start sm:self-auto">Novo registro</BotaoNovo>
         )}
       </div>
 
@@ -91,7 +95,15 @@ export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
           {org.registros.map(r => {
             const encs = origemDe(r.id);
             return (
-              <li key={r.id} className="bg-card rounded-xl border p-4" style={{ borderColor: 'var(--border)' }}>
+              <li
+                key={r.id}
+                ref={destaque.ref(r.id)}
+                className="bg-card rounded-xl border p-4 transition-shadow"
+                style={{
+                  borderColor: destaque.ativo(r.id) ? 'var(--brand)' : 'var(--border)',
+                  boxShadow: destaque.ativo(r.id) ? '0 0 0 3px var(--brand-soft)' : undefined,
+                }}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>
@@ -99,7 +111,7 @@ export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
                         {formatDateOnly(r.data)}{r.hora ? ` · ${r.hora}` : ''}
                       </span>
                       {r.meio && (
-                        <span className="px-2 py-0.5 rounded-md" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
+                        <span className="px-2 py-0.5 rounded-full" style={{ background: 'var(--tag-blue-soft)', color: 'var(--tag-blue-text)', fontWeight: 500 }}>
                           {r.meio}
                         </span>
                       )}
@@ -122,7 +134,7 @@ export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
 
                 <dl className="mt-2 grid grid-cols-1 sm:grid-cols-[110px_1fr] gap-x-3 gap-y-1.5" style={{ fontSize: '0.8rem' }}>
                   <dt style={{ color: 'var(--ink-5)', fontWeight: 600, fontSize: '0.72rem' }}>Participantes</dt>
-                  <dd style={{ color: r.participantes.length ? 'var(--ink-2)' : 'var(--ink-5)' }}>
+                  <dd style={{ color: r.participantes.length ? 'var(--ink-2)' : 'var(--ink-5)', fontStyle: r.participantes.length ? undefined : 'italic' }}>
                     {r.participantes.length ? r.participantes.join(', ') : NAO_INFORMADO}
                   </dd>
                   <dt style={{ color: 'var(--ink-5)', fontWeight: 600, fontSize: '0.72rem' }}>Resumo</dt>
@@ -135,17 +147,22 @@ export function AbaRegistrosContato({ org }: { org: OrganizacaoFicha }) {
                       <button
                         onClick={() => abrirAnexo(r.anexo!.id)}
                         className="inline-flex items-center gap-1 hover:underline"
-                        style={{ color: 'var(--info)' }}
+                        style={{ color: 'var(--brand-text)' }}
                         title={r.anexo.fileName}
                       >
                         <Paperclip size={11} /> {r.anexo.fileName}
                       </button>
                     )}
                     {encs.length > 0 && (
-                      <span className="inline-flex items-center gap-1" style={{ color: 'var(--ink-4)' }}>
+                      <button
+                        type="button"
+                        onClick={() => aoVerEncaminhamentos(r.id)}
+                        className="inline-flex items-center gap-1 hover:underline"
+                        style={{ color: 'var(--brand-text)' }}
+                      >
                         <ListChecks size={11} />
                         {encs.length === 1 ? 'Origem de 1 encaminhamento' : `Origem de ${encs.length} encaminhamentos`}
-                      </span>
+                      </button>
                     )}
                   </div>
                 )}

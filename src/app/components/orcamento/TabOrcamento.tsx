@@ -15,7 +15,7 @@
  */
 import { Fragment, useMemo, useState } from 'react';
 import {
-  ChevronDown, ChevronRight, Search, ShieldAlert, Info, Trash2, RotateCcw, History, Upload,
+  ChevronDown, ChevronRight, Search, ShieldAlert, Info, Trash2, RotateCcw, History, Upload, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal } from '../../data/mockData';
@@ -317,13 +317,15 @@ export function TabOrcamento({ project }: { project: Project }) {
                             borderBottom: '1px solid var(--line-1)',
                             // Item excluído permanece na posição, visivelmente
                             // diferente — nunca some da lista (RF-040).
-                            background: excluido ? 'var(--danger-soft)' : undefined,
-                            opacity: excluido ? 0.85 : 1,
+                            // Cinza, não vermelho: exclusão é decisão registrada,
+                            // não alerta (UI/UX, 29/09/2026).
+                            background: excluido ? 'var(--surface-2)' : undefined,
+                            opacity: excluido ? 0.8 : 1,
                           }}
                         >
                           <td className="px-2 py-1.5" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.75rem', color: 'var(--ink-1)', maxWidth: 240 }}>
-                            <span className="block truncate" title={item.descricao}>{item.descricao}</span>
+                            <span className="block truncate" title={item.descricao} style={{ textDecoration: excluido ? 'line-through' : undefined }}>{item.descricao}</span>
                           </td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtd}</td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{item.unidade || '—'}</td>
@@ -361,8 +363,9 @@ export function TabOrcamento({ project }: { project: Project }) {
                             <span
                               className="px-1.5 py-0.5 rounded"
                               style={{
-                                background: excluido ? 'var(--danger-soft)' : 'var(--surface-2)',
-                                color: excluido ? 'var(--danger)' : 'var(--ink-4)',
+                                background: excluido ? 'var(--surface-0)' : 'var(--surface-2)',
+                                color: excluido ? 'var(--ink-2)' : 'var(--ink-4)',
+                                border: excluido ? '1px solid var(--border)' : undefined,
                                 fontWeight: excluido ? 600 : 400,
                               }}
                             >
@@ -399,10 +402,11 @@ export function TabOrcamento({ project }: { project: Project }) {
                                 <>
                                   <button
                                     onClick={() => setEditando(item)}
-                                    className="px-1.5 py-0.5 rounded text-[11px]"
-                                    style={{ color: 'var(--brand)' }}
+                                    aria-label={`Execução de ${item.descricao}`}
+                                    title="Notas, conclusão e justificativa"
+                                    className="p-1 rounded"
                                   >
-                                    execução
+                                    <Pencil size={12} color="var(--ink-3)" />
                                   </button>
                                   <button onClick={() => setExcluindo(item)} aria-label={`Excluir ${item.descricao} do plano`} className="p-1 rounded">
                                     <Trash2 size={12} color="var(--danger)" />

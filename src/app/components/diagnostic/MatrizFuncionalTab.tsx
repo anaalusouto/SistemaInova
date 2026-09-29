@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, Pencil } from 'lucide-react';
 import {
   MATRIZ_FUNCOES, ATUACAO_OPCOES, QUEM_EXECUTA_OPCOES, INTERESSE_OPCOES, CRITICIDADE_OPCOES, ABRANGENCIA_OPCOES,
   type MatrizFuncaoCatalogo,
@@ -147,10 +147,10 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
                     {!readOnly && (
                       <button
                         onClick={() => startEdit(resposta)}
-                        className="text-[12px] font-medium hover:underline w-fit mt-1"
+                        className="inline-flex items-center gap-1 text-[12px] font-medium hover:underline w-fit mt-1"
                         style={{ color: 'var(--primary)' }}
                       >
-                        Editar
+                        <Pencil size={12} /> Editar
                       </button>
                     )}
                   </div>

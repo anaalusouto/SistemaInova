@@ -9,7 +9,7 @@
  * assunto do registro não quebra o vínculo.
  */
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, ListChecks, X, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, ListChecks, X, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, usePeople } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
@@ -20,6 +20,8 @@ import {
 } from '../../lib/organizacoes';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes, ConfirmarExclusao } from '../plano/camposFormulario';
 import { useEscritaOrganizacao } from './useOrganizacoes';
+import { useDestaque } from './useDestaque';
+import { BotaoNovo } from '../BotaoNovo';
 
 const COR_STATUS: Record<StatusEncaminhamento, { cor: string; fundo: string }> = {
   'A iniciar': { cor: 'var(--ink-3)', fundo: 'var(--surface-2)' },
@@ -32,7 +34,16 @@ const COLUNAS = ['Descrição', 'Responsável', 'Data inicial', 'Data final', 'S
 type Form = EncaminhamentoInput & { id?: string };
 type TipoOrigem = 'nenhuma' | 'contato' | 'texto';
 
-export function AbaEncaminhamentos({ org }: { org: OrganizacaoFicha }) {
+export function AbaEncaminhamentos({
+  org, foco, aoVerRegistro,
+}: {
+  org: OrganizacaoFicha;
+  /** Registro de contato em foco: os encaminhamentos que nasceram dele ficam destacados. */
+  foco: string | null;
+  aoVerRegistro: (registroId: string) => void;
+}) {
+  const doFoco = (e: Encaminhamento) => !!foco && e.origem?.tipo === 'contato' && e.origem.registroId === foco;
+  const destaque = useDestaque(org.encaminhamentos.find(doFoco)?.id ?? null);
   const { user, readOnly } = useAuth();
   const { log: audit } = useAudit();
   const escrita = useEscritaOrganizacao();
@@ -93,13 +104,7 @@ export function AbaEncaminhamentos({ org }: { org: OrganizacaoFicha }) {
           )}
         </div>
         {!readOnly && (
-          <button
-            onClick={novo}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white self-start sm:self-auto"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Plus size={12} /> Novo encaminhamento
-          </button>
+          <BotaoNovo onClick={novo} className="self-start sm:self-auto">Novo encaminhamento</BotaoNovo>
         )}
       </div>
 
@@ -108,7 +113,7 @@ export function AbaEncaminhamentos({ org }: { org: OrganizacaoFicha }) {
           <table className="w-full" style={{ minWidth: 900 }}>
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
-                {[...COLUNAS, ''].map(h => (
+                {[...COLUNAS, 'Ações'].map(h => (
                   <th
                     key={h}
                     className="px-3 py-2.5 text-left"
@@ -133,7 +138,11 @@ export function AbaEncaminhamentos({ org }: { org: OrganizacaoFicha }) {
                 const origem = textoOrigem(e);
                 const cor = COR_STATUS[e.status];
                 return (
-                  <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <tr
+                    key={e.id}
+                    ref={destaque.ref(e.id)}
+                    style={{ borderBottom: '1px solid var(--border)', background: doFoco(e) ? 'var(--brand-soft)' : undefined }}
+                  >
                     <td className="px-3 py-2.5" style={{ fontSize: '0.8rem', color: 'var(--ink-1)', minWidth: 260, whiteSpace: 'pre-line' }}>
                       {e.descricao}
                     </td>
@@ -153,10 +162,20 @@ export function AbaEncaminhamentos({ org }: { org: OrganizacaoFicha }) {
                     </td>
                     <td className="px-3 py-2.5" style={{ fontSize: '0.76rem', color: origem ? 'var(--ink-3)' : 'var(--ink-5)', minWidth: 180 }}>
                       {origem ? (
-                        <span className="inline-flex items-start gap-1">
-                          {origem.contato && <MessageSquare size={11} style={{ marginTop: 3, flexShrink: 0 }} />}
-                          {origem.texto}
-                        </span>
+                        origem.contato && e.origem?.tipo === 'contato' ? (
+                          <button
+                            type="button"
+                            onClick={() => aoVerRegistro((e.origem as { registroId: string }).registroId)}
+                            className="inline-flex items-start gap-1 text-left hover:underline"
+                            style={{ color: 'var(--brand-text)' }}
+                            title="Abrir o registro de contato de origem"
+                          >
+                            <MessageSquare size={11} style={{ marginTop: 3, flexShrink: 0 }} />
+                            {origem.texto}
+                          </button>
+                        ) : (
+                          <span>{origem.texto}</span>
+                        )
                       ) : '—'}
                     </td>
                     <td className="px-2 py-2.5 whitespace-nowrap">

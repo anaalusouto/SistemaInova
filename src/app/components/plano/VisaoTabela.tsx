@@ -37,7 +37,7 @@ const COLUNAS = [
 const CORES_FAIXA: Record<string, { cor: string; fundo: string }> = {
   'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)' },
   'Médio':   { cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)' },
-  'Alto':    { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
+  'Alto':    { cor: 'var(--alert)', fundo: 'var(--alert-soft)' },
   'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
 };
 
@@ -58,7 +58,7 @@ function Estado({ atividade, hoje }: { atividade: Activity; hoje: string }) {
     return (
       <span
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md whitespace-nowrap"
-        style={{ background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: '0.7rem', fontWeight: 600 }}
+        style={{ background: 'var(--alert-soft)', color: 'var(--alert)', fontSize: '0.7rem', fontWeight: 600 }}
         title={`Fim previsto em ${formatDateOnly(atividade.plannedEnd)}, ainda não concluída`}
       >
         <AlertTriangle size={11} /> Atrasada
@@ -328,7 +328,7 @@ export function VisaoTabela({
                                   <button
                                     onClick={() => aoAbrirAnexo(atividade)}
                                     className="inline-flex items-center gap-1 hover:underline"
-                                    style={{ fontSize: '0.72rem', color: 'var(--info)' }}
+                                    style={{ fontSize: '0.72rem', color: 'var(--brand-text)' }}
                                     title={atividade.attachment.fileName}
                                   >
                                     <Paperclip size={11} /> abrir

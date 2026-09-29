@@ -149,7 +149,7 @@ export function PainelEtapa({
                       style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}
                     >
                       <span className="truncate">{a.name}</span>
-                      <span style={{ fontSize: '0.7rem', color: estaAtrasada(a) ? 'var(--danger)' : 'var(--ink-5)', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: '0.7rem', color: estaAtrasada(a) ? 'var(--alert)' : 'var(--ink-5)', whiteSpace: 'nowrap' }}>
                         {estaAtrasada(a) ? 'Atrasada' : a.status}
                       </span>
                     </button>

@@ -9,6 +9,7 @@ import { CronogramaExecutivoTab } from './CronogramaExecutivoTab';
 import { GestaoPage } from './GestaoPage';
 import { MensagensPage } from './MensagensPage';
 import 'leaflet/dist/leaflet.css';
+import { BotaoNovo, LinkNovo } from './BotaoNovo';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
@@ -122,10 +123,7 @@ function RotasTab() {
             {rotasUnicas.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
-        <button onClick={() => { addRoute({ rota: 'ROTA NOVA', organizacao: '', municipio: '', uf: 'PA', diasAtuacao: 2, modalAcesso: '', tipoComunidade: '', notasLogisticas: '', status: 'Operacional' }); record('adicionar rota', 'ROTA NOVA'); }}
-          className="flex items-center gap-1 text-xs px-3 py-2 rounded-md text-white ml-auto" style={{ background: 'var(--primary)' }}>
-          <Plus size={12} /> Adicionar rota
-        </button>
+        <BotaoNovo onClick={() => { addRoute({ rota: 'ROTA NOVA', organizacao: '', municipio: '', uf: 'PA', diasAtuacao: 2, modalAcesso: '', tipoComunidade: '', notasLogisticas: '', status: 'Operacional' }); record('adicionar rota', 'ROTA NOVA'); }} className="ml-auto">Nova rota</BotaoNovo>
       </div>
 
       {/* KPIs */}
@@ -537,9 +535,7 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
                   {e.responsavel && <div className="text-[10px] opacity-90 truncate">{e.responsavel}</div>}
                 </button>
               ))}
-              <button onClick={() => onNew(key)} className="w-full text-[10px] py-1 rounded hover:bg-accent text-muted-foreground border border-dashed" style={{ borderColor: 'var(--border)' }}>
-                <Plus size={10} className="inline" /> adicionar
-              </button>
+              <LinkNovo onClick={() => onNew(key)} className="w-full justify-center py-1">Novo evento</LinkNovo>
             </div>
           </div>
         );
@@ -664,7 +660,7 @@ function EventForm({ initial, prefillDate, routes, communities, onSave, onClose,
           </div>
         </div>
         <div className="flex justify-between mt-5">
-          {onDelete ? <button onClick={onDelete} className="text-xs text-red-600 flex items-center gap-1"><Trash2 size={12} />Excluir evento</button> : <span />}
+          {onDelete ? <button onClick={onDelete} className="text-xs flex items-center gap-1" style={{ color: 'var(--danger)' }}><Trash2 size={12} />Excluir evento</button> : <span />}
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-sm rounded-md" style={{ border: '1px solid var(--border)' }}>Cancelar</button>
             <button onClick={() => { if (!form.title) { toast.error('Informe o título'); return; } onSave(form); }} className="px-4 py-2 text-sm text-white rounded-md flex items-center gap-1" style={{ background: 'var(--primary)' }}>

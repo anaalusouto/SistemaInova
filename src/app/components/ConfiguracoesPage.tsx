@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
-  UserCog, Plus, Trash2, X, Pencil,
+  UserCog, Trash2, X, Pencil,
 } from 'lucide-react';
 import { usePeople, ROLE_LABEL, useAuth, PRESENCE_ACTIVE_MS, type UserRole } from '../auth/authStore';
 import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type ManagedUser } from '../usuarios.server';
@@ -10,6 +10,7 @@ import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
 import { useAudit } from '../audit/auditStore';
 import { useStore } from '../store';
 import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, FONT_SCALE_LABEL, FONT_SCALE_ORDER, type AccentColor, type FontScale } from '../theme/themeStore';
+import { BotaoNovo } from './BotaoNovo';
 
 const NOTIF_KEY = 'pp-notificacoes-v1';
 
@@ -585,7 +586,7 @@ function AvatarEditor() {
       </div>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
       {user?.avatarUrl && !showPwd && (
-        <button onClick={startRemove} style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>Remover foto</button>
+        <button onClick={startRemove} className="inline-flex items-center gap-1" style={{ fontSize: '0.68rem', color: 'var(--danger)' }}><Trash2 size={11} /> Remover foto</button>
       )}
       {showPwd && (
         <div className="flex items-center gap-1.5 mt-0.5">
@@ -779,9 +780,7 @@ function UsuariosSection() {
             Administradores têm poder total (edição e aprovação em tudo). Estagiários podem ter poderes de admin ativados individualmente.
           </p>
         </div>
-        <button onClick={() => setShowNew(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium text-white" style={{ background: 'var(--primary)' }}>
-          <Plus size={13} /> Novo usuário
-        </button>
+        <BotaoNovo onClick={() => setShowNew(true)}>Novo usuário</BotaoNovo>
       </div>
 
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>

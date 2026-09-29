@@ -40,7 +40,7 @@ const fmt = (n: number) =>
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
   'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Atrasado':     { color: 'var(--alert)', bg: 'var(--alert-soft)', dot: 'var(--alert)' },
   'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
   'Suspenso':     { color: 'var(--warning)', bg: 'var(--warning-soft)', dot: 'var(--warning)' },
 };
@@ -48,8 +48,8 @@ const statusConfig: Record<string, { color: string; bg: string; dot: string }> =
 const riskConfig: Record<string, { color: string; bg: string }> = {
   'Baixo':   { color: 'var(--success)', bg: 'var(--success-soft)' },
   'Médio':   { color: 'var(--warning)', bg: 'var(--warning-soft)' },
-  'Alto':    { color: 'var(--danger)', bg: 'var(--danger-soft)' },
-  'Crítico': { color: 'var(--info)', bg: 'var(--info-soft)' },
+  'Alto':    { color: 'var(--alert)', bg: 'var(--alert-soft)' },
+  'Crítico': { color: 'var(--danger)', bg: 'var(--danger-soft)' },
   '—':       { color: 'var(--ink-4)', bg: 'var(--surface-2)' },
 };
 
@@ -169,7 +169,7 @@ export function PortfolioView({ onSelectProject }: PortfolioViewProps) {
   const pieData = [
     { name: 'Em andamento', value: kpiData.inProgress, color: 'var(--brand)' },
     { name: 'Concluído',    value: kpiData.concluded,  color: 'var(--success)' },
-    { name: 'Atrasado',     value: kpiData.delayed,    color: 'var(--danger)' },
+    { name: 'Atrasado',     value: kpiData.delayed,    color: 'var(--alert)' },
     { name: 'Não iniciado', value: kpiData.notStarted, color: 'var(--ink-5)' },
     ...(suspended > 0 ? [{ name: 'Suspenso', value: suspended, color: 'var(--warning)' }] : []),
   ];
@@ -389,7 +389,7 @@ export function PortfolioView({ onSelectProject }: PortfolioViewProps) {
             <tbody>
               {visibleProjects.map(p => {
                 const pctExec = p.budgetApproved > 0 ? Math.round((p.budgetExecuted / p.budgetApproved) * 100) : 0;
-                const progressColor = p.status === 'Atrasado' ? 'var(--danger)' : p.status === 'Concluído' ? 'var(--success)' : 'var(--brand)';
+                const progressColor = p.status === 'Atrasado' ? 'var(--alert)' : p.status === 'Concluído' ? 'var(--success)' : 'var(--brand)';
                 return (
                   <tr
                     key={p.id}

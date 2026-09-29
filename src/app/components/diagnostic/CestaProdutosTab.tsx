@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, ChevronDown, ChevronRight, Check, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Check, Pencil, Trash2 } from 'lucide-react';
 import { CESTA_BLOCOS, type CestaCampo } from '../../diagnostic/catalog/cestaProdutos';
 import {
   listarProdutos, criarProduto, salvarRespostasProduto, excluirProduto,
   type Produto, type ProdutoStatusPreenchimento,
 } from '../../diagnosticos.server';
 import { Chip } from './DiagnosticUI';
+import { BotaoNovo } from '../BotaoNovo';
 
 interface CestaProdutosTabProps {
   diagnosticoId: string;
@@ -86,13 +87,7 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
           {produtos.length} produtos cadastrados · {completos} preenchidos · {emPreenchimento} em preenchimento
         </p>
         {!readOnly && (
-          <button
-            onClick={() => setShowNovo(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-medium text-white hover:opacity-90"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Plus size={13} /> Adicionar produto
-          </button>
+          <BotaoNovo onClick={() => setShowNovo(true)}>Novo produto</BotaoNovo>
         )}
       </div>
 
@@ -272,8 +267,8 @@ function ProdutoEditor({ produto, readOnly, onBack }: { produto: Produto; readOn
                       <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)' }}>Nenhuma resposta registrada ainda neste bloco.</p>
                     )}
                     {!readOnly && (
-                      <button onClick={() => setEditingBlocoId(bloco.id)} className="text-[12px] font-medium hover:underline w-fit" style={{ color: 'var(--primary)' }}>
-                        Editar
+                      <button onClick={() => setEditingBlocoId(bloco.id)} className="inline-flex items-center gap-1 text-[12px] font-medium hover:underline w-fit" style={{ color: 'var(--primary)' }}>
+                        <Pencil size={12} /> Editar
                       </button>
                     )}
                   </>

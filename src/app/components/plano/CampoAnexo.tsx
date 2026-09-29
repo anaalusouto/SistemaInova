@@ -135,7 +135,7 @@ export function CampoAnexo({
             type="button"
             onClick={() => abrirAnexo(anexo.id)}
             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
-            style={{ color: 'var(--info)', fontSize: '0.72rem' }}
+            style={{ color: 'var(--brand-text)', fontSize: '0.72rem' }}
           >
             <ExternalLink size={11} /> abrir
           </button>

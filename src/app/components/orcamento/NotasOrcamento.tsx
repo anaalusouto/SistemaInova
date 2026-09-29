@@ -7,7 +7,7 @@
  */
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Paperclip, Pencil, Plus, Receipt, Trash2 } from 'lucide-react';
+import { Paperclip, Pencil, Receipt, Trash2 } from 'lucide-react';
 import { useStore } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { formatDateOnly } from '../../lib/dateOnly';
@@ -16,6 +16,7 @@ import {
   type ItemOrcamento, type NotaOrcamento,
 } from '../../lib/orcamento';
 import { ConfirmarExclusao } from '../plano/camposFormulario';
+import { BotaoNovo } from '../BotaoNovo';
 
 export function ComparativoExecucao({
   proposto, executado, notas,
@@ -123,13 +124,7 @@ export function ListaNotas({
           <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>{notas.length}</span>
         </div>
         {!readOnly && (
-          <button
-            onClick={aoNovaNota}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-medium text-white"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Plus size={13} /> Nova nota
-          </button>
+          <BotaoNovo onClick={aoNovaNota}>Nova nota</BotaoNovo>
         )}
       </div>
 

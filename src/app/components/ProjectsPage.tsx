@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import {
   Search,
   Filter,
-  Plus,
   ChevronRight,
   FolderKanban,
   Calendar,
@@ -19,6 +18,7 @@ import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { Chip, FilterGroup } from './portfolio/PortfolioFilters';
 import { getExercicios, getOrgOptions, STATUS_OPTIONS } from '../lib/portfolioFilters';
+import { BotaoNovo } from './BotaoNovo';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -26,7 +26,7 @@ const fmt = (n: number) =>
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
   'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Atrasado':     { color: 'var(--alert)', bg: 'var(--alert-soft)', dot: 'var(--alert)' },
   'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
   'Suspenso':     { color: 'var(--warning)', bg: 'var(--warning-soft)', dot: 'var(--warning)' },
 };
@@ -128,13 +128,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
             {projects.length} projetos no portfólio · {filtered.length} exibidos
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white hover:opacity-90"
-          style={{ background: 'var(--primary)' }}
-        >
-          <Plus size={14} /> Novo Projeto
-        </button>
+        <BotaoNovo onClick={() => setShowModal(true)}>Novo projeto</BotaoNovo>
       </div>
 
       <div className="flex items-center gap-3">
@@ -222,7 +216,7 @@ export function ProjectsPage({ onSelectProject }: ProjectsPageProps) {
         {filtered.map(p => {
           const cfg = statusConfig[p.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
           const progressColor =
-            p.status === 'Atrasado' ? 'var(--danger)' :
+            p.status === 'Atrasado' ? 'var(--alert)' :
             p.status === 'Concluído' ? 'var(--success)' : 'var(--brand)';
 
           return (

@@ -27,7 +27,7 @@ import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabMudancas } from './project-tabs/TabMudancas';
-import { riscoEmAberto } from '../lib/planoTrabalho';
+import { riscoEmAberto, faixaRisco } from '../lib/planoTrabalho';
 
 /**
  * As seções do RF-001, nesta ordem, menos Contato (ver TabId). Substituem as cinco abas antigas:
@@ -48,7 +48,7 @@ const tabs: { id: TabId; label: string; icon: typeof FileText }[] = [
 const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
   'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--danger)', bg: 'var(--danger-soft)', dot: 'var(--danger)' },
+  'Atrasado':     { color: 'var(--alert)', bg: 'var(--alert-soft)', dot: 'var(--alert)' },
   'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
 };
 
@@ -104,6 +104,10 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
     { kind: 'termoFomentoLink', valor: termoFomentoLink, rotulo: 'Termo de Fomento', rotuloVazio: 'Link do Termo de Fomento', cor: 'var(--info)', fundo: 'var(--info-soft)' },
   ];
 
+  const riscosAbertos = project.risks.filter(riscoEmAberto);
+  const criticosAbertos = riscosAbertos.filter(r => faixaRisco(r.severity) === 'Crítico').length;
+  const temCritico = criticosAbertos > 0;
+
   const acoesDoCabecalho = (
     // RF-033: acesso discreto ao parecer, no cabeçalho, presente em todas as
     // seções — e não uma aba a mais.
@@ -120,10 +124,15 @@ export function ProjectView({ project: initial, onBack }: ProjectViewProps) {
       <button
         onClick={() => { setActiveTab('plano'); setPedidoRiscos(n => n + 1); }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-        style={{ borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }}
+        // Vermelho só com risco CRÍTICO em aberto (UI/UX, 29/09/2026); sem ele,
+        // o botão é neutro como os vizinhos.
+        style={temCritico
+          ? { borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }
+          : { borderColor: 'var(--border)', color: 'var(--ink-2)' }}
+        title={temCritico ? `${criticosAbertos} crítico${criticosAbertos === 1 ? '' : 's'} em aberto` : undefined}
       >
         {/* Só os em aberto: encerrado não pede ação (mesma regra do cabeçalho). */}
-        <ShieldAlert size={13} /> Riscos ({project.risks.filter(riscoEmAberto).length})
+        <ShieldAlert size={13} /> Riscos ({riscosAbertos.length})
       </button>
       <button
         onClick={() => setPanel('mudancas')}

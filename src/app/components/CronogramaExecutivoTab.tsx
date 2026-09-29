@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks, Pencil, Check } from 'lucide-react';
+import { Trash2, Save, X, ChevronDown, MessageSquare, Link2, GanttChart, Search, ListChecks, Pencil, Check } from 'lucide-react';
 import { useStore } from '../store';
 import { useAuth, usePeople } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { ganttStatusColors, type GanttActivity, type GanttStatus } from '../data/cronogramaExecutivo';
 import { INTERNAL_STATUSES, internalStatusColors } from '../data/controleInterno';
+import { LinkNovo } from './BotaoNovo';
 
 const STATUS_LIST: GanttStatus[] = INTERNAL_STATUSES;
 
@@ -284,17 +285,14 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                     <button onClick={() => { setAddingSubTo(null); setNovaSub(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                   </div>
                 ) : (
-                  <button onClick={() => setAddingSubTo(a.id)}
-                    className="mt-1 text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
-                    <Plus size={10} /> Subatividade
-                  </button>
+                  <LinkNovo onClick={() => setAddingSubTo(a.id)} className="mt-1">Subatividade</LinkNovo>
                 )
               )}
             </div>
             {isAdmin && projectId == null && (
               <button onClick={() => handleDelete(a)} title="Remover"
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-600 mt-0.5">
-                <Trash2 size={12} />
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 mt-0.5" aria-label="Remover">
+                <Trash2 size={12} color="var(--danger)" />
               </button>
             )}
           </div>
@@ -473,10 +471,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                                   <button onClick={() => { setAddingTo(null); setNovaAtividade(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                                 </div>
                               ) : (
-                                <button onClick={() => { setAddingTo(en.id); setExpanded(prev => new Set(prev).add(en.id)); }}
-                                  className="mt-1 text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
-                                  <Plus size={10} /> Atividade
-                                </button>
+                                <LinkNovo onClick={() => { setAddingTo(en.id); setExpanded(prev => new Set(prev).add(en.id)); }} className="mt-1">Atividade</LinkNovo>
                               )
                             )}
                           </div>
@@ -510,10 +505,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                           <button onClick={() => { setAddingEntregaTo(null); setNovaEntrega(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                         </div>
                       ) : (
-                        <button onClick={() => setAddingEntregaTo(b.id)}
-                          className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
-                          <Plus size={10} /> Nova entrega
-                        </button>
+                        <LinkNovo onClick={() => setAddingEntregaTo(b.id)} className="w-full px-3 py-1.5">Nova entrega</LinkNovo>
                       )}
                     </div>
                     {showGantt && <div style={{ width: timelineWidth }} />}
@@ -533,11 +525,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
                   <button onClick={() => { setAddingBloco(false); setNovoBloco(''); }} className="text-[10px] px-1.5 py-1 text-muted-foreground">Cancelar</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingBloco(true)}
-                  className="w-full px-3 py-2.5 text-left text-[11px] font-semibold flex items-center gap-1.5 hover:bg-accent"
-                  style={{ color: 'var(--ink-4)' }}>
-                  <Plus size={12} /> Novo bloco
-                </button>
+                <LinkNovo onClick={() => setAddingBloco(true)} className="w-full px-3 py-2.5">Novo bloco</LinkNovo>
               )
             )}
           </div>

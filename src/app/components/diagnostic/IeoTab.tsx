@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, Pencil } from 'lucide-react';
 import { IEO_DIMENSOES, type IeoPergunta } from '../../diagnostic/catalog/ieo';
 import { calcularIeo } from '../../diagnostic/ieoCalculation';
 import { listarRespostasIeo, salvarRespostaIeo, type IeoResposta } from '../../diagnosticos.server';
@@ -125,8 +125,8 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
                             <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)' }}>Nenhuma resposta registrada ainda.</p>
                           )}
                           {!readOnly && (
-                            <button onClick={() => startEdit(resposta)} className="text-[12px] font-medium hover:underline w-fit mt-1" style={{ color: 'var(--primary)' }}>
-                              Editar
+                            <button onClick={() => startEdit(resposta)} className="inline-flex items-center gap-1 text-[12px] font-medium hover:underline w-fit mt-1" style={{ color: 'var(--primary)' }}>
+                              <Pencil size={12} /> Editar
                             </button>
                           )}
                         </div>

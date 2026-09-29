@@ -48,7 +48,7 @@ export function BotaoNotasEChecklist({
       <PopoverTrigger asChild>
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-          style={{ borderColor: 'var(--warning-soft-border, var(--border))', color: 'var(--warning-strong-text)', background: 'var(--warning-soft)' }}
+          style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand)', background: 'var(--brand-soft)' }}
           aria-haspopup="dialog"
         >
           <StickyNote size={13} /> Notas e encaminhamentos
@@ -267,7 +267,7 @@ function Checklist({ org, aoVerTodos }: { org: OrganizacaoFicha; aoVerTodos?: ()
           Encaminhamentos pendentes ({pendentes.length})
         </h3>
         {aoVerTodos && (
-          <button type="button" onClick={aoVerTodos} className="hover:underline" style={{ fontSize: '0.7rem', color: 'var(--info)' }}>
+          <button type="button" onClick={aoVerTodos} className="hover:underline" style={{ fontSize: '0.7rem', color: 'var(--brand-text)' }}>
             Ver todos
           </button>
         )}

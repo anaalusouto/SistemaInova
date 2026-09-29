@@ -1,10 +1,11 @@
 import { useMemo, useState, type FormEvent, type ReactNode, type DragEvent } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, usePeople } from '../auth/authStore';
 import { useStore } from '../store';
 import { useGestaoTarefas } from '../gestao/useGestaoTarefas';
 import type { TarefaGestao, TarefaGestaoStatus } from '../tarefasGestao.server';
+import { BotaoNovo, LinkNovo } from './BotaoNovo';
 
 const STATUS_LABEL: Record<TarefaGestaoStatus, string> = {
   nao_iniciado: 'Não iniciado',
@@ -24,7 +25,7 @@ function cardVisual(t: TarefaGestao) {
     return { label: 'Concluída', color: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-soft-border)' };
   }
   if (isOverdue(t)) {
-    return { label: 'Atrasada', color: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-soft-border)' };
+    return { label: 'Atrasada', color: 'var(--alert)', bg: 'var(--alert-soft)', border: 'var(--alert-soft-border)' };
   }
   if (t.status === 'em_andamento') {
     return { label: 'Em andamento', color: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-soft-border)' };
@@ -104,13 +105,7 @@ export function GestaoPage() {
             Quadro de tarefas por pessoa — arraste um card ou use o seletor para reatribuir.
           </p>
         </div>
-        <button
-          onClick={() => setFormState({ mode: 'create' })}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium text-white flex-shrink-0"
-          style={{ background: 'var(--primary)' }}
-        >
-          <Plus size={13} /> Nova tarefa
-        </button>
+        <BotaoNovo onClick={() => setFormState({ mode: 'create' })}>Nova tarefa</BotaoNovo>
       </div>
 
       {people.length === 0 ? (
@@ -173,13 +168,7 @@ export function GestaoPage() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => setFormState({ mode: 'create', defaultLogin: person.login })}
-                  className="flex items-center justify-center gap-1.5 py-2 text-[11px] border-t hover:bg-black/5 flex-shrink-0"
-                  style={{ borderColor: 'var(--border)', color: 'var(--ink-4)' }}
-                >
-                  <Plus size={11} /> Adicionar
-                </button>
+                <LinkNovo onClick={() => setFormState({ mode: 'create', defaultLogin: person.login })} className="justify-center py-2 border-t flex-shrink-0">Nova tarefa</LinkNovo>
               </div>
             );
           })}
@@ -227,7 +216,7 @@ function TaskCard({ task, people, onEdit, onDelete, onMove, onStatus }: {
           <span className="block" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)', lineHeight: 1.3 }}>{task.titulo}</span>
         </button>
         <button type="button" onClick={onDelete} className="flex-shrink-0 p-0.5 rounded hover:bg-red-50" title="Excluir tarefa">
-          <Trash2 size={12} color="var(--ink-5)" />
+          <Trash2 size={12} color="var(--danger)" />
         </button>
       </div>
 

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, Building2, Plus, X } from 'lucide-react';
+import { ArrowLeft, Building2, X } from 'lucide-react';
 import { listarComunidades } from '../comunidades.server';
 import { listarDiagnosticosPorComunidade, criarDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { useAudit } from '../audit/auditStore';
 import { useAuth } from '../auth/authStore';
 import { formatDateOnly } from '../lib/dateOnly';
+import { BotaoNovo } from './BotaoNovo';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -75,13 +76,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-white hover:opacity-90"
-            style={{ background: 'var(--primary)' }}
-          >
-            <Plus size={14} /> Novo diagnóstico
-          </button>
+          <BotaoNovo onClick={() => setShowNew(true)}>Novo diagnóstico</BotaoNovo>
         </div>
       </div>
 

@@ -29,7 +29,7 @@ const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerr
 const CORES: Record<string, { cor: string; fundo: string; forte: string }> = {
   'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)', forte: 'var(--success)' },
   'Médio':   { cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)', forte: 'var(--warning-strong-text)' },
-  'Alto':    { cor: 'var(--danger)', fundo: 'var(--danger-soft)', forte: 'var(--danger)' },
+  'Alto':    { cor: 'var(--alert)', fundo: 'var(--alert-soft)', forte: 'var(--alert)' },
   'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)', forte: 'var(--danger)' },
   '—':       { cor: 'var(--ink-4)', fundo: 'var(--surface-2)', forte: 'var(--ink-4)' },
 };
@@ -295,7 +295,7 @@ function Respostas({ respostas, aoAbrirAtividade }: { respostas: Activity[]; aoA
     <ul className="flex flex-col gap-1">
       {respostas.map(a => (
         <li key={a.id}>
-          <button onClick={() => aoAbrirAtividade(a)} className="text-left hover:underline" style={{ ...quebra, color: 'var(--info)' }}>
+          <button onClick={() => aoAbrirAtividade(a)} className="text-left hover:underline" style={{ ...quebra, color: 'var(--brand-text)' }}>
             {a.name}
           </button>
         </li>

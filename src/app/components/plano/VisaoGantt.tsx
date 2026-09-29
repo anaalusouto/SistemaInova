@@ -53,7 +53,7 @@ function Barras({
     atividade: { previsto: 'var(--brand)', realizado: 'var(--brand)' },
   }[tom];
 
-  const corRealizado = atrasada ? 'var(--danger)' : cores.realizado;
+  const corRealizado = atrasada ? 'var(--alert)' : cores.realizado;
 
   return (
     <div className="relative h-full w-full" title={titulo}>
@@ -278,7 +278,7 @@ export function VisaoGantt({
                           {risco && (
                             <ShieldAlert
                               size={11}
-                              color={risco.faixa === 'Crítico' || risco.faixa === 'Alto' ? 'var(--danger)' : 'var(--warning-strong-text)'}
+                              color={risco.faixa === 'Crítico' ? 'var(--danger)' : risco.faixa === 'Alto' ? 'var(--alert)' : 'var(--warning-strong-text)'}
                               aria-label={`Risco ${risco.faixa}`}
                             />
                           )}
@@ -331,7 +331,7 @@ export function VisaoGantt({
                                   aria-label={`Anexo de ${atividade.name}`}
                                   className="flex-shrink-0"
                                 >
-                                  <Paperclip size={10} color="var(--info)" />
+                                  <Paperclip size={10} color="var(--brand-text)" />
                                 </button>
                               )}
                             </>

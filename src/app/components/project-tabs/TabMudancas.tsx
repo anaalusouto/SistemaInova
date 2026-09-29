@@ -7,6 +7,7 @@ import { usePeople, useAuth } from '../../auth/authStore';
 import { useStore, type ProjectExt } from '../../store';
 import { useAudit } from '../../audit/auditStore';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
+import { BotaoNovo } from '../BotaoNovo';
 
 const CHANGE_TYPES: ChangeType[] = ['Escopo', 'Prazo', 'Financeiro', 'Equipe', 'Técnico'];
 
@@ -98,13 +99,7 @@ export function TabMudancas({ project }: Props) {
             {p.changes.length} mudanças registradas
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium text-white"
-          style={{ background: 'var(--primary)' }}
-        >
-          <Plus size={12} /> Registrar Mudança
-        </button>
+        <BotaoNovo onClick={() => setShowForm(true)}>Nova mudança</BotaoNovo>
       </div>
 
       <ApprovalsBanner projectId={project.id} approvals={p.approvals ?? []} entities={['mudanca']} />

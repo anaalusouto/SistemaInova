@@ -173,7 +173,7 @@ export function PainelAtividade({
 
             <Linha rotulo="Status e progresso">
               <span className="inline-flex items-center gap-2">
-                <span style={{ color: atrasada ? 'var(--danger)' : 'var(--ink-2)', fontWeight: atrasada ? 600 : 400 }}>
+                <span style={{ color: atrasada ? 'var(--alert)' : 'var(--ink-2)', fontWeight: atrasada ? 600 : 400 }}>
                   {atrasada ? 'Atrasada' : atividade.status}
                 </span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', color: 'var(--ink-4)' }}>

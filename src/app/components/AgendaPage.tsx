@@ -11,7 +11,7 @@ const statusConfig: Record<string, { color: string; bg: string }> = {
   'A iniciar': { color: 'var(--ink-4)', bg: 'var(--surface-2)' },
   'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)' },
   'Concluído': { color: 'var(--success)', bg: 'var(--success-soft)' },
-  'Atrasado': { color: 'var(--danger)', bg: 'var(--danger-soft)' },
+  'Atrasado': { color: 'var(--alert)', bg: 'var(--alert-soft)' },
 };
 
 function formatTs(iso: string) {
