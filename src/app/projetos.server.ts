@@ -17,7 +17,7 @@ import type {
   Project, Goal, Deliverable, Activity, Risk, Change, FinancialItem, ContrapartidaItem,
   Evidence, ActivityStatus, Task, Attachment, BudgetLink,
 } from './data/mockData';
-import type { ItemOrcamento } from './lib/orcamento';
+import type { ItemOrcamento, NotaOrcamento } from './lib/orcamento';
 import type {
   Contact, MetaChangeLog, PendingApproval, ProjectOp,
   ParecerTecnico,
@@ -127,9 +127,20 @@ function mapItemOrcamento(i: any): ItemOrcamento {
     valorExecutado: i.valor_executado === null || i.valor_executado === undefined ? null : n2(i.valor_executado),
     dataCompra: i.data_compra ?? null,
     justificativaDiferenca: i.justificativa_diferenca ?? '',
+    execucaoConcluida: Boolean(i.execucao_concluida),
     situacao: i.situacao ?? 'Ativo',
     motivoExclusao: i.motivo_exclusao ?? null,
     riscoId: i.risco_id ?? null,
+  };
+}
+function mapNota(n: any): NotaOrcamento {
+  // Um comprovante por nota: enviar outro substitui (mesma regra dos anexos).
+  const anexos = (n.projeto_anexos ?? []) as any[];
+  return {
+    id: n.id, itemId: n.item_id ?? null, numero: n.numero ?? null, fornecedor: n.fornecedor ?? null,
+    dataEmissao: n.data_emissao, valor: n2(n.valor), descricao: n.descricao ?? null,
+    anexo: anexos.length ? mapAnexo(anexos[anexos.length - 1]) : null,
+    criadoPor: n.criado_por, criadoEm: n.criado_em,
   };
 }
 function mapFinanceiro(i: any): FinancialItem {
@@ -189,9 +200,14 @@ function mapProjeto(row: any): ProjectExt {
   // cabeçalho dizer "proposto: Não informado" enquanto a aba Orçamento somava
   // R$ 100.000 para o mesmo projeto (RF-004 e RF-029 precisam concordar).
   const itensOrcamento = (row.orcamento_itens ?? []) as any[];
-  const budgetExecuted = financeiro.length
-    ? financeiro.reduce((a, i) => a + i.executedValue, 0)
-    : n2(row.orcamento_executado);
+  // Desde a 0016 o executado é a soma das NOTAS, inclusive as que ainda não
+  // têm item (RF04.3). Sem nota, vale o que havia antes.
+  const notas = (row.orcamento_notas ?? []) as any[];
+  const budgetExecuted = notas.length
+    ? notas.reduce((a, n) => a + n2(n.valor), 0)
+    : financeiro.length
+      ? financeiro.reduce((a, i) => a + i.executedValue, 0)
+      : n2(row.orcamento_executado);
   const budgetApproved = itensOrcamento.length
     // Inclui itens excluídos: o valor original da proposta não encolhe porque
     // a equipe decidiu não comprar algo (RF-029).
@@ -241,6 +257,8 @@ function mapProjeto(row: any): ProjectExt {
     organizacao: row.comunidades ? { id: row.comunidades.id, nome: row.comunidades.nome } : null,
     commLogs: ordenarRegistros(((row.comunidades?.logs_comunicacao ?? []) as any[]).map(mapRegistro)),
     orcamentoItens: ((row.orcamento_itens ?? []) as any[]).map(mapItemOrcamento),
+    orcamentoNotas: ((row.orcamento_notas ?? []) as any[]).map(mapNota)
+      .sort((a, b) => (a.dataEmissao < b.dataEmissao ? 1 : a.dataEmissao > b.dataEmissao ? -1 : (a.criadoEm < b.criadoEm ? 1 : -1))),
     // Ordem decrescente de data (RF-033): o acompanhamento mais recente primeiro.
     pareceres: ((row.pareceres_tecnicos ?? []) as any[])
       .map(mapParecer)
@@ -252,7 +270,7 @@ const SELECT_PROJETO = `
   *,
   projeto_equipe(nome),
   metas(id, nome, ordem, responsavel, inicio_previsto, fim_previsto, etapas(*, atividades(*, tarefas(*), projeto_anexos(*)))),
-  plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_contrapartidas(*),
+  plano_riscos(*), mudancas(*), orcamento_itens(*), orcamento_notas(*, projeto_anexos(*)), orcamento_contrapartidas(*),
   evidencias(*), aportes(*), contatos(*), comunidades(id, nome, logs_comunicacao(*)),
   log_alteracoes_meta(*), aprovacoes_pendentes(*),
   pareceres_tecnicos(*)
@@ -564,7 +582,8 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         const { error } = await supabaseAdmin.from('orcamento_itens').insert({
           projeto_id: projetoId, meta_texto: str(payload.meta, 'Meta 1'), categoria: str(payload.category, 'Materiais de consumo'),
           item: str(payload.item), unidade: str(payload.unidade, 'unidade'), qtd, qtd_unidades: qtdUnidades, valor_unitario: valorUnitario,
-          valor_executado: flag === 'Sim' ? total : num(payload.executedValue, 0), data: str(payload.date) || null,
+          // Executado nasce ausente: vem das notas fiscais (0016), não daqui.
+          valor_executado: null, data: str(payload.date) || null,
           fornecedor: str(payload.supplier) || null, documento: str(payload.document) || null, executado_flag: flag,
           prestacao_contas: str(payload.accountability, 'Não enviado'), registro_alteracao: str(payload.changeRecord, 'Novo item'),
         });
@@ -576,6 +595,11 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         if (error) throw new Error(error.message);
         return;
       }
+      // Desde a 0016 o executado do item é a soma das notas, mantida pelo
+      // banco. Escrever direto aqui faria a coluna divergir das notas.
+      if (field === 'valor executado' || field === 'executado') {
+        throw new Error('O valor executado agora vem das notas fiscais. Lance a nota na aba Orçamento › Execução.');
+      }
       const patch: Record<string, unknown> = {};
       switch (field) {
         case 'categoria': patch.categoria = to; break;
@@ -585,8 +609,6 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         case 'unidade': patch.unidade = to; break;
         case 'qtd. de unidades': patch.qtd_unidades = Number(to) || 0; break;
         case 'valor unitário': patch.valor_unitario = Number(to) || 0; break;
-        case 'valor executado': patch.valor_executado = Number(to) || 0; break;
-        case 'executado': patch.executado_flag = to; break;
         case 'prestação de contas': patch.prestacao_contas = to; break;
         case 'registro de alterações': patch.registro_alteracao = to; break;
         case 'fornecedor': patch.fornecedor = to; break;
@@ -594,15 +616,8 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         case 'data': patch.data = to; break;
         default: break;
       }
-      const { data: updated, error } = await supabaseAdmin.from('orcamento_itens').update(patch).eq('id', op.targetId).select('valor_planejado, executado_flag, valor_executado').single();
+      const { error } = await supabaseAdmin.from('orcamento_itens').update(patch).eq('id', op.targetId);
       if (error) throw new Error(error.message);
-      if (field === 'executado') {
-        const planejado = n2(updated?.valor_planejado);
-        if (to === 'Sim') await supabaseAdmin.from('orcamento_itens').update({ valor_executado: planejado }).eq('id', op.targetId);
-        if (to === 'Não') await supabaseAdmin.from('orcamento_itens').update({ valor_executado: 0 }).eq('id', op.targetId);
-      } else if (field === 'valor executado' && updated?.executado_flag !== 'Parcial' && n2(updated?.valor_executado) !== n2(updated?.valor_planejado)) {
-        await supabaseAdmin.from('orcamento_itens').update({ executado_flag: n2(updated?.valor_executado) === 0 ? 'Não' : 'Parcial' }).eq('id', op.targetId);
-      }
       return;
     }
     default:

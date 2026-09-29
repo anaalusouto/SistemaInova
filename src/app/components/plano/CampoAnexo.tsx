@@ -1,7 +1,7 @@
 /**
  * Anexar, abrir, substituir e remover um arquivo (RF-009, RF-026, RF-032).
  *
- * Serve tanto à atividade quanto ao registro de contato: a única diferença é
+ * Serve à atividade, ao registro de contato e à nota fiscal: a única diferença é
  * qual id vai como pai. Um componente só evita que as duas telas divirjam em
  * limite, tipos aceitos ou no que acontece ao substituir.
  *
@@ -45,12 +45,14 @@ function tamanhoLegivel(bytes: number | null): string {
 }
 
 export function CampoAnexo({
-  projetoId, atividadeId, logComunicacaoId, anexo, rotulo = 'Anexar foto ou documento',
+  projetoId, atividadeId, logComunicacaoId, orcamentoNotaId, anexo, rotulo = 'Anexar foto ou documento',
 }: {
   /** Null para registro de contato, que pertence à organização (RC-03). */
   projetoId: number | null;
   atividadeId?: string;
   logComunicacaoId?: string;
+  /** Comprovante de nota fiscal do orçamento (RF04.3). */
+  orcamentoNotaId?: string;
   anexo?: Attachment | null;
   rotulo?: string;
 }) {
@@ -59,7 +61,7 @@ export function CampoAnexo({
   const inputRef = useRef<HTMLInputElement>(null);
   const [ocupado, setOcupado] = useState(false);
 
-  const paiDefinido = !!atividadeId || !!logComunicacaoId;
+  const paiDefinido = !!atividadeId || !!logComunicacaoId || !!orcamentoNotaId;
 
   const selecionar = async (arquivo: File) => {
     // Checagem local para dar resposta imediata; o servidor revalida de
@@ -86,6 +88,7 @@ export function CampoAnexo({
         projetoId,
         atividadeId: atividadeId ?? null,
         logComunicacaoId: logComunicacaoId ?? null,
+        orcamentoNotaId: orcamentoNotaId ?? null,
         nomeArquivo: arquivo.name,
         tipoMime: arquivo.type,
         dataUrl,

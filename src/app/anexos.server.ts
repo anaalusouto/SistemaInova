@@ -1,5 +1,6 @@
 /**
- * Anexos de atividade e de registro de contato (RF-009, RF-026, RF-032, RN-002).
+ * Anexos de atividade, de registro de contato e de nota fiscal do orçamento
+ * (RF-009, RF-026, RF-032, RN-002, RF04.3).
  *
  * O bucket `projeto-anexos` é PRIVADO. Nenhuma URL pública é gerada em momento
  * algum: a leitura sai sempre por URL assinada de vida curta, emitida aqui
@@ -62,9 +63,11 @@ export interface AnexoInput {
   /** Obrigatório para anexo de atividade. Registro de contato pertence à
    *  organização (RC-03) e o servidor descobre qual a partir do registro. */
   projetoId: number | null;
-  /** Exatamente um dos dois — o CHECK da tabela recusa o contrário. */
+  /** Exatamente um dos três — o CHECK da tabela recusa o contrário. */
   atividadeId?: string | null;
   logComunicacaoId?: string | null;
+  /** Comprovante de uma nota do orçamento (0016). */
+  orcamentoNotaId?: string | null;
   nomeArquivo: string;
   tipoMime: string;
   /** Conteúdo como data URL base64, mesmo transporte já usado no Diagnóstico. */
@@ -95,10 +98,11 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<string> => {
     const sessao = await exigirEscrita();
 
-    if (!data.atividadeId && !data.logComunicacaoId) {
-      throw new AnexoInvalido('O anexo precisa pertencer a uma atividade ou a um registro de contato.');
+    const pais = [data.atividadeId, data.logComunicacaoId, data.orcamentoNotaId].filter(Boolean).length;
+    if (pais === 0) {
+      throw new AnexoInvalido('O anexo precisa pertencer a uma atividade, a um registro de contato ou a uma nota.');
     }
-    if (data.atividadeId && data.logComunicacaoId) {
+    if (pais > 1) {
       throw new AnexoInvalido('O anexo pertence a um único registro.');
     }
     if (!TIPOS_ACEITOS.includes(data.tipoMime as (typeof TIPOS_ACEITOS)[number])) {
@@ -118,8 +122,16 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
     // O dono do arquivo sai do banco, não do que o cliente mandou: a atividade
     // é do projeto; o registro de contato, da organização (RC-03).
     let comunidadeId: string | null = null;
+    let projetoId: number | null = data.projetoId;
     let dono: string;
-    if (data.logComunicacaoId) {
+    if (data.orcamentoNotaId) {
+      // A nota diz de qual projeto é; o cliente não escolhe.
+      const { data: nota } = await supabaseAdmin
+        .from('orcamento_notas').select('projeto_id').eq('id', data.orcamentoNotaId).maybeSingle();
+      if (!nota) throw new AnexoInvalido('Nota não encontrada.');
+      projetoId = Number(nota.projeto_id);
+      dono = String(projetoId);
+    } else if (data.logComunicacaoId) {
       const { data: reg } = await supabaseAdmin
         .from('logs_comunicacao').select('comunidade_id').eq('id', data.logComunicacaoId).maybeSingle();
       if (!reg) throw new AnexoInvalido('Registro de contato não encontrado.');
@@ -130,8 +142,8 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
       dono = String(data.projetoId);
     }
 
-    const pasta = data.atividadeId ? 'atividades' : 'contatos';
-    const parentId = (data.atividadeId ?? data.logComunicacaoId)!;
+    const pasta = data.atividadeId ? 'atividades' : data.orcamentoNotaId ? 'notas' : 'contatos';
+    const parentId = (data.atividadeId ?? data.logComunicacaoId ?? data.orcamentoNotaId)!;
     const storagePath = caminho(dono, pasta, parentId, data.nomeArquivo);
 
     const { error: erroUpload } = await supabaseAdmin.storage
@@ -142,10 +154,11 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
     const { data: linha, error: erroLinha } = await supabaseAdmin
       .from('projeto_anexos')
       .insert({
-        projeto_id: data.logComunicacaoId ? null : data.projetoId,
+        projeto_id: data.logComunicacaoId ? null : projetoId,
         comunidade_id: comunidadeId,
         atividade_id: data.atividadeId ?? null,
         log_comunicacao_id: data.logComunicacaoId ?? null,
+        orcamento_nota_id: data.orcamentoNotaId ?? null,
         storage_path: storagePath,
         nome_arquivo: data.nomeArquivo,
         tipo_mime: data.tipoMime,
@@ -164,7 +177,7 @@ export const enviarAnexo = createServerFn({ method: 'POST' })
     }
 
     // Substituição: só agora o anterior sai, com o novo já garantido.
-    const coluna = data.atividadeId ? 'atividade_id' : 'log_comunicacao_id';
+    const coluna = data.atividadeId ? 'atividade_id' : data.orcamentoNotaId ? 'orcamento_nota_id' : 'log_comunicacao_id';
     const { data: antigos } = await supabaseAdmin
       .from('projeto_anexos')
       .select('id, storage_path')

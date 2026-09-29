@@ -1,8 +1,9 @@
 /**
  * Escritas do Orçamento (RF-030, RF-039, RF-040, RF-041, RN-032, RN-033).
  *
- * O que a equipe PMO informa na rotina normal é só execução: valor, data da
- * compra e a justificativa exigida quando o executado difere do proposto. Os
+ * O que a equipe PMO informa na rotina normal é só execução: as notas fiscais
+ * (RF04.3 — o executado do item é a soma delas) e a justificativa exigida
+ * quando o executado difere do proposto. Os
  * dados planejados do item são somente leitura (RF-030) — corrigi-los é papel
  * de uma nova versão da planilha, com prévia e reconciliação, não de digitação
  * na tela de execução.
@@ -12,7 +13,9 @@
  * pergunta sem resposta três meses depois.
  */
 import { createServerFn } from '@tanstack/react-start';
-import { arredondar } from './lib/orcamento';
+import {
+  arredondar, exigeJustificativa, validarNota, moeda, type NotaInput,
+} from './lib/orcamento';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -34,7 +37,8 @@ export class OrcamentoInvalido extends Error {
 
 type Evento =
   | 'importação' | 'correção de origem' | 'valor executado' | 'data da compra'
-  | 'justificativa' | 'exclusão' | 'reversão' | 'vínculo de risco';
+  | 'justificativa' | 'exclusão' | 'reversão' | 'vínculo de risco'
+  | 'nota fiscal' | 'conclusão';
 
 async function registrar(
   supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>,
@@ -54,19 +58,18 @@ async function registrar(
   if (error) console.error('[orçamento] histórico não gravado:', { itemId, evento, erro: error.message });
 }
 
-const dinheiro = (v: number | null | undefined) =>
-  v === null || v === undefined ? null : arredondar(Number(v)).toFixed(2);
-
 // ---------------------------------------------------------------------------
-// Execução do item (RF-030, RF-039)
+// Execução do item (RF-030, RF-039, RF04.3)
+//
+// Desde a 0016 o valor executado e a data da compra do item vêm das NOTAS —
+// o banco mantém a soma (trigger recalcular_execucao). O que a equipe informa
+// aqui é a justificativa e se a execução do item está concluída.
 // ---------------------------------------------------------------------------
 
 export interface ExecucaoInput {
   itemId: string;
-  /** null limpa a execução — volta a ser "Não informado", não zero (RF-029). */
-  valorExecutado: number | null;
-  dataCompra: string | null;
   justificativa: string;
+  execucaoConcluida: boolean;
 }
 
 export const registrarExecucao = createServerFn({ method: 'POST' })
@@ -77,7 +80,7 @@ export const registrarExecucao = createServerFn({ method: 'POST' })
 
     const { data: item, error: erroLer } = await supabaseAdmin
       .from('orcamento_itens')
-      .select('id, situacao, valor_proposto, valor_executado, data_compra, justificativa_diferenca')
+      .select('id, situacao, valor_proposto, valor_executado, justificativa_diferenca, execucao_concluida')
       .eq('id', data.itemId)
       .single();
     if (erroLer || !item) throw new Error('Item de orçamento não encontrado.');
@@ -88,48 +91,160 @@ export const registrarExecucao = createServerFn({ method: 'POST' })
       ]);
     }
 
-    if (data.valorExecutado !== null && !Number.isFinite(data.valorExecutado)) {
-      throw new OrcamentoInvalido(['O valor executado não é um número válido.']);
-    }
-    if (data.valorExecutado !== null && data.valorExecutado < 0) {
-      throw new OrcamentoInvalido(['O valor executado não pode ser negativo.']);
-    }
-
-    // RF-039: diferença exige justificativa específica do item, inclusive
-    // quando o executado é MENOR — gastar menos também é um desvio do plano e
-    // precisa de explicação registrada.
-    const proposto = arredondar(Number(item.valor_proposto ?? 0));
-    const executado = data.valorExecutado === null ? null : arredondar(data.valorExecutado);
-    if (executado !== null && executado !== proposto && !data.justificativa.trim()) {
+    const precisa = exigeJustificativa({
+      valorProposto: Number(item.valor_proposto ?? 0),
+      valorExecutado: item.valor_executado === null ? null : Number(item.valor_executado),
+      execucaoConcluida: data.execucaoConcluida,
+    });
+    if (precisa && !data.justificativa.trim()) {
       throw new OrcamentoInvalido([
-        `O valor executado difere do proposto. Informe a justificativa desta diferença.`,
+        'O executado difere do proposto. Informe a justificativa desta diferença.',
       ]);
     }
 
+    const depoisJust = data.justificativa.trim() || null;
     const { error } = await supabaseAdmin
       .from('orcamento_itens')
-      .update({
-        valor_executado: executado,
-        data_compra: data.dataCompra,
-        justificativa_diferenca: data.justificativa.trim() || null,
-      })
+      .update({ justificativa_diferenca: depoisJust, execucao_concluida: data.execucaoConcluida })
       .eq('id', data.itemId);
     if (error) throw new Error(error.message);
 
-    const antesExec = dinheiro(item.valor_executado as number | null);
-    const depoisExec = dinheiro(executado);
-    if (antesExec !== depoisExec) {
-      await registrar(supabaseAdmin, data.itemId, 'valor executado', sessao.displayName, antesExec, depoisExec);
-    }
-    if ((item.data_compra ?? null) !== data.dataCompra) {
-      await registrar(supabaseAdmin, data.itemId, 'data da compra', sessao.displayName,
-        (item.data_compra as string) ?? null, data.dataCompra);
-    }
     const antesJust = (item.justificativa_diferenca as string) ?? null;
-    const depoisJust = data.justificativa.trim() || null;
     if (antesJust !== depoisJust) {
       // RN-033: nenhuma substituição silenciosa da justificativa anterior.
       await registrar(supabaseAdmin, data.itemId, 'justificativa', sessao.displayName, antesJust, depoisJust);
+    }
+    if (Boolean(item.execucao_concluida) !== data.execucaoConcluida) {
+      await registrar(supabaseAdmin, data.itemId, 'conclusão', sessao.displayName,
+        item.execucao_concluida ? 'concluída' : 'em andamento',
+        data.execucaoConcluida ? 'concluída' : 'em andamento');
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// Notas fiscais / comprovantes (RF04.3)
+//
+// Nota não é bloqueada por passar do proposto: ela registra um gasto que
+// aconteceu. O item fica sinalizado com justificativa pendente até alguém
+// explicar a diferença (justificativaPendente, lib/orcamento.ts).
+// ---------------------------------------------------------------------------
+
+/** O item precisa ser do mesmo projeto e estar ativo. */
+async function conferirItemDaNota(
+  supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>,
+  projetoId: number,
+  itemId: string | null,
+): Promise<void> {
+  if (!itemId) return;
+  const { data: item } = await supabaseAdmin
+    .from('orcamento_itens').select('projeto_id, situacao').eq('id', itemId).maybeSingle();
+  if (!item || Number(item.projeto_id) !== projetoId) {
+    throw new OrcamentoInvalido(['O item escolhido não pertence a este projeto.']);
+  }
+  if (item.situacao === 'Excluído') {
+    throw new OrcamentoInvalido(['O item escolhido está excluído do plano. Reverta a exclusão ou lance a nota sem item.']);
+  }
+}
+
+const textoOuNulo = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
+
+function resumoNota(n: { numero: string | null; valor: number }): string {
+  return `${n.numero ? `NF ${n.numero}` : 'Nota sem número'} · ${moeda(n.valor)}`;
+}
+
+export const criarNota = createServerFn({ method: 'POST' })
+  .validator((d: NotaInput) => d)
+  .handler(async ({ data }): Promise<string> => {
+    const sessao = await exigirEscrita();
+    const erros = validarNota(data);
+    if (erros.length) throw new OrcamentoInvalido(erros);
+    const supabaseAdmin = await getAdmin();
+    await conferirItemDaNota(supabaseAdmin, data.projetoId, data.itemId);
+
+    const valor = arredondar(data.valor!);
+    const { data: nova, error } = await supabaseAdmin
+      .from('orcamento_notas')
+      .insert({
+        projeto_id: data.projetoId, item_id: data.itemId,
+        numero: textoOuNulo(data.numero), fornecedor: textoOuNulo(data.fornecedor),
+        data_emissao: data.dataEmissao, valor, descricao: textoOuNulo(data.descricao),
+        criado_por: sessao.displayName,
+      })
+      .select('id')
+      .single();
+    if (error) throw new Error(error.message);
+
+    if (data.itemId) {
+      await registrar(supabaseAdmin, data.itemId, 'nota fiscal', sessao.displayName, null,
+        resumoNota({ numero: textoOuNulo(data.numero), valor }), 'nota lançada');
+    }
+    return nova.id as string;
+  });
+
+export const atualizarNota = createServerFn({ method: 'POST' })
+  .validator((d: { notaId: string; dados: NotaInput }) => d)
+  .handler(async ({ data: { notaId, dados } }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const erros = validarNota(dados);
+    if (erros.length) throw new OrcamentoInvalido(erros);
+    const supabaseAdmin = await getAdmin();
+
+    const { data: antes, error: e1 } = await supabaseAdmin
+      .from('orcamento_notas').select('projeto_id, item_id, numero, valor').eq('id', notaId).single();
+    if (e1 || !antes) throw new Error('Nota não encontrada.');
+    // O projeto sai do banco, não do cliente: a nota não muda de projeto.
+    const projetoId = Number(antes.projeto_id);
+    await conferirItemDaNota(supabaseAdmin, projetoId, dados.itemId);
+
+    const valor = arredondar(dados.valor!);
+    const { error } = await supabaseAdmin
+      .from('orcamento_notas')
+      .update({
+        item_id: dados.itemId,
+        numero: textoOuNulo(dados.numero), fornecedor: textoOuNulo(dados.fornecedor),
+        data_emissao: dados.dataEmissao, valor, descricao: textoOuNulo(dados.descricao),
+        atualizado_por: sessao.displayName,
+      })
+      .eq('id', notaId);
+    if (error) throw new Error(error.message);
+
+    const de = resumoNota({ numero: antes.numero ?? null, valor: Number(antes.valor) });
+    const para = resumoNota({ numero: textoOuNulo(dados.numero), valor });
+    if (antes.item_id && antes.item_id !== dados.itemId) {
+      await registrar(supabaseAdmin, antes.item_id, 'nota fiscal', sessao.displayName, de, null, 'nota movida para outro item');
+    }
+    if (dados.itemId) {
+      const mudouDeItem = antes.item_id !== dados.itemId;
+      if (mudouDeItem || de !== para) {
+        await registrar(supabaseAdmin, dados.itemId, 'nota fiscal', sessao.displayName,
+          mudouDeItem ? null : de, para, mudouDeItem ? 'nota vinculada a este item' : 'nota alterada');
+      }
+    }
+  });
+
+export const excluirNota = createServerFn({ method: 'POST' })
+  .validator((d: { notaId: string }) => d)
+  .handler(async ({ data: { notaId } }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const supabaseAdmin = await getAdmin();
+
+    const { data: nota, error: e1 } = await supabaseAdmin
+      .from('orcamento_notas').select('item_id, numero, valor, projeto_anexos(storage_path)').eq('id', notaId).single();
+    if (e1 || !nota) throw new Error('Nota não encontrada.');
+
+    // O CASCADE apaga a linha do anexo, mas não o arquivo no storage.
+    const caminhos = ((nota.projeto_anexos ?? []) as { storage_path: string }[]).map(a => a.storage_path);
+    if (caminhos.length) {
+      const { error: erroStorage } = await supabaseAdmin.storage.from('projeto-anexos').remove(caminhos);
+      if (erroStorage) console.error('[orçamento] comprovante não removido do storage:', { caminhos, erro: erroStorage.message });
+    }
+
+    const { error } = await supabaseAdmin.from('orcamento_notas').delete().eq('id', notaId);
+    if (error) throw new Error(error.message);
+
+    if (nota.item_id) {
+      await registrar(supabaseAdmin, nota.item_id, 'nota fiscal', sessao.displayName,
+        resumoNota({ numero: nota.numero ?? null, valor: Number(nota.valor) }), null, 'nota excluída');
     }
   });
 

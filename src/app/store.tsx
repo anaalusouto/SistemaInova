@@ -28,10 +28,10 @@ import {
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
 import {
-  registrarExecucao, excluirItemDoPlano, reverterExclusao,
+  registrarExecucao, excluirItemDoPlano, reverterExclusao, criarNota, atualizarNota, excluirNota,
   type ExecucaoInput, type ExclusaoInput,
 } from './orcamento.server';
-import type { ItemOrcamento } from './lib/orcamento';
+import type { ItemOrcamento, NotaOrcamento, NotaInput } from './lib/orcamento';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -101,6 +101,8 @@ export type ProjectExt = Project & {
   pareceres?: ParecerTecnico[];
   /** Itens do orçamento no modelo da seção 14 (execução opcional, exclusão lógica). */
   orcamentoItens?: ItemOrcamento[];
+  /** Notas fiscais / comprovantes (RF04.3), mais recente primeiro. */
+  orcamentoNotas?: NotaOrcamento[];
 };
 
 /** Lançamento simples de recurso adicional — entradas e saídas fora do orçamento aprovado. */
@@ -177,6 +179,10 @@ type Ctx = {
   saveExecucao: (input: ExecucaoInput) => Promise<void>;
   excluirItemOrcamento: (input: ExclusaoInput) => Promise<string>;
   reverterItemOrcamento: (itemId: string, motivo: string) => Promise<void>;
+  // Notas fiscais (RF04.3): o executado do item é a soma delas.
+  createNota: (input: NotaInput) => Promise<string>;
+  updateNota: (notaId: string, input: NotaInput) => Promise<void>;
+  deleteNota: (notaId: string) => Promise<void>;
 
   // Contatos do projeto
   addContact: (projectId: number, c: Omit<Contact, 'id'>) => Promise<void>;
@@ -388,6 +394,9 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     saveExecucao: input => run(() => registrarExecucao({ data: input })),
     excluirItemOrcamento: input => run(() => excluirItemDoPlano({ data: input })),
     reverterItemOrcamento: (itemId, motivo) => run(() => reverterExclusao({ data: { itemId, motivo } })),
+    createNota: input => run(() => criarNota({ data: input })),
+    updateNota: (notaId, input) => run(() => atualizarNota({ data: { notaId, dados: input } })),
+    deleteNota: notaId => run(() => excluirNota({ data: { notaId } })),
 
     // author/adminName não são mais enviados: o servidor deriva quem está
     // chamando a partir da sessão (sessao.server.ts). A assinatura pública

@@ -8,8 +8,10 @@
  * origem contarem histórias diferentes.
  *
  * Dois valores, e só dois (RF-029): proposto e executado. Não há cartão de
- * "valor aprovado" nem de "saldo", porque o proposto JÁ é o aprovado e saldo
- * seria um terceiro número derivado a mais para alguém interpretar errado.
+ * "valor aprovado", porque o proposto JÁ é o aprovado.
+ *
+ * RF04.3: o executado vem das notas fiscais. A lista de notas aparece mesmo
+ * sem planilha importada — nota pode entrar sem item e ser vinculada depois.
  */
 import { Fragment, useMemo, useState } from 'react';
 import {
@@ -21,10 +23,12 @@ import { useStore, type ProjectExt } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { formatDateOnly } from '../../lib/dateOnly';
 import {
-  agruparPorGrupo, totaisDoOrcamento, diferencaDoItem, exigeJustificativa,
-  moeda, moedaComSinal, NAO_INFORMADO, type ItemOrcamento,
+  agruparPorGrupo, totaisDoOrcamento, diferencaDoItem, justificativaPendente, somaDasNotas,
+  moeda, moedaComSinal, NAO_INFORMADO, type ItemOrcamento, type NotaOrcamento,
 } from '../../lib/orcamento';
 import { FormularioExecucao } from './FormularioExecucao';
+import { FormularioNota } from './FormularioNota';
+import { ComparativoExecucao, ListaNotas } from './NotasOrcamento';
 import { DialogoExclusaoItem } from './DialogoExclusaoItem';
 import { PainelHistoricoItem } from './PainelHistoricoItem';
 import { DialogoImportacao } from './DialogoImportacao';
@@ -68,13 +72,35 @@ export function TabOrcamento({ project }: { project: Project }) {
   const [revertendo, setRevertendo] = useState<ItemOrcamento | null>(null);
   const [motivoReversao, setMotivoReversao] = useState('');
   const [importando, setImportando] = useState(false);
+  // Diálogo da nota: nova (com item pré-escolhido ou não) ou existente.
+  const [notaAberta, setNotaAberta] = useState<{ nota?: NotaOrcamento; itemId?: string | null } | null>(null);
 
   const itens = p.orcamentoItens ?? [];
+  const notas = p.orcamentoNotas ?? [];
+  const notasPorItem = useMemo(() => {
+    const m = new Map<string, NotaOrcamento[]>();
+    for (const n of notas) if (n.itemId) m.set(n.itemId, [...(m.get(n.itemId) ?? []), n]);
+    return m;
+  }, [notas]);
 
   // Totais do PROJETO: calculados sobre todos os itens, imunes ao filtro. O
   // mesmo princípio do registro de riscos — filtrar não pode fazer o
   // orçamento parecer menor do que é.
   const totaisProjeto = useMemo(() => totaisDoOrcamento(itens), [itens]);
+  // Proposto: da planilha quando há itens, senão o aprovado do cadastro — o
+  // mesmo que o cabeçalho do projeto mostra. Executado: todas as notas.
+  const proposto = itens.length ? totaisProjeto.proposto : (p.budgetApproved || null);
+  const executado = somaDasNotas(notas) ?? totaisProjeto.executadoConhecido;
+
+  const dialogoNota = notaAberta && (
+    <FormularioNota
+      projetoId={p.id}
+      itens={itens}
+      nota={notaAberta.nota}
+      itemInicial={notaAberta.itemId}
+      aoFechar={() => setNotaAberta(null)}
+    />
+  );
 
   const filtrados = useMemo(() => {
     const termo = busca.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -109,7 +135,14 @@ export function TabOrcamento({ project }: { project: Project }) {
 
   if (itens.length === 0) {
     return (
-      <div className="h-full overflow-y-auto p-6">
+      <div className="h-full overflow-y-auto p-6 flex flex-col gap-4">
+        <ComparativoExecucao proposto={proposto} executado={executado} notas={notas} />
+        <ListaNotas
+          notas={notas}
+          itens={itens}
+          aoNovaNota={() => setNotaAberta({})}
+          aoAbrirNota={n => setNotaAberta({ nota: n })}
+        />
         <div
           className="flex items-start gap-2.5 rounded-lg border px-3.5 py-3 max-w-3xl"
           style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
@@ -117,15 +150,15 @@ export function TabOrcamento({ project }: { project: Project }) {
           <Info size={15} color="var(--ink-4)" style={{ flexShrink: 0, marginTop: 1 }} />
           <div style={{ fontSize: '0.8rem', color: 'var(--ink-3)', lineHeight: 1.6 }}>
             Nenhum item de orçamento neste projeto. Os itens vêm da importação da planilha do
-            orçamento — a tela de execução mostra o que foi importado e recebe apenas o valor
-            executado, a data da compra e a justificativa de diferença.
+            orçamento. Enquanto ela não entra, as notas são lançadas sem item e contam no total
+            do projeto; depois, cada nota pode ser vinculada ao item dela.
           </div>
         </div>
 
         {!readOnly && (
           <button
             onClick={() => setImportando(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12.5px] self-start mt-3"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12.5px] self-start"
             style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
           >
             <Upload size={13} /> Importar planilha
@@ -135,22 +168,21 @@ export function TabOrcamento({ project }: { project: Project }) {
         {importando && (
           <DialogoImportacao projetoId={p.id} aoFechar={() => setImportando(false)} />
         )}
+        {dialogoNota}
       </div>
     );
   }
 
   return (
     <div className="h-full overflow-y-auto p-6 flex flex-col gap-4">
-      {/* RF-029: dois valores, e só dois. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* RF-029 e RF04.3: proposto × executado (das notas). */}
+      <ComparativoExecucao proposto={proposto} executado={executado} notas={notas} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { rotulo: 'Valor proposto', valor: moeda(totaisProjeto.proposto), nota: 'total original da planilha' },
           {
-            rotulo: 'Valor executado',
-            valor: moeda(totaisProjeto.executadoConhecido),
-            nota: totaisProjeto.itensSemExecucao > 0
-              ? `${totaisProjeto.itensSemExecucao === 1 ? '1 item' : `${totaisProjeto.itensSemExecucao} itens`} sem execução informada`
-              : 'todos os itens informados',
+            rotulo: 'Itens sem execução',
+            valor: String(totaisProjeto.itensSemExecucao),
+            nota: totaisProjeto.itensSemExecucao > 0 ? 'nenhuma nota vinculada' : 'todos os itens com nota',
           },
           { rotulo: 'Plano ativo', valor: moeda(totaisProjeto.ativo), nota: 'proposto menos itens excluídos' },
           {
@@ -304,6 +336,12 @@ export function TabOrcamento({ project }: { project: Project }) {
                             ) : (
                               <span style={{ color: 'var(--ink-1)', fontWeight: 600 }}>{moeda(item.valorExecutado)}</span>
                             )}
+                            <span className="block" style={{ fontSize: '0.64rem', color: 'var(--ink-5)', fontFamily: 'inherit' }}>
+                              {(() => {
+                                const qtd = notasPorItem.get(item.id)?.length ?? 0;
+                                return `${qtd} ${qtd === 1 ? 'nota' : 'notas'}${item.execucaoConcluida ? ' · concluído' : ''}`;
+                              })()}
+                            </span>
                           </td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
                             {item.dataCompra ? formatDateOnly(item.dataCompra) : '—'}
@@ -332,10 +370,16 @@ export function TabOrcamento({ project }: { project: Project }) {
                             </span>
                           </td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.71rem', color: 'var(--ink-3)', maxWidth: 180 }}>
-                            <span className="block truncate" title={item.motivoExclusao ?? item.justificativaDiferenca}>
-                              {item.motivoExclusao ?? item.justificativaDiferenca ?? ''}
-                              {!item.motivoExclusao && !item.justificativaDiferenca && <span style={{ color: 'var(--ink-5)' }}>—</span>}
-                            </span>
+                            {justificativaPendente(item) ? (
+                              <span style={{ color: 'var(--warning)', fontWeight: 600 }} title="O executado difere do proposto e ainda não há justificativa.">
+                                justificativa pendente
+                              </span>
+                            ) : (
+                              <span className="block truncate" title={item.motivoExclusao ?? item.justificativaDiferenca}>
+                                {item.motivoExclusao ?? item.justificativaDiferenca ?? ''}
+                                {!item.motivoExclusao && !item.justificativaDiferenca && <span style={{ color: 'var(--ink-5)' }}>—</span>}
+                              </span>
+                            )}
                           </td>
                           <td className="px-2 py-1.5 whitespace-nowrap">
                             {item.riscoId ? (
@@ -387,9 +431,24 @@ export function TabOrcamento({ project }: { project: Project }) {
         </div>
       </div>
 
-      {editando && (
-        <FormularioExecucao item={editando} aoFechar={() => setEditando(null)} />
+      <ListaNotas
+        notas={notas}
+        itens={itens}
+        aoNovaNota={() => setNotaAberta({})}
+        aoAbrirNota={n => setNotaAberta({ nota: n })}
+      />
+
+      {editando && !notaAberta && (
+        <FormularioExecucao
+          item={itens.find(i => i.id === editando.id) ?? editando}
+          notas={notasPorItem.get(editando.id) ?? []}
+          aoFechar={() => setEditando(null)}
+          aoNovaNota={() => setNotaAberta({ itemId: editando.id })}
+          aoAbrirNota={n => setNotaAberta({ nota: n })}
+        />
       )}
+
+      {dialogoNota}
 
       {excluindo && (
         <DialogoExclusaoItem item={excluindo} etapas={etapas} aoFechar={() => setExcluindo(null)} />

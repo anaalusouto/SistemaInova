@@ -12,6 +12,8 @@
  * devolvem `null` quando não há base para calcular, em vez de devolver zero.
  */
 
+import type { Attachment } from '../data/mockData';
+
 export const NAO_INFORMADO = 'Não informado' as const;
 
 export type SituacaoItem = 'Ativo' | 'Excluído';
@@ -30,13 +32,77 @@ export interface ItemOrcamento {
   valorProposto: number;
   /** Fórmula qtd × qtdUnidades × valorUnitario, calculada pelo banco (RN-030). */
   valorPlanejado: number;
-  /** null = sem registro de execução. NUNCA zero por ausência (RF-029). */
+  /** Soma das notas do item (espelho mantido pelo banco, 0016). null = nenhuma
+   *  nota. NUNCA zero por ausência (RF-029). */
   valorExecutado: number | null;
+  /** Data da nota mais recente. */
   dataCompra: string | null;
   justificativaDiferenca: string;
+  /** A equipe marcou que não entra mais nota neste item (RF04.3). */
+  execucaoConcluida: boolean;
   situacao: SituacaoItem;
   motivoExclusao: string | null;
   riscoId: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Notas fiscais / comprovantes (RF04.3, migration 0016)
+// ---------------------------------------------------------------------------
+
+export interface NotaOrcamento {
+  id: string;
+  /** Opcional: nota pode ser lançada antes de haver planilha importada. */
+  itemId: string | null;
+  numero: string | null;
+  fornecedor: string | null;
+  dataEmissao: string;          // AAAA-MM-DD
+  valor: number;
+  descricao: string | null;
+  /** Comprovante (um por nota). null = "sem comprovante". */
+  anexo: Attachment | null;
+  criadoPor: string;
+  criadoEm: string;
+}
+
+export interface NotaInput {
+  projetoId: number;
+  itemId: string | null;
+  numero: string;
+  fornecedor: string;
+  dataEmissao: string | null;
+  valor: number | null;
+  descricao: string;
+}
+
+/** Validação da nota — a mesma no formulário e no servidor. */
+export function validarNota(n: Pick<NotaInput, 'dataEmissao' | 'valor'>): string[] {
+  const erros: string[] = [];
+  if (!n.dataEmissao) erros.push('Informe a data da nota.');
+  if (n.valor === null || !Number.isFinite(n.valor)) erros.push('Informe o valor da nota.');
+  else if (n.valor <= 0) erros.push('O valor da nota precisa ser maior que zero.');
+  return erros;
+}
+
+/** Converte o que a pessoa digitou ("1.234,56") em número; vazio vira null. */
+export function lerValor(texto: string): number | null {
+  const limpo = texto.replace(/\s|R\$/g, '').replace(/\./g, '').replace(',', '.').trim();
+  if (limpo === '') return null;
+  const n = Number(limpo);
+  return Number.isFinite(n) ? arredondar(n) : NaN;
+}
+
+/** Soma das notas; null quando não há nenhuma (ausência não é zero). */
+export function somaDasNotas(notas: Pick<NotaOrcamento, 'valor'>[]): number | null {
+  return notas.length ? arredondar(notas.reduce((s, n) => s + n.valor, 0)) : null;
+}
+
+/**
+ * Executado ÷ proposto, em %. null quando falta um dos dois. Pode passar de
+ * 100: execução acima do proposto é informação, não erro de conta.
+ */
+export function percentualExecutado(executado: number | null, proposto: number | null): number | null {
+  if (executado === null || !proposto) return null;
+  return Math.round((executado / proposto) * 1000) / 10;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,12 +131,32 @@ export function arredondar(v: number): number {
   return Math.round((v + Number.EPSILON) * 100) / 100;
 }
 
-/** Diferença entre o executado e o proposto exige justificativa (RF-039). */
+/**
+ * Quando a diferença entre executado e proposto exige justificativa (RF-039,
+ * ajustado pela equipe em 29/09/2026 para o lançamento por notas):
+ *
+ * - soma das notas ACIMA do proposto: sempre;
+ * - item marcado como execução concluída com soma diferente do proposto
+ *   (inclusive sem nota nenhuma: concluir sem gastar também é desvio).
+ *
+ * Abaixo do proposto com execução em andamento não pede — é o estado normal
+ * entre a primeira e a última nota.
+ */
 export function exigeJustificativa(
-  item: Pick<ItemOrcamento, 'valorProposto' | 'valorExecutado'>,
+  item: Pick<ItemOrcamento, 'valorProposto' | 'valorExecutado' | 'execucaoConcluida'>,
 ): boolean {
-  if (item.valorExecutado === null) return false;
-  return arredondar(item.valorExecutado) !== arredondar(item.valorProposto);
+  const proposto = arredondar(item.valorProposto);
+  const executado = item.valorExecutado === null ? null : arredondar(item.valorExecutado);
+  if (executado !== null && executado > proposto) return true;
+  if (item.execucaoConcluida) return (executado ?? 0) !== proposto;
+  return false;
+}
+
+/** Item que exige justificativa e ainda não tem — sinalizado na tabela. */
+export function justificativaPendente(
+  item: Pick<ItemOrcamento, 'valorProposto' | 'valorExecutado' | 'execucaoConcluida' | 'justificativaDiferenca' | 'situacao'>,
+): boolean {
+  return item.situacao === 'Ativo' && exigeJustificativa(item) && !item.justificativaDiferenca.trim();
 }
 
 // ---------------------------------------------------------------------------

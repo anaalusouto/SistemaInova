@@ -1,58 +1,57 @@
 /**
- * Registro de execução de um item (RF-030, RF-039).
+ * Execução de um item (RF-030, RF-039, RF04.3).
  *
- * Os dados planejados aparecem, mas só para leitura: a tela mostra contra o
- * que se está comparando sem permitir editar a origem. A justificativa vira
- * obrigatória assim que o valor digitado se afasta do proposto — em qualquer
- * direção, porque gastar menos também é desvio do plano e precisa de
- * explicação registrada (RF-039).
+ * Desde a 0016 o executado do item é a soma das notas dele — não se digita.
+ * Aqui a pessoa vê as notas, lança uma nova, marca a execução como concluída
+ * e escreve a justificativa quando ela é exigida: soma acima do proposto, ou
+ * item concluído com soma diferente do proposto (exigeJustificativa).
+ *
+ * Os dados planejados aparecem só para leitura (RF-030).
  */
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { Paperclip, Plus, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../store';
-import { moeda, moedaComSinal, arredondar, type ItemOrcamento } from '../../lib/orcamento';
-import { Campo, AreaTexto, Data, Erros, Acoes } from '../plano/camposFormulario';
+import { useAuth } from '../../auth/authStore';
+import { formatDateOnly } from '../../lib/dateOnly';
+import {
+  moeda, moedaComSinal, arredondar, exigeJustificativa, somaDasNotas,
+  type ItemOrcamento, type NotaOrcamento,
+} from '../../lib/orcamento';
+import { Campo, AreaTexto, Erros, Acoes } from '../plano/camposFormulario';
 
 export function FormularioExecucao({
-  item, aoFechar,
-}: { item: ItemOrcamento; aoFechar: () => void }) {
+  item, notas, aoFechar, aoNovaNota, aoAbrirNota,
+}: {
+  item: ItemOrcamento;
+  /** Notas deste item. */
+  notas: NotaOrcamento[];
+  aoFechar: () => void;
+  aoNovaNota: () => void;
+  aoAbrirNota: (n: NotaOrcamento) => void;
+}) {
   const { saveExecucao } = useStore();
-  const [valor, setValor] = useState(item.valorExecutado === null ? '' : String(item.valorExecutado));
-  const [dataCompra, setDataCompra] = useState(item.dataCompra);
+  const { readOnly } = useAuth();
+  const [concluida, setConcluida] = useState(item.execucaoConcluida);
   const [justificativa, setJustificativa] = useState(item.justificativaDiferenca);
   const [erros, setErros] = useState<string[]>([]);
   const [salvando, setSalvando] = useState(false);
 
-  // Campo vazio significa "sem registro de execução", não zero (RF-029).
-  const executado = useMemo(() => {
-    const limpo = valor.replace(/\./g, '').replace(',', '.').trim();
-    if (limpo === '') return null;
-    const n = Number(limpo);
-    return Number.isFinite(n) ? arredondar(n) : NaN;
-  }, [valor]);
-
-  const invalido = typeof executado === 'number' && Number.isNaN(executado);
-  const diferenca = executado === null || invalido ? null : arredondar(item.valorProposto - (executado as number));
-  const precisaJustificar = executado !== null && !invalido && executado !== arredondar(item.valorProposto);
+  const executado = somaDasNotas(notas);
+  const diferenca = executado === null ? null : arredondar(item.valorProposto - executado);
+  const precisaJustificar = exigeJustificativa({
+    valorProposto: item.valorProposto, valorExecutado: executado, execucaoConcluida: concluida,
+  });
 
   const salvar = async () => {
-    const problemas: string[] = [];
-    if (invalido) problemas.push('O valor executado não é um número válido.');
-    if (typeof executado === 'number' && executado < 0) problemas.push('O valor executado não pode ser negativo.');
     if (precisaJustificar && !justificativa.trim()) {
-      problemas.push('O valor executado difere do proposto. Informe a justificativa desta diferença.');
+      setErros(['O executado difere do proposto. Informe a justificativa desta diferença.']);
+      return;
     }
-    if (problemas.length) { setErros(problemas); return; }
-
     setSalvando(true);
     try {
-      await saveExecucao({
-        itemId: item.id,
-        valorExecutado: executado as number | null,
-        dataCompra,
-        justificativa,
-      });
-      toast.success('Execução registrada.');
+      await saveExecucao({ itemId: item.id, justificativa, execucaoConcluida: concluida });
+      toast.success('Execução atualizada.');
       aoFechar();
     } catch (e) {
       setErros([e instanceof Error ? e.message : 'Não foi possível salvar.']);
@@ -65,14 +64,14 @@ export function FormularioExecucao({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={aoFechar}>
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-card rounded-2xl border p-5 w-full max-w-lg flex flex-col gap-3"
+        className="bg-card rounded-2xl border p-5 w-full max-w-lg flex flex-col gap-3 max-h-[92vh] overflow-y-auto"
         style={{ borderColor: 'var(--border)' }}
         role="dialog"
-        aria-label="Registrar execução"
+        aria-label="Execução do item"
       >
         <div>
           <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>
-            Registrar execução
+            Execução do item
           </div>
           <div style={{ fontSize: '0.76rem', color: 'var(--ink-4)', marginTop: 2 }}>
             {item.grupo} · {item.categoria}
@@ -81,10 +80,7 @@ export function FormularioExecucao({
         </div>
 
         {/* Planejado — somente leitura (RF-030). */}
-        <div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-lg px-3 py-2"
-          style={{ background: 'var(--surface-2)' }}
-        >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-lg px-3 py-2" style={{ background: 'var(--surface-2)' }}>
           {[
             ['Qtd.', `${item.qtd} ${item.unidade}`.trim()],
             ['Qtd./un.', String(item.qtdUnidades)],
@@ -100,46 +96,106 @@ export function FormularioExecucao({
 
         <Erros erros={erros} />
 
-        <Campo rotulo="Valor executado" dica="Deixe em branco para registrar que ainda não há execução informada.">
-          <input
-            type="text"
-            inputMode="decimal"
-            className="w-full border rounded-lg px-2.5 py-1.5"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
-            placeholder="Não informado"
-            value={valor}
-            onChange={e => setValor(e.target.value)}
-          />
-        </Campo>
-
-        <Campo rotulo="Data da compra">
-          <Data valor={dataCompra} aoMudar={setDataCompra} />
-        </Campo>
-
-        <div className="flex items-center gap-2" style={{ fontSize: '0.78rem' }} aria-live="polite">
-          <span style={{ color: 'var(--ink-4)' }}>Diferença (proposto − executado):</span>
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)', fontWeight: 600,
-              color: diferenca === null ? 'var(--ink-5)' : diferenca < 0 ? 'var(--danger)' : 'var(--success)',
-            }}
-          >
-            {moedaComSinal(diferenca)}
-          </span>
-          {diferenca !== null && diferenca < 0 && (
-            <span style={{ fontSize: '0.7rem', color: 'var(--danger)' }}>execução acima do proposto</span>
+        {/* Notas do item */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-3)' }}>
+              Notas fiscais ({notas.length})
+            </span>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={aoNovaNota}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md border text-[11.5px] font-medium"
+                style={{ borderColor: 'var(--border)', color: 'var(--brand)' }}
+              >
+                <Plus size={12} /> Nova nota
+              </button>
+            )}
+          </div>
+          {notas.length === 0 ? (
+            <span style={{ fontSize: '0.76rem', color: 'var(--ink-5)' }}>Nenhuma nota lançada neste item.</span>
+          ) : (
+            <ul className="flex flex-col rounded-lg border" style={{ borderColor: 'var(--line-1)' }}>
+              {notas.map(n => (
+                <li key={n.id} style={{ borderBottom: '1px solid var(--line-1)' }}>
+                  <button
+                    type="button"
+                    onClick={() => aoAbrirNota(n)}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-accent"
+                    style={{ fontSize: '0.76rem' }}
+                  >
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--ink-4)' }}>{formatDateOnly(n.dataEmissao)}</span>
+                    <span className="flex-1 min-w-0 truncate" style={{ color: 'var(--ink-2)' }}>
+                      {n.numero ? `NF ${n.numero}` : 'Sem número'}{n.fornecedor ? ` · ${n.fornecedor}` : ''}
+                    </span>
+                    {n.anexo
+                      ? <Paperclip size={11} color="var(--ink-4)" aria-label="Com comprovante" />
+                      : <span style={{ fontSize: '0.66rem', color: 'var(--warning)' }}>sem comprovante</span>}
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink-1)' }}>{moeda(n.valor)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
+
+        <div className="grid grid-cols-2 gap-2 rounded-lg px-3 py-2" style={{ background: 'var(--surface-2)' }} aria-live="polite">
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase' }}>Executado (soma das notas)</div>
+            <div style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{moeda(executado)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase' }}>Diferença (proposto − executado)</div>
+            <div
+              style={{
+                fontSize: '0.85rem', fontFamily: 'var(--font-mono)', fontWeight: 700,
+                color: diferenca === null ? 'var(--ink-5)' : diferenca < 0 ? 'var(--danger)' : 'var(--success)',
+              }}
+            >
+              {moedaComSinal(diferenca)}
+            </div>
+          </div>
+        </div>
+        {diferenca !== null && diferenca < 0 && (
+          <div className="flex items-center gap-1.5" style={{ fontSize: '0.72rem', color: 'var(--danger)' }}>
+            <AlertTriangle size={12} /> Execução acima do proposto.
+          </div>
+        )}
+
+        <label className="flex items-start gap-2" style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>
+          <input
+            type="checkbox"
+            checked={concluida}
+            disabled={readOnly}
+            onChange={e => setConcluida(e.target.checked)}
+            style={{ marginTop: 3 }}
+          />
+          <span>
+            Execução concluída
+            <span className="block" style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>
+              Marque quando não entra mais nota neste item. Concluído com valor diferente do proposto exige justificativa.
+            </span>
+          </span>
+        </label>
 
         <Campo
           rotulo="Justificativa da diferença"
           obrigatorio={precisaJustificar}
-          dica={precisaJustificar ? 'O valor difere do proposto — a justificativa passa a ser obrigatória.' : undefined}
+          dica={precisaJustificar ? 'O executado difere do proposto — a justificativa é obrigatória.' : undefined}
         >
-          <AreaTexto valor={justificativa} aoMudar={setJustificativa} linhas={3} />
+          <AreaTexto valor={justificativa} aoMudar={setJustificativa} linhas={3} desabilitado={readOnly} />
         </Campo>
 
-        <Acoes aoCancelar={aoFechar} aoSalvar={salvar} salvando={salvando} />
+        {readOnly ? (
+          <div className="flex justify-end">
+            <button onClick={aoFechar} className="px-3 py-1.5 rounded-md border text-[12.5px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
+              Fechar
+            </button>
+          </div>
+        ) : (
+          <Acoes aoCancelar={aoFechar} aoSalvar={salvar} salvando={salvando} />
+        )}
       </div>
     </div>
   );
