@@ -115,7 +115,8 @@ export function VisaoRiscos({
           <span style={{ fontSize: '0.74rem', color: 'var(--ink-2)', lineHeight: 1.5 }}>
             {resumo.semEtapa} risco{resumo.semEtapa === 1 ? '' : 's'} do modelo anterior ainda não
             {resumo.semEtapa === 1 ? ' está vinculado' : ' estão vinculados'} a uma etapa. Continuam contando na matriz;
-            a coluna Meta / Etapa mostra a etapa registrada na planilha antiga até a conciliação.
+            a coluna Meta / Etapa mostra a etapa registrada na planilha antiga até a conciliação. Para vincular,
+            abra o risco e use Editar risco.
           </span>
         </div>
       )}
