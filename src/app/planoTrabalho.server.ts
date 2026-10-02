@@ -13,7 +13,7 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 import {
-  validarDatasDaAtividade, validarPeriodoDaEtapa, validarMeta, motivoParaNaoRemoverEtapa, progressoParaStatus,
+  validarDatasDaAtividade, validarPeriodoDaEtapa, validarJustificativaAtraso, validarMeta, motivoParaNaoRemoverEtapa, progressoParaStatus,
   type MetaInput, type Periodo,
 } from './lib/planoTrabalho';
 import type { ActivityStatus, BudgetLink } from './data/mockData';
@@ -327,14 +327,11 @@ async function validarAtividade(
   );
   if (!validacao.ok) throw new DadosInvalidos(validacao.erros);
 
-  // RN-010: divergência entre previsto e realizado exige justificativa.
-  const divergeInicio = !!data.inicioRealizado && !!data.inicioPrevisto && data.inicioRealizado !== data.inicioPrevisto;
-  const divergeFim = !!data.fimRealizado && !!data.fimPrevisto && data.fimRealizado !== data.fimPrevisto;
-  if ((divergeInicio || divergeFim) && !data.justificativaAtraso.trim()) {
-    throw new DadosInvalidos([
-      'As datas realizadas divergem das previstas. Informe a justificativa antes de salvar.',
-    ]);
-  }
+  const justificativa = validarJustificativaAtraso({
+    plannedStart: data.inicioPrevisto, plannedEnd: data.fimPrevisto,
+    actualStart: data.inicioRealizado, actualEnd: data.fimRealizado,
+  }, data.justificativaAtraso);
+  if (!justificativa.ok) throw new DadosInvalidos(justificativa.erros);
 }
 
 function linhaAtividade(data: AtividadeInput) {

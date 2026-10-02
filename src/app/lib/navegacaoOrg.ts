@@ -24,12 +24,12 @@ export interface RotaOrg {
 export const ROTA_INICIO: RotaOrg = { orgId: null, secao: 'dados', projetoId: null };
 
 export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string; emConstrucao?: boolean }[] = [
-  { id: 'dados', rotulo: 'Dados cadastrais' },
+  { id: 'dados', rotulo: 'Cadastro' },
   { id: 'projetos', rotulo: 'Projeto' },
-  { id: 'encaminhamentos', rotulo: 'Encaminhamentos e notas' },
-  { id: 'registros', rotulo: 'Registros de contato' },
   { id: 'mapeamento', rotulo: 'Mapeamento', emConstrucao: true },
   { id: 'parecer', rotulo: 'Parecer', emConstrucao: true },
+  { id: 'encaminhamentos', rotulo: 'Encaminhamento' },
+  { id: 'registros', rotulo: 'Registro de Contato' },
 ];
 
 /**

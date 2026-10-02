@@ -54,13 +54,39 @@ export function estaAtrasada(a: Pick<Activity, 'status' | 'plannedEnd'>, hoje = 
 }
 
 /**
- * Houve divergência entre o par previsto e o par realizado — o que torna a
- * justificativa obrigatória ao salvar (RN-010).
+ * Houve diferença entre previsto e realizado, inclusive antecipação.
+ * A exigência de justificativa considera apenas atraso: ver validarJustificativaAtraso.
  */
 export function temDivergenciaDeDatas(a: Activity): boolean {
   const divergeInicio = !!a.actualStart && !!a.plannedStart && a.actualStart !== a.plannedStart;
   const divergeFim = !!a.actualEnd && !!a.plannedEnd && a.actualEnd !== a.plannedEnd;
   return divergeInicio || divergeFim;
+}
+
+type DatasDeExecucao = Pick<Activity, 'plannedStart' | 'plannedEnd' | 'actualStart' | 'actualEnd'>;
+
+function motivosDeAtraso(a: DatasDeExecucao): string[] {
+  const motivos: string[] = [];
+  if (a.actualStart && a.plannedStart && a.actualStart > a.plannedStart) {
+    motivos.push('O início real é posterior ao início previsto.');
+  }
+  if (a.actualEnd && a.plannedEnd && a.actualEnd > a.plannedEnd) {
+    motivos.push('O fim real é posterior ao fim previsto.');
+  }
+  return motivos;
+}
+
+export function temAtrasoNasDatas(a: DatasDeExecucao): boolean {
+  return motivosDeAtraso(a).length > 0;
+}
+
+/** Mesma regra no formulário e no servidor: antecipação e igualdade não exigem justificativa. */
+export function validarJustificativaAtraso(a: DatasDeExecucao, justificativa: string): ValidacaoDatas {
+  const motivos = motivosDeAtraso(a);
+  const erros = motivos.length > 0 && !justificativa.trim()
+    ? [`${motivos.join(' ')} Preencha o campo "Justificativa de atraso" para salvar.`]
+    : [];
+  return { ok: erros.length === 0, erros };
 }
 
 /**
@@ -951,14 +977,14 @@ export function validarDatasDaAtividade(
 
   // RN-016: o teto do realizado acompanha o realizado da etapa quando ele
   // existe. É isso que permite registrar um atraso de verdade — primeiro a
-  // etapa estende o período realizado com justificativa, depois a atividade
+  // etapa estende o período realizado, depois a atividade
   // recebe a data. Sem isso, a validação obrigaria a descartar a ocorrência.
   const tetoRealizado = etapa.actualEnd ?? etapa.plannedEnd;
   if (actualEnd && actualEnd > tetoRealizado) {
     erros.push(
       etapa.actualEnd
         ? 'O fim realizado não pode ultrapassar o fim realizado da etapa.'
-        : 'O fim realizado ultrapassa o fim previsto da etapa. Atualize primeiro o período realizado da etapa, com justificativa.',
+        : 'O fim realizado ultrapassa o fim previsto da etapa. Atualize primeiro o período realizado da etapa para incluir essa data.',
     );
   }
 

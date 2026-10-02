@@ -11,13 +11,13 @@
  * o calendário do navegador já não ofereça data fora da etapa — evitar o erro
  * é melhor do que explicá-lo depois.
  */
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { type Activity, type Deliverable, type ActivityStatus, type BudgetLink } from '../../data/mockData';
 import { useStore } from '../../store';
 import { usePeople } from '../../auth/authStore';
 import { type AtividadeInput } from '../../planoTrabalho.server';
-import { validarDatasDaAtividade, temDivergenciaDeDatas, progressoParaStatus } from '../../lib/planoTrabalho';
+import { validarDatasDaAtividade, validarJustificativaAtraso, temAtrasoNasDatas, progressoParaStatus } from '../../lib/planoTrabalho';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes } from './camposFormulario';
 
 const STATUS: readonly ActivityStatus[] = ['A iniciar', 'Em andamento', 'Concluído'];
@@ -54,25 +54,36 @@ export function FormularioAtividade({
   const [form, setForm] = useState<AtividadeInput>(() => inicial(etapa, atividade));
   const [erros, setErros] = useState<string[]>([]);
   const [salvando, setSalvando] = useState(false);
+  const [tentouSalvar, setTentouSalvar] = useState(false);
+  const justificativaRef = useRef<HTMLTextAreaElement>(null);
+  const justificativaId = useId();
 
-  const alterar = <K extends keyof AtividadeInput>(campo: K, valor: AtividadeInput[K]) =>
+  const alterar = <K extends keyof AtividadeInput>(campo: K, valor: AtividadeInput[K]) => {
     setForm(f => ({ ...f, [campo]: valor }));
+    setErros([]);
+  };
 
   // CA-07: etapa sem período previsto não aceita atividade. A mensagem orienta
   // a preencher o período em vez de só recusar.
   const semPeriodoDaEtapa = !etapa.plannedStart || !etapa.plannedEnd;
 
-  const divergencia = useMemo(
-    () => temDivergenciaDeDatas({
+  const atraso = useMemo(
+    () => temAtrasoNasDatas({
       plannedStart: form.inicioPrevisto, plannedEnd: form.fimPrevisto,
       actualStart: form.inicioRealizado, actualEnd: form.fimRealizado,
-    } as Activity),
+    }),
     [form.inicioPrevisto, form.fimPrevisto, form.inicioRealizado, form.fimRealizado],
   );
 
   const tetoRealizado = etapa.actualEnd ?? etapa.plannedEnd;
+  const validacaoJustificativa = validarJustificativaAtraso({
+    plannedStart: form.inicioPrevisto, plannedEnd: form.fimPrevisto,
+    actualStart: form.inicioRealizado, actualEnd: form.fimRealizado,
+  }, form.justificativaAtraso);
+  const erroJustificativa = tentouSalvar ? validacaoJustificativa.erros[0] : undefined;
 
   const salvar = async () => {
+    setTentouSalvar(true);
     const problemas: string[] = [];
     if (!form.nome.trim()) problemas.push('Informe o título da atividade.');
     if (!form.inicioPrevisto || !form.fimPrevisto) problemas.push('Informe o início e o fim previstos.');
@@ -86,12 +97,13 @@ export function FormularioAtividade({
     );
     problemas.push(...validacao.erros);
 
-    // RN-010: divergência entre previsto e realizado exige justificativa.
-    if (divergencia && !form.justificativaAtraso.trim()) {
-      problemas.push('As datas realizadas divergem das previstas. Informe a justificativa.');
-    }
+    problemas.push(...validacaoJustificativa.erros);
 
-    if (problemas.length) { setErros(problemas); return; }
+    if (problemas.length) {
+      setErros(problemas);
+      if (!validacaoJustificativa.ok) justificativaRef.current?.focus();
+      return;
+    }
 
     setSalvando(true);
     try {
@@ -204,10 +216,10 @@ export function FormularioAtividade({
         <legend style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', padding: '0 6px' }}>
           Realizado — preencher só quando acontecer
         </legend>
-        <Campo rotulo="Início">
+        <Campo rotulo="Início real">
           <Data valor={form.inicioRealizado} aoMudar={v => alterar('inicioRealizado', v)} max={tetoRealizado} />
         </Campo>
-        <Campo rotulo="Fim">
+        <Campo rotulo="Fim real">
           <Data
             valor={form.fimRealizado}
             aoMudar={v => alterar('fimRealizado', v)}
@@ -219,10 +231,16 @@ export function FormularioAtividade({
 
       <Campo
         rotulo="Justificativa de atraso"
-        obrigatorio={divergencia}
-        dica={divergencia ? 'As datas realizadas divergem das previstas — a justificativa passa a ser obrigatória.' : undefined}
+        obrigatorio={atraso}
+        dica={atraso ? 'Obrigatória: o início real ou o fim real é posterior à respectiva data prevista.' : 'Datas reais anteriores ou iguais às previstas não exigem justificativa.'}
       >
-        <AreaTexto valor={form.justificativaAtraso} aoMudar={v => alterar('justificativaAtraso', v)} linhas={2} />
+        <AreaTexto
+          id={justificativaId} inputRef={justificativaRef}
+          valor={form.justificativaAtraso} aoMudar={v => alterar('justificativaAtraso', v)} linhas={2}
+          obrigatorio={atraso} invalido={!!erroJustificativa}
+          descritoPor={erroJustificativa ? `${justificativaId}-erro` : undefined}
+        />
+        {erroJustificativa && <span id={`${justificativaId}-erro`} role="alert" className="text-xs" style={{ color: 'var(--danger)' }}>{erroJustificativa}</span>}
       </Campo>
 
       <Campo rotulo="Vínculo orçamentário" dica='"Não informado" não é "Não" — a ausência é registrada como tal.'>

@@ -99,3 +99,32 @@ test('busca encontra organizações pela sigla, nome completo e projeto', () => 
   }
   assert.deepEqual(filtrarOrganizacoes([org], { ...FILTROS_VAZIOS, busca: 'inexistente' }), []);
 });
+
+const { validarJustificativaAtraso, temAtrasoNasDatas, validarDatasDaAtividade } = loadTs('src/app/lib/planoTrabalho');
+for (const [inicio, inicioReal] of [['antecipado', '2026-10-09'], ['igual', '2026-10-10'], ['posterior', '2026-10-11']]) {
+  for (const [fim, fimReal] of [['antecipado', '2026-10-19'], ['igual', '2026-10-20'], ['posterior', '2026-10-21']]) {
+    test(`justificativa: início ${inicio} e fim ${fim}`, () => {
+      const dates = { plannedStart: '2026-10-10', plannedEnd: '2026-10-20', actualStart: inicioReal, actualEnd: fimReal };
+      const etapa = { plannedStart: '2026-10-01', plannedEnd: '2026-10-31', actualStart: null, actualEnd: null };
+      const precisaJustificar = inicio === 'posterior' || fim === 'posterior';
+      assert.equal(validarDatasDaAtividade(dates, etapa).ok, true);
+      assert.equal(temAtrasoNasDatas(dates), precisaJustificar);
+      const result = validarJustificativaAtraso(dates, '');
+      assert.equal(result.ok, !precisaJustificar);
+      assert.equal(validarJustificativaAtraso(dates, 'Entrega reprogramada após indisponibilidade do fornecedor.').ok, true);
+      if (precisaJustificar) {
+        assert.match(result.erros[0], /Justificativa de atraso/);
+        assert.equal(result.erros[0].includes('início real'), inicio === 'posterior');
+        assert.equal(result.erros[0].includes('fim real'), fim === 'posterior');
+      }
+    });
+  }
+}
+
+test('justificativa trata datas parciais e não aceita apenas espaços quando há atraso', () => {
+  const dates = { plannedStart: '2026-10-10', plannedEnd: '2026-10-20', actualStart: '2026-10-11', actualEnd: null };
+  assert.equal(validarJustificativaAtraso(dates, '   ').ok, false);
+  assert.equal(validarJustificativaAtraso({ ...dates, actualStart: null }, '').ok, true);
+  assert.equal(validarJustificativaAtraso({ ...dates, actualStart: '2026-10-09' }, '').ok, true);
+  assert.equal(validarJustificativaAtraso({ ...dates, actualStart: null, actualEnd: '2026-10-21' }, '').ok, false);
+});

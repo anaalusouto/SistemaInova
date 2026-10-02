@@ -5,7 +5,7 @@
  * mensagem de erro apareçam sempre do mesmo jeito, em todos os formulários da
  * aba. Campo obrigatório é marcado no rótulo, não descoberto só ao salvar.
  */
-import { type ReactNode } from 'react';
+import { type ReactNode, type Ref } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 const baseInput: React.CSSProperties = {
@@ -48,16 +48,24 @@ export function Texto({
 }
 
 export function AreaTexto({
-  valor, aoMudar, linhas = 3, placeholder, desabilitado,
-}: { valor: string; aoMudar: (v: string) => void; linhas?: number; placeholder?: string; desabilitado?: boolean }) {
+  valor, aoMudar, linhas = 3, placeholder, desabilitado, id, inputRef, obrigatorio, invalido, descritoPor,
+}: {
+  valor: string; aoMudar: (v: string) => void; linhas?: number; placeholder?: string; desabilitado?: boolean;
+  id?: string; inputRef?: Ref<HTMLTextAreaElement>; obrigatorio?: boolean; invalido?: boolean; descritoPor?: string;
+}) {
   return (
     <textarea
+      id={id}
+      ref={inputRef}
       className="w-full border rounded-lg px-2.5 py-1.5"
-      style={{ ...baseInput, resize: 'vertical' }}
+      style={{ ...baseInput, resize: 'vertical', ...(invalido ? { borderColor: 'var(--danger)' } : {}) }}
       rows={linhas}
       value={valor}
       placeholder={placeholder}
       disabled={desabilitado}
+      required={obrigatorio}
+      aria-invalid={invalido || undefined}
+      aria-describedby={descritoPor}
       onChange={e => aoMudar(e.target.value)}
     />
   );
