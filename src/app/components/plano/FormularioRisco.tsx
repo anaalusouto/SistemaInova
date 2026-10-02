@@ -9,7 +9,7 @@
  */
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { type Risk, type Deliverable, type RiskStatus } from '../../data/mockData';
+import { type Risk, type Deliverable, type Goal, type RiskStatus } from '../../data/mockData';
 import { useStore } from '../../store';
 import { usePeople } from '../../auth/authStore';
 import { type RiscoInput } from '../../planoTrabalho.server';
@@ -29,10 +29,10 @@ const CORES_FAIXA: Record<string, { cor: string; fundo: string }> = {
   'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
 };
 
-function inicial(projetoId: number, etapa: Deliverable, risco?: Risk): RiscoInput {
+function inicial(projetoId: number, etapa?: Deliverable, risco?: Risk): RiscoInput {
   return {
     projetoId,
-    etapaId: etapa.id,
+    etapaId: etapa?.id ?? risco?.stageId ?? '',
     titulo: risco?.title ?? '',
     descricao: risco?.description ?? '',
     categoria: risco?.category ?? '',
@@ -74,8 +74,11 @@ function Escala({
 }
 
 export function FormularioRisco({
-  projetoId, etapa, risco, aoFechar,
-}: { projetoId: number; etapa: Deliverable; risco?: Risk; aoFechar: () => void }) {
+  projetoId, etapa, risco, metas = [], codigos, aoFechar,
+}: {
+  projetoId: number; etapa?: Deliverable; risco?: Risk;
+  metas?: Goal[]; codigos?: Map<string, string>; aoFechar: () => void;
+}) {
   const { createRisco, updateRisco } = useStore();
   const pessoas = usePeople();
   const [form, setForm] = useState<RiscoInput>(() => inicial(projetoId, etapa, risco));
@@ -91,6 +94,7 @@ export function FormularioRisco({
 
   const salvar = async () => {
     const problemas: string[] = [];
+    if (!form.etapaId) problemas.push('Selecione a etapa do risco.');
     if (!form.titulo.trim()) problemas.push('Informe o título do risco.');
     if (!form.categoria.trim()) problemas.push('Informe a categoria.');
     if (!form.responsavel.trim()) problemas.push('Informe o responsável.');
@@ -118,13 +122,38 @@ export function FormularioRisco({
     <div className="flex flex-col gap-3">
       <Erros erros={erros} />
 
+      {risco && metas.length > 0 ? (
+        <Campo rotulo="Etapa" obrigatorio>
+          <select
+            className="w-full border rounded-lg px-2.5 py-1.5"
+            style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem' }}
+            value={form.etapaId}
+            onChange={e => alterar('etapaId', e.target.value)}
+          >
+            <option value="">Selecione…</option>
+            {metas.map(meta => (
+              <optgroup key={meta.id} label={meta.name}>
+                {meta.deliverables.map(e => (
+                  <option key={e.id} value={e.id}>
+                    {codigos?.get(e.id) ? `${codigos.get(e.id)} · ` : ''}{e.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </Campo>
+      ) : (
       <div
         className="rounded-lg px-3 py-2"
         style={{ background: 'var(--surface-2)', fontSize: '0.74rem', color: 'var(--ink-3)' }}
       >
-        Risco da etapa <strong style={{ color: 'var(--ink-2)' }}>{etapa.name}</strong>. Todo risco pertence a uma
-        etapa — a meta é derivada dela.
+        {etapa ? (
+          <>Risco da etapa <strong style={{ color: 'var(--ink-2)' }}>{etapa.name}</strong>. A meta é derivada dela.</>
+        ) : (
+          <>Cadastre uma etapa no plano de trabalho para vincular este risco.</>
+        )}
       </div>
+      )}
 
       <Campo rotulo="Título" obrigatorio>
         <Texto valor={form.titulo} aoMudar={v => alterar('titulo', v)} placeholder="Resumo curto do risco" />
@@ -139,6 +168,9 @@ export function FormularioRisco({
             onChange={e => alterar('categoria', e.target.value)}
           >
             <option value="">Selecione…</option>
+            {form.categoria && !CATEGORIAS.some(c => c === form.categoria) && (
+              <option value={form.categoria}>{form.categoria}</option>
+            )}
             {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </Campo>
@@ -151,6 +183,9 @@ export function FormularioRisco({
             onChange={e => alterar('responsavel', e.target.value)}
           >
             <option value="">Selecione…</option>
+            {form.responsavel && !pessoas.some(p => p.name === form.responsavel) && (
+              <option value={form.responsavel}>{form.responsavel}</option>
+            )}
             {pessoas.map(p => <option key={p.login} value={p.name}>{p.name}</option>)}
           </select>
         </Campo>

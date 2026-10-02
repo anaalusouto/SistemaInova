@@ -17,6 +17,7 @@ import { SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../lib/navegacaoOrg';
 
 /** O menu "Projetos" saiu (29/09/2026): projeto se abre dentro da organização. */
 export type NavItem =
+  | 'overview'
   | 'organizations'
   | 'schedule'
   | 'diagnostics'
@@ -33,7 +34,9 @@ interface SidebarProps {
   aoNavegarOrg: (rota: RotaOrg) => void;
 }
 
-const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] = [];
+const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+];
 
 const bottomItems = [
   { id: 'organizations' as NavItem, label: 'Organizações', icon: Building2 },

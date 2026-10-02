@@ -1,10 +1,10 @@
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
-export default defineConfig(async ({ command, mode }) => {
+export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
   // DEBUG TEMPORÁRIO: confirmar se a Vercel está passando VITE_SUPABASE_URL
   // pro processo de build. Aparece nos Build Logs da Vercel. Remover depois.
   console.log('[debug-env]', {
@@ -14,7 +14,7 @@ export default defineConfig(async ({ command, mode }) => {
     VERCEL_ENV: process.env.VERCEL_ENV,
   });
 
-  const plugins = [
+  const plugins: PluginOption[] = [
     tailwindcss(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
     tanstackStart({

@@ -3,6 +3,7 @@ import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
 import { ProjectView } from './components/ProjectView';
+import { PortfolioView } from './components/PortfolioView';
 import { ReportsModule } from './components/ReportsModule';
 import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoModule } from './components/DiagnosticoModule';
@@ -34,9 +35,9 @@ function greetingFor(displayName: string): string {
 }
 
 function AppShell() {
-  // Organização é o hub (29/09/2026): o menu Projetos saiu e projeto se abre
-  // dentro da organização dele. A rota fica aqui porque o menu lateral a lê.
-  const [activeNav, setActiveNav] = useState<NavItem>('organizations');
+  // A Visão Geral é a entrada da plataforma; projetos abrem na organização.
+  // A rota da organização fica aqui porque o menu lateral também a lê.
+  const [activeNav, setActiveNav] = useState<NavItem>('overview');
   const [rotaOrg, setRotaOrg] = useState<RotaOrg>(ROTA_INICIO);
   // Projeto sem organização vinculada (em 29/09 nenhum): abre sozinho, para
   // não ficar inacessível.
@@ -54,7 +55,7 @@ function AppShell() {
     log({ userLogin: user.login, area: activeNav, action: 'view' });
   }, [activeNav, user, log]);
 
-  /** Abre o projeto dentro da organização dele (notificações, agenda, Visão Geral). */
+  /** Abre o projeto dentro da organização dele (notificações e agenda). */
   const handleSelectProject = (id: number) => {
     const orgId = getProject(id)?.organizacao?.id ?? null;
     setActiveNav('organizations');
@@ -75,7 +76,7 @@ function AppShell() {
   const handleNavigate = (item: NavItem) => {
     setActiveNav(item);
     setProjetoAvulso(null);
-    // "Organizações" no menu sempre leva ao início (Visão Geral + lista).
+    // "Organizações" no menu sempre leva à lista de organizações.
     if (item === 'organizations') setRotaOrg(ROTA_INICIO);
   };
 
@@ -86,8 +87,10 @@ function AppShell() {
     }
 
     switch (activeNav) {
+      case 'overview':
+        return <PortfolioView />;
       case 'organizations':
-        return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} aoAbrirProjeto={handleSelectProject} />;
+        return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} />;
       case 'schedule':
         return <CronogramaPage onOpenProject={handleSelectProject} />;
       case 'diagnostics':
@@ -98,7 +101,7 @@ function AppShell() {
         return <ConfiguracoesPage />;
 
       default:
-        return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} aoAbrirProjeto={handleSelectProject} />;
+        return <PortfolioView />;
     }
   };
 
