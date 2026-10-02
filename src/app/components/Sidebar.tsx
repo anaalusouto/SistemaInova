@@ -202,14 +202,13 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
         <span className="truncate">{nomeCurtoOrg(org.nome)}</span>
       </div>
       {SECOES_ORG.map(s => {
-        const ativo = rota.secao === s.id || (s.id === 'projetos' && rota.secao === 'projeto' && rota.projetoId == null);
+        const ativo = rota.secao === s.id || (s.id === 'projetos' && rota.secao === 'projeto');
         return (
           <div key={s.id}>
-            <button type="button" onClick={() => ir({ secao: s.id })} {...item(ativo, 1)}>
+            <button type="button" onClick={() => ir(s.id === 'projetos'
+              ? { secao: 'projeto', projetoId: org.projetos[0]?.id ?? null }
+              : { secao: s.id })} {...item(ativo, 1)}>
               <span className="truncate">{s.rotulo}</span>
-              {s.id === 'projetos' && org.projetos.length > 0 && (
-                <span className="ml-auto" style={{ fontSize: '0.66rem', opacity: 0.7 }}>{org.projetos.length}</span>
-              )}
               {s.id === 'encaminhamentos' && org.pendentes > 0 && (
                 <span
                   className="ml-auto rounded-full px-1.5"
@@ -220,18 +219,6 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
                 </span>
               )}
             </button>
-            {s.id === 'projetos' && org.projetos.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => ir({ secao: 'projeto', projetoId: p.id })}
-                title={`${p.codigo} — ${p.nome}`}
-                {...item(rota.secao === 'projeto' && rota.projetoId === p.id, 2)}
-              >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', flexShrink: 0 }}>{p.codigo}</span>
-                <span className="truncate">{p.nome}</span>
-              </button>
-            ))}
           </div>
         );
       })}

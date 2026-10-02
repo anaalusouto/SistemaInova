@@ -9,7 +9,7 @@
 export type SecaoOrg = 'dados' | 'projetos' | 'projeto' | 'encaminhamentos' | 'registros';
 
 export interface RotaOrg {
-  /** null = início (Visão Geral + lista de organizações). */
+  /** null = lista de organizações. */
   orgId: string | null;
   secao: SecaoOrg;
   /** Só na seção 'projeto'. */
@@ -25,7 +25,7 @@ export const ROTA_INICIO: RotaOrg = { orgId: null, secao: 'dados', projetoId: nu
 
 export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string }[] = [
   { id: 'dados', rotulo: 'Dados cadastrais' },
-  { id: 'projetos', rotulo: 'Projetos' },
+  { id: 'projetos', rotulo: 'Projeto' },
   { id: 'encaminhamentos', rotulo: 'Encaminhamentos e notas' },
   { id: 'registros', rotulo: 'Registros de contato' },
 ];

@@ -299,6 +299,10 @@ export const criarProjeto = createServerFn({ method: 'POST' })
     // o vínculo e a sigla em `org` saem do banco, não do cliente.
     let org = data.org ?? null;
     if (data.comunidadeId) {
+      const { data: vinculado, error: erroVinculo } = await supabaseAdmin.from('projetos')
+        .select('id').eq('comunidade_id', data.comunidadeId).limit(1).maybeSingle();
+      if (erroVinculo) throw new Error(erroVinculo.message);
+      if (vinculado) throw new Error('Esta organização já possui seu projeto vinculado.');
       const { data: com } = await supabaseAdmin.from('comunidades').select('nome').eq('id', data.comunidadeId).maybeSingle();
       if (!com) throw new Error('Organização não encontrada.');
       org = nomeCurtoOrg(com.nome);
