@@ -16,6 +16,7 @@ import {
   type FiltrosOrganizacao,
 } from '../../lib/organizacoes';
 import { nomeCurtoOrg } from '../../lib/navegacaoOrg';
+import './organizacoes.css';
 
 /** Opções de um filtro: a lista fixa (ou o que aparece nos dados) e, se alguma
  *  organização estiver sem o campo, "Não informado" no fim. */
@@ -152,7 +153,7 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido =
                   type="button"
                   onClick={() => aoAbrir(o.id)}
                   aria-label={`Abrir organização ${sigla}${projeto ? `, projeto ${projeto.nome}` : ''}`}
-                  className="w-full h-full min-h-[230px] flex flex-col gap-3 rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="organizacao-card w-full h-full min-h-[230px] flex flex-col gap-3 rounded-xl border bg-card p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   style={{ borderColor: 'var(--border)' }}
                 >
                   <span className="flex items-center justify-between gap-2">

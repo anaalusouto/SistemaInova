@@ -6,7 +6,7 @@
  * O menu "Projetos" saiu — projeto se acessa pela organização.
  */
 
-export type SecaoOrg = 'dados' | 'projetos' | 'projeto' | 'encaminhamentos' | 'registros';
+export type SecaoOrg = 'dados' | 'projetos' | 'projeto' | 'encaminhamentos' | 'registros' | 'mapeamento' | 'parecer';
 
 export interface RotaOrg {
   /** null = lista de organizações. */
@@ -23,11 +23,13 @@ export interface RotaOrg {
 
 export const ROTA_INICIO: RotaOrg = { orgId: null, secao: 'dados', projetoId: null };
 
-export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string }[] = [
+export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string; emConstrucao?: boolean }[] = [
   { id: 'dados', rotulo: 'Dados cadastrais' },
   { id: 'projetos', rotulo: 'Projeto' },
   { id: 'encaminhamentos', rotulo: 'Encaminhamentos e notas' },
   { id: 'registros', rotulo: 'Registros de contato' },
+  { id: 'mapeamento', rotulo: 'Mapeamento', emConstrucao: true },
+  { id: 'parecer', rotulo: 'Parecer', emConstrucao: true },
 ];
 
 /**

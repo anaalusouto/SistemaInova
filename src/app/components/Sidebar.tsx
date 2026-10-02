@@ -14,6 +14,7 @@ import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
 import { useListaOrganizacoes } from './organizacoes/useOrganizacoes';
 import { SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../lib/navegacaoOrg';
+import './organizacoes/organizacoes.css';
 
 /** O menu "Projetos" saiu (29/09/2026): projeto se abre dentro da organização. */
 export type NavItem =
@@ -136,7 +137,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
             <div key={i.id}>
               {renderBtn(i)}
               {i.id === 'organizations' && activeItem === 'organizations' && rotaOrg.orgId && (
-                <ArvoreOrganizacao rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} />
+                <ArvoreOrganizacao key={rotaOrg.orgId} rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} />
               )}
             </div>
           ))}
@@ -192,7 +193,7 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
   });
 
   return (
-    <div className="mb-1" role="group" aria-label={`Seções de ${org.nome}`}>
+    <div className="organizacao-submenu mb-1" role="group" aria-label={`Seções de ${org.nome}`}>
       <div
         className="flex items-center gap-1.5 truncate"
         style={{ padding: '6px 10px 4px 22px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--sidebar-foreground)' }}
@@ -208,7 +209,10 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
             <button type="button" onClick={() => ir(s.id === 'projetos'
               ? { secao: 'projeto', projetoId: org.projetos[0]?.id ?? null }
               : { secao: s.id })} {...item(ativo, 1)}>
-              <span className="truncate">{s.rotulo}</span>
+              <span className="min-w-0">
+                <span className="block truncate">{s.rotulo}</span>
+                {s.emConstrucao && <span className="block text-[10px] font-normal opacity-60">(Em construção)</span>}
+              </span>
               {s.id === 'encaminhamentos' && org.pendentes > 0 && (
                 <span
                   className="ml-auto rounded-full px-1.5"

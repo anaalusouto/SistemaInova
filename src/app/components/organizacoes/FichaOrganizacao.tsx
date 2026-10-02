@@ -16,6 +16,7 @@ import { useFichaOrganizacao } from './useOrganizacoes';
 import { AbaRegistrosContato } from './AbaRegistrosContato';
 import { AbaEncaminhamentos } from './AbaEncaminhamentos';
 import { NotasDaOrganizacao } from './NotasDaOrganizacao';
+import { OrganizacaoEmConstrucao } from './OrganizacaoEmConstrucao';
 import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
@@ -106,7 +107,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
                   color: ativa ? 'var(--brand)' : 'var(--ink-3)',
                 }}
               >
-                {s.rotulo}{contagem[s.id] ? ` (${contagem[s.id]})` : ''}
+                {s.rotulo}{s.emConstrucao ? ' (Em construção)' : ''}{contagem[s.id] ? ` (${contagem[s.id]})` : ''}
               </button>
             );
           })}
@@ -124,6 +125,9 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
         </div>
       ) : (
         <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
+          {(rota.secao === 'mapeamento' || rota.secao === 'parecer') && (
+            <OrganizacaoEmConstrucao key={rota.secao} titulo={rota.secao === 'mapeamento' ? 'Mapeamento' : 'Parecer'} />
+          )}
           {rota.secao === 'dados' && (
             <DadosCadastrais org={org} aoAbrirProjeto={id => ir({ secao: 'projeto', projetoId: id })} />
           )}

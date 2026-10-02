@@ -1,0 +1,73 @@
+.organizacao-card {
+  position: relative;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .organizacao-card:hover {
+    transform: translateY(-5px) scale(1.015);
+    box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--ink-1) 28%, transparent);
+    z-index: 1;
+  }
+}
+
+.organizacao-card:focus-visible {
+  transform: translateY(-3px);
+}
+
+.organizacao-submenu {
+  overflow: hidden;
+  animation: org-submenu-open 300ms ease-out;
+}
+
+@keyframes org-submenu-open {
+  from { max-height: 0; opacity: 0; transform: translateY(-6px); }
+  to { max-height: 36rem; opacity: 1; transform: translateY(0); }
+}
+
+.org-river { overflow: visible; }
+.org-river-water { stroke: var(--brand); stroke-width: 1.2; opacity: 0.3; }
+.org-river-current { stroke: var(--brand); stroke-width: 1; opacity: 0.12; stroke-linecap: round; }
+.org-river-fish, .org-river-fish-tail { fill: var(--brand); opacity: 0.65; }
+.org-river-fish-path { animation: org-fish-swim 9s linear infinite; }
+.org-river-fish-direction { animation: org-fish-turn 9s linear infinite; }
+.org-river-ripple {
+  stroke: var(--brand);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: org-fish-splash 9s linear infinite;
+}
+
+@keyframes org-fish-swim {
+  0%, 100% { transform: translate(44px, 80px); }
+  20% { transform: translate(88px, 79px); }
+  27% { transform: translate(108px, 67px) rotate(-35deg); }
+  33% { transform: translate(131px, 35px) rotate(-5deg); }
+  40% { transform: translate(157px, 67px) rotate(35deg); }
+  47% { transform: translate(175px, 80px); }
+  54%, 58% { transform: translate(198px, 82px); }
+  76% { transform: translate(126px, 85px); }
+  93% { transform: translate(44px, 80px); }
+}
+
+@keyframes org-fish-turn {
+  0%, 54% { transform: scaleX(1); }
+  58%, 93% { transform: scaleX(-1); }
+  97%, 100% { transform: scaleX(1); }
+}
+
+@keyframes org-fish-splash {
+  0%, 39%, 52%, 100% { opacity: 0; transform: scaleX(0.5); }
+  41% { opacity: 0.35; transform: scaleX(0.7); }
+  49% { opacity: 0; transform: scaleX(1.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .organizacao-card { transition: none; }
+  .organizacao-card:hover, .organizacao-card:focus-visible { transform: none; }
+  .organizacao-submenu { animation: none; }
+  .org-river-fish-path { animation: none; transform: translate(120px, 80px); }
+  .org-river-fish-direction { animation: none; }
+  .org-river-ripple { animation: none; opacity: 0; }
+}
