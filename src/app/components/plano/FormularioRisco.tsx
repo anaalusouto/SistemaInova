@@ -2,16 +2,14 @@
  * Cadastro e edição de risco (RF-028).
  *
  * O risco nasce preso a uma ETAPA (RN-028) — não existe caminho neste
- * formulário para criar risco solto. Na edição a etapa vira um campo
- * obrigatório: é assim que todo risco fica editável, inclusive o legado que
- * a migration 0011 não conseguiu vincular — quem edita escolhe a etapa. A matriz 5×5 fica visível enquanto se
+ * formulário para criar risco solto. A matriz 5×5 fica visível enquanto se
  * escolhe probabilidade e impacto, porque a faixa resultante (Baixo a Crítico)
  * é consequência da multiplicação, não um campo que alguém escolhe: ver o
  * número mudar evita que a pessoa "mire" numa faixa.
  */
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { type Risk, type Deliverable, type Goal, type RiskStatus } from '../../data/mockData';
+import { type Risk, type Deliverable, type RiskStatus } from '../../data/mockData';
 import { useStore } from '../../store';
 import { usePeople } from '../../auth/authStore';
 import { type RiscoInput } from '../../planoTrabalho.server';
@@ -31,10 +29,10 @@ const CORES_FAIXA: Record<string, { cor: string; fundo: string }> = {
   'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)' },
 };
 
-function inicial(projetoId: number, etapa: Deliverable | undefined, risco?: Risk): RiscoInput {
+function inicial(projetoId: number, etapa: Deliverable, risco?: Risk): RiscoInput {
   return {
     projetoId,
-    etapaId: etapa?.id ?? risco?.stageId ?? '',
+    etapaId: etapa.id,
     titulo: risco?.title ?? '',
     descricao: risco?.description ?? '',
     categoria: risco?.category ?? '',
@@ -76,17 +74,8 @@ function Escala({
 }
 
 export function FormularioRisco({
-  projetoId, etapa, risco, metas, codigos, aoFechar,
-}: {
-  projetoId: number;
-  /** Etapa fixa (criação a partir do painel da etapa) ou atual do risco. */
-  etapa?: Deliverable;
-  risco?: Risk;
-  /** Quando informadas, a etapa vira um campo editável do formulário. */
-  metas?: Goal[];
-  codigos?: Map<string, string>;
-  aoFechar: () => void;
-}) {
+  projetoId, etapa, risco, aoFechar,
+}: { projetoId: number; etapa: Deliverable; risco?: Risk; aoFechar: () => void }) {
   const { createRisco, updateRisco } = useStore();
   const pessoas = usePeople();
   const [form, setForm] = useState<RiscoInput>(() => inicial(projetoId, etapa, risco));
@@ -106,7 +95,6 @@ export function FormularioRisco({
     if (!form.categoria.trim()) problemas.push('Informe a categoria.');
     if (!form.responsavel.trim()) problemas.push('Informe o responsável.');
     if (!form.descricao.trim()) problemas.push('Informe a descrição.');
-    if (!form.etapaId) problemas.push('Selecione a etapa do risco.');
     if (problemas.length) { setErros(problemas); return; }
 
     setSalvando(true);
@@ -130,35 +118,13 @@ export function FormularioRisco({
     <div className="flex flex-col gap-3">
       <Erros erros={erros} />
 
-      {metas ? (
-        <Campo rotulo="Etapa" obrigatorio dica="Todo risco pertence a uma etapa — a meta é derivada dela.">
-          <select
-            className="w-full border rounded-lg px-2.5 py-1.5"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem' }}
-            value={form.etapaId}
-            onChange={e => alterar('etapaId', e.target.value)}
-          >
-            <option value="">Selecione…</option>
-            {metas.filter(m => m.deliverables.length > 0).map(m => (
-              <optgroup key={m.id} label={`${codigos?.get(m.id) ?? ''} ${m.name}`.trim()}>
-                {m.deliverables.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {`${codigos?.get(d.id) ?? ''} ${d.name}`.trim()}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </Campo>
-      ) : etapa && (
-        <div
-          className="rounded-lg px-3 py-2"
-          style={{ background: 'var(--surface-2)', fontSize: '0.74rem', color: 'var(--ink-3)' }}
-        >
-          Risco da etapa <strong style={{ color: 'var(--ink-2)' }}>{etapa.name}</strong>. Todo risco pertence a uma
-          etapa — a meta é derivada dela.
-        </div>
-      )}
+      <div
+        className="rounded-lg px-3 py-2"
+        style={{ background: 'var(--surface-2)', fontSize: '0.74rem', color: 'var(--ink-3)' }}
+      >
+        Risco da etapa <strong style={{ color: 'var(--ink-2)' }}>{etapa.name}</strong>. Todo risco pertence a uma
+        etapa — a meta é derivada dela.
+      </div>
 
       <Campo rotulo="Título" obrigatorio>
         <Texto valor={form.titulo} aoMudar={v => alterar('titulo', v)} placeholder="Resumo curto do risco" />

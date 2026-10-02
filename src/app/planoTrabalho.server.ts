@@ -474,8 +474,8 @@ function validarRisco(data: RiscoInput): void {
   if (!data.descricao.trim()) erros.push('Informe a descrição.');
   if (!(data.probabilidade >= 1 && data.probabilidade <= 5)) erros.push('A probabilidade deve ficar entre 1 e 5.');
   if (!(data.impacto >= 1 && data.impacto <= 5)) erros.push('O impacto deve ficar entre 1 e 5.');
-  // RN-028: todo risco salvo fica preso a uma etapa. As linhas legadas sem
-  // vínculo ganham a etapa na primeira edição.
+  // RN-028: risco NOVO sempre nasce preso a uma etapa. Só as linhas legadas
+  // ficaram sem vínculo, e elas não passam por aqui.
   if (!data.etapaId) erros.push('O risco precisa pertencer a uma etapa.');
   if (erros.length) throw new DadosInvalidos(erros);
 }
@@ -517,15 +517,12 @@ export const atualizarRisco = createServerFn({ method: 'POST' })
     validarRisco(dados);
     const supabaseAdmin = await getAdmin();
 
-    // Mesmo vínculo do criarRisco: a etapa precisa existir — é por aqui que o
-    // risco legado sem etapa ganha uma, então não dá para gravar meta nula.
-    const { data: etapa, error: erroEtapa } = await supabaseAdmin
+    const { data: etapa } = await supabaseAdmin
       .from('etapas').select('meta_id').eq('id', dados.etapaId).single();
-    if (erroEtapa || !etapa) throw new Error('Etapa não encontrada.');
 
     const { error } = await supabaseAdmin.from('plano_riscos').update({
       etapa_id: dados.etapaId,
-      meta_id: etapa.meta_id,
+      meta_id: etapa?.meta_id ?? null,
       titulo: dados.titulo.trim(),
       descricao: dados.descricao.trim(),
       categoria: vazioParaNulo(dados.categoria),
