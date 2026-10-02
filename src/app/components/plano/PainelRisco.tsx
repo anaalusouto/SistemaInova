@@ -2,9 +2,9 @@
  * Painel do risco (RF-027, RF-028).
  *
  * Mostra hierarquia, matriz, estratégia e as atividades de resposta — e
- * permite editar, para a equipe PMO. Risco legado sem etapa vinculada diz isso
- * em vez de exibir um vínculo que não existe: a migration 0011 só vinculou
- * automaticamente o que casava sem ambiguidade.
+ * permite editar, para a equipe PMO. Todo risco é editável: o legado sem
+ * etapa vinculada (a migration 0011 só vinculou o que casava sem ambiguidade)
+ * diz isso e, ao ser editado, ganha a etapa que a pessoa escolher.
  */
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
@@ -15,9 +15,12 @@ import { Painel, Linha, Ausente, BotaoAcao } from './PainelBase';
 import { FormularioRisco } from './FormularioRisco';
 
 export function PainelRisco({
-  risco, etapa, meta, codigoEtapa, projetoId, acoesDeResposta, aoFechar, aoAbrirAtividade,
+  risco, etapa, meta, codigoEtapa, projetoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade,
 }: {
   risco: Risk; etapa?: Deliverable; meta?: Goal; codigoEtapa?: string; projetoId: number;
+  /** Metas do projeto, para escolher (ou trocar) a etapa ao editar. */
+  metas: Goal[];
+  codigos: Map<string, string>;
   acoesDeResposta: Activity[];
   aoFechar: () => void;
   aoAbrirAtividade: (a: Activity) => void;
@@ -30,9 +33,9 @@ export function PainelRisco({
     ? `${meta.name} › ${etapa.name}${codigoEtapa ? ` (${codigoEtapa})` : ''}`
     : 'Etapa não vinculada';
 
-  // Sem etapa não há o que editar com segurança: o formulário exige etapa
-  // (RN-028) e escolher uma por chute reescreveria o histórico do registro.
-  const podeEditar = !readOnly && !!etapa;
+  // Todo risco é editável. Sem etapa, o formulário não chuta uma: a etapa
+  // vira campo obrigatório (RN-028) e quem edita escolhe.
+  const podeEditar = !readOnly;
 
   const acoes = podeEditar && !editando ? (
     <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar risco</BotaoAcao>
@@ -46,8 +49,15 @@ export function PainelRisco({
       acoes={acoes}
       largo
     >
-      {editando && etapa ? (
-        <FormularioRisco projetoId={projetoId} etapa={etapa} risco={risco} aoFechar={() => setEditando(false)} />
+      {editando ? (
+        <FormularioRisco
+          projetoId={projetoId}
+          etapa={etapa}
+          risco={risco}
+          metas={metas}
+          codigos={codigos}
+          aoFechar={() => setEditando(false)}
+        />
       ) : (
         <>
           {!etapa && (
@@ -55,8 +65,8 @@ export function PainelRisco({
               className="rounded-lg border px-3 py-2 mb-3"
               style={{ borderColor: 'var(--border)', background: 'var(--warning-soft)', fontSize: '0.75rem', color: 'var(--ink-2)' }}
             >
-              Este risco veio do modelo anterior e ainda não está vinculado a uma etapa, então não pode ser
-              editado por aqui.
+              Este risco veio do modelo anterior e ainda não está vinculado a uma etapa. Ao editá-lo, escolha a
+              etapa a que ele pertence.
               {risco.stage && <> O registro antigo indicava: <strong>{risco.stage}</strong>.</>}
             </div>
           )}

@@ -400,6 +400,8 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
             meta={alvo?.meta}
             codigoEtapa={alvo ? codigos.get(alvo.etapa.id) : undefined}
             projetoId={p.id}
+            metas={metas}
+            codigos={codigos}
             acoesDeResposta={todasAtividades.filter(a => a.riskOriginId === risco.id)}
             aoFechar={fechar}
             aoAbrirAtividade={a => setPainel({ tipo: 'atividade', atividadeId: a.id })}
