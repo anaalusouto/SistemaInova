@@ -8,6 +8,7 @@
  * escrita.
  */
 import { createServerFn } from '@tanstack/react-start';
+import { nomeCurtoOrg } from './lib/navegacaoOrg';
 import {
   categoriaDe, tipoDe, ordenarRegistros, ordenarEncaminhamentos,
   validarRegistro, validarEncaminhamento, juntarErros,
@@ -46,7 +47,8 @@ function mapResumo(row: any, pendentes: number, projetos: ProjetoDaOrganizacao[]
   return {
     id: row.id,
     codigo: row.code,
-    nome: row.nome,
+    nome: nomeCurtoOrg(row.nome),
+    nomeCompleto: row.nome,
     categoria: categoriaDe(row.segmento_social),
     tipo: tipoDe(row.tipo),
     municipio: row.municipio ?? null,

@@ -31,12 +31,27 @@ export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string }[] 
 ];
 
 /**
- * Nome curto para o menu: a sigla entre parênteses quando houver
- * ("Cooperativa … (COOPAVISEU)" → "COOPAVISEU"), senão o nome até o travessão
- * ("ACREPAF — Jacundá" → "ACREPAF").
+ * Nome de exibição padronizado pelas abreviações já usadas nos projetos.
+ * O nome completo cadastrado no banco continua preservado.
  */
+const chaveNome = (nome: string) => nome.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+const ABREVIACOES = new Map([
+  ['ADESC/PA', 'ADESC'],
+  ['ATRT', 'TAUARI'],
+  ['COPASMIG', 'COOPASMIG'],
+  ['CAANP-AGROMEL', 'CAANP AGROMEL'],
+  ['CAANP-AGROMEL (2ª rota)', 'CAANP AGROMEL'],
+  ['Associação Mulheres Indígenas do Gurupi', 'AMIG'],
+  ['Associação Mebengokre Yte Kayapo', 'MEBENKOKRE'],
+  ['Associação Indígena Riktikô "Ronkô"', 'RIKTIKO'],
+  ['Turiwara-Ka\'i', 'TURIWARA-KA\'I'],
+  ['Nova Betel', 'NOVA BETEL'],
+].map(([nome, sigla]) => [chaveNome(nome), sigla]));
+
 export function nomeCurtoOrg(nome: string): string {
+  const conhecida = ABREVIACOES.get(chaveNome(nome));
+  if (conhecida) return conhecida;
   const sigla = nome.match(/\(([^()]+)\)\s*$/)?.[1]?.trim();
-  if (sigla) return sigla;
-  return nome.split(/\s+[—–-]\s+/)[0].trim() || nome;
+  const curto = sigla || nome.split(/\s+[—–-]\s+/)[0].trim() || nome;
+  return ABREVIACOES.get(chaveNome(curto)) ?? curto;
 }

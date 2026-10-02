@@ -51,6 +51,8 @@ export interface OrganizacaoResumo {
   id: string;
   codigo: string;
   nome: string;
+  /** Nome cadastrado, preservado para busca pela razão social. */
+  nomeCompleto?: string;
   categoria: CategoriaOrganizacao | null;
   tipo: TipoOrganizacao | null;
   municipio: string | null;
@@ -89,7 +91,7 @@ export function filtrarOrganizacoes(lista: OrganizacaoResumo[], f: FiltrosOrgani
   const casa = (sel: string[], v: string | null) => sel.length === 0 || sel.includes(v ?? FILTRO_NAO_INFORMADO);
   return lista.filter(o => {
     if (q) {
-      const textos = [o.nome, o.codigo, o.municipio, ...o.projetos.flatMap(p => [p.nome, p.codigo, p.coordenador])];
+      const textos = [o.nome, o.nomeCompleto, o.codigo, o.municipio, ...o.projetos.flatMap(p => [p.nome, p.codigo, p.coordenador])];
       if (!textos.some(t => t && semAcento(t).includes(q))) return false;
     }
     return casa(f.categorias, o.categoria) && casa(f.tipos, o.tipo) && casa(f.ufs, o.uf) && casa(f.situacoes, o.status);

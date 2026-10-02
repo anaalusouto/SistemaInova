@@ -69,7 +69,7 @@ export function DiagnosticoReportsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
+    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full min-h-0 [&>*]:shrink-0">
       <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>

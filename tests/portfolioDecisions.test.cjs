@@ -68,3 +68,34 @@ test('recorte vazio produz séries vazias e prazos zerados', () => {
   assert.deepEqual(result.risks, []);
   assert.ok(result.deadlines.every(d => d.projetos === 0));
 });
+
+test('abreviações seguem os nomes dos projetos e não mudam ao normalizar novamente', () => {
+  const { nomeCurtoOrg } = loadTs('src/app/lib/navegacaoOrg');
+  const cases = [
+    ['Associação de Desenvolvimento Comunitário de Santa Maria do Pará (ADESC/PA)', 'ADESC'],
+    ['Associação de Trabalhadores Rurais de Tauari (ATRT)', 'TAUARI'],
+    ['Associação Mulheres Indígenas do Gurupi', 'AMIG'],
+    ['COPASMIG — São Miguel do Guamá', 'COOPASMIG'],
+    ['Cooperativa Amazônia Agroindustrial Viseu Pará (COOPAVISEU)', 'COOPAVISEU'],
+    ['ACREPAF — Jacundá', 'ACREPAF'],
+    ['CAANP-AGROMEL (2ª rota)', 'CAANP AGROMEL'],
+    ['Nova Betel', 'NOVA BETEL'],
+  ];
+  for (const [fullName, abbreviation] of cases) {
+    assert.equal(nomeCurtoOrg(fullName), abbreviation);
+    assert.equal(nomeCurtoOrg(abbreviation), abbreviation);
+  }
+});
+
+test('busca encontra organizações pela sigla, nome completo e projeto', () => {
+  const { filtrarOrganizacoes, FILTROS_VAZIOS } = loadTs('src/app/lib/organizacoes');
+  const org = {
+    id: 'org-1', codigo: '01', nome: 'AMIG', nomeCompleto: 'Associação Mulheres Indígenas do Gurupi',
+    categoria: 'Indígena', tipo: 'Associação', municipio: 'Gurupi', uf: 'PA', status: 'Ativa', pendentes: 0,
+    projetos: [{ id: 1, codigo: '01-2026', nome: 'Artesanato comunitário', coordenador: 'Equipe regional' }],
+  };
+  for (const busca of ['amig', 'mulheres indigenas', 'artesanato']) {
+    assert.deepEqual(filtrarOrganizacoes([org], { ...FILTROS_VAZIOS, busca }), [org]);
+  }
+  assert.deepEqual(filtrarOrganizacoes([org], { ...FILTROS_VAZIOS, busca: 'inexistente' }), []);
+});

@@ -19,7 +19,7 @@ import { NotasDaOrganizacao } from './NotasDaOrganizacao';
 import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
-import { ROTA_INICIO, SECOES_ORG, type RotaOrg } from '../../lib/navegacaoOrg';
+import { ROTA_INICIO, SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
 
 /** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
 const ICONE_POR_TIPO: Record<TipoOrganizacao, typeof Building2> = {
@@ -62,7 +62,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
       {/* Cabeçalho fixo da organização (slides 3 a 6). */}
       <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
         <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} />
@@ -76,8 +76,13 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
           </div>
           <div className="min-w-0">
             <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25 }}>
-              {org.nome}
+              {nomeCurtoOrg(org.nome)}
             </h1>
+            {org.projetos[0] && (
+              <p className="text-sm mt-1" style={{ color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>
+                {org.projetos[0].nome}
+              </p>
+            )}
             <p style={{ color: 'var(--ink-4)', fontSize: '0.82rem', marginTop: 2 }}>
               {[org.categoria ?? 'Categoria não informada', org.tipo ?? 'Tipo não informado'].join(' · ')}
             </p>
@@ -110,7 +115,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
 
       {rota.secao === 'projeto' || rota.secao === 'projetos' ? (
         // O projeto cuida da própria rolagem (título fixo, conteúdo rolando).
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 min-w-0">
           <ProjetoDaOrganizacao
             org={org}
             projetoId={rota.projetoId ?? org.projetos[0]?.id ?? null}
@@ -118,7 +123,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
           {rota.secao === 'dados' && (
             <DadosCadastrais org={org} aoAbrirProjeto={id => ir({ secao: 'projeto', projetoId: id })} />
           )}

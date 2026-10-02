@@ -4,6 +4,7 @@
 // diagnóstico (Organização + Aplicação + versão) e versionamento. As funções
 // de Matriz/IEO/Cesta/Parecer/Anexos entram nas fases seguintes.
 import { createServerFn } from '@tanstack/react-start';
+import { nomeCurtoOrg } from './lib/navegacaoOrg';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -58,7 +59,7 @@ export const listarVisaoGeralDiagnosticos = createServerFn({ method: 'GET' }).ha
       const maisRecente = diags.slice().sort((a, b) => (a.data_aplicacao < b.data_aplicacao ? 1 : -1))[0];
       const ultimaEdicaoRow = diags.slice().sort((a, b) => (a.atualizado_em < b.atualizado_em ? 1 : -1))[0];
       return {
-        comunidadeId: row.id, code: row.code, nome: row.nome, classificacao: row.segmento_social ?? '',
+        comunidadeId: row.id, code: row.code, nome: nomeCurtoOrg(row.nome), classificacao: row.segmento_social ?? '',
         dataAplicacaoMaisRecente: maisRecente?.data_aplicacao ?? null,
         ultimaEdicao: ultimaEdicaoRow?.atualizado_em ?? null,
         statusMaisRecente: maisRecente?.status ?? null,
@@ -487,7 +488,7 @@ export const listarDiagnosticosConcluidosParaRelatorio = createServerFn({ method
     if (error) throw new Error(error.message);
     return (data ?? []).map((row: any) => ({
       diagnosticoId: row.id, dataAplicacao: row.data_aplicacao, versao: row.versao,
-      comunidadeNome: row.comunidades?.nome ?? '—', comunidadeCode: row.comunidades?.code ?? '',
+      comunidadeNome: nomeCurtoOrg(row.comunidades?.nome ?? '—'), comunidadeCode: row.comunidades?.code ?? '',
       classificacao: row.comunidades?.segmento_social ?? '',
     }));
   },
@@ -522,7 +523,7 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
     const comunidadeRow: any = (diagRes.data as any).comunidades ?? {};
     return {
       diagnostico: mapDiagnostico(diagRes.data),
-      comunidade: { nome: comunidadeRow.nome ?? '—', code: comunidadeRow.code ?? '', classificacao: comunidadeRow.segmento_social ?? '' },
+      comunidade: { nome: nomeCurtoOrg(comunidadeRow.nome ?? '—'), code: comunidadeRow.code ?? '', classificacao: comunidadeRow.segmento_social ?? '' },
       matriz: (matrizRes.data ?? []).map(mapMatrizResposta),
       ieo: (ieoRes.data ?? []).map(mapIeoResposta),
       produtos: (produtosRes.data ?? []).map(mapProdutoRow),

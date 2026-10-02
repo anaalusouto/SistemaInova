@@ -57,7 +57,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const ultimaEdicao = diagnosticos.slice().sort((a, b) => (a.atualizadoEm < b.atualizadoEm ? 1 : -1))[0]?.atualizadoEm ?? null;
 
   return (
-    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full">
+    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full min-h-0 [&>*]:shrink-0">
       <div className="flex flex-col gap-3">
         <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
           <ArrowLeft size={12} /> Diagnóstico

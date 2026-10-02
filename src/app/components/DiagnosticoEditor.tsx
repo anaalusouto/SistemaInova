@@ -56,7 +56,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <div className="flex flex-col gap-3 px-7 pt-5 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
           <ArrowLeft size={12} /> Organização
@@ -121,7 +121,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
           })}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-7">
+      <div className="flex-1 min-h-0 overflow-y-auto p-7">
         {tab === 'matriz' && diagnostico && (
           <MatrizFuncionalTab diagnosticoId={diagnosticoId} readOnly={diagnostico.status === 'concluido'} />
         )}

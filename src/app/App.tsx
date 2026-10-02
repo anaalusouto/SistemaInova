@@ -115,7 +115,7 @@ function AppShell() {
         isOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
         <header
           className="flex items-center gap-3 border-b px-4 h-16 flex-shrink-0"
           style={{ borderColor: 'var(--border)', background: 'var(--background)' }}
@@ -134,7 +134,7 @@ function AppShell() {
           <ThemeToggleButton />
           <NotificationsBell onOpenProject={handleSelectProject} />
         </header>
-        <main className="flex-1 overflow-y-auto">{renderMain()}</main>
+        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto">{renderMain()}</main>
       </div>
       <Toaster position="top-right" richColors closeButton />
     </div>

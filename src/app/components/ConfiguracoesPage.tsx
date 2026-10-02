@@ -66,7 +66,7 @@ export function ConfiguracoesPage() {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-full min-h-0 min-w-0 overflow-hidden">
       {/* Left nav */}
       <div className="w-full lg:w-52 border-b lg:border-b-0 lg:border-r flex-shrink-0 py-3 lg:py-6 px-3 flex flex-col" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         <div className="px-3 mb-2 lg:mb-4 hidden lg:block">
@@ -107,7 +107,7 @@ export function ConfiguracoesPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4 sm:p-8">
         {activeSection === 'profile' && (
           <div className="max-w-3xl flex flex-col gap-6">
             <div className="flex items-center justify-between">

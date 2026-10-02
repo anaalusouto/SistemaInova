@@ -9,6 +9,7 @@
 // pessoas/fornecedores/capacitações etc.) não foi pedido pelo RF-02 e não é
 // necessário aqui — quem ainda gerencia esses dados é o seed local existente.
 import { createServerFn } from '@tanstack/react-start';
+import { nomeCurtoOrg } from './lib/navegacaoOrg';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -28,7 +29,7 @@ export interface ComunidadeResumo {
 
 function mapComunidade(row: any): ComunidadeResumo {
   return {
-    id: row.id, code: row.code, nome: row.nome,
+    id: row.id, code: row.code, nome: nomeCurtoOrg(row.nome),
     classificacao: row.segmento_social ?? '', municipio: row.municipio ?? null, uf: row.uf ?? null,
     status: row.status,
   };

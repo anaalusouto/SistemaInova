@@ -22,7 +22,7 @@ export function ReportsModule() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-1 px-7 pt-4 border-b flex-shrink-0 print:hidden" style={{ borderColor: 'var(--border)' }}>
         {TABS.map(tab => {
           const Icon = tab.icon;
@@ -40,7 +40,7 @@ export function ReportsModule() {
           );
         })}
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {subView === 'projetos' ? <ReportsPage /> : <DiagnosticoReportsPage />}
       </div>
     </div>

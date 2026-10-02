@@ -247,7 +247,8 @@ function mapProjeto(row: any): ProjectExt {
     changes: (row.mudancas ?? []).map(mapMudanca),
     evidences: (row.evidencias ?? []).map(mapEvidencia),
     communityId: null,
-    org: row.org ?? undefined, segmento: row.segmento ?? undefined, plano,
+    org: row.org ? nomeCurtoOrg(row.org) : row.comunidades?.nome ? nomeCurtoOrg(row.comunidades.nome) : undefined,
+    segmento: row.segmento ?? undefined, plano,
     driveLink: row.drive_link ?? undefined, budgetLink: row.budget_link ?? undefined, termoFomentoLink: row.termo_fomento_link ?? undefined,
     contacts: (row.contatos ?? []).map(mapContato),
     metaLog: (row.log_alteracoes_meta ?? []).map(mapMetaLog),
@@ -255,7 +256,7 @@ function mapProjeto(row: any): ProjectExt {
     aportes: (row.aportes ?? []).map(mapAporte),
     // Os registros de contato são da organização (RC-03); o projeto os lê
     // de lá só para o parecer poder apontar para um deles.
-    organizacao: row.comunidades ? { id: row.comunidades.id, nome: row.comunidades.nome } : null,
+    organizacao: row.comunidades ? { id: row.comunidades.id, nome: nomeCurtoOrg(row.comunidades.nome) } : null,
     commLogs: ordenarRegistros(((row.comunidades?.logs_comunicacao ?? []) as any[]).map(mapRegistro)),
     orcamentoItens: ((row.orcamento_itens ?? []) as any[]).map(mapItemOrcamento),
     orcamentoNotas: ((row.orcamento_notas ?? []) as any[]).map(mapNota)
