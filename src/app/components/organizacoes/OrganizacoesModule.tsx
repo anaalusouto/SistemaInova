@@ -25,7 +25,7 @@ export function OrganizacoesModule({ rota, aoNavegar }: OrganizacoesModuleProps)
   const setFiltros = (f: FiltrosOrganizacao) => { filtrosMemoria = f; setFiltrosState(f); };
 
   if (rota.orgId) {
-    return <FichaOrganizacao rota={{ ...rota, orgId: rota.orgId }} aoNavegar={aoNavegar} />;
+    return <FichaOrganizacao key={rota.orgId} rota={{ ...rota, orgId: rota.orgId }} aoNavegar={aoNavegar} />;
   }
   return (
     <ListaOrganizacoes

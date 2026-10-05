@@ -27,6 +27,36 @@ const project = (overrides = {}) => ({
   progress: 30, status: 'Em andamento', risks: [], endDate: '2026-10-31', ...overrides,
 });
 
+test('projeto da organização exige vínculo único e rejeita ID de outra organização', () => {
+  const { resolverProjetoOrg } = loadTs('src/app/lib/navegacaoOrg');
+  const projetos = [{ id: 101 }, { id: 202 }];
+  const antes = JSON.stringify(projetos);
+  assert.deepEqual(resolverProjetoOrg([]), { estado: 'sem-projeto', ids: [] });
+  assert.deepEqual(resolverProjetoOrg([projetos[0]]), { estado: 'unico', projeto: projetos[0] });
+  assert.deepEqual(resolverProjetoOrg([projetos[0]], 202), { estado: 'vinculo-invalido', ids: [101] });
+  assert.deepEqual(resolverProjetoOrg(projetos, 101), { estado: 'conflito', ids: [101, 202] });
+  assert.equal(JSON.stringify(projetos), antes);
+});
+
+test('organizações: busca, filtros combinados, limpeza e ordenação preservam IDs e dados', () => {
+  const { FILTROS_VAZIOS, filtrarOrganizacoes, ordenarOrganizacoes } = loadTs('src/app/lib/organizacoes');
+  const a = { id: 'org-a', codigo: 'ORG-01', nome: 'Árvore', categoria: 'Indígena', tipo: 'Associação', uf: 'PA', status: 'Ativa', projetos: [] };
+  const b = { id: 'org-b', codigo: 'ORG-02', nome: 'Buriti', categoria: 'Quilombola', tipo: 'Cooperativa', uf: 'MA', status: 'Concluída', projetos: [] };
+  const lista = [b, a];
+  const antes = JSON.stringify(lista);
+  for (const busca of ['arvore', 'ORG-01']) assert.deepEqual(filtrarOrganizacoes(lista, { ...FILTROS_VAZIOS, busca }).map(o => o.id), ['org-a']);
+  assert.deepEqual(filtrarOrganizacoes(lista, { ...FILTROS_VAZIOS, categorias: ['Indígena'], tipos: ['Associação'], ufs: ['PA'], situacoes: ['Ativa'] }).map(o => o.id), ['org-a']);
+  assert.deepEqual(filtrarOrganizacoes(lista, { ...FILTROS_VAZIOS, categorias: ['Indígena'], ufs: ['MA'] }), []);
+  assert.equal(filtrarOrganizacoes(lista, FILTROS_VAZIOS).length, 2);
+  for (const coluna of ['nome', 'categoria', 'tipo']) {
+    const asc = ordenarOrganizacoes(lista, coluna, 'asc').map(o => o.id);
+    const desc = ordenarOrganizacoes(lista, coluna, 'desc').map(o => o.id);
+    assert.deepEqual(desc, [...asc].reverse());
+    assert.deepEqual([...asc].sort(), ['org-a', 'org-b']);
+  }
+  assert.equal(JSON.stringify(lista), antes);
+});
+
 test('dados demonstrativos têm um projeto por organização e totais financeiros consistentes', () => {
   assert.equal(portfolioDemo.length, 12);
   assert.equal(new Set(portfolioDemo.map(p => p.org)).size, portfolioDemo.length);

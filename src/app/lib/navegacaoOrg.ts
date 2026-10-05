@@ -23,6 +23,17 @@ export interface RotaOrg {
 
 export const ROTA_INICIO: RotaOrg = { orgId: null, secao: 'dados', projetoId: null };
 
+/** Nunca escolhe um vínculo arbitrário em organizações com dados legados. */
+export function resolverProjetoOrg<T extends { id: number }>(projetos: readonly T[], solicitado: number | null = null):
+  | { estado: 'unico'; projeto: T }
+  | { estado: 'sem-projeto' | 'conflito' | 'vinculo-invalido'; ids: number[] } {
+  const ids = projetos.map(p => p.id);
+  if (projetos.length === 0) return { estado: 'sem-projeto', ids };
+  if (projetos.length > 1) return { estado: 'conflito', ids };
+  if (solicitado !== null && solicitado !== projetos[0].id) return { estado: 'vinculo-invalido', ids };
+  return { estado: 'unico', projeto: projetos[0] };
+}
+
 export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string; emConstrucao?: boolean }[] = [
   { id: 'dados', rotulo: 'Cadastro' },
   { id: 'projetos', rotulo: 'Projeto' },

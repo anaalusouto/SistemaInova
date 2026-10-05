@@ -20,7 +20,7 @@ import { OrganizacaoEmConstrucao } from './OrganizacaoEmConstrucao';
 import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
-import { ROTA_INICIO, SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
+import { ROTA_INICIO, SECOES_ORG, nomeCurtoOrg, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
 
 /** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
 const ICONE_POR_TIPO: Record<TipoOrganizacao, typeof Building2> = {
@@ -56,6 +56,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   }
 
   const IconeTipo = org.tipo ? ICONE_POR_TIPO[org.tipo] : Building2;
+  const vinculo = resolverProjetoOrg(org.projetos);
   const secaoMenu = rota.secao === 'projeto' ? 'projetos' : rota.secao;
   const contagem: Partial<Record<typeof secaoMenu, number>> = {
     encaminhamentos: org.pendentes,
@@ -79,9 +80,9 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25 }}>
               {nomeCurtoOrg(org.nome)}
             </h1>
-            {org.projetos[0] && (
+            {vinculo.estado === 'unico' && (
               <p className="text-sm mt-1" style={{ color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>
-                {org.projetos[0].nome}
+                {vinculo.projeto.nome}
               </p>
             )}
             <p style={{ color: 'var(--ink-4)', fontSize: '0.82rem', marginTop: 2 }}>
@@ -119,7 +120,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
         <div className="flex-1 min-h-0 min-w-0">
           <ProjetoDaOrganizacao
             org={org}
-            projetoId={rota.projetoId ?? org.projetos[0]?.id ?? null}
+            projetoId={rota.projetoId}
             aoVoltarProjetos={() => ir({ secao: 'dados' })}
           />
         </div>
@@ -171,11 +172,21 @@ function ProjetoDaOrganizacao({
   org, projetoId, aoVoltarProjetos,
 }: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void }) {
   const { getProject, projectsLoading } = useStore();
-  const projeto = projetoId != null && org.projetos.some(p => p.id === projetoId) ? getProject(projetoId) : undefined;
+  const vinculo = resolverProjetoOrg(org.projetos, projetoId);
+  if (vinculo.estado !== 'unico') {
+    return (
+      <div className="p-7 text-sm" role={vinculo.estado === 'sem-projeto' ? 'status' : 'alert'}>
+        {vinculo.estado === 'sem-projeto'
+          ? `Nenhum projeto vinculado a ${org.nome} (ID: ${org.id}). O vínculo precisa ser tratado pela equipe responsável.`
+          : `Vínculo de projeto ${vinculo.estado === 'conflito' ? 'em conflito' : 'inválido'} para ${org.nome} (ID: ${org.id}). Projetos vinculados: ${vinculo.ids.join(', ')}. Solicite a correção dos vínculos.`}
+      </div>
+    );
+  }
+  const projeto = getProject(vinculo.projeto.id);
   if (!projeto) {
     return (
       <div className="p-7" style={{ fontSize: '0.84rem', color: 'var(--ink-4)' }}>
-        {projectsLoading ? 'Carregando projeto…' : `Nenhum projeto vinculado a ${org.nome}.`}
+        {projectsLoading ? 'Carregando projeto…' : `Não foi possível carregar o projeto ${vinculo.projeto.id} vinculado a ${org.nome}. Recarregue a página ou informe a falha à equipe responsável.`}
       </div>
     );
   }
@@ -189,7 +200,8 @@ function ProjetoDaOrganizacao({
 
 function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha; aoAbrirProjeto: (id: number) => void }) {
   const municipio = org.municipio ? `${org.municipio}${org.uf ? `/${org.uf}` : ''}` : null;
-  const projeto = org.projetos[0];
+  const vinculo = resolverProjetoOrg(org.projetos);
+  const projeto = vinculo.estado === 'unico' ? vinculo.projeto : null;
   return (
     <div className="p-4 sm:p-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Secao titulo="Identificação">
@@ -208,7 +220,7 @@ function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha; aoAbr
                     <span>{projeto.codigo} — {projeto.nome}</span>
                     <ExternalLink size={11} className="flex-shrink-0" style={{ marginTop: 3 }} aria-hidden />
                   </button>
-          ) : NAO_INFORMADO}
+          ) : vinculo.estado === 'conflito' ? `Conflito de vínculos. IDs dos projetos: ${vinculo.ids.join(', ')}. Solicite correção.` : 'Sem projeto vinculado'}
         </Item>
       </Secao>
 

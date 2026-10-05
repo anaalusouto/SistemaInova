@@ -7,6 +7,7 @@
  * ela se chama Organização.
  */
 import { formatDateOnly } from './dateOnly';
+import { nomeCurtoOrg } from './navegacaoOrg';
 
 export const NAO_INFORMADO = 'Não informado';
 
@@ -101,6 +102,16 @@ export function filtrarOrganizacoes(lista: OrganizacaoResumo[], f: FiltrosOrgani
 /** "1 organização", "20 organizações". */
 export function contagemOrganizacoes(n: number): string {
   return `${n} ${n === 1 ? 'organização' : 'organizações'}`;
+}
+
+export type ColunaOrganizacao = 'nome' | 'categoria' | 'tipo';
+
+export function ordenarOrganizacoes(lista: readonly OrganizacaoResumo[], coluna: ColunaOrganizacao, direcao: 'asc' | 'desc'): OrganizacaoResumo[] {
+  const valor = (o: OrganizacaoResumo) => coluna === 'nome' ? nomeCurtoOrg(o.nome) : o[coluna] ?? NAO_INFORMADO;
+  return [...lista].sort((a, b) => {
+    const ordem = valor(a).localeCompare(valor(b), 'pt-BR') || a.codigo.localeCompare(b.codigo, 'pt-BR') || a.id.localeCompare(b.id);
+    return direcao === 'asc' ? ordem : -ordem;
+  });
 }
 
 export interface PessoaReferencia {

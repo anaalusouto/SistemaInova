@@ -1,0 +1,89 @@
+INOVA — Homologação de prioridade alta
+
+Data da verificação técnica: 05/10/2026 (America/Sao_Paulo).
+Verificador técnico: Codex.
+Ambiente técnico: workspace local Windows; sem sessão autenticada de homologação.
+Versão-base: 5fd35056ea38683b32a3a5e67e013d691961a6a2 + alterações locais deste pacote.
+Aceite funcional: PENDENTE. Responsável pelo aceite: a definir.
+Publicação: não realizada. Banco e registros da operação real: não alterados.
+
+EVIDÊNCIAS EXECUTADAS
+E01 — node --test tests/portfolioDecisions.test.cjs: 19 testes aprovados, 0 falhas.
+E02 — node node_modules/typescript/bin/tsc --noEmit: concluído, código 0.
+E03 — node node_modules/vite/bin/vite.js build: cliente e servidor compilados, código 0.
+E04 — git diff --check: código 0; avisos de conversão LF/CRLF no Windows.
+O build apresentou avisos de tamanho dos bundles e do plugin de resolução de caminhos.
+Build e testes isolados não demonstram persistência, acesso autenticado ou aceite.
+
+MATRIZ DOS ITENS
+H01 — Dados/anexos/registros após recarregar: PENDENTE no ambiente autenticado.
+  Não foram alterados registros nem acessados anexos reais nesta checagem.
+H02 — Aceite e pendências: registro criado; ACEITE PENDENTE pelo responsável.
+H03 — Menu/identificação: chave da ficha por ID da organização evita reaproveitar
+  estado de formulários ao trocar organização. Alternância visual em duas
+  organizações, nas quatro seções solicitadas: PENDENTE.
+H04 — Busca/filtros/estados: busca por nome sem acento e código; combinação
+  Categoria/Tipo/UF/Situação; combinação vazia e limpeza verificadas em E01.
+  Carregamento e erro têm tratamento no código; teste visual controlado: PENDENTE.
+H05 — Colunas/ordenação: tabela Organização/Categoria/Tipo implementada, com
+  alternância ascendente/descendente por coluna e botão acessível em cada linha.
+  Ordem reversa, IDs e ausência de mutação verificados em E01.
+  Clique na linha e verificação visual da organização: PENDENTE.
+H06 — Projeto único: menu solicita a seção sem escolher primeiro vínculo;
+  resolução única verificada em E01. ProjectView inicia em Plano de Trabalho,
+  conforme inspeção do código. Clique no ambiente: PENDENTE.
+H07 — Sem projeto: estado com ID da organização e orientação de tratamento;
+  não cria vínculo. Resolução vazia verificada em E01. Ambiente: PENDENTE.
+H08 — Preservação dos dados: funções de busca/ordenação/resolução não alteram
+  os dados de entrada (E01); navegação não chama escrita, por inspeção do código.
+  Comparação de IDs e registros no banco antes/depois: PENDENTE.
+H09 — Projeto 1:1: criação já verifica vínculo no servidor; migração 0018 já
+  define índice único parcial em comunidade_id. Aplicação do índice: NÃO VERIFICADA.
+  Conflitos legados agora mostram todos os IDs, sem abrir arbitrariamente um
+  projeto, inclusive quando um ID específico é solicitado (E01).
+  Consulta somente leitura em homologacao-vinculos.sql preparada, NÃO EXECUTADA.
+  Tentativa de segundo vínculo no ambiente de teste: PENDENTE.
+H10 — Lista/subnível intermediário: seção Projeto renderiza projeto diretamente;
+  menu não contém subnível por código/nome; demais seções mantidas, por inspeção.
+  Verificação visual desktop/celular: PENDENTE.
+H11 — Visão Geral: componente preservado; E01 verifica resultados de cálculo
+  financeiro, riscos, avanço e prazos, inclusive recorte vazio.
+  Comparação visual antes/depois com mesmos dados/filtros: PENDENTE.
+H12 — Tabela de organizações na Visão Geral: ausente no código atual;
+  acesso disponível pelo menu Organizações. Verificação visual: PENDENTE.
+
+ROTEIRO PARA COMPLETAR A HOMOLOGAÇÃO
+1. Registrar URL/ambiente, versão publicada, data/hora, verificador e responsável
+   pelo aceite. Selecionar organizações A/B e registrar seus IDs e projetos.
+2. Guardar a saída da consulta homologacao-vinculos.sql; confirmar índice único.
+   Se houver conflitos, registrar organização e TODOS os projetos. Não remover
+   ou conciliar automaticamente registros para fazer a migração passar.
+3. Em A e B, alternar Cadastro, Projeto, Encaminhamento e Registro de Contato.
+   Conferir menu, título, conteúdo, ID e projeto correto, inclusive no celular.
+4. Testar buscas por nome/código, cada filtro, combinação, limpar, zero resultados.
+   Simular lentidão e falha de leitura em ambiente de teste; restaurar a conexão.
+   Conferir três colunas, cada ordenação e abertura por linha e teclado.
+5. Testar organização com um projeto, sem projeto e conflito legado controlado.
+   No ambiente isolado, testar criação concorrente de segundo vínculo; ambos
+   não podem persistir. Guardar resposta e consultar IDs após a tentativa.
+6. Guardar IDs e conteúdo antes da navegação: projetos, contatos, notas, plano,
+   riscos, orçamento e histórico. Comparar após navegar e recarregar.
+7. Apenas nos registros autorizados de TESTE, editar e salvar; guardar ID, campo,
+   valor anterior/novo, horário e resultado. Recarregar, reabrir pelo mesmo ID
+   e comparar. Abrir anexos já existentes, pareceres e links; registrar ID do
+   anexo/parecer, destino e resultado, sem armazenar URLs assinadas ou credenciais.
+   Não excluir registros da operação real para limpar a homologação.
+8. Na Visão Geral, guardar mesmos dados/filtros e resultados antes/depois de
+   navegar; comparar indicadores e seis gráficos. Confirmar ausência da tabela.
+9. Para cada cenário, anexar evidência e registrar:
+   item | ambiente | versão | data/hora | verificador | organização ID |
+   registro/projeto/anexo ID | esperado | obtido | evidência | resultado |
+   falha/pendência | responsável | decisão.
+10. Responsável registra aceite, aceite com pendências ou recusa, com data,
+    justificativa e decisões em aberto. Commit/build não encerram o pacote.
+
+DECISÕES EM ABERTO
+- URL e acesso à homologação; organizações e registros autorizados para teste.
+- Responsável pelo aceite e evidências visuais da versão publicada.
+- Tratamento aprovado de organização sem projeto e conflitos legados, se existirem.
+- Confirmação da aplicação da migração 0018 no ambiente.

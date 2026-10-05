@@ -207,7 +207,7 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
         return (
           <div key={s.id}>
             <button type="button" onClick={() => ir(s.id === 'projetos'
-              ? { secao: 'projeto', projetoId: org.projetos[0]?.id ?? null }
+              ? { secao: 'projeto', projetoId: null }
               : { secao: s.id })} {...item(ativo, 1)}>
               <span className="min-w-0">
                 <span className="block truncate">{s.rotulo}</span>
