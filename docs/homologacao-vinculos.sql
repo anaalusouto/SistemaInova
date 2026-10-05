@@ -18,3 +18,14 @@ SELECT indexname, indexdef
 FROM pg_indexes
 WHERE schemaname = 'public' AND tablename = 'projetos'
   AND indexname = 'idx_projetos_organizacao_unica';
+
+-- Guarda da migração 0019: verificar definição e ativação no ambiente.
+SELECT tgname, tgenabled, pg_get_triggerdef(oid) AS definicao
+FROM pg_trigger
+WHERE tgrelid = 'public.projetos'::regclass
+  AND NOT tgisinternal AND tgname = 'proteger_vinculo_projeto';
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'comunidades'
+  AND column_name IN ('mapeamento_relatorio_url', 'parecer_relatorio_url');

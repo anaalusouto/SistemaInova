@@ -124,7 +124,7 @@ type Ctx = {
   projects: ProjectExt[];
   projectsLoading: boolean;
   getProject: (id: number) => ProjectExt | undefined;
-  addProject: (p: Partial<ProjectExt> & { team?: string[]; comunidadeId?: string | null }) => Promise<ProjectExt>;
+  addProject: (p: Partial<ProjectExt> & { team?: string[]; comunidadeId: string }) => Promise<ProjectExt>;
   updateProject: (id: number, patch: Partial<ProjectExt>) => Promise<void>;
   deleteProject: (id: number) => Promise<void>;
 

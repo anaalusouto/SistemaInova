@@ -135,7 +135,7 @@ export function TabOrcamento({ project }: { project: Project }) {
 
   if (itens.length === 0) {
     return (
-      <div className="h-full overflow-y-auto p-6 flex flex-col gap-4">
+      <div className="p-6 flex flex-col gap-4">
         <ComparativoExecucao proposto={proposto} executado={executado} notas={notas} />
         <ListaNotas
           notas={notas}
@@ -174,7 +174,7 @@ export function TabOrcamento({ project }: { project: Project }) {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6 flex flex-col gap-4">
+    <div className="p-6 flex flex-col gap-4">
       {/* RF-029 e RF04.3: proposto × executado (das notas). */}
       <ComparativoExecucao proposto={proposto} executado={executado} notas={notas} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

@@ -1,0 +1,93 @@
+INOVA — Homologação de prioridades Média e Baixa
+Data técnica: 05/10/2026 (America/Sao_Paulo). Verificador: Codex.
+Ambiente: workspace local Windows, sem sessão de navegador disponível.
+Versão-base: bfb2a8a3bc79f29fe05d939263d6b4ce33d10dd1 + alterações locais.
+Aceite: PENDENTE. Publicação e migração de banco: NÃO realizadas.
+Nenhum registro de operação real foi alterado ou excluído.
+
+IMPLEMENTAÇÃO E EVIDÊNCIAS
+M01 — Gestão Interna: subáreas Projeto, Diagnóstico e Relatórios; duplicação
+  principal removida. Destinos existentes preservados. Ordem e ausência de
+  duplicação verificadas por renderização estática e teste de regra.
+M02 — Mapeamento: título e menu “Mapeamento (Em construção)”; página informativa;
+  link externo por organização, com edição apenas para perfis de escrita.
+M03 — Parecer: título e menu “Parecer (Em construção)”; mesma página informativa;
+  relatório/PDF por link externo. Botão/painel de parecer técnico retirados da
+  tela do projeto. Dados anteriores preservados; não convertidos automaticamente.
+  Renderização confirma link, títulos e ausência de controles de escrita para
+  visualizador. Não comprova acesso ao arquivo hospedado externamente.
+M04 — Projeto 1:1: API exige organização válida, recusa vínculos existentes com
+  todos os IDs e rejeita alterações de vínculo por diversos formatos de payload.
+  Testes dos handlers reais com sessão/banco isolados; zero escrita nos casos
+  negados. Formulário legado apresenta organização sem seleção editável.
+  Migração 0019 preparada para vínculo obrigatório em INSERT e imutável em UPDATE.
+  Índice único da 0018 continua responsável pela exclusividade concorrente.
+  Persistência, aplicação de trigger e concorrência em PostgreSQL: PENDENTES.
+  Modal de criação não ganhou novo acesso: fluxo de organização sem projeto
+  permanece dependente da decisão já registrada no pacote anterior.
+L01 — Cabeçalho: só H1 da organização fora da rolagem da ficha; identificação,
+  metadados, projeto e conteúdo na mesma rolagem. Projeto em contexto usa H2.
+  Removida fixação adicional de cabeçalhos Tabela/Gantt e orçamento legado.
+  Renderização confirma único H1 e contextos de duas organizações isolados.
+  Ensaio de posição/rolagem/altura no navegador: PENDENTE.
+L02 — Encaminhamento/notas: estrutura existente preservada; notas à direita
+  em tela ampla, empilhadas em tela estreita. Nova nota usa escrita de notas,
+  separada de criação de encaminhamento. Persistência pós-reload: PENDENTE.
+L03 — Tabela contextual: usa encaminhamentos da organização atual, incluindo
+  concluídos inicialmente. Colunas Descrição/Responsável/Data inicial/Data final/
+  Status/Origem e Novo encaminhamento mantidos (inspeção do código).
+L04 — Origem/retorno: IDs de contato e encaminhamento permanecem no mesmo orgId;
+  destaque e rolagem até item existentes preservados. Ensaio cruzado: PENDENTE.
+L05 — Computador/celular/teclado: menu usa botões, aria-expanded e aria-current;
+  H1 e conteúdo separados; seletor das visões pode quebrar linha em tela estreita.
+  Não havia apps/navegadores disponíveis na ferramenta de UI desta sessão.
+  Percurso visual, foco, Tab/Shift+Tab/Enter/Escape e rolagem: PENDENTES.
+L06 — Perfis: guardas de sessão/escrita existentes mantidas; visualizador não
+  pode criar/editar projeto nem salvar relatório, inclusive por API direta,
+  em testes com sessão isolada. Botões de edição de links ocultos para consulta.
+  Perfis reais, autorização de leitura e comparação antes/depois: PENDENTES.
+L07 — Plano: abertura inicial em Plano de Trabalho; Descrição/Orçamento mantidos
+  com mesma instância/ID do projeto. Confirmação visual e troca das abas: PENDENTES.
+L08 — Expansão/filtros: padrão recolhido, botão Expandir tudo/Recolher tudo abaixo
+  da busca já existentes. Teste preserva IDs, objetos das atividades e numeração
+  ao buscar tarefa e combinar responsável/status. Campos da tabela preservados.
+L09 — Riscos/Mudanças/links: contadores continuam derivados de riscos abertos
+  e mudanças do projeto; links existentes mantidos. Sucesso ao editar link agora
+  aguarda gravação; erro não é anunciado como sucesso. Parecer antigo removido.
+  Comparação de contadores com registros reais e abertura de links: PENDENTES.
+L10 — Tabela/Gantt/Kanban: critérios e árvore filtrada comuns preservados no
+  TabPlanoTrabalho; controles específicos mantidos. Ensaio alternando as visões
+  sobre conjunto conhecido: PENDENTE.
+L11 — Decisoes: conteúdo preparado em decisoes-pendentes.txt, com escolha,
+  fonte e responsável conhecido. Arquivo/aba de destino não informado; transcrição
+  para a aba solicitada: PENDENTE.
+
+VALIDAÇÃO LOCAL
+node --test tests/portfolioDecisions.test.cjs tests/organizacaoServidor.test.cjs
+  tests/organizacaoInterface.test.cjs
+  Testes de regras, API com dependências isoladas e renderização estática.
+Resultado: 33 testes aprovados, 0 falhas.
+node node_modules/typescript/bin/tsc --noEmit: concluído, código 0.
+node node_modules/vite/bin/vite.js build: cliente/servidor concluídos, código 0.
+git diff --check: código 0; avisos LF/CRLF no Windows.
+Build com avisos de tamanho de bundles, plugin de resolução e tempo em plugins.
+Essas evidências não representam homologação autenticada ou aceite.
+
+PRÓXIMA EXECUÇÃO EM HOMOLOGAÇÃO
+1. Aplicar 0018/0019 em ambiente de teste aprovado; consultar IDs e índice antes.
+   Não apagar conflitos legados. Conferir insert sem vínculo, segundo vínculo
+   concorrente e update para outra organização; confirmar IDs após recarregar.
+2. Disponibilizar links conhecidos em Mapeamento/Parecer, abrir externamente,
+   recarregar e comparar duas organizações. Visualizador apenas consulta.
+3. Percorrer três subáreas de Gestão Interna, seções de A/B e abas do projeto.
+   Confirmar organização/projeto, seleção, ausência de parecer antigo e cartões.
+4. No desktop e celular, rolar páginas longas: só H1 contextual permanece fixo.
+   Conferir datas, metadados, visões e orçamento rolando, sem itens inacessíveis.
+5. Criar/editar nota de TESTE, recarregar; confirmar orgId, conteúdo e contagem
+   de encaminhamentos inalterada. Navegar Origem -> contato -> encaminhamentos.
+6. Buscar/filtrar conjunto conhecido, expandir/recolher e trocar Tabela/Gantt/
+   Kanban; conferir mesmos IDs, responsáveis, datas, status e justificativas.
+7. Conferir contadores de Riscos/Mudanças, links e perfis reais; testar teclado.
+8. Registrar por caso: ambiente/versão/data/verificador, orgId/projetoId/registroId,
+   esperado/obtido/evidência, falha/pendência/decisão e responsável pelo aceite.
+9. Transferir decisões para a aba informada e obter aceite explícito da versão.

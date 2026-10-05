@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   LayoutDashboard,
   BarChart3,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
+import { SUBAREAS_GESTAO } from '../lib/gestaoInterna';
 import { useListaOrganizacoes } from './organizacoes/useOrganizacoes';
 import { SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../lib/navegacaoOrg';
 import './organizacoes/organizacoes.css';
@@ -42,14 +44,14 @@ const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] =
 const bottomItems = [
   { id: 'organizations' as NavItem, label: 'Organizações', icon: Building2 },
   { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
-  { id: 'diagnostics' as NavItem, label: 'Diagnóstico', icon: ClipboardList },
-  { id: 'reports' as NavItem, label: 'Relatórios', icon: BarChart3 },
   { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaOrg, aoNavegarOrg }: SidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const { paraMim } = useAgenda();
+  const [gestaoAberta, setGestaoAberta] = useState(true);
+  const naGestao = SUBAREAS_GESTAO.some(s => s.id === activeItem);
   const pendentes = paraMim.filter(a => !a.concluidaEm).length;
 
   const initials = (user?.displayName ?? '')
@@ -65,6 +67,8 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
     return (
       <button
         key={item.id}
+        type="button"
+        aria-current={isActive ? 'page' : undefined}
         onClick={() => { onNavigate(item.id); onClose?.(); }}
         className="w-full flex items-center gap-3 rounded-md mb-0.5 text-left transition-all duration-150"
         style={{
@@ -135,7 +139,19 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         <div className="mt-1">
           {bottomItems.map(i => (
             <div key={i.id}>
-              {renderBtn(i)}
+              {i.id === 'schedule' ? (
+                <>
+                  <button type="button" onClick={() => setGestaoAberta(aberta => !aberta)} aria-expanded={gestaoAberta} aria-controls="subareas-gestao"
+                    className="w-full flex items-center gap-3 rounded-md mb-0.5 px-3 py-2 text-left hover:bg-[var(--sidebar-accent)]"
+                    style={{ color: 'var(--sidebar-foreground)', fontSize: '0.825rem', fontWeight: naGestao ? 600 : 400 }}>
+                    <Kanban size={15} /> Gestão Interna
+                    {gestaoAberta ? <ChevronDown size={12} className="ml-auto" /> : <ChevronRight size={12} className="ml-auto" />}
+                  </button>
+                  <div id="subareas-gestao" role="group" aria-label="Subáreas de Gestão Interna" hidden={!gestaoAberta}>
+                    {SUBAREAS_GESTAO.map(s => renderBtn({ ...s, icon: s.id === 'schedule' ? Kanban : s.id === 'diagnostics' ? ClipboardList : BarChart3 }, true))}
+                  </div>
+                </>
+              ) : renderBtn(i)}
               {i.id === 'organizations' && activeItem === 'organizations' && rotaOrg.orgId && (
                 <ArvoreOrganizacao key={rotaOrg.orgId} rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} />
               )}
@@ -210,8 +226,7 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
               ? { secao: 'projeto', projetoId: null }
               : { secao: s.id })} {...item(ativo, 1)}>
               <span className="min-w-0">
-                <span className="block truncate">{s.rotulo}</span>
-                {s.emConstrucao && <span className="block text-[10px] font-normal opacity-60">(Em construção)</span>}
+                <span className="block">{s.rotulo}{s.emConstrucao ? ' (Em construção)' : ''}</span>
               </span>
               {s.id === 'encaminhamentos' && org.pendentes > 0 && (
                 <span

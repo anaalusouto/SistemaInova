@@ -40,7 +40,7 @@ export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: n
       <div className={`w-full flex flex-col flex-1 min-h-0 ${nestedPage ? '' : 'max-w-[1500px] mx-auto'}`}>
         {!nestedPage && (
           <div className="mb-3">
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem' }}>Gestão Interna</h1>
+            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem' }}>Projeto</h1>
             <p className="text-sm text-muted-foreground">Cronograma executivo, rotas de campo e calendário anual — INOVA FAS/FUNBIO</p>
           </div>
         )}

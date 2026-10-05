@@ -172,7 +172,7 @@ export function VisaoGantt({
       <div style={{ minWidth: LARGURA_ESQUERDA + larguraLinha }}>
         {/* Cabeçalho */}
         <div
-          className="flex sticky top-0 z-10"
+          className="flex"
           style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}
         >
           <div

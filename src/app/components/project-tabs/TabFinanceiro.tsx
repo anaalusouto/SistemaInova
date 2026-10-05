@@ -203,7 +203,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
   };
 
   return (
-    <div className="space-y-5 p-6 overflow-y-auto h-full">
+    <div className="space-y-5 p-6">
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -341,7 +341,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
               const subtotalE = its.reduce((a, i) => a + i.executedValue, 0);
               return (
                 <div key={meta} style={{ borderTop: '1px solid var(--border)' }}>
-                  <div className="px-5 py-2 flex items-center justify-between sticky top-0 z-10" style={{ background: 'var(--surface-2)' }}>
+                  <div className="px-5 py-2 flex items-center justify-between" style={{ background: 'var(--surface-2)' }}>
                     <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink-1)', textTransform: 'uppercase' }}>{meta}</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--ink-3)' }}>
                       Previsto: <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--ink-1)' }}>{fmt(subtotalP)}</span>

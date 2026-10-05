@@ -13,10 +13,11 @@ export function NovoProjetoModal({
   onClose,
   onCreate,
 }: {
-  /** Nome da organização em que o projeto nasce (só exibição). */
-  organizacao: string;
+  /** Organização já selecionada; o vínculo é obrigatório e imutável. */
+  organizacao: { id: string; nome: string };
   onClose: () => void;
   onCreate: (data: {
+    comunidadeId: string;
     name: string;
     code: string;
     coordinator: string;
@@ -49,6 +50,7 @@ export function NovoProjetoModal({
       return;
     }
     onCreate({
+      comunidadeId: organizacao.id,
       name: form.name.trim(),
       code: form.code.trim() || `PT-2026-${String(Date.now()).slice(-3)}`,
       coordinator: form.coordinator.trim(),
@@ -85,7 +87,7 @@ export function NovoProjetoModal({
           </button>
         </div>
         <p className="mb-4" style={{ fontSize: '0.78rem', color: 'var(--ink-4)' }}>
-          Organização executora: <strong style={{ color: 'var(--ink-2)' }}>{organizacao}</strong>
+          Organização executora: <strong style={{ color: 'var(--ink-2)' }}>{organizacao.nome}</strong>
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Nome *" full>

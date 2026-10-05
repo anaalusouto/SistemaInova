@@ -9,6 +9,7 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
+import { normalizarLinkRelatorio, type AreaRelatorioOrg } from './lib/relatoriosOrg';
 import {
   categoriaDe, tipoDe, ordenarRegistros, ordenarEncaminhamentos,
   validarRegistro, validarEncaminhamento, juntarErros,
@@ -151,6 +152,8 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     const o = org.data;
     return {
       ...mapResumo(o, encs.filter(e => e.status !== 'Concluído').length, (projetos.data ?? []).map(mapProjeto)),
+      mapeamentoRelatorioUrl: o.mapeamento_relatorio_url ?? null,
+      parecerRelatorioUrl: o.parecer_relatorio_url ?? null,
       eixo: o.eixo_principal ?? null,
       localizacao: o.localizacao ?? null,
       territorio: o.territorio ?? null,
@@ -171,6 +174,20 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
 // ---------------------------------------------------------------------------
 // Registros de contato (RC-03)
 // ---------------------------------------------------------------------------
+
+export const salvarLinkRelatorioOrg = createServerFn({ method: 'POST' })
+  .validator((d: { organizacaoId: string; area: AreaRelatorioOrg; url: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    await exigirEscrita();
+    if (!['mapeamento', 'parecer'].includes(data.area)) throw new Error('Área de relatório inválida.');
+    const url = normalizarLinkRelatorio(data.url);
+    const coluna = data.area === 'mapeamento' ? 'mapeamento_relatorio_url' : 'parecer_relatorio_url';
+    const supabaseAdmin = await getAdmin();
+    const { data: org, error } = await supabaseAdmin.from('comunidades')
+      .update({ [coluna]: url }).eq('id', data.organizacaoId).select('id').maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!org) throw new Error('Organização não encontrada.');
+  });
 
 function linhaRegistro(d: RegistroContatoInput) {
   return {

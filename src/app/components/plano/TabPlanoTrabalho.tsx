@@ -202,7 +202,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
 
       {/* Seletor de visão (RF-011) */}
       <div ref={seletorRef} className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
-        <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <div className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {VISOES.map((v, i) => {
             const Icone = v.icone;
             const ativa = visao === v.id;

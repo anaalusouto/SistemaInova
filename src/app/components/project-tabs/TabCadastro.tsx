@@ -73,7 +73,7 @@ const P_FIELDS: { title: string; fields: { key: keyof PlanoTrabalho; label: stri
 ];
 
 export function TabCadastro({ project }: Props) {
-  const { updateProject, communities } = useStore();
+  const { updateProject } = useStore();
   const { user } = useAuth();
   const { log: audit } = useAudit();
   const proj = project as ProjectExt;
@@ -94,7 +94,6 @@ export function TabCadastro({ project }: Props) {
     budgetApproved: String(project.budgetApproved),
     status: project.status,
     teamText: project.team.join(', '),
-    communityId: proj.communityId ?? null as number | null,
   });
   const [plano, setPlano] = useState<PlanoTrabalho>(proj.plano ?? {});
 
@@ -104,7 +103,7 @@ export function TabCadastro({ project }: Props) {
       coordinator: project.coordinator, financier: project.financier,
       objective: project.objective, startDate: project.startDate, endDate: project.endDate,
       budgetApproved: String(project.budgetApproved), status: project.status,
-      teamText: project.team.join(', '), communityId: proj.communityId ?? null,
+      teamText: project.team.join(', '),
     });
     setPlano(proj.plano ?? {});
   }, [project.id]);
@@ -115,7 +114,7 @@ export function TabCadastro({ project }: Props) {
       objective: form.objective, startDate: form.startDate, endDate: form.endDate,
       budgetApproved: Number(form.budgetApproved) || 0, status: form.status,
       team: form.teamText.split(',').map(t => t.trim()).filter(Boolean),
-      communityId: form.communityId, plano,
+      plano,
     } as Partial<ProjectExt>);
     record('editar cadastro/plano de trabalho', form.name);
     toast.success('Cadastro salvo.');
@@ -152,11 +151,8 @@ export function TabCadastro({ project }: Props) {
           <F label="Início"><input className="ci" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} placeholder="MM/AAAA" /></F>
           <F label="Término"><input className="ci" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} placeholder="MM/AAAA" /></F>
           <F label="Valor Total (R$)"><input type="number" className="ci" value={form.budgetApproved} onChange={e => setForm({ ...form, budgetApproved: e.target.value })} /></F>
-          <F label="Comunidade vinculada">
-            <select className="ci" value={form.communityId ?? ''} onChange={e => setForm({ ...form, communityId: e.target.value ? Number(e.target.value) : null })}>
-              <option value="">— Sem vínculo —</option>
-              {communities.map(c => <option key={c.id} value={c.id}>{c.code} · {c.nome}</option>)}
-            </select>
+          <F label="Organização vinculada">
+            <input className="ci" value={proj.organizacao?.nome ?? 'Sem vínculo — requer tratamento pela equipe'} readOnly disabled />
           </F>
         </div>
         {project.team.length > 0 && (

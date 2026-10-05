@@ -25,6 +25,7 @@ import type {
 import { mapRegistro } from './organizacoes.server';
 import { ordenarRegistros } from './lib/organizacoes';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
+import { exigirOrganizacaoNaCriacao, validarPatchVinculo } from './lib/vinculoProjeto';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -292,19 +293,21 @@ export const listarProjetos = createServerFn({ method: 'GET' }).handler(async ()
 });
 
 export const criarProjeto = createServerFn({ method: 'POST' })
-  .validator((d: Partial<ProjectExt> & { team?: string[]; comunidadeId?: string | null }) => d)
+  .validator((d: Partial<ProjectExt> & { team?: string[]; comunidadeId: string }) => d)
   .handler(async ({ data }): Promise<ProjectExt> => {
     await exigirEscrita();
+    const comunidadeId = exigirOrganizacaoNaCriacao(data.comunidadeId);
     const supabaseAdmin = await getAdmin();
     // Projeto nasce dentro da organização (navegação centrada na organização):
     // o vínculo e a sigla em `org` saem do banco, não do cliente.
     let org = data.org ?? null;
-    if (data.comunidadeId) {
+    {
       const { data: vinculado, error: erroVinculo } = await supabaseAdmin.from('projetos')
-        .select('id').eq('comunidade_id', data.comunidadeId).limit(1).maybeSingle();
+        .select('id').eq('comunidade_id', comunidadeId);
       if (erroVinculo) throw new Error(erroVinculo.message);
-      if (vinculado) throw new Error('Esta organização já possui seu projeto vinculado.');
-      const { data: com } = await supabaseAdmin.from('comunidades').select('nome').eq('id', data.comunidadeId).maybeSingle();
+      if (vinculado?.length) throw new Error(`Esta organização já possui projeto vinculado. IDs: ${vinculado.map(p => p.id).join(', ')}.`);
+      const { data: com, error: erroOrg } = await supabaseAdmin.from('comunidades').select('nome').eq('id', comunidadeId).maybeSingle();
+      if (erroOrg) throw new Error(erroOrg.message);
       if (!com) throw new Error('Organização não encontrada.');
       org = nomeCurtoOrg(com.nome);
     }
@@ -316,7 +319,7 @@ export const criarProjeto = createServerFn({ method: 'POST' })
     const { data: row, error } = await supabaseAdmin
       .from('projetos')
       .insert({
-        nome: data.name ?? 'Novo projeto', code, org, comunidade_id: data.comunidadeId ?? null, segmento: data.segmento ?? null,
+        nome: data.name ?? 'Novo projeto', code, org, comunidade_id: comunidadeId, segmento: data.segmento ?? null,
         coordenador: data.coordinator ?? null, financiador: data.financier ?? null, objetivo: data.objective ?? null,
         data_inicio: data.startDate ?? null, data_fim: data.endDate ?? null, status: data.status ?? 'Não iniciado',
         orcamento_aprovado: data.budgetApproved ?? 0, nivel_risco: data.riskLevel ?? '—',
@@ -353,10 +356,10 @@ export const atualizarProjeto = createServerFn({ method: 'POST' })
   .validator((d: { id: number; patch: Partial<ProjectExt> }) => d)
   .handler(async ({ data: { id, patch } }): Promise<void> => {
     await exigirEscrita();
+    validarPatchVinculo(patch);
     const supabaseAdmin = await getAdmin();
     const row: Record<string, unknown> = {};
     if (patch.name !== undefined) row.nome = patch.name;
-    if (patch.org !== undefined) row.org = patch.org;
     if (patch.segmento !== undefined) row.segmento = patch.segmento;
     if (patch.coordinator !== undefined) row.coordenador = patch.coordinator;
     if (patch.financier !== undefined) row.financiador = patch.financier;

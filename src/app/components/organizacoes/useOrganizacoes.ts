@@ -5,8 +5,10 @@ import {
   criarRegistroContato, atualizarRegistroContato, excluirRegistroContato,
   criarEncaminhamento, atualizarEncaminhamento, excluirEncaminhamento,
   criarNotaOrganizacao, salvarNotaOrganizacao, excluirNotaOrganizacao,
+  salvarLinkRelatorioOrg,
 } from '../../organizacoes.server';
 import type { RegistroContatoInput, EncaminhamentoInput } from '../../lib/organizacoes';
+import type { AreaRelatorioOrg } from '../../lib/relatoriosOrg';
 
 /**
  * Leitura e escrita das Organizações.
@@ -38,6 +40,8 @@ export function useEscritaOrganizacao() {
   }, [revalidar]);
 
   return {
+    salvarLinkRelatorio: (organizacaoId: string, area: AreaRelatorioOrg, url: string) =>
+      run(() => salvarLinkRelatorioOrg({ data: { organizacaoId, area, url } })),
     criarRegistro: (d: RegistroContatoInput) => run(() => criarRegistroContato({ data: d })),
     atualizarRegistro: (registroId: string, dados: RegistroContatoInput) =>
       run(() => atualizarRegistroContato({ data: { registroId, dados } })),

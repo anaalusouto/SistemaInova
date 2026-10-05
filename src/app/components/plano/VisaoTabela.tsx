@@ -132,7 +132,7 @@ export function VisaoTabela({
             {COLUNAS.map(c => (
               <th
                 key={c}
-                className="text-left px-2.5 py-2 sticky top-0"
+                className="text-left px-2.5 py-2"
                 style={{
                   fontSize: '0.66rem', fontWeight: 600, color: 'var(--ink-5)',
                   textTransform: 'uppercase', letterSpacing: '0.04em',

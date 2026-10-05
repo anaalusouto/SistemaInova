@@ -5,7 +5,6 @@ import {
   DollarSign,
   ShieldAlert,
   GitBranch,
-  ClipboardCheck,
   ArrowLeft,
   ChevronRight,
   ExternalLink,
@@ -22,7 +21,6 @@ import { useAudit } from '../audit/auditStore';
 import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
 import { TabDescricao } from './project-tabs/TabDescricao';
 import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
-import { PainelParecer } from './plano/PainelParecer';
 import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabMudancas } from './project-tabs/TabMudancas';
@@ -56,19 +54,21 @@ interface ProjectViewProps {
   onBack: () => void;
   /** Rótulo do "voltar" no caminho. Dentro da organização, volta aos projetos dela. */
   rotuloVoltar?: string;
+  /** A ficha já apresenta o único H1 fixo com o nome da organização. */
+  dentroDaOrganizacao?: boolean;
 }
 
-export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos' }: ProjectViewProps) {
+export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
   const [panel, setPanel] = useState<'mudancas' | null>(null);
   // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
   // no lugar da gaveta antiga. Um contador, e não um booleano, para que clicar
   // de novo funcione mesmo se a pessoa já tiver trocado de visão depois.
   const [pedidoRiscos, setPedidoRiscos] = useState(0);
-  const [parecerAberto, setParecerAberto] = useState(false);
   const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; value: string } | null>(null);
+  const [salvandoLink, setSalvandoLink] = useState(false);
   const { getProject, updateProject } = useStore();
-  const { user } = useAuth();
+  const { user, readOnly } = useAuth();
   const { log: audit } = useAudit();
   const project = getProject(initial.id) ?? initial;
   const driveLink = (project as ProjectExt).driveLink ?? '';
@@ -79,16 +79,15 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
   // RF-006: o painel lateral fecha por botão E por Escape. Sem isso, quem abre
   // um detalhe sem querer fica preso ao mouse para sair.
   useEffect(() => {
-    if (!panel && editLink === null && !parecerAberto) return;
+    if (!panel && editLink === null) return;
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (editLink !== null) setEditLink(null);
-      else if (parecerAberto) setParecerAberto(false);
       else setPanel(null);
     };
     window.addEventListener('keydown', aoTeclar);
     return () => window.removeEventListener('keydown', aoTeclar);
-  }, [panel, editLink, parecerAberto]);
+  }, [panel, editLink]);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -108,20 +107,6 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
   const riscosAbertos = project.risks.filter(riscoEmAberto);
   const criticosAbertos = riscosAbertos.filter(r => faixaRisco(r.severity) === 'Crítico').length;
   const temCritico = criticosAbertos > 0;
-
-  const acoesDoCabecalho = (
-    // RF-033: acesso discreto ao parecer, no cabeçalho, presente em todas as
-    // seções — e não uma aba a mais.
-    <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-      <button
-        onClick={() => setParecerAberto(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-        style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-      >
-        <ClipboardCheck size={13} /> Parecer técnico ({(project as ProjectExt).pareceres?.length ?? 0})
-      </button>
-    </div>
-  );
 
   // Slide 4: Riscos (N) e Mudanças (N) na linha do seletor de visões do Plano.
   const acoesDaVisao = (
@@ -150,15 +135,16 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
   );
 
   return (
-    <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
-      {/*
-        RC-05: só o topo fica fixo — caminho, título e a linha código ·
-        financiador. Links, resumo, abas, busca, seletor de visão e o conteúdo
-        rolam juntos, numa rolagem só. O fixo é um irmão do scroll, não um
-        sticky sobreposto: por construção nada passa por baixo dele.
-      */}
+    <div className="flex flex-col min-w-0">
+      {!dentroDaOrganizacao && (
+        <h1 className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b text-xl font-bold"
+          style={{ background: 'var(--surface-0)', borderColor: 'var(--border)', overflowWrap: 'anywhere' }}>
+          {(project as ProjectExt).organizacao?.nome ?? (project as ProjectExt).org ?? project.name}
+        </h1>
+      )}
+      {/* Apenas o H1 da organização fica fixo; todo o contexto do projeto rola. */}
       <div
-        className="flex-shrink-0 border-b px-6 pt-5 pb-3 relative z-10"
+        className="border-b px-4 sm:px-6 pt-5 pb-3"
         style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}
       >
         {/* Caminho */}
@@ -180,14 +166,14 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3 lg:gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1
+              <h2
                 style={{
                   fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem',
                   color: 'var(--ink-1)', lineHeight: 1.3,
                 }}
               >
                 {project.name}
-              </h1>
+              </h2>
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
                 style={{ color: cfg.color, background: cfg.bg }}
@@ -207,16 +193,11 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
 
           </div>
 
-          {/* Registros — acesso aos painéis de risco, mudança e parecer. No
-              desktop ficam ao lado do título; no celular, rolam com o conteúdo
-              para a área fixa não crescer. */}
-          <div className="hidden lg:block lg:flex-shrink-0">{acoesDoCabecalho}</div>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto" style={{ background: 'var(--background)' }}>
+      <div className="min-w-0" style={{ background: 'var(--background)' }}>
         <div className="border-b px-6 pt-3 pb-0" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
-          <div className="lg:hidden mb-2">{acoesDoCabecalho}</div>
 
           {/* Links do Drive */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -233,13 +214,13 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
                     <ExternalLink size={11} /> {chip.rotulo}
                   </a>
                 )}
-                <button
+                {!readOnly && <button
                   onClick={() => setEditLink({ kind: chip.kind, value: chip.valor })}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
                   style={{ borderColor: 'var(--border)', color: 'var(--ink-4)' }}
                 >
                   <Link2 size={11} /> {chip.valor ? 'Editar' : chip.rotuloVazio}
-                </button>
+                </button>}
               </span>
             ))}
           </div>
@@ -280,8 +261,6 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
         </div>
       </div>
 
-      {parecerAberto && <PainelParecer project={project} aoFechar={() => setParecerAberto(false)} />}
-
       {/* Painel de Riscos / Mudanças */}
       {panel && (
         <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setPanel(null)}>
@@ -321,18 +300,24 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
             <div className="flex items-center justify-end gap-2 mt-4">
               <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
               <button
-                onClick={() => {
-                  updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);
-                  audit({
-                    userLogin: user?.login ?? '—', area: 'projeto', action: `editar link (${editLink.kind})`,
-                    detail: editLink.value.trim(), projectId: project.id, projectName: project.name, kind: 'alteracao',
-                  });
-                  toast.success('Link atualizado.');
-                  setEditLink(null);
+                disabled={salvandoLink}
+                onClick={async () => {
+                  setSalvandoLink(true);
+                  try {
+                    await updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);
+                    audit({
+                      userLogin: user?.login ?? '—', area: 'projeto', action: `editar link (${editLink.kind})`,
+                      detail: editLink.value.trim(), projectId: project.id, projectName: project.name, kind: 'alteracao',
+                    });
+                    toast.success('Link atualizado.');
+                    setEditLink(null);
+                  } catch (erro) {
+                    toast.error(erro instanceof Error ? erro.message : 'Não foi possível salvar o link.');
+                  } finally { setSalvandoLink(false); }
                 }}
                 className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white"
                 style={{ background: 'var(--primary)' }}
-              >Salvar</button>
+              >{salvandoLink ? 'Salvando…' : 'Salvar'}</button>
             </div>
           </div>
         </div>

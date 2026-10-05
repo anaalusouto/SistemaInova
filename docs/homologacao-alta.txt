@@ -1,5 +1,9 @@
 INOVA — Homologação de prioridade alta
 
+ATUALIZAÇÃO: o pacote posterior de prioridades Média/Baixa altera o cabeçalho
+e o acesso ao parecer técnico. Consultar homologacao-media-baixa.txt para a
+versão atual; este registro conserva as evidências da verificação anterior.
+
 Data da verificação técnica: 05/10/2026 (America/Sao_Paulo).
 Verificador técnico: Codex.
 Ambiente técnico: workspace local Windows; sem sessão autenticada de homologação.

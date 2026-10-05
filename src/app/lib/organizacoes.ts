@@ -175,6 +175,8 @@ export interface ProjetoDaOrganizacao {
 }
 
 export interface OrganizacaoFicha extends OrganizacaoResumo {
+  mapeamentoRelatorioUrl?: string | null;
+  parecerRelatorioUrl?: string | null;
   eixo: string | null;
   localizacao: string | null;
   territorio: string | null;

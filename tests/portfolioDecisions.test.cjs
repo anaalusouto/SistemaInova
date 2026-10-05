@@ -38,6 +38,51 @@ test('projeto da organização exige vínculo único e rejeita ID de outra organ
   assert.equal(JSON.stringify(projetos), antes);
 });
 
+test('Gestão Interna preserva ordem Projeto, Diagnóstico e Relatórios', () => {
+  const { SUBAREAS_GESTAO } = loadTs('src/app/lib/gestaoInterna');
+  assert.deepEqual(SUBAREAS_GESTAO.map(s => s.label), ['Projeto', 'Diagnóstico', 'Relatórios']);
+  assert.equal(new Set(SUBAREAS_GESTAO.map(s => s.id)).size, 3);
+});
+
+test('criação exige organização e atualização rejeita todos os formatos de vínculo', () => {
+  const { exigirOrganizacaoNaCriacao, validarPatchVinculo } = loadTs('src/app/lib/vinculoProjeto');
+  for (const valor of [null, undefined, '', '  ', 12]) assert.throws(() => exigirOrganizacaoNaCriacao(valor), /Selecione a organização/);
+  assert.equal(exigirOrganizacaoNaCriacao(' org-a '), 'org-a');
+  for (const campo of ['comunidadeId', 'comunidade_id', 'communityId', 'organizacao', 'org']) {
+    assert.throws(() => validarPatchVinculo({ [campo]: 'org-b' }), /não pode ser alterado/);
+  }
+  assert.doesNotThrow(() => validarPatchVinculo({ name: 'Projeto', driveLink: 'https://example.org' }));
+});
+
+test('relatórios externos aceitam HTTP(S) e rejeitam execução de código e credenciais na URL', () => {
+  const { normalizarLinkRelatorio } = loadTs('src/app/lib/relatoriosOrg');
+  assert.equal(normalizarLinkRelatorio('  https://example.org/relatorio.pdf  '), 'https://example.org/relatorio.pdf');
+  assert.equal(normalizarLinkRelatorio(' '), null);
+  for (const link of ['javascript:alert(1)', 'data:text/html,test', 'file:///doc.pdf', 'ftp://example.org/doc', 'https://user:pass@example.org', 'doc.pdf']) {
+    assert.throws(() => normalizarLinkRelatorio(link), /link externo válido/);
+  }
+});
+
+test('plano começa recolhido; expansão e filtro preservam IDs, folhas e numeração', () => {
+  const { CRITERIOS_VAZIOS, idsRecolhiveis, recolhidosDe, tudoExpandido, filtrarPlano, codigosHierarquicos } = loadTs('src/app/lib/planoTrabalho');
+  const metas = [{ id: 'meta-a', name: 'Meta', deliverables: [{ id: 'etapa-a', name: 'Etapa', activities: [
+    { id: 'atividade-a', name: 'Oficina', responsible: 'Ana', status: 'Em andamento', budgetLink: 'Não informado', tasks: [{ id: 'tarefa-a', title: 'Preparação' }] },
+    { id: 'atividade-b', name: 'Entrega', responsible: 'Bia', status: 'A iniciar', budgetLink: 'Não informado', tasks: [] },
+  ] }] }];
+  const antes = JSON.stringify(metas);
+  const ids = idsRecolhiveis(metas);
+  assert.deepEqual([...recolhidosDe(ids, new Set())], ['meta-a', 'etapa-a', 'atividade-a']);
+  assert.equal(tudoExpandido(ids, new Set()), false);
+  assert.equal(tudoExpandido(ids, new Set(ids)), true);
+  assert.equal(recolhidosDe(ids, new Set(ids)).size, 0);
+  const codigosAntes = [...codigosHierarquicos(metas)];
+  const resultado = filtrarPlano(metas, [], { ...CRITERIOS_VAZIOS, busca: 'preparacao', responsaveis: ['Ana'], status: ['Em andamento'] });
+  assert.deepEqual(resultado.flatMap(m => m.deliverables.flatMap(e => e.activities.map(a => a.id))), ['atividade-a']);
+  assert.equal(resultado[0].deliverables[0].activities[0], metas[0].deliverables[0].activities[0]);
+  assert.deepEqual([...codigosHierarquicos(metas)], codigosAntes);
+  assert.equal(JSON.stringify(metas), antes);
+});
+
 test('organizações: busca, filtros combinados, limpeza e ordenação preservam IDs e dados', () => {
   const { FILTROS_VAZIOS, filtrarOrganizacoes, ordenarOrganizacoes } = loadTs('src/app/lib/organizacoes');
   const a = { id: 'org-a', codigo: 'ORG-01', nome: 'Árvore', categoria: 'Indígena', tipo: 'Associação', uf: 'PA', status: 'Ativa', projetos: [] };

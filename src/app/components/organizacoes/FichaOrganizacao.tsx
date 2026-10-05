@@ -1,7 +1,7 @@
 /**
  * Organização como hub (alteracoes-inova.pptx, 29/09/2026).
  *
- * O cabeçalho da organização (ícone, nome, Categoria · Tipo) fica fixo; o
+ * Somente o H1 com o nome da organização fica fixo; os metadados e o
  * conteúdo embaixo muda conforme a seção escolhida no menu lateral em árvore:
  * Dados cadastrais, Projeto (único, dentro da organização),
  * Encaminhamentos e notas, Registros de contato. No celular o menu lateral é
@@ -65,8 +65,12 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
-      {/* Cabeçalho fixo da organização (slides 3 a 6). */}
-      <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
+      <h1 className="px-4 sm:px-7 py-3 border-b flex-shrink-0"
+        style={{ background: 'var(--surface-0)', borderColor: 'var(--border)', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25, overflowWrap: 'anywhere' }}>
+        {nomeCurtoOrg(org.nome)}
+      </h1>
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
+      <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
         <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} />
         <div className="flex items-center gap-3 min-w-0">
           <div
@@ -77,9 +81,6 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             <IconeTipo size={20} color="var(--brand)" aria-hidden />
           </div>
           <div className="min-w-0">
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25 }}>
-              {nomeCurtoOrg(org.nome)}
-            </h1>
             {vinculo.estado === 'unico' && (
               <p className="text-sm mt-1" style={{ color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>
                 {vinculo.projeto.nome}
@@ -116,8 +117,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
       </div>
 
       {rota.secao === 'projeto' || rota.secao === 'projetos' ? (
-        // O projeto cuida da própria rolagem (título fixo, conteúdo rolando).
-        <div className="flex-1 min-h-0 min-w-0">
+        <div className="min-w-0">
           <ProjetoDaOrganizacao
             org={org}
             projetoId={rota.projetoId}
@@ -125,9 +125,10 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
           />
         </div>
       ) : (
-        <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
+        <div className="min-w-0">
           {(rota.secao === 'mapeamento' || rota.secao === 'parecer') && (
-            <OrganizacaoEmConstrucao key={rota.secao} titulo={rota.secao === 'mapeamento' ? 'Mapeamento' : 'Parecer'} />
+            <OrganizacaoEmConstrucao key={`${org.id}-${rota.secao}`} titulo={rota.secao === 'mapeamento' ? 'Mapeamento' : 'Parecer'}
+              organizacaoId={org.id} relatorioUrl={rota.secao === 'mapeamento' ? org.mapeamentoRelatorioUrl : org.parecerRelatorioUrl} />
           )}
           {rota.secao === 'dados' && (
             <DadosCadastrais org={org} aoAbrirProjeto={id => ir({ secao: 'projeto', projetoId: id })} />
@@ -156,6 +157,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -190,7 +192,7 @@ function ProjetoDaOrganizacao({
       </div>
     );
   }
-  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" />;
+  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao />;
 }
 
 // ---------------------------------------------------------------------------

@@ -83,7 +83,7 @@ export function TabDescricao({ project }: { project: Project }) {
     n === undefined || n === null ? undefined : `${n.toLocaleString('pt-BR')} ${tipo}`;
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="p-6">
       <div className="flex flex-col gap-4 max-w-5xl">
         {/* RN-007: o aviso vem antes do conteúdo, não depois. Quem lê precisa
             saber o que está lendo ANTES de ler os números. */}
