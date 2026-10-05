@@ -144,6 +144,38 @@ test('recorte vazio produz séries vazias e prazos zerados', () => {
   assert.ok(result.deadlines.every(d => d.projetos === 0));
 });
 
+test('AT-007: os mesmos filtros preservam indicadores e gráficos derivados do conjunto selecionado', () => {
+  const { applyPortfolioFilters, emptyPortfolioFilters } = loadTs('src/app/lib/portfolioFilters');
+  const { buildKpi } = loadTs('src/app/data/mockData');
+  const { buildFinancialTimeline } = loadTs('src/app/lib/financialTimeline');
+  const a = project({ id: 101, name: 'Projeto A', org: 'Org A', segmento: 'Indígena', startDate: '2026-10-01', endDate: '2026-10-31',
+    risks: [{ severity: 20, category: 'Operacional', status: 'Aberto' }], changes: [{ approval: 'Pendente' }],
+    financialItems: [{ date: '2026-10-05', plannedValue: 100, executedValue: 60 }] });
+  const b = project({ id: 202, name: 'Projeto B', org: 'Org B', segmento: 'Quilombola', startDate: '2026-01-01', endDate: '2026-12-31', budgetApproved: 200, budgetExecuted: 80, changes: [] });
+  const c = project({ id: 303, name: 'Projeto C', org: 'Org A', segmento: 'Indígena', startDate: '2026-10-01', endDate: '2026-10-31', status: 'Concluído', budgetApproved: 50, budgetExecuted: 0, changes: [] });
+  const lista = [a, b, c];
+  const filtros = { ...emptyPortfolioFilters(), exercicioKey: '2026-2026', periodStart: { year: 2026, month: 10 }, periodEnd: { year: 2026, month: 10 }, status: ['Em andamento'], org: ['Org A'], classificacao: ['Indígena'] };
+  const antes = JSON.stringify({ lista, filtros });
+  const calcular = () => {
+    const selecionados = applyPortfolioFilters(lista, filtros);
+    return { ids: selecionados.map(p => p.id), kpi: buildKpi(selecionados), decisions: buildDecisionCharts(selecionados, reference),
+      timeline: buildFinancialTimeline(selecionados, { start: filtros.periodStart, end: filtros.periodEnd }) };
+  };
+  const resultado = calcular();
+  assert.deepEqual(resultado.ids, [101]);
+  assert.equal(resultado.kpi.totalProjects, 1);
+  assert.equal(resultado.kpi.totalBudget, 100);
+  assert.equal(resultado.kpi.totalExecuted, 60);
+  assert.equal(resultado.kpi.avgProgress, 30);
+  assert.equal(resultado.kpi.criticalRisks, 1);
+  assert.equal(resultado.kpi.pendingChanges, 1);
+  assert.deepEqual(resultado.timeline, [{ month: 'Out/2026', previsto: 100, executado: 60 }]);
+  assert.deepEqual(resultado.decisions.budgets, [{ name: 'Org A', previsto: 100, executado: 60, saldo: 40 }]);
+  assert.deepEqual(calcular(), resultado);
+  assert.equal(JSON.stringify({ lista, filtros }), antes);
+  assert.equal(buildKpi(applyPortfolioFilters(lista, emptyPortfolioFilters())).totalBudget, 350);
+});
+
 test('abreviações seguem os nomes dos projetos e não mudam ao normalizar novamente', () => {
   const { nomeCurtoOrg } = loadTs('src/app/lib/navegacaoOrg');
   const cases = [

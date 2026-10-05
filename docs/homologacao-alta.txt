@@ -30,9 +30,10 @@ H04 — Busca/filtros/estados: busca por nome sem acento e código; combinação
   Categoria/Tipo/UF/Situação; combinação vazia e limpeza verificadas em E01.
   Carregamento e erro têm tratamento no código; teste visual controlado: PENDENTE.
 H05 — Visualização: por solicitação posterior do usuário, restaurados cartões
-  responsivos, com quatro por linha no desktop e ordenação alfabética fixa.
+  responsivos, com quatro por linha no desktop. Na revisão dos ATs, autorizada
+  ordenação por Organização/Categoria/Tipo em ordem crescente/decrescente.
   Busca, filtros e aviso de conflitos de projetos preservados.
-  Tabela e controles de ordenação por coluna retirados do escopo aprovado.
+  Tabela retirada do escopo aprovado; ordenação agora disponível nos cartões.
   Abertura do cartão e verificação visual da organização: PENDENTE.
 H06 — Projeto único: menu solicita a seção sem escolher primeiro vínculo;
   resolução única verificada em E01. ProjectView inicia em Plano de Trabalho,

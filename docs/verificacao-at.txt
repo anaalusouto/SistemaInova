@@ -1,0 +1,99 @@
+INOVA — Revisão AT-005 a AT-049 solicitada pelo usuário
+Verificador: Codex. Data da revisão: 05/10/2026 (America/Sao_Paulo).
+Versão-base: 068df1d6bcb5e0e25a0e5682f59fb6d246797ecf + alterações locais.
+Ambiente de dados: tgkfysmwllbocwxlpyai.supabase.co, conexão do projeto.
+Não foi presumido que o banco conectado seja staging; dados sintéticos de teste
+foram criados por autorização explícita do usuário. Não houve exclusões.
+Aceite: PENDENTE. Publicação: não realizada nesta revisão.
+
+MATRIZ DE RESULTADOS
+AT-005 — JÁ IMPLEMENTADO: App inicia com activeNav='overview'; item Visão Geral
+  abre PortfolioView. Menu na ordem Visão Geral, Organizações, Gestão Interna,
+  verificada em renderização estática. Entrada pós-login real: pendente.
+AT-006 — JÁ IMPLEMENTADO: App renderiza PortfolioView e OrganizacoesModule em
+  destinos separados; OrganizacoesModule não embute o painel.
+AT-009 — JÁ IMPLEMENTADO: Organizações inicia com título, busca, filtros e lista
+  de cartões. Renderização confirma ausência do painel acima da lista.
+  A menção a “tabela” foi substituída pela decisão de manter cartões (AT-010).
+AT-017 — JÁ IMPLEMENTADO: seis nomes e ordem solicitados. Renderização confirma
+  menu desktop e seletor celular para Cadastro/Projeto/Encaminhamento/Registro
+  de Contato de duas organizações sintéticas, com seleção correspondente.
+AT-049 — JÁ CORRIGIDO: justificativa só quando início real > previsto ou fim real
+  > previsto. Antecipação/igualdade não exigem justificativa. Mensagem indica o
+  motivo e campo; formulário marca obrigatório e foca o campo ao recusar.
+  Testes da regra e dos handlers de criar/editar cobrem todos os nove pares de
+  datas. São 18 cenários nos handlers, com gravação isolada; atraso sem texto
+  não escreve, com texto salva. Ensaio visual de foco após salvar: pendente.
+AT-007 — JÁ IMPLEMENTADO, REGRESSÃO AMPLIADA: filtros do painel preservados;
+  teste compara indicadores, cronologia e gráficos com mesmos dados/filtros,
+  preservando entradas. Valores são derivados dos registros, sem fixar imagens.
+  Comparação visual autenticada antes/depois: pendente.
+AT-008 — JÁ IMPLEMENTADO: PortfolioView não contém ListaOrganizacoes ou tabela
+  de organizações. Organizações é acessível pelo menu independente.
+AT-010 — AJUSTADO NESTA REVISÃO: conforme resposta do usuário, manter cartões
+  e permitir ordenar. Adicionados Organização/Categoria/Tipo e botão crescente/
+  decrescente. Categoria e Tipo continuam visíveis nos cartões. Clique preserva
+  o ID da organização. Regressão cobre a ordenação e preservação de IDs; teste
+  de clique/teclado na interface publicada: pendente.
+AT-011 — JÁ IMPLEMENTADO: busca por nome/código e quatro filtros; combinação
+  sem resultado e limpar cobertas em regras. Renderização verifica carregamento,
+  erro controlado, lista vazia e busca sem resultados. Teste interativo: pendente.
+AT-020 — JÁ IMPLEMENTADO: rota compartilhada entre menu e ficha; ficha tem key
+  pelo orgId. Renderização confirma título/seleção em dois contextos e quatro
+  seções; não comprova o percurso interativo na interface publicada.
+AT-021 — JÁ IMPLEMENTADO: Projeto resolve vínculo único e renderiza projeto
+  diretamente, iniciando Plano de Trabalho. Renderização confirma projeto 101
+  sintético no plano. Projeto de homologação no banco: 64; ensaio visual pendente.
+AT-022 — JÁ IMPLEMENTADO: sem lista/cartões de projetos nem submenu por código/
+  nome. Seções restantes mantidas. O acesso direto é verificado por renderização.
+AT-023 — CONFERIDO NO BANCO: comparação de hashes por ID de registros preexistentes
+  antes/depois, em 14 tabelas, sem alterações/exclusões encontradas. Inclui projetos,
+  contatos, notas, registros, metas, etapas, atividades, riscos, orçamento, histórico,
+  pareceres e anexos. Isso não substitui navegar/recarregar na interface.
+AT-024 — JÁ IMPLEMENTADO: ausência de vínculo é explícita, com orgId e orientação;
+  não cria ou abre projeto de outra organização. Ausência, conflito e ID incompatível
+  verificados por renderização; decisão de tratamento de negócio continua aberta.
+AT-025 — JÁ IMPLEMENTADO E CONFERIDO NO BANCO: tentativa de segundo projeto
+  recusada com 23505. Vínculo obrigatório/imutável recusados com 23514.
+  Conflitos legados mostram todos os IDs, sem escolher o primeiro, em regras e
+  renderização. Auditoria por IDs dos 21 projetos não encontrou vínculos duplicados
+  nem projetos sem organização; resultado em evidencias/at-vinculos.json.
+AT-047 — PARCIALMENTE CONFERIDO NO AMBIENTE: criou-se organização autorizada,
+  projeto, registro, nota, plano, risco, orçamento de valor zero, parecer e anexo
+  sintéticos. Nota e contato editados e relidos por novas requisições REST;
+  parecer preservou projeto/origem; anexo privado baixado por URL assinada com
+  mesmos bytes. Link sintético preservado. Não foi presumido acesso a documentos
+  de terceiros; reload e abertura pela interface/perfis continuam pendentes.
+AT-048 — REGISTRO DE EVIDÊNCIAS CRIADO, ACEITE PENDENTE: ambiente/versão,
+  verificador, horários UTC, IDs e resultados em evidencias/at-banco.json.
+  Decisões em decisoes-pendentes.txt. Commit não comprova entrega homologada.
+
+ORGANIZAÇÃO E REGISTROS PARA HOMOLOGAÇÃO VISUAL
+Organização: HOMOLOGAÇÃO AT — organização de teste
+Código: HOMOLOG-AT-20261005
+Organização ID: bea269e2-199a-4bb7-b6dc-cc926fbc27f8
+Projeto ID: 64; código HOMOLOG-AT-PROJ-20261005.
+Demais IDs, horários e contagens: evidencias/at-banco.json.
+Os registros permanecem disponíveis; nada foi apagado para limpar o teste.
+Esses dados podem aparecer na lista e no painel de dados reais. O projeto tem
+orçamento de teste de valor zero e nome/código claramente identificados.
+
+LIMITES DOS ENSAIOS
+- Banco/Storage conferidos com credencial administrativa existente, por REST.
+  Não comprova os perfis da aplicação. APIs de sessão/escrita têm testes isolados.
+- Não havia sessão de navegador disponível; não se declarou reload da interface,
+  navegação por clique, foco/teclado, rolagem ou aceite como concluídos.
+- Parecer anterior preservado como dado; acesso antigo continua retirado do projeto.
+- Novo anexo PNG é sintético; URLs assinadas/credenciais não são gravadas no relatório.
+- O script scripts/homologacaoAt.mjs sem argumentos faz somente preflight de leitura;
+  --executar cria/reutiliza e testa apenas registros sintéticos identificados.
+  Escritas são administrativas, não substituem o fluxo da interface.
+- Aba Decisoes e responsável pelo aceite ainda não foram informados.
+
+VALIDAÇÃO LOCAL FINAL
+node --test tests/portfolioDecisions.test.cjs tests/organizacaoServidor.test.cjs
+  tests/organizacaoInterface.test.cjs: 38 testes aprovados, 0 falhas.
+node node_modules/typescript/bin/tsc --noEmit: código 0.
+node node_modules/vite/bin/vite.js build: cliente/servidor concluídos, código 0.
+git diff --check: código 0; avisos de conversão LF/CRLF no Windows.
+Build com avisos de tamanho dos bundles e tempo em plugins, sem falha.

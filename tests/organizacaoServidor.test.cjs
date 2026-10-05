@@ -6,7 +6,7 @@ const ts = require('typescript');
 
 // Executa os handlers reais com sessão e banco isolados. Não usa credenciais,
 // rede nem registros reais. O índice/trigger ainda exige teste em PostgreSQL.
-function ambiente({ consulta = false, vinculados = [], orgExiste = true } = {}) {
+function ambiente({ consulta = false, vinculados = [], orgExiste = true, etapa } = {}) {
   const escritas = [];
   const cache = new Map();
   const db = { from(tabela) {
@@ -15,6 +15,7 @@ function ambiente({ consulta = false, vinculados = [], orgExiste = true } = {}) 
     let filtroId;
     let codigos = false;
     const resultado = () => {
+      if (tabela === 'etapas') return { data: etapa, error: null };
       if (inserido) return { data: { id: 101, ...inserido, comunidades: { id: inserido.comunidade_id, nome: 'Org A' } }, error: null };
       if (atualizacao) return { data: { id: filtroId }, error: null };
       if (tabela === 'comunidades') return { data: orgExiste ? { id: filtroId, nome: 'Org A' } : null, error: null };
@@ -113,4 +114,42 @@ test('relatório escreve só o campo e organização solicitados e rejeita área
   await assert.rejects(salvarLinkRelatorioOrg({ data: { organizacaoId: 'org-a', area: 'outra', url: 'https://example.org' } }), /Área de relatório inválida/);
   await assert.rejects(salvarLinkRelatorioOrg({ data: { organizacaoId: 'org-a', area: 'parecer', url: 'javascript:alert(1)' } }), /link externo válido/);
   assert.equal(a.escritas.length, 1);
+});
+
+test('AT-049: criar e editar atividade exigem justificativa somente para datas posteriores', async () => {
+  const etapa = { id: 'etapa-a', inicio_previsto: '2026-10-01', fim_previsto: '2026-10-31', inicio_realizado: null, fim_realizado: null };
+  for (const inicioRealizado of ['2026-10-09', '2026-10-10', '2026-10-11']) {
+    for (const fimRealizado of ['2026-10-19', '2026-10-20', '2026-10-21']) {
+      for (const editar of [false, true]) {
+        const a = ambiente({ etapa });
+        const plano = a.carregar('src/app/planoTrabalho.server');
+        const dados = {
+          etapaId: 'etapa-a', nome: 'Atividade de teste', responsavel: 'Equipe', status: 'Em andamento', progresso: 30,
+          inicioPrevisto: '2026-10-10', fimPrevisto: '2026-10-20', inicioRealizado, fimRealizado,
+          justificativaAtraso: '', vinculoOrcamentario: 'Não informado', observacoes: '',
+          proximoPasso: '', proximoPassoResponsavel: '', proximoPassoPrazo: null,
+        };
+        const salvar = () => editar
+          ? plano.atualizarAtividade({ data: { atividadeId: 'atividade-a', dados } })
+          : plano.criarAtividade({ data: dados });
+        const atraso = inicioRealizado > dados.inicioPrevisto || fimRealizado > dados.fimPrevisto;
+        if (atraso) {
+          await assert.rejects(salvar(), erro => {
+            assert.equal(erro.name, 'DadosInvalidos');
+            assert.match(erro.message, /posterior/);
+            assert.match(erro.message, /Preencha o campo "Justificativa de atraso"/);
+            return true;
+          });
+          assert.deepEqual(a.escritas, []);
+          dados.justificativaAtraso = 'Fornecedor indisponível no período previsto.';
+        }
+        await salvar();
+        assert.equal(a.escritas.length, 1);
+        assert.equal(a.escritas[0].tabela, 'atividades');
+        assert.equal(a.escritas[0].dados.inicio_realizado, inicioRealizado);
+        assert.equal(a.escritas[0].dados.fim_realizado, fimRealizado);
+        assert.equal(a.escritas[0].dados.justificativa_atraso, dados.justificativaAtraso || null);
+      }
+    }
+  }
 });

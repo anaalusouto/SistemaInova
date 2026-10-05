@@ -1,0 +1,102 @@
+{
+  "ambiente": "tgkfysmwllbocwxlpyai.supabase.co",
+  "verificador": "Codex via REST administrativo",
+  "inicioUTC": "2026-10-05T18:26:27.092Z",
+  "limite": "Não comprova login, autorização dos perfis ou reload da interface. Somente dados sintéticos são escritos. Nenhum registro é excluído.",
+  "ids": {
+    "organizacao": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+    "projeto": 64,
+    "registroContato": "b9db21a2-1438-46e7-8765-5345b7bd1aaf",
+    "nota": "0ac34ff0-ff9a-43ef-903d-34e18d248fb7",
+    "meta": "ddbf409d-835d-4bb2-82ed-3481255267b1",
+    "etapa": "6798b66f-e4cb-4aec-b9ff-289e8abf72e9",
+    "atividade": "df6596eb-5f61-424b-81f2-e76e0730aa2a",
+    "risco": "a9093873-e8cf-4dd2-bcd6-0872cf3eade0",
+    "orcamento": "faf9a96c-83c0-4442-88f6-989ea494f7eb",
+    "parecer": "f40c5647-a3d5-4577-9325-d4e3a2e43585",
+    "anexo": "4dca1f09-e01a-4d82-824f-9bb591bc0d04"
+  },
+  "resultados": [
+    {
+      "item": "AT-025 segundo projeto",
+      "resultado": "CONFORME no banco",
+      "status": 409,
+      "codigo": "23505",
+      "dataUTC": "2026-10-05T18:26:28.762Z"
+    },
+    {
+      "item": "Vínculo obrigatório",
+      "resultado": "CONFORME no banco",
+      "status": 400,
+      "codigo": "23514",
+      "dataUTC": "2026-10-05T18:26:28.876Z"
+    },
+    {
+      "item": "Vínculo imutável",
+      "resultado": "CONFORME no banco",
+      "status": 400,
+      "codigo": "23514",
+      "dataUTC": "2026-10-05T18:26:29.015Z"
+    },
+    {
+      "item": "AT-047 registros, nota e parecer",
+      "resultado": "CONFORME em gravação/releitura REST; reload da interface pendente",
+      "notaId": "0ac34ff0-ff9a-43ef-903d-34e18d248fb7",
+      "registroId": "b9db21a2-1438-46e7-8765-5345b7bd1aaf",
+      "parecerId": "f40c5647-a3d5-4577-9325-d4e3a2e43585",
+      "dataUTC": "2026-10-05T18:26:32.270Z"
+    },
+    {
+      "item": "AT-047 anexo",
+      "resultado": "CONFORME no Storage com URL assinada; acesso pela interface/perfil pendente",
+      "anexoId": "4dca1f09-e01a-4d82-824f-9bb591bc0d04",
+      "bytes": 68,
+      "dataUTC": "2026-10-05T18:26:33.602Z"
+    },
+    {
+      "item": "AT-047 link",
+      "resultado": "URL sintética preservada; abertura de links reais da operação não verificada",
+      "projetoId": 64,
+      "dataUTC": "2026-10-05T18:26:33.711Z"
+    },
+    {
+      "item": "AT-023 preservação",
+      "resultado": "CONFORME nos registros preexistentes comparados",
+      "totaisAntes": {
+        "comunidades": 20,
+        "projetos": 20,
+        "contatos": 0,
+        "logs_comunicacao": 2,
+        "organizacao_notas": 3,
+        "metas": 104,
+        "etapas": 310,
+        "atividades": 371,
+        "plano_riscos": 271,
+        "orcamento_itens": 0,
+        "orcamento_notas": 0,
+        "log_alteracoes_meta": 512,
+        "pareceres_tecnicos": 0,
+        "projeto_anexos": 0
+      },
+      "totaisDepois": {
+        "comunidades": 21,
+        "projetos": 21,
+        "contatos": 0,
+        "logs_comunicacao": 3,
+        "organizacao_notas": 4,
+        "metas": 105,
+        "etapas": 311,
+        "atividades": 372,
+        "plano_riscos": 272,
+        "orcamento_itens": 1,
+        "orcamento_notas": 0,
+        "log_alteracoes_meta": 512,
+        "pareceres_tecnicos": 1,
+        "projeto_anexos": 1
+      },
+      "alterados": [],
+      "dataUTC": "2026-10-05T18:26:34.200Z"
+    }
+  ],
+  "fimUTC": "2026-10-05T18:26:34.200Z"
+}

@@ -12,8 +12,8 @@ import { useListaOrganizacoes } from './useOrganizacoes';
 import { Chip, FilterGroup } from '../portfolio/PortfolioFilters';
 import {
   CATEGORIAS_ORGANIZACAO, FILTRO_NAO_INFORMADO, FILTROS_VAZIOS, NAO_INFORMADO, TIPOS_ORGANIZACAO,
-  contagemOrganizacoes, filtrarOrganizacoes,
-  type FiltrosOrganizacao,
+  contagemOrganizacoes, filtrarOrganizacoes, ordenarOrganizacoes,
+  type FiltrosOrganizacao, type ColunaOrganizacao,
 } from '../../lib/organizacoes';
 import { nomeCurtoOrg, resolverProjetoOrg } from '../../lib/navegacaoOrg';
 import './organizacoes.css';
@@ -42,9 +42,10 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido =
 
   const ativos = filtros.categorias.length + filtros.tipos.length + filtros.ufs.length + filtros.situacoes.length;
   const [painelAberto, setPainelAberto] = useState(ativos > 0);
+  const [ordenacao, setOrdenacao] = useState<{ coluna: ColunaOrganizacao; direcao: 'asc' | 'desc' }>({ coluna: 'nome', direcao: 'asc' });
 
   const filtradas = useMemo(() => filtrarOrganizacoes(organizacoes, filtros), [organizacoes, filtros]);
-  const linhas = useMemo(() => [...filtradas].sort((a, b) => nomeCurtoOrg(a.nome).localeCompare(nomeCurtoOrg(b.nome), 'pt-BR')), [filtradas]);
+  const linhas = useMemo(() => ordenarOrganizacoes(filtradas, ordenacao.coluna, ordenacao.direcao), [filtradas, ordenacao]);
 
   const grupos: { id: GrupoFiltro; rotulo: string; opcoes: string[] }[] = useMemo(() => [
     { id: 'categorias', rotulo: 'Categoria', opcoes: opcoes(CATEGORIAS_ORGANIZACAO, organizacoes.map(o => o.categoria)) },
@@ -105,6 +106,23 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido =
           }}
         >
           <Filter size={12} /> Filtros{ativos > 0 ? ` (${ativos})` : ''}
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-[13px]" style={{ color: 'var(--ink-3)' }}>
+        <label className="inline-flex items-center gap-2">
+          Ordenar por
+          <select value={ordenacao.coluna} onChange={e => setOrdenacao(atual => ({ ...atual, coluna: e.target.value as ColunaOrganizacao }))}
+            className="rounded-lg border bg-card px-3 py-2" style={{ borderColor: 'var(--border)' }}>
+            <option value="nome">Organização</option>
+            <option value="categoria">Categoria</option>
+            <option value="tipo">Tipo</option>
+          </select>
+        </label>
+        <button type="button" onClick={() => setOrdenacao(atual => ({ ...atual, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' }))}
+          aria-label={`Ordenação ${ordenacao.direcao === 'asc' ? 'crescente; alternar para decrescente' : 'decrescente; alternar para crescente'}`}
+          className="rounded-lg border bg-card px-3 py-2" style={{ borderColor: 'var(--border)' }}>
+          {ordenacao.direcao === 'asc' ? '↑ Crescente' : '↓ Decrescente'}
         </button>
       </div>
 

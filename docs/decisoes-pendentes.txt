@@ -26,6 +26,10 @@ vínculo não editável depois da criação.
 Fonte: mensagem do usuário, prioridade 3, Projeto 1:1.
 Quem decidiu: usuário solicitante (nome não informado).
 Desdobramento liberado: validação da API e migração para guarda no banco.
+Execução da migração 0019: informada pelo usuário em mensagem posterior.
+Bloqueios conferidos depois no banco conectado tgkfysmwllbocwxlpyai.supabase.co,
+com registros sintéticos autorizados pelo usuário; evidências em at-banco.json.
+Horário de aplicação original não informado. Aceite da interface continua pendente.
 Pendência: tratamento excepcional dos registros legados sem vínculo/conflitantes.
 Não associar, conciliar nem excluir automaticamente projetos para resolver isso.
 
@@ -37,8 +41,10 @@ Desdobramento liberado: estrutura da ficha/projeto e remoção de fixação adic
 nas visões e orçamento. Homologação visual e de teclado pendente.
 
 D05 — Visualização de Organizações
-Escolha: manter cartões antigos, busca, filtros e ordem alfabética.
-Fonte: mensagem anterior do usuário, “voltar para a visualização antiga”.
+Escolha: manter cartões antigos, busca e filtros; permitir ordenar por Organização,
+Categoria ou Tipo, em ordem crescente/decrescente.
+Fonte: mensagem anterior “voltar para a visualização antiga” e resposta posterior
+do usuário nesta revisão: “Manter os cartões e permitir ordenar”.
 Quem decidiu: usuário solicitante (nome não informado).
 Desdobramento liberado: cartões preservados neste pacote.
 

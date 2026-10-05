@@ -2,8 +2,17 @@ INOVA — Homologação de prioridades Média e Baixa
 Data técnica: 05/10/2026 (America/Sao_Paulo). Verificador: Codex.
 Ambiente: workspace local Windows, sem sessão de navegador disponível.
 Versão-base: bfb2a8a3bc79f29fe05d939263d6b4ce33d10dd1 + alterações locais.
-Aceite: PENDENTE. Publicação e migração de banco: NÃO realizadas.
-Nenhum registro de operação real foi alterado ou excluído.
+Aceite: PENDENTE. Publicação: não realizada por Codex nesta sessão.
+Migração 0019: execução informada pelo usuário em mensagem posterior; os bloqueios
+foram depois conferidos por REST no banco tgkfysmwllbocwxlpyai.supabase.co.
+Horário da aplicação original não informado; horários dos testes em at-banco.json.
+Codex não alterou nem excluiu registros da operação real nesta sessão.
+
+REVISÃO POSTERIOR DOS ATs: consultar verificacao-at.txt e evidencias/at-banco.json.
+Foi criada organização sintética por autorização posterior do usuário, com projeto
+64. Os bloqueios da migração foram confirmados no banco configurado por REST;
+notas/contato/parecer/anexo sintéticos foram relidos. Nenhum registro preexistente
+da operação mudou na comparação. Homologação de interface/perfis continua pendente.
 
 IMPLEMENTAÇÃO E EVIDÊNCIAS
 M01 — Gestão Interna: subáreas Projeto, Diagnóstico e Relatórios; duplicação
@@ -20,9 +29,10 @@ M04 — Projeto 1:1: API exige organização válida, recusa vínculos existente
   todos os IDs e rejeita alterações de vínculo por diversos formatos de payload.
   Testes dos handlers reais com sessão/banco isolados; zero escrita nos casos
   negados. Formulário legado apresenta organização sem seleção editável.
-  Migração 0019 preparada para vínculo obrigatório em INSERT e imutável em UPDATE.
+  Migração 0019 para vínculo obrigatório em INSERT e imutável em UPDATE:
+  executada conforme confirmação do usuário.
   Índice único da 0018 continua responsável pela exclusividade concorrente.
-  Persistência, aplicação de trigger e concorrência em PostgreSQL: PENDENTES.
+  Persistência, conferência do trigger e concorrência em PostgreSQL: PENDENTES.
   Modal de criação não ganhou novo acesso: fluxo de organização sem projeto
   permanece dependente da decisão já registrada no pacote anterior.
 L01 — Cabeçalho: só H1 da organização fora da rolagem da ficha; identificação,
@@ -74,7 +84,8 @@ Build com avisos de tamanho de bundles, plugin de resolução e tempo em plugins
 Essas evidências não representam homologação autenticada ou aceite.
 
 PRÓXIMA EXECUÇÃO EM HOMOLOGAÇÃO
-1. Aplicar 0018/0019 em ambiente de teste aprovado; consultar IDs e índice antes.
+1. Com a 0019 informada como executada, conferir ambiente, IDs, índice da 0018
+   e trigger da 0019 usando homologacao-vinculos.sql (somente leitura).
    Não apagar conflitos legados. Conferir insert sem vínculo, segundo vínculo
    concorrente e update para outra organização; confirmar IDs após recarregar.
 2. Disponibilizar links conhecidos em Mapeamento/Parecer, abrir externamente,
