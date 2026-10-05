@@ -25,10 +25,11 @@ H03 — Menu/identificação: chave da ficha por ID da organização evita reapr
 H04 — Busca/filtros/estados: busca por nome sem acento e código; combinação
   Categoria/Tipo/UF/Situação; combinação vazia e limpeza verificadas em E01.
   Carregamento e erro têm tratamento no código; teste visual controlado: PENDENTE.
-H05 — Colunas/ordenação: tabela Organização/Categoria/Tipo implementada, com
-  alternância ascendente/descendente por coluna e botão acessível em cada linha.
-  Ordem reversa, IDs e ausência de mutação verificados em E01.
-  Clique na linha e verificação visual da organização: PENDENTE.
+H05 — Visualização: por solicitação posterior do usuário, restaurados cartões
+  responsivos, com quatro por linha no desktop e ordenação alfabética fixa.
+  Busca, filtros e aviso de conflitos de projetos preservados.
+  Tabela e controles de ordenação por coluna retirados do escopo aprovado.
+  Abertura do cartão e verificação visual da organização: PENDENTE.
 H06 — Projeto único: menu solicita a seção sem escolher primeiro vínculo;
   resolução única verificada em E01. ProjectView inicia em Plano de Trabalho,
   conforme inspeção do código. Clique no ambiente: PENDENTE.
@@ -62,7 +63,7 @@ ROTEIRO PARA COMPLETAR A HOMOLOGAÇÃO
    Conferir menu, título, conteúdo, ID e projeto correto, inclusive no celular.
 4. Testar buscas por nome/código, cada filtro, combinação, limpar, zero resultados.
    Simular lentidão e falha de leitura em ambiente de teste; restaurar a conexão.
-   Conferir três colunas, cada ordenação e abertura por linha e teclado.
+   Conferir cartões, ordem alfabética e abertura por clique e teclado.
 5. Testar organização com um projeto, sem projeto e conflito legado controlado.
    No ambiente isolado, testar criação concorrente de segundo vínculo; ambos
    não podem persistir. Guardar resposta e consultar IDs após a tentativa.

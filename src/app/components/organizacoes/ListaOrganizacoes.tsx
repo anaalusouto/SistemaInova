@@ -1,21 +1,21 @@
 /**
  * Lista de Organizações (RC-01).
  *
- * Lista com colunas Organização, Categoria e Tipo e ordenação alternável.
+ * Organizações em blocos: quatro por linha no desktop, com o projeto abaixo.
  * Busca e Filtros (RF01.3) seguem o padrão da lista de Projetos: painel
  * embutido que abre abaixo da busca. Os filtros moram no OrganizacoesModule
  * para sobreviver a abrir e fechar uma ficha.
  */
 import { useMemo, useState } from 'react';
-import { Building2, Filter, Loader2, Search } from 'lucide-react';
+import { Building2, ChevronRight, Filter, Loader2, MapPin, Search } from 'lucide-react';
 import { useListaOrganizacoes } from './useOrganizacoes';
 import { Chip, FilterGroup } from '../portfolio/PortfolioFilters';
 import {
   CATEGORIAS_ORGANIZACAO, FILTRO_NAO_INFORMADO, FILTROS_VAZIOS, NAO_INFORMADO, TIPOS_ORGANIZACAO,
-  contagemOrganizacoes, filtrarOrganizacoes, ordenarOrganizacoes,
-  type FiltrosOrganizacao, type ColunaOrganizacao,
+  contagemOrganizacoes, filtrarOrganizacoes,
+  type FiltrosOrganizacao,
 } from '../../lib/organizacoes';
-import { nomeCurtoOrg } from '../../lib/navegacaoOrg';
+import { nomeCurtoOrg, resolverProjetoOrg } from '../../lib/navegacaoOrg';
 import './organizacoes.css';
 
 /** Opções de um filtro: a lista fixa (ou o que aparece nos dados) e, se alguma
@@ -42,13 +42,9 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido =
 
   const ativos = filtros.categorias.length + filtros.tipos.length + filtros.ufs.length + filtros.situacoes.length;
   const [painelAberto, setPainelAberto] = useState(ativos > 0);
-  const [ordenacao, setOrdenacao] = useState<{ coluna: ColunaOrganizacao; direcao: 'asc' | 'desc' }>({ coluna: 'nome', direcao: 'asc' });
-  const ordenar = (coluna: ColunaOrganizacao) => setOrdenacao(atual => ({
-    coluna, direcao: atual.coluna === coluna && atual.direcao === 'asc' ? 'desc' : 'asc',
-  }));
 
   const filtradas = useMemo(() => filtrarOrganizacoes(organizacoes, filtros), [organizacoes, filtros]);
-  const linhas = useMemo(() => ordenarOrganizacoes(filtradas, ordenacao.coluna, ordenacao.direcao), [filtradas, ordenacao]);
+  const linhas = useMemo(() => [...filtradas].sort((a, b) => nomeCurtoOrg(a.nome).localeCompare(nomeCurtoOrg(b.nome), 'pt-BR')), [filtradas]);
 
   const grupos: { id: GrupoFiltro; rotulo: string; opcoes: string[] }[] = useMemo(() => [
     { id: 'categorias', rotulo: 'Categoria', opcoes: opcoes(CATEGORIAS_ORGANIZACAO, organizacoes.map(o => o.categoria)) },
@@ -147,36 +143,55 @@ export function ListaOrganizacoes({ aoAbrir, filtros, aoMudarFiltros, embutido =
           {filtrando ? 'Nenhuma organização encontrada com essa busca ou esses filtros.' : 'Nenhuma organização cadastrada.'}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card" style={{ borderColor: 'var(--border)' }}>
-          <table className="w-full text-left text-sm" aria-label="Organizações">
-            <thead>
-              <tr>
-                {([{ coluna: 'nome', rotulo: 'Organização' }, { coluna: 'categoria', rotulo: 'Categoria' }, { coluna: 'tipo', rotulo: 'Tipo' }] as const).map(({ coluna, rotulo }) => (
-                  <th key={coluna} scope="col" className="px-4 py-3" aria-sort={ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                    <button type="button" onClick={() => ordenar(coluna)} className="inline-flex items-center gap-2" aria-label={`Ordenar por ${rotulo}`}>
-                      {rotulo} {ordenacao.coluna === coluna ? (ordenacao.direcao === 'asc' ? '↑' : '↓') : '↕'}
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {linhas.map(o => (
-                <tr key={o.id} onClick={() => aoAbrir(o.id)} className="cursor-pointer border-t hover:bg-accent" style={{ borderColor: 'var(--border)' }}>
-                  <td className="px-4 py-3">
-                    <button type="button" onClick={e => { e.stopPropagation(); aoAbrir(o.id); }} className="text-left hover:underline focus-visible:ring-2 focus-visible:ring-primary" aria-label={`Abrir organização ${nomeCurtoOrg(o.nome)}, código ${o.codigo}`}>
-                      <span className="block font-semibold">{nomeCurtoOrg(o.nome)}</span>
-                      <span className="block text-xs" style={{ color: 'var(--ink-4)' }}>{o.codigo}</span>
-                    </button>
-                    {o.projetos.length > 1 && <span className="block text-xs" style={{ color: 'var(--danger)' }}>Conflito de projetos: {o.projetos.map(p => p.id).join(', ')}</span>}
-                  </td>
-                  <td className="px-4 py-3">{o.categoria ?? NAO_INFORMADO}</td>
-                  <td className="px-4 py-3">{o.tipo ?? NAO_INFORMADO}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Organizações">
+          {linhas.map(o => {
+            const sigla = nomeCurtoOrg(o.nome);
+            const vinculo = resolverProjetoOrg(o.projetos);
+            const projeto = vinculo.estado === 'unico' ? vinculo.projeto : null;
+            return (
+              <li key={o.id} className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => aoAbrir(o.id)}
+                  aria-label={`Abrir organização ${sigla}${projeto ? `, projeto ${projeto.nome}` : ''}`}
+                  className="organizacao-card w-full h-full min-h-[230px] flex flex-col gap-3 rounded-xl border bg-card p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  style={{ borderColor: 'var(--border)' }}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--brand-soft)' }}>
+                      <Building2 size={17} color="var(--brand)" aria-hidden />
+                    </span>
+                    <ChevronRight size={15} color="var(--ink-5)" aria-hidden />
+                  </span>
+                  <span className="block text-base font-bold" style={{ fontFamily: 'var(--font-heading)', color: 'var(--ink-1)', overflowWrap: 'anywhere' }}>
+                    {sigla}
+                  </span>
+                  <span className="flex flex-wrap gap-1.5 text-[11px]" style={{ color: 'var(--ink-4)' }}>
+                    <span className="rounded-full px-2 py-0.5" style={{ background: 'var(--surface-2)' }}>{o.categoria ?? NAO_INFORMADO}</span>
+                    <span className="rounded-full px-2 py-0.5" style={{ background: 'var(--surface-2)' }}>{o.tipo ?? NAO_INFORMADO}</span>
+                  </span>
+                  <span className="flex items-start gap-1.5 text-xs" style={{ color: 'var(--ink-5)' }}>
+                    <MapPin size={12} className="shrink-0 mt-0.5" aria-hidden />
+                    {o.municipio ? `${o.municipio}${o.uf ? `/${o.uf}` : ''}` : 'Município não informado'}
+                  </span>
+                  {o.pendentes > 0 && (
+                    <span className="text-xs font-medium" style={{ color: 'var(--warning-strong-text)' }}>
+                      {o.pendentes} {o.pendentes === 1 ? 'encaminhamento pendente' : 'encaminhamentos pendentes'}
+                    </span>
+                  )}
+                  <span className="block w-full border-t pt-3 mt-auto" style={{ borderColor: 'var(--border)' }}>
+                    <span className="block text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--ink-5)' }}>Projeto</span>
+                    <span className="block text-sm font-medium" style={{ color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>
+                      {vinculo.estado === 'conflito'
+                        ? `Conflito de projetos: ${vinculo.ids.join(', ')}`
+                        : projeto?.nome ?? 'Sem projeto vinculado'}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
