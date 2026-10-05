@@ -1,0 +1,139 @@
+{
+  "ambiente": "tgkfysmwllbocwxlpyai.supabase.co",
+  "dataUTC": "2026-10-05T18:51:22.328Z",
+  "verificador": "Codex, somente leitura REST",
+  "quantidadeProjetos": 21,
+  "quantidadeOrganizacoes": 21,
+  "organizacoesSemProjeto": [],
+  "organizacoesComUmProjeto": [
+    {
+      "organizacaoId": "1e671e9e-5b18-44aa-8719-a38afd36733f",
+      "projetoIds": [
+        1
+      ]
+    },
+    {
+      "organizacaoId": "1f8aa37f-01bc-424d-935c-1bd78c7eec58",
+      "projetoIds": [
+        3
+      ]
+    },
+    {
+      "organizacaoId": "2d46123a-8fd4-4c15-a47d-5b1a62296246",
+      "projetoIds": [
+        2
+      ]
+    },
+    {
+      "organizacaoId": "41cf509f-a132-4a4f-a071-ed18a88f5781",
+      "projetoIds": [
+        8
+      ]
+    },
+    {
+      "organizacaoId": "468db12d-38b4-4424-9a53-14a898a0c474",
+      "projetoIds": [
+        9
+      ]
+    },
+    {
+      "organizacaoId": "69524928-28b9-48cf-add6-64bb7218c564",
+      "projetoIds": [
+        17
+      ]
+    },
+    {
+      "organizacaoId": "70fdb89d-1d22-4ffc-95df-27a1fc182570",
+      "projetoIds": [
+        16
+      ]
+    },
+    {
+      "organizacaoId": "77481b97-4859-4da7-b161-4941d9e410ec",
+      "projetoIds": [
+        15
+      ]
+    },
+    {
+      "organizacaoId": "79431206-d023-4ae2-bdbe-9dbcafa3e62a",
+      "projetoIds": [
+        13
+      ]
+    },
+    {
+      "organizacaoId": "7ff0bedc-b479-4431-b6d4-cdf299f87814",
+      "projetoIds": [
+        4
+      ]
+    },
+    {
+      "organizacaoId": "9b7b11f0-fa59-444c-87c5-8641f10b5d4c",
+      "projetoIds": [
+        19
+      ]
+    },
+    {
+      "organizacaoId": "a47c7cb8-8d8e-463c-8427-e68397783fb5",
+      "projetoIds": [
+        11
+      ]
+    },
+    {
+      "organizacaoId": "b39b4d4b-99a8-4ec4-b73c-94311bad20db",
+      "projetoIds": [
+        6
+      ]
+    },
+    {
+      "organizacaoId": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+      "projetoIds": [
+        64
+      ]
+    },
+    {
+      "organizacaoId": "c82c2ac0-56cd-4a88-9d67-f7d2ddb8e061",
+      "projetoIds": [
+        12
+      ]
+    },
+    {
+      "organizacaoId": "cb533019-40b0-495b-bec4-012436f9804d",
+      "projetoIds": [
+        20
+      ]
+    },
+    {
+      "organizacaoId": "cb7e721a-8ca3-4b81-adae-76f4b8f65539",
+      "projetoIds": [
+        5
+      ]
+    },
+    {
+      "organizacaoId": "d06209b3-1301-4efb-beb4-026ab87d43aa",
+      "projetoIds": [
+        10
+      ]
+    },
+    {
+      "organizacaoId": "eef51b80-ce13-4719-9670-1ea68dd7931e",
+      "projetoIds": [
+        14
+      ]
+    },
+    {
+      "organizacaoId": "f8f4cf10-7557-41b1-af24-b14f6f93d3a0",
+      "projetoIds": [
+        18
+      ]
+    },
+    {
+      "organizacaoId": "fae1a5ae-e5a7-4b79-bd4f-d63d51417393",
+      "projetoIds": [
+        7
+      ]
+    }
+  ],
+  "conflitos": [],
+  "projetosSemOrganizacao": [],
+  "projetosComOrganizacaoInexistente": []
+}

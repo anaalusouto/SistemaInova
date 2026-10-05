@@ -2,6 +2,14 @@ INOVA — Registro provisório para a aba Decisoes
 Data: 05/10/2026. Aba/arquivo de destino: não informado; transcrição pendente.
 Não constitui aceite da versão nem substitui decisões de negócio em aberto.
 
+Atualização informada pela equipe na mensagem de 05/10/2026:
+As nove decisões da rodada foram registradas em 02/10/2026; o item de registro
+das decisões está concluído pela equipe e conforme. Permanece apenas DEC 10,
+sobre o destino dos campos omitidos do Cadastro. Não escolher destino nem
+alterar esses campos sem essa decisão. Fonte: checklist enviado pelo usuário.
+Os D01–D07 abaixo são notas técnicas locais, não a numeração oficial DEC.
+A aba original não foi editada por Codex, e sua localização não foi informada.
+
 D01 — Gestão Interna
 Escolha: três subáreas na ordem Projeto, Diagnóstico, Relatórios; sem duplicação
 de Diagnóstico e Relatórios no nível principal.

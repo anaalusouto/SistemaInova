@@ -160,17 +160,33 @@ try {
   const orgs = await rest('comunidades', 'select=id,code,mapeamento_relatorio_url,parecer_relatorio_url&code=eq.HOMOLOG-AT-20261005');
   console.log(JSON.stringify({ modo: 'preflight', ambiente: new URL(base).host, campos0019Disponiveis: true, organizacoesTesteEncontradas: orgs.map(o => ({ id: o.id, code: o.code })) }));
   if (process.argv.includes('--auditar-vinculos')) {
-    const projetos = await rest('projetos', 'select=id,comunidade_id&order=id');
+    async function listarTodos(tabela, campos) {
+      const rows = [];
+      for (let offset = 0; ; offset += 1000) {
+        const pagina = await rest(tabela, `select=${campos}&order=id&limit=1000&offset=${offset}`);
+        rows.push(...pagina);
+        if (pagina.length < 1000) return rows;
+      }
+    }
+    const [projetos, organizacoes] = await Promise.all([
+      listarTodos('projetos', 'id,comunidade_id'), listarTodos('comunidades', 'id'),
+    ]);
     const porOrg = new Map();
     for (const p of projetos) if (p.comunidade_id) porOrg.set(p.comunidade_id, [...(porOrg.get(p.comunidade_id) ?? []), p.id]);
     const auditoria = {
       ambiente: new URL(base).host, dataUTC: new Date().toISOString(), verificador: 'Codex, somente leitura REST',
       quantidadeProjetos: projetos.length,
+      quantidadeOrganizacoes: organizacoes.length,
+      organizacoesSemProjeto: organizacoes.filter(o => !porOrg.has(o.id)).map(o => o.id),
+      organizacoesComUmProjeto: organizacoes.filter(o => porOrg.get(o.id)?.length === 1).map(o => ({ organizacaoId: o.id, projetoIds: porOrg.get(o.id) })),
       conflitos: [...porOrg].filter(([, ids]) => ids.length > 1).map(([organizacaoId, projetoIds]) => ({ organizacaoId, projetoIds })),
       projetosSemOrganizacao: projetos.filter(p => !p.comunidade_id).map(p => p.id),
+      projetosComOrganizacaoInexistente: projetos.filter(p => p.comunidade_id && !organizacoes.some(o => o.id === p.comunidade_id)).map(p => ({ projetoId: p.id, organizacaoId: p.comunidade_id })),
     };
     await mkdir('docs/evidencias', { recursive: true });
-    await writeFile('docs/evidencias/at-vinculos.json', `${JSON.stringify(auditoria, null, 2)}\n`, 'utf8');
+    const caminho = `docs/evidencias/at-vinculos-${auditoria.dataUTC.replace(/[:.]/g, '-')}.json`;
+    await writeFile(caminho, `${JSON.stringify(auditoria, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({ evidencia: caminho }));
     console.log(JSON.stringify(auditoria));
   }
   if (process.argv.includes('--executar')) await executar();

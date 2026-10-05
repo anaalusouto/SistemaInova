@@ -201,6 +201,7 @@ type Ctx = {
 
   // Acompanhamento das atividades do cronograma por projeto
   ganttTracking: Record<string, InternalTracking>;
+  salvarPlanoAdministrativo: (blocos: GanttBloco[]) => void;
   setGanttTracking: (activityId: number, projectId: number, patch: Partial<InternalTracking>) => void;
 
   // Rotas / Calendário
@@ -412,6 +413,12 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
 
     // Acompanhamento por projeto das atividades do cronograma — ainda local (onda 3)
     ganttTracking,
+    salvarPlanoAdministrativo: (blocos) => {
+      // Esta área já usa armazenamento local. Recusar antes de mudar a tela
+      // quando ele estiver indisponível evita anunciar uma gravação perdida.
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ communities, routes, events, gantt: blocos, ganttTracking }));
+      setGantt(blocos);
+    },
     setGanttTracking: (activityId, projectId, p) => setGanttTrackingState(prev => {
       const key = `${activityId}:${projectId}`;
       const cur = prev[key] ?? { status: 'Não iniciado' as const };

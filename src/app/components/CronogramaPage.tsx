@@ -6,6 +6,7 @@ import { useAuth } from '../auth/authStore';
 import { useAudit } from '../audit/auditStore';
 import { tipoComunidadeColors, type CalendarEventType, type RotaItem, type CalendarEvent } from '../data/rotas';
 import { CronogramaExecutivoTab } from './CronogramaExecutivoTab';
+import { PlanoAdministrativo } from './PlanoAdministrativo';
 import { GestaoPage } from './GestaoPage';
 import { MensagensPage } from './MensagensPage';
 import 'leaflet/dist/leaflet.css';
@@ -29,10 +30,10 @@ const DEFAULT_TIPO_COLOR = 'var(--ink-4)';
 const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 
-type GestaoInternaTab = 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
+type GestaoInternaTab = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 
 export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: number) => void }) {
-  const [tab, setTab] = useState<GestaoInternaTab>('executivo');
+  const [tab, setTab] = useState<GestaoInternaTab>('plano');
   const nestedPage = tab === 'kanban' || tab === 'mensagens';
 
   return (
@@ -47,6 +48,7 @@ export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: n
 
         <div className={`flex gap-2 mb-3 shrink-0 flex-wrap ${nestedPage ? 'px-6 pt-6' : ''}`}>
           {[
+            { id: 'plano', label: 'Plano de Trabalho', icon: GanttChart },
             { id: 'executivo', label: 'Cronograma Executivo', icon: GanttChart },
             { id: 'rotas', label: 'Rotas', icon: RouteIcon },
             { id: 'calendario', label: 'Calendário 2026', icon: CalendarDays },
@@ -65,6 +67,7 @@ export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: n
           })}
         </div>
 
+        {tab === 'plano' && <PlanoAdministrativo />}
         {tab === 'executivo' && (
           <div className="flex-1 min-h-0"><CronogramaExecutivoTab /></div>
         )}

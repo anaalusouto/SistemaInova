@@ -8,7 +8,7 @@ const { renderToStaticMarkup } = require('react-dom/server');
 
 // Renderização dos componentes reais com hooks de sessão/leitura isolados.
 // Não substitui ensaio no navegador para rolagem, foco e operações persistidas.
-function carregarInterface(arquivo, { readOnly = false, org, project, listaState } = {}) {
+function carregarInterface(arquivo, { readOnly = false, org, project, listaState, gantt = [] } = {}) {
   const cache = new Map();
   const vazio = () => null;
   const mocks = {
@@ -16,7 +16,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     auditStore: { useAudit: () => ({ log: () => {} }) },
     useAgenda: { useAgenda: () => ({ paraMim: [] }) },
     useOrganizacoes: { useFichaOrganizacao: () => ({ data: org }), useListaOrganizacoes: () => listaState ?? ({ data: org ? [org] : [] }), useEscritaOrganizacao: () => ({ salvarLinkRelatorio: async () => {} }) },
-    store: { useStore: () => ({ getProject: id => project?.id === id ? project : undefined }) },
+    store: { useStore: () => ({ gantt, getProject: id => project?.id === id ? project : undefined }) },
     AbaRegistrosContato: { AbaRegistrosContato: vazio },
     AbaEncaminhamentos: { AbaEncaminhamentos: vazio },
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
@@ -60,6 +60,21 @@ test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   assert.match(html, /aria-label="Subáreas de Gestão Interna"/);
   assert.ok(html.indexOf('>Visão Geral<') < html.indexOf('>Organizações<'));
   assert.ok(html.indexOf('>Organizações<') < html.indexOf('Gestão Interna'));
+  assert.ok(html.indexOf('</nav>') < html.indexOf('Configurações'));
+  assert.ok(html.indexOf('Configurações') < html.indexOf('Verificador'));
+  assert.equal((html.match(/Configurações/g) ?? []).length, 1);
+});
+
+test('plano administrativo renderiza tabela e controles comuns sem abrir projeto de organização', () => {
+  const gantt = [{ id: 1, bloco: 'Administração', entregas: [{ id: 2, entrega: 'Etapa interna', inicio: '2026-10-01', fim: '2026-10-31', atividades: [{ id: 3, atividade: 'Atividade interna', inicio: '2026-10-01', fim: '2026-10-31', status: 'Não iniciado' }] }] }];
+  for (const readOnly of [false, true]) {
+    const { PlanoAdministrativo } = carregarInterface('src/app/components/PlanoAdministrativo.tsx', { readOnly, gantt });
+    const html = renderToStaticMarkup(React.createElement(PlanoAdministrativo));
+    assert.match(html, /Administração/);
+    assert.match(html, /Expandir tudo/);
+    for (const campo of ['Tabela', 'Gantt', 'Kanban', 'Responsável', 'Início previsto', 'Fim previsto', 'Justificativa de atraso']) assert.ok(html.includes(campo), campo);
+    assert.ok(!html.includes('data-plano-projeto'));
+  }
 });
 
 test('AT-017/020: desktop e celular apresentam seis seções na ordem e organização corretas', () => {

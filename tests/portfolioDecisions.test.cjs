@@ -21,6 +21,47 @@ function loadTs(file) {
 }
 const { buildDecisionCharts } = loadTs('src/app/lib/portfolioDecisions');
 const { portfolioDemo } = loadTs('src/app/data/portfolioDemo');
+const { metasAdministrativas, patchAtividadeAdministrativa } = loadTs('src/app/lib/planoAdministrativo');
+const { cronogramaExecutivoSeed } = loadTs('src/app/data/cronogramaExecutivo');
+
+test('plano administrativo projeta a hierarquia existente sem alterar IDs, vínculos ou datas realizadas', () => {
+  const antes = JSON.stringify(cronogramaExecutivoSeed);
+  const metas = metasAdministrativas(cronogramaExecutivoSeed);
+  assert.equal(metas.length, cronogramaExecutivoSeed.length);
+  for (let i = 0; i < metas.length; i++) {
+    const b = cronogramaExecutivoSeed[i];
+    assert.equal(metas[i].id, `administrativo:meta:${b.id}`);
+    assert.equal(metas[i].deliverables.length, b.entregas.length);
+    for (let j = 0; j < b.entregas.length; j++) {
+      const e = b.entregas[j]; const etapa = metas[i].deliverables[j];
+      assert.equal(etapa.activities.length, e.atividades.length);
+      for (let k = 0; k < e.atividades.length; k++) {
+        const a = e.atividades[k]; const atividade = etapa.activities[k];
+        assert.equal(atividade.id, `administrativo:atividade:${a.id}`);
+        assert.equal(atividade.plannedStart, a.inicio || null);
+        assert.equal(atividade.actualStart, null);
+        assert.equal(atividade.actualEnd, null);
+        assert.deepEqual(atividade.tasks.map(t => t.title), (a.subatividades ?? []).map(t => t.atividade));
+      }
+    }
+  }
+  assert.equal(JSON.stringify(cronogramaExecutivoSeed), antes);
+});
+
+test('editar campos administrativos preserva status legado, tarefas e vínculos e sobrevive à serialização', () => {
+  const a = { id: 99, atividade: 'Teste', inicio: '2026-10-01', fim: '2026-10-31', status: 'Validação pendente', projetoIds: [1, 2], subatividades: [{ id: 100, atividade: 'Tarefa' }] };
+  const form = { nome: 'Teste editado', responsavel: 'Equipe', inicioPrevisto: a.inicio, fimPrevisto: a.fim, status: 'Em andamento', progresso: 40, observacoes: 'Nota', inicioRealizado: '2026-10-01', fimRealizado: null, justificativaAtraso: '', vinculoOrcamentario: 'Não informado', proximoPasso: 'Conferir', proximoPassoResponsavel: 'Equipe', proximoPassoPrazo: '2026-10-15' };
+  const atualizado = { ...a, ...patchAtividadeAdministrativa(form, a) };
+  const relido = JSON.parse(JSON.stringify([{ id: 1, bloco: 'Meta', entregas: [{ id: 2, entrega: 'Etapa', inicio: a.inicio, fim: a.fim, atividades: [atualizado] }] }]));
+  const exibido = metasAdministrativas(relido)[0].deliverables[0].activities[0];
+  assert.equal(atualizado.status, 'Validação pendente');
+  assert.deepEqual(atualizado.projetoIds, [1, 2]);
+  assert.deepEqual(atualizado.subatividades, a.subatividades);
+  assert.equal(exibido.actualStart, form.inicioRealizado);
+  assert.equal(exibido.actualEnd, null);
+  assert.equal(exibido.nextStep, 'Conferir');
+  assert.equal(a.atividade, 'Teste');
+});
 const reference = new Date(2026, 9, 2, 12);
 const project = (overrides = {}) => ({
   org: 'Organização A', code: '01-2026', budgetApproved: 100, budgetExecuted: 60,

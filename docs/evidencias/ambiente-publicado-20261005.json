@@ -1,0 +1,15 @@
+﻿{
+    "dataUTC":  "2026-10-05T19:03:40.7069559Z",
+    "fonte":  "Vercel CLI ls e inspect da URL informada, somente leitura",
+    "urlInformada": "https://sistema-inova-rose.vercel.app/",
+    "deploymentId": "dpl_5yAhj48Cm4iPqpC9trwUACphBMi7",
+    "aliasConfirmado": "sistema-inova-rose.vercel.app",
+    "url":  "https://sistema-inova-a3nycdbbh-ana-luizas-projects-4b9b93c5.vercel.app",
+    "target":  "production",
+    "state":  "READY",
+    "commit":  "b99ec554d28e2544d80b5be46193aff560885beb",
+    "createdAtUTC":  "2026-10-05T18:42:34.0940000Z",
+    "readyAtUTC":  "2026-10-05T18:42:58.3780000Z",
+    "verificador":  "Codex",
+    "limite":  "Deployment e alias confirmados pela Vercel. Interface autenticada e alterações locais desta rodada não homologadas nesse deployment."
+}

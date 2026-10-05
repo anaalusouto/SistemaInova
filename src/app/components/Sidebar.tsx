@@ -44,7 +44,6 @@ const topItems: { id: NavItem; label: string; icon: typeof LayoutDashboard }[] =
 const bottomItems = [
   { id: 'organizations' as NavItem, label: 'Organizações', icon: Building2 },
   { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
-  { id: 'settings' as NavItem, label: 'Configurações', icon: Settings },
 ];
 
 export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaOrg, aoNavegarOrg }: SidebarProps) {
@@ -133,7 +132,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-2 overflow-y-auto">
+      <nav className="flex-1 min-h-0 px-3 py-2 overflow-y-auto">
         {topItems.map(i => renderBtn(i))}
 
         <div className="mt-1">
@@ -161,7 +160,8 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
 
       </nav>
 
-      <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
+      <div className="shrink-0 px-3 py-3 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
+        {renderBtn({ id: 'settings', label: 'Configurações', icon: Settings })}
         <div className="flex items-center gap-3 px-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 overflow-hidden" style={{ background: 'var(--sidebar-primary)', color: 'var(--primary-foreground)' }}>
             {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}

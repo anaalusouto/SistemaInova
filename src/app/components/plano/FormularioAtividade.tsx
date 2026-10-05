@@ -47,8 +47,8 @@ function inicial(etapa: Deliverable, atividade?: Activity): AtividadeInput {
 }
 
 export function FormularioAtividade({
-  etapa, atividade, aoFechar,
-}: { etapa: Deliverable; atividade?: Activity; aoFechar: () => void }) {
+  etapa, atividade, aoFechar, aoSalvar,
+}: { etapa: Deliverable; atividade?: Activity; aoFechar: () => void; aoSalvar?: (form: AtividadeInput) => Promise<void> | void }) {
   const { createAtividade, updateAtividade } = useStore();
   const pessoas = usePeople();
   const [form, setForm] = useState<AtividadeInput>(() => inicial(etapa, atividade));
@@ -107,7 +107,10 @@ export function FormularioAtividade({
 
     setSalvando(true);
     try {
-      if (atividade) {
+      if (aoSalvar) {
+        await aoSalvar(form);
+        toast.success(atividade ? 'Atividade atualizada.' : 'Atividade criada.');
+      } else if (atividade) {
         await updateAtividade(atividade.id, form);
         toast.success('Atividade atualizada.');
       } else {

@@ -1,0 +1,68 @@
+INOVA — Gestão Interna, preparação e cabeçalho
+Data: 05/10/2026. Verificador técnico: Codex. Aceite: pendente.
+
+AMBIENTE E VERSÃO PUBLICADA
+URL informada pelo usuário: https://sistema-inova-rose.vercel.app/
+Vercel inspect confirmou que essa URL é alias do deployment
+dpl_5yAhj48Cm4iPqpC9trwUACphBMi7, READY, target production.
+Deployment: sistema-inova-a3nycdbbh-ana-luizas-projects-4b9b93c5.vercel.app.
+Vercel ls vinculou essa URL ao commit b99ec554d28e2544d80b5be46193aff560885beb.
+Pronto em 05/10/2026, 18:42:58 UTC. Não inferido a partir de main.
+As mudanças desta rodada permanecem locais; não foram publicadas por Codex.
+Metadados de referência em evidencias/ambiente-publicado-20261005.json.
+
+GESTÃO INTERNA
+Hierarquia Projeto, Diagnóstico, Relatórios já implementada e testada em
+renderização; Diagnóstico e Relatórios não aparecem duplicados no nível principal.
+Nesta rodada Projeto passou a abrir Plano de Trabalho, com Tabela, Gantt,
+Kanban e filtros dos mesmos componentes utilizados pelos projetos das organizações.
+Blocos/entregas/atividades/subatividades existentes são apresentados como
+metas/etapas/atividades/tarefas, com IDs estáveis e sem apagar registros.
+Datas realizadas ausentes ficam vazias; status especiais do cronograma são
+preservados ao editar outros campos. Alterar status no Kanban usa os três
+estados do plano. O cronograma original continua acessível para seus campos
+específicos e operações existentes, junto com Rotas, Calendário e Mensagens.
+Edição de meta, período/resultado de etapa, atividade e movimento de cartões
+usam o armazenamento local existente, sem criar projeto sem organização no banco.
+Perfil de consulta tem controles de edição desabilitados e escrita recusada.
+Falha de localStorage é informada e não atualiza o estado em memória.
+Limite: persistência administrativa continua no navegador; compartilhamento
+entre dispositivos/usuários e reload real da tela ainda não homologados.
+Diagnóstico e Relatórios: código funcional não alterado nesta rodada;
+instrumentos, IEO e exportações precisam de conferência autenticada no ambiente.
+
+ORGANIZAÇÕES E VÍNCULOS
+Mapeamento/Parecer informativos e acesso externo já implementados; acesso
+antigo ao parecer técnico removido, dados existentes preservados.
+Criação com vínculo obrigatório e imutável já implementada. Evidência anterior
+at-banco.json confirma bloqueios de criação duplicada e alteração de vínculo.
+Auditoria exclusivamente de leitura em 05/10/2026 às 18:51:22 UTC:
+21 organizações, 21 projetos; 0 organizações sem projeto; 21 com um projeto;
+0 com múltiplos; 0 projetos sem organização ou vinculados a organização inexistente.
+Inclui a organização sintética HOMOLOG-AT-20261005, projeto 64.
+IDs completos: evidencias/at-vinculos-2026-10-05T18-51-22-328Z.json.
+Nenhuma associação, correção ou exclusão foi executada neste levantamento.
+
+MENU E CABEÇALHO
+Configurações movido do nav rolável para rodapé acima do perfil, mantendo
+o destino existente; nav min-h-0 e rodapé shrink-0 evitam disputa por altura.
+Cabeçalho contextual já tinha somente H1 fixo, conteúdo e metadados roláveis.
+Renderização automatizada verifica único H1 e organização correta; não prova
+ausência de sobreposição, altura útil ou interação por teclado no navegador.
+
+REFERÊNCIAS E DECISÕES
+Referência do deployment e relação dos IDs guardadas antes de publicação.
+Capturas de telas, filtros e indicadores autenticados no ambiente: não coletadas.
+A ferramenta de navegador retornou inventário vazio e erro 'Browser is not
+available: iab' ao tentar abrir a URL. Rolagem desktop/mobile permanece pendente.
+Conforme informação da equipe, nove decisões registradas em 02/10/2026.
+Apenas DEC 10 segue pendente: destino dos campos omitidos do Cadastro.
+Essa decisão não foi tomada aqui; aba original não foi editada nesta sessão.
+
+VALIDAÇÃO
+41 testes automatizados passaram, incluindo renderização do plano administrativo
+com perfil de consulta e escrita, projeção sem mutação, preservação
+dos vínculos/tarefas/status legado e campos administrativos após serialização.
+TypeScript sem erros. Build Vite concluído (exit 0), com avisos de tamanho de
+bundle já existentes. git diff --check sem erros de whitespace (exit 0).
+Nenhum pacote marcado entregue só pelo commit ou por esses testes técnicos.

@@ -3,6 +3,7 @@
 // Estrutura: Bloco > Entrega > Atividade. Acompanhamento é feito por projeto.
 
 import type { InternalStatus } from './controleInterno';
+import type { Activity, Deliverable, Goal } from './mockData';
 
 export type GanttStatus = InternalStatus;
 
@@ -15,6 +16,8 @@ export const ganttStatusColors: Record<GanttStatus, string> = {
 };
 
 export interface GanttActivity {
+  /** Campos do plano administrativo; o cronograma legado continua preservado. */
+  plano?: Partial<Omit<Activity, 'id' | 'tasks'>>;
   id: number;
   atividade: string;
   /** Atividade macro à qual esta subatividade pertence (opcional). */
@@ -41,6 +44,7 @@ export interface GanttActivity {
 
 
 export interface GanttEntrega {
+  plano?: Partial<Omit<Deliverable, 'id' | 'activities'>>;
   id: number;
   entrega: string;
   inicio: string;
@@ -53,6 +57,7 @@ export interface GanttEntrega {
 }
 
 export interface GanttBloco {
+  plano?: Partial<Omit<Goal, 'id' | 'deliverables'>>;
   id: number;
   bloco: string;
   entregas: GanttEntrega[];
