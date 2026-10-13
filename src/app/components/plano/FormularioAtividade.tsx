@@ -256,9 +256,9 @@ export function FormularioAtividade({
 
       <fieldset className="flex flex-col gap-3 border rounded-lg p-3" style={{ borderColor: 'var(--line-1)' }}>
         <legend style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', padding: '0 6px' }}>
-          Próximo passo — ação a executar, não observação
+          Próximo passo — ação de acompanhamento
         </legend>
-        <Campo rotulo="Ação">
+        <Campo rotulo="Ação" dica="Ao salvar, aparece também nos Encaminhamentos da organização vinculada. Subtarefas são cadastradas no painel da atividade.">
           <Texto valor={form.proximoPasso} aoMudar={v => alterar('proximoPasso', v)} placeholder="O que precisa ser feito a seguir" />
         </Campo>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

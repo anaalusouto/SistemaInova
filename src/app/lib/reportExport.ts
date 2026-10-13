@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Project } from '../data/mockData';
+import { registrosDoPlano, type OrdemCamposPlano, type RegistroPlano } from './planoRelatorio';
 
 export interface ReportProjectModel {
   name: string;
@@ -15,6 +16,7 @@ export interface ReportProjectModel {
   riscos?: number;
   mudancas?: number;
   evidencias?: number;
+  detalhes?: RegistroPlano[];
 }
 
 export interface ReportModel {
@@ -55,7 +57,7 @@ function downloadFile(filename: string, content: string, mime: string) {
 }
 
 /** Monta o modelo intermediário do relatório a partir dos projetos e campos selecionados. */
-export function buildReportModel(title: string, projects: Project[], fields: string[]): ReportModel {
+export function buildReportModel(title: string, projects: Project[], fields: string[], ordem: OrdemCamposPlano = {}): ReportModel {
   const has = (f: string) => fields.includes(f);
   const model: ReportModel = { title, generatedAt: new Date(), projects: [] };
 
@@ -67,6 +69,7 @@ export function buildReportModel(title: string, projects: Project[], fields: str
 
   model.projects = projects.map(p => {
     const pm: ReportProjectModel = { name: p.name, code: p.code };
+    pm.detalhes = registrosDoPlano(p, fields, ordem);
 
     if (has('cadastro')) {
       pm.cadastro = { coordinator: p.coordinator, financier: p.financier, vigencia: `${p.startDate} → ${p.endDate}` };
@@ -85,7 +88,7 @@ export function buildReportModel(title: string, projects: Project[], fields: str
       });
     }
     if (has('contrapart')) pm.contrapartidas = (p.contrapartidas ?? []).length;
-    if (has('riscos')) pm.riscos = p.risks.length;
+    if (has('riscos')) pm.riscos = p.risks.filter(r => r.status !== 'Encerrado').length;
     if (has('mudancas')) pm.mudancas = p.changes.length;
     if (has('evidencias')) pm.evidencias = p.evidences.length;
 
@@ -135,6 +138,7 @@ export function exportReportCsv(model: ReportModel) {
     if (p.riscos !== undefined) rows.push(['Riscos', p.name, 'Riscos abertos', p.riscos]);
     if (p.mudancas !== undefined) rows.push(['Mudanças', p.name, 'Mudanças', p.mudancas]);
     if (p.evidencias !== undefined) rows.push(['Evidências', p.name, 'Anexos', p.evidencias]);
+    for (const r of p.detalhes ?? []) for (const c of r.campos) rows.push([r.titulo, p.name, c.rotulo, c.valor]);
   }
 
   const csv = rows.map(r => r.map(csvEscape).join(';')).join('\n');
@@ -186,6 +190,11 @@ export function exportReportXml(model: ReportModel) {
     if (p.riscos !== undefined) lines.push(`      <riscos total="${p.riscos}"/>`);
     if (p.mudancas !== undefined) lines.push(`      <mudancas total="${p.mudancas}"/>`);
     if (p.evidencias !== undefined) lines.push(`      <evidencias total="${p.evidencias}"/>`);
+    for (const r of p.detalhes ?? []) {
+      lines.push(`      <registro tipo="${r.tipo}" id="${xmlEscape(r.id)}" titulo="${xmlEscape(r.titulo)}">`);
+      for (const c of r.campos) lines.push(`        <campo chave="${c.chave}" rotulo="${xmlEscape(c.rotulo)}" preenchido="${c.preenchido}">${xmlEscape(c.valor)}</campo>`);
+      lines.push('      </registro>');
+    }
     lines.push('    </projeto>');
   }
   lines.push('  </projetos>');
@@ -204,8 +213,9 @@ export function exportReportPdf(model: ReportModel) {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text(model.title, marginX, y);
-  y += 16;
+  const tituloLinhas = doc.splitTextToSize(model.title, pageWidth - marginX * 2);
+  doc.text(tituloLinhas, marginX, y);
+  y += tituloLinhas.length * 19;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
@@ -239,13 +249,14 @@ export function exportReportPdf(model: ReportModel) {
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text(p.name, marginX, y, { maxWidth: pageWidth - marginX * 2 - 80 });
+    const nomeLinhas = doc.splitTextToSize(p.name, pageWidth - marginX * 2 - 80);
+    doc.text(nomeLinhas, marginX, y);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(140);
     doc.text(p.code, pageWidth - marginX, y, { align: 'right' });
     doc.setTextColor(0);
-    y += 12;
+    y += nomeLinhas.length * 14;
 
     const rows: [string, string][] = [];
     if (p.cadastro) {
@@ -295,6 +306,19 @@ export function exportReportPdf(model: ReportModel) {
       y = (doc as any).lastAutoTable.finalY + 18;
     } else {
       y += 18;
+    }
+    for (const r of p.detalhes ?? []) {
+      if (y > pageHeight - 100) { doc.addPage(); y = 50; }
+      autoTable(doc, {
+        startY: y,
+        head: [[{ content: r.titulo, colSpan: 2 }]],
+        body: r.campos.map(c => [c.rotulo, c.valor]),
+        theme: 'grid', styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+        columnStyles: { 0: { cellWidth: 140 } },
+        headStyles: { fillColor: [37, 99, 235] },
+        margin: { left: marginX, right: marginX, top: 40, bottom: 40 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 14;
     }
   }
 

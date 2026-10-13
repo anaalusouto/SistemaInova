@@ -37,8 +37,11 @@ import { PainelRisco } from './PainelRisco';
 import { Painel } from './PainelBase';
 import { FormularioRisco } from './FormularioRisco';
 import { useAuth } from '../../auth/authStore';
+import { ordenarPlano, registrosDoPlano, type OrdemCamposPlano } from '../../lib/planoRelatorio';
+import { VisaoCompleta } from './VisaoCompleta';
+import { VisaoOrdenacao } from './VisaoOrdenacao';
 
-type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos';
+type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos' | 'completa' | 'ordenar';
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: 'tabela', rotulo: 'Tabela', icone: Table2, disponivel: true },
@@ -46,6 +49,8 @@ const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boo
   { id: 'kanban', rotulo: 'Kanban', icone: Columns3, disponivel: true },
   // RF01: a visão consolidada de riscos, no lugar do modal "Registro de riscos".
   { id: 'riscos', rotulo: 'Riscos', icone: ShieldAlert, disponivel: true },
+  { id: 'completa', rotulo: 'Todos os campos', icone: Table2, disponivel: true },
+  { id: 'ordenar', rotulo: 'Ordenar', icone: ChevronsUpDown, disponivel: true },
 ];
 
 /** Qual painel está aberto. Um de cada vez — abrir dois empilhados confunde a origem. */
@@ -57,17 +62,20 @@ type PainelAberto =
   | { tipo: 'novoRisco' }
   | null;
 
-export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
+export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEncaminhamentos }: {
   project: Project;
   /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
   pedidoRiscos?: number;
   /** Botões à direita do seletor de visões — Riscos (N) e Mudanças (N), como no slide 4. */
   acoesDaVisao?: ReactNode;
+  aoEncaminhamentos?: (atividadeId?: string) => void;
 }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
   const { readOnly } = useAuth();
   const [visao, setVisao] = useState<Visao>('tabela');
+  const [ordemCampos, setOrdemCampos] = useState<OrdemCamposPlano>({});
+  const [exportando, setExportando] = useState(false);
   // RC-06: tudo começa recolhido. Guarda-se o que foi aberto — ver recolhidosDe().
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
   const [painel, setPainel] = useState<PainelAberto>(null);
@@ -85,7 +93,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
     seletorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [pedidoRiscos]);
 
-  const metas = p.goals;
+  const metas = useMemo(() => ordenarPlano(p.goals), [p.goals]);
   const riscos = p.risks;
 
   // RN-004: a numeração sai da lista COMPLETA do projeto. Quando busca e
@@ -179,7 +187,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
     <div className="flex flex-col">
       {/* Busca e filtros (RF-012). Filtram atividades; a visão Riscos tem a
           própria busca, sobre os riscos. */}
-      <div className="px-6 pt-4" hidden={visao === 'riscos'}>
+      <div className="px-6 pt-4" hidden={visao === 'riscos' || visao === 'completa' || visao === 'ordenar'}>
         <BarraFiltros
           metas={metas}
           criterios={criterios}
@@ -208,7 +216,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
       {/* Seletor de visão (RF-011) */}
       <div ref={seletorRef} className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
         <div className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {VISOES.map((v, i) => {
+          {VISOES.filter(v => v.id !== 'ordenar' || !readOnly).map((v, i) => {
             const Icone = v.icone;
             const ativa = visao === v.id;
             return (
@@ -279,12 +287,26 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
           {metas.flatMap(m => m.deliverables).length} etapas
         </span>
 
-        {acoesDaVisao && <div className="flex items-center gap-2 ml-auto flex-wrap">{acoesDaVisao}</div>}
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          {aoEncaminhamentos && <button type="button" onClick={() => aoEncaminhamentos()} className="border rounded-lg px-3 py-1.5 text-xs">Encaminhamentos</button>}
+          <button type="button" disabled={exportando} className="border rounded-lg px-3 py-1.5 text-xs" onClick={async () => {
+            setExportando(true);
+            try {
+              const { buildReportModel, exportReportPdf } = await import('../../lib/reportExport');
+              exportReportPdf(buildReportModel(`Parecer e plano de trabalho - ${p.name}`, [p], ['cadastro', 'metas', 'riscos', 'pareceres'], ordemCampos));
+              toast.success('Parecer e plano completos exportados.');
+            } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível exportar.'); }
+            finally { setExportando(false); }
+          }}>{exportando ? 'Exportando…' : 'Exportar parecer'}</button>
+          {acoesDaVisao}
+        </div>
       </div>
 
       {/* Visão */}
       <div className="px-6 pb-6">
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+          {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, undefined, ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} />}
+          {visao === 'ordenar' && <VisaoOrdenacao projetoId={p.id} metas={metas} codigos={codigos} />}
           {visao === 'tabela' && (
             <VisaoTabela
               metas={metasVisiveis}
@@ -394,6 +416,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
             codigo={codigos.get(alvo.atividade.id) ?? ''}
             projetoId={p.id}
             riscoOrigem={origem}
+            aoEncaminhamentos={aoEncaminhamentos ? () => aoEncaminhamentos(alvo.atividade.nextStep.trim() ? alvo.atividade.id : undefined) : undefined}
             aoFechar={fechar}
             aoAbrirRisco={r => setPainel({ tipo: 'risco', riscoId: r.id })}
           />

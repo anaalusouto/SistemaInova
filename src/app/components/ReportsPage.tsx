@@ -3,6 +3,8 @@ import { ChevronDown, Download, FileCode2, FileSpreadsheet, FileText, Printer } 
 import { toast } from 'sonner';
 import { useStore } from '../store';
 import { buildReportModel, exportReportCsv, exportReportPdf, exportReportXml } from '../lib/reportExport';
+import { registrosDoPlano } from '../lib/planoRelatorio';
+import { VisaoCompleta } from './plano/VisaoCompleta';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +29,8 @@ const FIELDS: FieldOption[] = [
   { id: 'metas',        label: 'Metas e atividades',                                           group: 'Monitoramento' },
   { id: 'financeiro',   label: 'Resumo financeiro (aprovado, executado, saldo)',               group: 'Financeiro' },
   { id: 'contrapart',   label: 'Contrapartidas',                                               group: 'Financeiro' },
-  { id: 'riscos',       label: 'Riscos abertos',                                               group: 'Gestão' },
+  { id: 'riscos',       label: 'Riscos completos e ações de resposta',                         group: 'Gestão' },
+  { id: 'pareceres',    label: 'Pareceres técnicos completos',                                 group: 'Gestão' },
   { id: 'mudancas',     label: 'Mudanças',                                                     group: 'Gestão' },
   { id: 'evidencias',   label: 'Evidências e relatórios',                                      group: 'Anexos' },
 ];
@@ -35,7 +38,7 @@ const FIELDS: FieldOption[] = [
 export function ReportsPage() {
   const { projects } = useStore();
   const [selectedProjects, setSelectedProjects] = useState<number[]>(projects.map(p => p.id));
-  const [selectedFields, setSelectedFields] = useState<string[]>(['cadastro', 'situacao', 'metas', 'financeiro', 'riscos']);
+  const [selectedFields, setSelectedFields] = useState<string[]>(['cadastro', 'situacao', 'metas', 'financeiro', 'riscos', 'pareceres']);
   const [title, setTitle] = useState('Relatório Consolidado');
 
   // Projetos chegam de forma assíncrona (Supabase); quando o primeiro lote carrega
@@ -259,9 +262,11 @@ export function ReportsPage() {
 
             {has('riscos') && p.risks.length > 0 && (
               <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
-                <b style={{ color: 'var(--ink-1)' }}>Riscos abertos:</b> {p.risks.length}
+                <b style={{ color: 'var(--ink-1)' }}>Riscos abertos:</b> {p.risks.filter(r => r.status !== 'Encerrado').length}
               </p>
             )}
+
+            <VisaoCompleta registros={registrosDoPlano(p, selectedFields)} />
 
             {has('mudancas') && p.changes.length > 0 && (
               <p style={{ fontSize: '0.8rem', color: 'var(--ink-2)', marginTop: 6 }}>
@@ -286,7 +291,13 @@ export function ReportsPage() {
 
       <style>{`.ci{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;width:100%;background:var(--surface-1);color:var(--ink-1)}
       .ci:focus{border-color:var(--primary);background:var(--surface-0)}
-      @media print { .print\\:hidden { display: none !important; } body { background: #fff; } }`}</style>
+      @media print {
+        .print\\:hidden { display: none !important; }
+        html, body { background: #fff; height: auto !important; overflow: visible !important; }
+        body *:has(#report-preview) { height: auto !important; max-height: none !important; overflow: visible !important; }
+        body *:has(#report-preview) > *:not(:has(#report-preview)):not(#report-preview) { display: none !important; }
+        #report-preview { height: auto !important; overflow: visible !important; padding: 0; border: 0; }
+      }`}</style>
     </div>
   );
 }

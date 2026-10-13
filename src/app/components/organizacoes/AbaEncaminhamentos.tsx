@@ -22,6 +22,7 @@ import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes, ConfirmarExclusao
 import { useEscritaOrganizacao } from './useOrganizacoes';
 import { useDestaque } from './useDestaque';
 import { BotaoNovo } from '../BotaoNovo';
+import { EncaminhamentosPlano } from './EncaminhamentosPlano';
 
 const COR_STATUS: Record<StatusEncaminhamento, { cor: string; fundo: string }> = {
   'A iniciar': { cor: 'var(--ink-3)', fundo: 'var(--surface-2)' },
@@ -53,7 +54,7 @@ export function AbaEncaminhamentos({
 
   const registros = useMemo(() => new Map(org.registros.map(r => [r.id, r])), [org.registros]);
   const linhas = mostrarConcluidos ? org.encaminhamentos : org.encaminhamentos.filter(e => e.status !== 'Concluído');
-  const concluidos = org.encaminhamentos.length - org.pendentes;
+  const concluidos = org.encaminhamentos.filter(e => e.status === 'Concluído').length;
 
   const registrar = (action: string, detail: string) =>
     audit({ userLogin: user?.login ?? '—', area: 'organizações', action, detail: `${org.nome} · ${detail}`, kind: 'alteracao' });
@@ -90,6 +91,7 @@ export function AbaEncaminhamentos({
 
   return (
     <div className="p-4 sm:p-7 space-y-4">
+      <EncaminhamentosPlano orgId={org.id} foco={foco} mostrarConcluidos={mostrarConcluidos} />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)' }}>

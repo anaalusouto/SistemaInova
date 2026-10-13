@@ -22,7 +22,7 @@ import {
 import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco, excluirRisco,
-  criarParecer, atualizarParecer, excluirParecer, definirResponsavel,
+  criarParecer, atualizarParecer, excluirParecer, definirResponsavel, reordenarPlano,
   salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa,
   type PeriodoEtapaInput, type SalvarMetaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
@@ -175,6 +175,7 @@ type Ctx = {
   updateParecer: (parecerId: string, input: ParecerInput) => Promise<void>;
   deleteParecer: (parecerId: string) => Promise<void>;
   setResponsavel: (atividadeId: string, responsavel: string) => Promise<void>;
+  reorderPlano: (input: import('./lib/reordenacaoPlano').ReordenarPlanoInput) => Promise<void>;
 
   // Orçamento (RF-030, RF-039, RF-040, RF-041)
   saveExecucao: (input: ExecucaoInput) => Promise<void>;
@@ -394,6 +395,10 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     updateParecer: (parecerId, input) => run(() => atualizarParecer({ data: { parecerId, dados: input } })),
     deleteParecer: parecerId => run(() => excluirParecer({ data: { parecerId } })),
     setResponsavel: (atividadeId, responsavel) => run(() => definirResponsavel({ data: { atividadeId, responsavel } })),
+    reorderPlano: async input => {
+      try { await run(() => reordenarPlano({ data: input })); }
+      catch (e) { await invalidate(); throw e; }
+    },
     saveExecucao: input => run(() => registrarExecucao({ data: input })),
     excluirItemOrcamento: input => run(() => excluirItemDoPlano({ data: input })),
     reverterItemOrcamento: (itemId, motivo) => run(() => reverterExclusao({ data: { itemId, motivo } })),

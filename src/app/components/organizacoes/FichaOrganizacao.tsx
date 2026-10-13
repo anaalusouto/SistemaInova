@@ -122,6 +122,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             org={org}
             projetoId={rota.projetoId}
             aoVoltarProjetos={() => ir({ secao: 'dados' })}
+            aoEncaminhamentos={id => ir({ secao: 'encaminhamentos', foco: id ?? null })}
           />
         </div>
       ) : (
@@ -171,8 +172,8 @@ function Voltar({ aoVoltar }: { aoVoltar: () => void }) {
 }
 
 function ProjetoDaOrganizacao({
-  org, projetoId, aoVoltarProjetos,
-}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void }) {
+  org, projetoId, aoVoltarProjetos, aoEncaminhamentos,
+}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void; aoEncaminhamentos: (atividadeId?: string) => void }) {
   const { getProject, projectsLoading } = useStore();
   const vinculo = resolverProjetoOrg(org.projetos, projetoId);
   if (vinculo.estado !== 'unico') {
@@ -192,7 +193,7 @@ function ProjetoDaOrganizacao({
       </div>
     );
   }
-  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao />;
+  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao aoEncaminhamentos={aoEncaminhamentos} />;
 }
 
 // ---------------------------------------------------------------------------

@@ -6,7 +6,7 @@
  * acontece com o registro (RN-005): a linha não é apagada, é marcada como
  * excluída, para não deixar anexo órfão nem romper vínculo de risco.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pencil, Trash2, Plus, Check, X as XIcon, CornerDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -27,17 +27,21 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
   const [editando, setEditando] = useState<{ id: string; titulo: string } | null>(null);
   const [excluindo, setExcluindo] = useState<{ id: string; titulo: string } | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const emExecucao = useRef(false);
 
   const executar = async (acao: () => Promise<void>, mensagem: string) => {
+    if (emExecucao.current) return;
+    emExecucao.current = true;
     setOcupado(true);
     try { await acao(); toast.success(mensagem); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível concluir.'); }
-    finally { setOcupado(false); }
+    finally { emExecucao.current = false; setOcupado(false); }
   };
 
   return (
     <>
       <div className="flex flex-col gap-1.5 mt-1">
+        <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Subtarefas detalham a execução desta atividade. A ação de acompanhamento fica em Próximo passo e aparece em Encaminhamentos.</p>
         {atividade.tasks.length === 0 && (
           <span style={{ color: 'var(--ink-5)', fontSize: '0.78rem' }}>Nenhuma tarefa.</span>
         )}
@@ -52,11 +56,19 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
               <>
                 <input
                   autoFocus
+                  disabled={ocupado}
+                  aria-label="Título da subtarefa"
                   className="flex-1 border rounded-md px-2 py-1 text-[0.78rem]"
                   style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }}
                   value={editando.titulo}
                   onChange={e => setEditando({ ...editando, titulo: e.target.value })}
-                  onKeyDown={e => { if (e.key === 'Escape') setEditando(null); }}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { e.stopPropagation(); setEditando(null); }
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing && editando.titulo.trim()) {
+                      e.preventDefault();
+                      void executar(async () => { await renameTarefa(t.id, editando.titulo.trim()); setEditando(null); }, 'Tarefa renomeada.');
+                    }
+                  }}
                 />
                 <button
                   aria-label="Confirmar"
@@ -68,7 +80,7 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
                 >
                   <Check size={14} color="var(--success)" />
                 </button>
-                <button aria-label="Cancelar" onClick={() => setEditando(null)}>
+                <button disabled={ocupado} aria-label="Cancelar" onClick={() => setEditando(null)}>
                   <XIcon size={14} color="var(--ink-4)" />
                 </button>
               </>
@@ -77,10 +89,10 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
                 <span className="flex-1" style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{t.title}</span>
                 {!readOnly && (
                   <>
-                    <button aria-label={`Renomear ${t.title}`} onClick={() => setEditando({ id: t.id, titulo: t.title })}>
+                    <button disabled={ocupado} aria-label={`Renomear ${t.title}`} onClick={() => setEditando({ id: t.id, titulo: t.title })}>
                       <Pencil size={12} color="var(--ink-4)" />
                     </button>
-                    <button aria-label={`Excluir ${t.title}`} onClick={() => setExcluindo({ id: t.id, titulo: t.title })}>
+                    <button disabled={ocupado} aria-label={`Excluir ${t.title}`} onClick={() => setExcluindo({ id: t.id, titulo: t.title })}>
                       <Trash2 size={12} color="var(--danger)" />
                     </button>
                   </>
@@ -96,11 +108,14 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
               className="flex-1 border rounded-md px-2 py-1 text-[0.78rem]"
               style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }}
               placeholder="Nova tarefa"
+              aria-label="Nova subtarefa"
+              disabled={ocupado}
               value={nova}
               onChange={e => setNova(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter' && nova.trim()) {
-                  executar(async () => { await createTarefa(atividade.id, nova); setNova(''); }, 'Tarefa adicionada.');
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing && nova.trim()) {
+                  e.preventDefault();
+                  executar(async () => { await createTarefa(atividade.id, nova.trim()); setNova(''); }, 'Tarefa adicionada.');
                 }
               }}
             />
@@ -137,12 +152,13 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
 }
 
 export function PainelAtividade({
-  atividade, etapa, meta, codigo, projetoId, riscoOrigem, aoFechar, aoAbrirRisco,
+  atividade, etapa, meta, codigo, projetoId, riscoOrigem, aoFechar, aoAbrirRisco, aoEncaminhamentos,
 }: {
   atividade: Activity; etapa: Deliverable; meta: Goal; codigo: string; projetoId: number;
   riscoOrigem?: Risk;
   aoFechar: () => void;
   aoAbrirRisco: (r: Risk) => void;
+  aoEncaminhamentos?: () => void;
 }) {
   const { deleteAtividade } = useStore();
   const { readOnly } = useAuth();
@@ -206,7 +222,9 @@ export function PainelAtividade({
               ) : <Ausente />}
             </Linha>
 
-            <Linha rotulo={`Tarefas (${atividade.tasks.length})`}>
+            {aoEncaminhamentos && <BotaoAcao aoClicar={aoEncaminhamentos}>{atividade.nextStep.trim() ? 'Ver encaminhamento desta atividade' : 'Ver encaminhamentos da organização'}</BotaoAcao>}
+
+            <Linha rotulo={`Subtarefas (${atividade.tasks.length})`}>
               <Tarefas atividade={atividade} codigo={codigo} />
             </Linha>
 

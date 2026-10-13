@@ -56,9 +56,10 @@ interface ProjectViewProps {
   rotuloVoltar?: string;
   /** A ficha já apresenta o único H1 fixo com o nome da organização. */
   dentroDaOrganizacao?: boolean;
+  aoEncaminhamentos?: (atividadeId?: string) => void;
 }
 
-export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false }: ProjectViewProps) {
+export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
   const [panel, setPanel] = useState<'mudancas' | null>(null);
   // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
@@ -92,7 +93,7 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
   const renderTab = () => {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
-      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} />;
+      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} aoEncaminhamentos={aoEncaminhamentos} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
       default:          return null;
     }

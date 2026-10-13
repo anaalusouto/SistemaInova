@@ -53,7 +53,8 @@ async function proximaOrdem(
   colunaPai: 'etapa_id' | 'atividade_id',
   paiId: string,
 ): Promise<number> {
-  const { data } = await supabaseAdmin.from(tabela).select('ordem').eq(colunaPai, paiId);
+  const { data, error } = await supabaseAdmin.from(tabela).select('ordem').eq(colunaPai, paiId);
+  if (error) throw new Error(error.message);
   const ordens = (data ?? []).map(r => Number(r.ordem) || 0);
   return ordens.length ? Math.max(...ordens) + 1 : 1;
 }
@@ -212,7 +213,8 @@ export const criarEtapaDaMeta = createServerFn({ method: 'POST' })
     const supabaseAdmin = await getAdmin();
     const meta = await carregarMeta(supabaseAdmin, data.metaId);
 
-    const { data: irmas } = await supabaseAdmin.from('etapas').select('ordem').eq('meta_id', meta.id);
+    const { data: irmas, error: erroOrdem } = await supabaseAdmin.from('etapas').select('ordem').eq('meta_id', meta.id);
+    if (erroOrdem) throw new Error(erroOrdem.message);
     const ordens = (irmas ?? []).map(r => Number(r.ordem) || 0);
     const { data: nova, error } = await supabaseAdmin
       .from('etapas')
@@ -663,4 +665,22 @@ export const definirResponsavel = createServerFn({ method: 'POST' })
       .update({ responsavel: vazioParaNulo(responsavel) })
       .eq('id', atividadeId);
     if (error) throw new Error(error.message);
+  });
+
+/** Atualização atômica de índices; a RPC valida origem, lista completa e concorrência. */
+export const reordenarPlano = createServerFn({ method: 'POST' })
+  .validator((d: import('./lib/reordenacaoPlano').ReordenarPlanoInput) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const { validarReordenacao } = await import('./lib/reordenacaoPlano');
+    validarReordenacao(data);
+    const supabaseAdmin = await getAdmin();
+    const { error } = await supabaseAdmin.rpc('reordenar_plano', {
+      p_nivel: data.nivel, p_pai: String(data.paiId), p_antes: data.antes, p_ids: data.ids,
+      p_autor: sessao.displayName, p_papel: sessao.role,
+    });
+    if (error) {
+      if (error.code === 'PGRST202' || error.code === '42883') throw new Error('A ordenação manual requer a migração 0021 no banco de dados.');
+      throw new Error(error.message);
+    }
   });

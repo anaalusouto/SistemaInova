@@ -108,6 +108,12 @@ function mapEncaminhamento(e: any): Encaminhamento {
 // Leitura
 // ---------------------------------------------------------------------------
 
+/** Conta a projeção do plano sem criar ou duplicar encaminhamentos no banco. */
+function pendentesDoPlano(projeto: any): number {
+  return (projeto.metas ?? []).reduce((total: number, m: any) => total + (m.etapas ?? []).reduce((subtotal: number, e: any) =>
+    subtotal + (e.atividades ?? []).filter((a: any) => !a.excluido_em && a.status !== 'Concluído' && a.proximo_passo?.trim()).length, 0), 0);
+}
+
 export const listarOrganizacoes = createServerFn({ method: 'GET' })
   .handler(async (): Promise<OrganizacaoResumo[]> => {
     await exigirSessao();
@@ -115,7 +121,7 @@ export const listarOrganizacoes = createServerFn({ method: 'GET' })
     const [orgs, pend, projs] = await Promise.all([
       supabaseAdmin.from('comunidades').select('id, code, nome, segmento_social, tipo, municipio, uf, status').order('nome'),
       supabaseAdmin.from('encaminhamentos').select('comunidade_id').neq('status', 'Concluído'),
-      supabaseAdmin.from('projetos').select('id, code, nome, coordenador, comunidade_id').not('comunidade_id', 'is', null).order('code'),
+      supabaseAdmin.from('projetos').select('id, code, nome, coordenador, comunidade_id, metas(etapas(atividades(proximo_passo, status, excluido_em)))').not('comunidade_id', 'is', null).order('code'),
     ]);
     if (orgs.error) throw new Error(orgs.error.message);
     if (pend.error) throw new Error(pend.error.message);
@@ -124,6 +130,7 @@ export const listarOrganizacoes = createServerFn({ method: 'GET' })
     for (const r of pend.data ?? []) contagem.set(r.comunidade_id, (contagem.get(r.comunidade_id) ?? 0) + 1);
     const projetosPorOrg = new Map<string, ProjetoDaOrganizacao[]>();
     for (const p of projs.data ?? []) {
+      contagem.set(p.comunidade_id, (contagem.get(p.comunidade_id) ?? 0) + pendentesDoPlano(p));
       projetosPorOrg.set(p.comunidade_id, [...(projetosPorOrg.get(p.comunidade_id) ?? []), mapProjeto(p)]);
     }
     return (orgs.data ?? []).map(o => mapResumo(o, contagem.get(o.id) ?? 0, projetosPorOrg.get(o.id) ?? []));
@@ -138,7 +145,7 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     const [org, pessoas, projetos, registros, encaminhamentos, notas] = await Promise.all([
       supabaseAdmin.from('comunidades').select('*').eq('id', id).maybeSingle(),
       supabaseAdmin.from('comunidade_pessoas').select('*').eq('comunidade_id', id).order('nome'),
-      supabaseAdmin.from('projetos').select('id, code, nome, coordenador').eq('comunidade_id', id).order('code'),
+      supabaseAdmin.from('projetos').select('id, code, nome, coordenador, metas(etapas(atividades(proximo_passo, status, excluido_em)))').eq('comunidade_id', id).order('code'),
       supabaseAdmin.from('logs_comunicacao').select('*, projeto_anexos(*)').eq('comunidade_id', id),
       supabaseAdmin.from('encaminhamentos').select('*').eq('comunidade_id', id),
       supabaseAdmin.from('organizacao_notas').select('*').eq('comunidade_id', id).order('criado_em', { ascending: false }),
@@ -151,7 +158,7 @@ export const obterOrganizacao = createServerFn({ method: 'GET' })
     const encs = (encaminhamentos.data ?? []).map(mapEncaminhamento);
     const o = org.data;
     return {
-      ...mapResumo(o, encs.filter(e => e.status !== 'Concluído').length, (projetos.data ?? []).map(mapProjeto)),
+      ...mapResumo(o, encs.filter(e => e.status !== 'Concluído').length + (projetos.data ?? []).reduce((total, p) => total + pendentesDoPlano(p), 0), (projetos.data ?? []).map(mapProjeto)),
       mapeamentoRelatorioUrl: o.mapeamento_relatorio_url ?? null,
       parecerRelatorioUrl: o.parecer_relatorio_url ?? null,
       eixo: o.eixo_principal ?? null,

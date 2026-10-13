@@ -78,7 +78,7 @@ function mapAtividade(a: any): Activity {
     nextStep: a.proximo_passo ?? '', nextStepOwner: a.proximo_passo_responsavel ?? '',
     nextStepDue: a.proximo_passo_prazo ?? null,
     riskOriginId: a.risco_origem_id ?? undefined,
-    tasks: ((a.tarefas ?? []) as any[]).map(mapTarefa).sort((x, y) => x.order - y.order),
+    tasks: ((a.tarefas ?? []) as any[]).map(mapTarefa).sort((x, y) => x.order - y.order || x.id.localeCompare(y.id)),
     attachment: anexo,
     // Legado (ver mockData.ts): mantido só para as telas ainda não migradas.
     plannedDate: a.data_planejada ?? '', startDate: a.data_inicio ?? null, conclusionDate: a.data_conclusao ?? null,
@@ -90,12 +90,12 @@ function mapEtapa(e: any): Deliverable {
     plannedStart: e.inicio_previsto ?? null, plannedEnd: e.fim_previsto ?? null,
     actualStart: e.inicio_realizado ?? null, actualEnd: e.fim_realizado ?? null,
     // Soft-deleted (excluido_em preenchido) não aparece mais na UI, mas continua no banco.
-    activities: (e.atividades ?? []).filter((a: any) => !a.excluido_em).map(mapAtividade),
+    activities: (e.atividades ?? []).filter((a: any) => !a.excluido_em).map(mapAtividade).sort((a: Activity, b: Activity) => a.order - b.order || a.id.localeCompare(b.id)),
   };
 }
 function mapMeta(m: any): Goal {
   return {
-    id: m.id, name: m.nome, order: n2(m.ordem), deliverables: (m.etapas ?? []).map(mapEtapa),
+    id: m.id, name: m.nome, order: n2(m.ordem), deliverables: (m.etapas ?? []).map(mapEtapa).sort((a: Deliverable, b: Deliverable) => a.order - b.order || a.id.localeCompare(b.id)),
     plannedStart: m.inicio_previsto ?? null, plannedEnd: m.fim_previsto ?? null, responsible: m.responsavel ?? null,
   };
 }
@@ -191,7 +191,7 @@ function mapAprovacao(a: any): PendingApproval {
 }
 
 function mapProjeto(row: any): ProjectExt {
-  const metas: Goal[] = (row.metas ?? []).map(mapMeta);
+  const metas: Goal[] = (row.metas ?? []).map(mapMeta).sort((a: Goal, b: Goal) => a.order - b.order || a.id.localeCompare(b.id));
   const financeiro: FinancialItem[] = (row.orcamento_itens ?? []).map(mapFinanceiro);
   const allActivities = metas.flatMap(g => g.deliverables.flatMap(d => d.activities));
   const progress = allActivities.length
@@ -424,7 +424,7 @@ async function computeOrdemInsercao(
   paiId: string | number,
   afterId?: string,
 ): Promise<number> {
-  const { data: irmaos, error } = await supabaseAdmin.from(tabela).select('id, ordem').eq(colunaPai, paiId).order('ordem');
+  const { data: irmaos, error } = await supabaseAdmin.from(tabela).select('id, ordem').eq(colunaPai, paiId).order('ordem').order('id');
   if (error) throw new Error(error.message);
   const lista = irmaos ?? [];
   if (!afterId) return lista.length ? Math.max(...lista.map(i => Number(i.ordem))) + 1 : 1;
@@ -432,7 +432,11 @@ async function computeOrdemInsercao(
   if (idx === -1 || idx === lista.length - 1) {
     return lista.length ? Math.max(...lista.map(i => Number(i.ordem))) + 1 : 1;
   }
-  return (Number(lista[idx].ordem) + Number(lista[idx + 1].ordem)) / 2;
+  const atual = Number(lista[idx].ordem);
+  const seguinte = Number(lista[idx + 1].ordem);
+  const nova = (atual + seguinte) / 2;
+  if (nova <= atual || nova >= seguinte) throw new Error('Não há intervalo de ordenação disponível após este item. Adicione ao final da lista.');
+  return nova;
 }
 
 async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, projetoId: number, op: ProjectOp): Promise<void> {
