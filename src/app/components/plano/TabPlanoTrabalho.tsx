@@ -34,6 +34,9 @@ import { PainelEtapa } from './PainelEtapa';
 import { PainelMeta } from './PainelMeta';
 import { PainelAtividade } from './PainelAtividade';
 import { PainelRisco } from './PainelRisco';
+import { Painel } from './PainelBase';
+import { FormularioRisco } from './FormularioRisco';
+import { useAuth } from '../../auth/authStore';
 
 type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos';
 
@@ -51,6 +54,7 @@ type PainelAberto =
   | { tipo: 'etapa'; etapaId: string }
   | { tipo: 'atividade'; atividadeId: string }
   | { tipo: 'risco'; riscoId: string }
+  | { tipo: 'novoRisco' }
   | null;
 
 export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
@@ -62,6 +66,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
 }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
+  const { readOnly } = useAuth();
   const [visao, setVisao] = useState<Visao>('tabela');
   // RC-06: tudo começa recolhido. Guarda-se o que foi aberto — ver recolhidosDe().
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
@@ -329,6 +334,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
               metas={metas}
               codigos={codigos}
               atividades={todasAtividades}
+              aoNovoRisco={() => setPainel({ tipo: 'novoRisco' })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
             />
@@ -337,6 +343,11 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
       </div>
 
       {/* Painéis (RF-022, RF-023, RF-027, RF04.1) */}
+      {painel?.tipo === 'novoRisco' && !readOnly && (
+        <Painel titulo="Novo risco" caminho={p.name} aoFechar={fechar} largo>
+          <FormularioRisco projetoId={p.id} metas={metas} codigos={codigos} aoFechar={fechar} />
+        </Painel>
+      )}
       {painel?.tipo === 'meta' && (() => {
         const meta = metas.find(m => m.id === painel.metaId);
         if (!meta) return null;
@@ -395,6 +406,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao }: {
         const alvo = risco.stageId ? indice.etapas.get(risco.stageId) : undefined;
         return (
           <PainelRisco
+            key={risco.id}
             risco={risco}
             etapa={alvo?.etapa}
             meta={alvo?.meta}

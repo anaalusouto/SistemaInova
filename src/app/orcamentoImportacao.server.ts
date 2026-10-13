@@ -18,6 +18,7 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 import { chaveDeOrigem } from './lib/orcamento';
+import { vincularMetasDoOrcamento, chaveMetaNova, type MetaDoOrcamento, type VinculoMeta } from './lib/orcamentoMetas';
 import {
   detectarCabecalho, montarPrevia, reconciliar,
   type Celula, type MapeamentoColunas, type Previa, type Reconciliacao, type ItemExistente,
@@ -72,6 +73,8 @@ async function matrizDaAba(workbook: any, aba: string): Promise<Celula[][]> {
 }
 
 export interface PreviaImportacao {
+  metas: MetaDoOrcamento[];
+  vinculosMetas: VinculoMeta[];
   abas: string[];
   aba: string;
   /** Mapeamento detectado; a UI permite corrigir antes de confirmar (RF-037). */
@@ -89,7 +92,7 @@ export interface PreviaImportacao {
  * Lê o arquivo e monta a prévia. NÃO grava nada.
  */
 export const lerPlanilha = createServerFn({ method: 'POST' })
-  .validator((d: { projetoId: number; dataUrl: string; aba?: string; mapeamento?: MapeamentoColunas }) => d)
+  .validator((d: { projetoId: number; dataUrl: string; aba?: string; mapeamento?: MapeamentoColunas; metasPorLinha?: Record<string, string> }) => d)
   .handler(async ({ data }): Promise<PreviaImportacao> => {
     await exigirEscrita();
 
@@ -114,13 +117,21 @@ export const lerPlanilha = createServerFn({ method: 'POST' })
     const previa = montarPrevia(matriz, mapeamento, linhaCabecalho + 1);
 
     const supabaseAdmin = await getAdmin();
-    const { data: existentesRaw } = await supabaseAdmin
+    const { data: metasRaw, error: erroMetas } = await supabaseAdmin.from('metas')
+      .select('id,nome,ordem').eq('projeto_id', data.projetoId).order('ordem', { ascending: true }).order('criado_em', { ascending: true });
+    if (erroMetas) throw new Error(erroMetas.message);
+    const metas = (metasRaw ?? []).map((m, i) => ({ id: m.id, nome: m.nome, numero: i + 1 }));
+    const vinculosMetas = vincularMetasDoOrcamento(previa.itens, metas, data.metasPorLinha);
+    previa.itens.forEach((item, i) => { item.metaId = vinculosMetas[i].metaId; });
+    const { data: existentesRaw, error: erroExistentes } = await supabaseAdmin
       .from('orcamento_itens')
-      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao')
+      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao, meta_id')
       .eq('projeto_id', data.projetoId);
 
+    if (erroExistentes) throw new Error(`Não foi possível conferir os vínculos do orçamento. Verifique a migração 0020. ${erroExistentes.message}`);
     const existentes: ItemExistente[] = (existentesRaw ?? []).map(i => ({
       id: i.id as string,
+      metaId: i.meta_id ?? null,
       chave: (i.chave_origem as string) ?? null,
       descricao: (i.item as string) ?? '',
       valorProposto: Number(i.valor_proposto ?? 0),
@@ -136,6 +147,7 @@ export const lerPlanilha = createServerFn({ method: 'POST' })
       .limit(1);
 
     return {
+      metas, vinculosMetas,
       abas,
       aba,
       mapeamento,
@@ -153,6 +165,7 @@ export const lerPlanilha = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 
 export interface AplicarInput {
+  metasPorLinha?: Record<string, string>;
   projetoId: number;
   nomeArquivo: string;
   aba: string;
@@ -197,13 +210,25 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
       );
     }
 
-    const { data: existentesRaw } = await supabaseAdmin
+    // Releitura e resolução no servidor: nenhum ID da prévia é confiado
+    // sem conferir que a meta pertence ao projeto que recebe o orçamento.
+    const { data: metasRaw, error: erroMetas } = await supabaseAdmin.from('metas')
+      .select('id,nome,ordem').eq('projeto_id', data.projetoId).order('ordem', { ascending: true }).order('criado_em', { ascending: true });
+    if (erroMetas) throw new Error(erroMetas.message);
+    const metas = (metasRaw ?? []).map((m, i) => ({ id: m.id, nome: m.nome, numero: i + 1 }));
+    const vinculos = vincularMetasDoOrcamento(previa.itens, metas, data.metasPorLinha);
+    const pendentes = vinculos.filter(v => v.motivo);
+    if (pendentes.length) throw new PlanilhaInvalida(pendentes.map(v => `Linha ${v.linhaPlanilha}: ${v.motivo}`).join(' '));
+
+    const { data: existentesRaw, error: erroExistentes } = await supabaseAdmin
       .from('orcamento_itens')
-      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao')
+      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao, meta_id')
       .eq('projeto_id', data.projetoId);
 
+    if (erroExistentes) throw new Error(`Não foi possível conferir os vínculos do orçamento. Verifique a migração 0020. ${erroExistentes.message}`);
     const existentes: ItemExistente[] = (existentesRaw ?? []).map(i => ({
       id: i.id as string,
+      metaId: i.meta_id ?? null,
       chave: (i.chave_origem as string) ?? null,
       descricao: (i.item as string) ?? '',
       valorProposto: Number(i.valor_proposto ?? 0),
@@ -211,12 +236,31 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
       excluido: i.situacao === 'Excluído',
     }));
 
-    const plano = reconciliar(existentes, previa.itens);
+    previa.itens.forEach((item, i) => { item.metaId = vinculos[i].metaId; });
+    let plano = reconciliar(existentes, previa.itens);
     if (plano.ambiguos.length > 0 && !data.decisaoJustificada.trim()) {
       throw new PlanilhaInvalida(
         'A correspondência com itens já cadastrados é ambígua. Registre a decisão antes de confirmar.',
       );
     }
+
+    // Só a confirmação cria metas. A leitura da planilha permanece sem escrita.
+    const criadas = new Map<string, string>();
+    let ordemMeta = Math.max(0, ...(metasRaw ?? []).map(m => Number(m.ordem ?? 0)));
+    for (const vinculo of vinculos) {
+      if (!vinculo.criarMeta) continue;
+      const chave = chaveMetaNova(vinculo.criarMeta);
+      if (!criadas.has(chave)) {
+        const { data: novaMeta, error } = await supabaseAdmin.from('metas')
+          .insert({ projeto_id: data.projetoId, nome: vinculo.criarMeta, ordem: ++ordemMeta })
+          .select('id').single();
+        if (error) throw new Error(error.message);
+        criadas.set(chave, novaMeta.id);
+      }
+      vinculo.metaId = criadas.get(chave)!;
+    }
+    previa.itens.forEach((item, i) => { item.metaId = vinculos[i].metaId; });
+    plano = reconciliar(existentes, previa.itens);
 
     const { data: ultima } = await supabaseAdmin
       .from('orcamento_importacoes')
@@ -241,6 +285,8 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
           desacordoDeTotal: previa.desacordoDeTotal,
           decisaoJustificada: data.decisaoJustificada.trim() || null,
           acaoAusentes: data.acaoAusentes,
+          metasCriadas: [...criadas.values()],
+          vinculosMetas: vinculos,
         },
       })
       .select('id')
@@ -255,6 +301,7 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
         .from('orcamento_itens')
         .update({
           grupo: alt.novo.grupo,
+          meta_id: alt.novo.metaId,
           categoria: alt.novo.categoria,
           item: alt.novo.descricao,
           qtd: alt.novo.qtd,
@@ -286,6 +333,7 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
         .from('orcamento_itens')
         .insert({
           projeto_id: data.projetoId,
+          meta_id: novo.metaId,
           grupo: novo.grupo,
           categoria: novo.categoria,
           item: novo.descricao,

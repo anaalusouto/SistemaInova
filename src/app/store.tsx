@@ -21,7 +21,7 @@ import {
 } from './projetos.server';
 import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
-  criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco,
+  criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco, excluirRisco,
   criarParecer, atualizarParecer, excluirParecer, definirResponsavel,
   salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa,
   type PeriodoEtapaInput, type SalvarMetaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
@@ -168,6 +168,7 @@ type Ctx = {
   deleteTarefa: (tarefaId: string) => Promise<void>;
   createRisco: (input: RiscoInput) => Promise<void>;
   updateRisco: (riscoId: string, input: RiscoInput) => Promise<void>;
+  deleteRisco: (riscoId: string) => Promise<void>;
   uploadAnexo: (input: AnexoInput) => Promise<string>;
   deleteAnexo: (anexoId: string) => Promise<void>;
   createParecer: (input: ParecerInput) => Promise<string>;
@@ -386,6 +387,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     deleteTarefa: tarefaId => run(() => excluirTarefa({ data: { tarefaId } })),
     createRisco: input => run(() => criarRisco({ data: input })),
     updateRisco: (riscoId, input) => run(() => atualizarRisco({ data: { riscoId, dados: input } })),
+    deleteRisco: riscoId => run(() => excluirRisco({ data: { riscoId } })),
     uploadAnexo: input => run(() => enviarAnexo({ data: input })),
     deleteAnexo: anexoId => run(() => removerAnexo({ data: { anexoId } })),
     createParecer: input => run(() => criarParecer({ data: input })),

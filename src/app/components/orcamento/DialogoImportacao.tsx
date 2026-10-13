@@ -44,6 +44,7 @@ export function DialogoImportacao({
   const [erro, setErro] = useState<string | null>(null);
   const [acaoAusentes, setAcaoAusentes] = useState<'manter' | 'excluir'>('manter');
   const [decisao, setDecisao] = useState('');
+  const [metasPorLinha, setMetasPorLinha] = useState<Record<string, string>>({});
 
   const carregar = async (f: File, aba?: string) => {
     if (f.size > LIMITE_MB * 1024 * 1024) {
@@ -60,6 +61,7 @@ export function DialogoImportacao({
         leitor.readAsDataURL(f);
       });
       setArquivo({ nome: f.name, dataUrl });
+      setMetasPorLinha({});
       const r = await lerPlanilha({ data: { projetoId, dataUrl, aba } });
       setPrevia(r);
     } catch (e) {
@@ -75,6 +77,7 @@ export function DialogoImportacao({
     setOcupado(true);
     setErro(null);
     try {
+      setMetasPorLinha({});
       setPrevia(await lerPlanilha({ data: { projetoId, dataUrl: arquivo.dataUrl, aba } }));
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível ler a aba.');
@@ -98,6 +101,7 @@ export function DialogoImportacao({
           linhaCabecalho: previa.linhaCabecalho,
           acaoAusentes,
           decisaoJustificada: decisao,
+          metasPorLinha,
         },
       });
       toast.success(
@@ -119,6 +123,17 @@ export function DialogoImportacao({
     p.itens.some(i => i.divergencias.length > 0) || (rec?.ambiguos.length ?? 0) > 0
   );
   const exigeDecisao = !!p && (p.duplicadas.length > 0 || (rec?.ambiguos.length ?? 0) > 0);
+  const metasPendentes = previa?.vinculosMetas.some(v => !!v.motivo) ?? false;
+  const escolherMeta = async (linha: number, metaId: string) => {
+    if (!arquivo || !previa) return;
+    const escolhas = { ...metasPorLinha, [linha]: metaId };
+    setOcupado(true); setErro(null);
+    try {
+      const nova = await lerPlanilha({ data: { projetoId, dataUrl: arquivo.dataUrl, aba: previa.aba, mapeamento: previa.mapeamento, metasPorLinha: escolhas } });
+      setMetasPorLinha(escolhas); setPrevia(nova);
+    } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível conferir a meta.'); }
+    finally { setOcupado(false); }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.55)' }} onClick={aoFechar}>
@@ -187,6 +202,7 @@ export function DialogoImportacao({
                 )}
                 <button
                   onClick={() => { setPrevia(null); setArquivo(null); setErro(null); }}
+                  disabled={ocupado}
                   className="px-2 py-1 rounded-md border text-[11.5px]"
                   style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                 >
@@ -237,6 +253,26 @@ export function DialogoImportacao({
                   </>
                 )}
                 {p!.vazias > 0 && <>{p!.vazias} {p!.vazias === 1 ? 'linha vazia ignorada' : 'linhas vazias ignoradas'}.</>}
+              </Secao>
+
+              <Secao titulo="Vínculo com as metas do projeto" tom={metasPendentes ? 'alerta' : 'ok'}>
+                <p>As metas são identificadas na leitura. Metas novas indicadas na planilha serão criadas ao confirmar a importação.</p>
+                <div className="overflow-x-auto mt-2">
+                  <table className="w-full text-left text-xs">
+                    <thead><tr><th className="p-2">Linha / Item</th><th className="p-2">Meta vinculada</th></tr></thead>
+                    <tbody>{previa.vinculosMetas.map((v, i) => <tr key={v.linhaPlanilha}>
+                      <td className="p-2">{v.linhaPlanilha} · {p!.itens[i].descricao}</td>
+                      <td className="p-2">
+                        <div>{v.metaNome ?? 'Meta não identificada'}{v.criarMeta && <strong> · será criada</strong>}</div>
+                        {v.motivo && <div role="alert" style={{ color: 'var(--danger)' }}>{v.motivo}</div>}
+                        {previa.metas.length > 0 && <select aria-label={`Meta da linha ${v.linhaPlanilha}`} value={metasPorLinha[String(v.linhaPlanilha)] ?? ''} disabled={ocupado} onChange={e => void escolherMeta(v.linhaPlanilha, e.target.value)} className="border rounded px-2 py-1 mt-1 max-w-full">
+                          <option value="">Usar identificação automática</option>
+                          {previa.metas.map(m => <option key={m.id} value={m.id}>Meta {m.numero} — {m.nome}</option>)}
+                        </select>}
+                      </td>
+                    </tr>)}</tbody>
+                  </table>
+                </div>
               </Secao>
 
               {rec && (
@@ -375,11 +411,11 @@ export function DialogoImportacao({
             </button>
             <button
               onClick={confirmar}
-              disabled={ocupado || p!.itens.length === 0 || (exigeDecisao && !decisao.trim())}
+              disabled={ocupado || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim())}
               className="px-4 py-1.5 rounded-md text-[12.5px] font-medium text-white"
               style={{
                 background: 'var(--primary)',
-                opacity: ocupado || p!.itens.length === 0 || (exigeDecisao && !decisao.trim()) ? 0.5 : 1,
+                opacity: ocupado || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim()) ? 0.5 : 1,
               }}
             >
               {ocupado ? 'Importando…' : `Importar ${p!.itens.length} ${p!.itens.length === 1 ? 'item' : 'itens'}`}

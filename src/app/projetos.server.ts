@@ -119,6 +119,7 @@ function mapMudanca(c: any): Change {
 }
 function mapItemOrcamento(i: any): ItemOrcamento {
   return {
+    metaId: i.meta_id ?? null,
     id: i.id, grupo: i.grupo ?? '', ordem: n2(i.ordem),
     categoria: i.categoria ?? '', descricao: i.item ?? '',
     qtd: n2(i.qtd), unidade: i.unidade ?? '', qtdUnidades: n2(i.qtd_unidades),

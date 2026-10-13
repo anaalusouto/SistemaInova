@@ -15,7 +15,7 @@
  * agrega SOMENTE riscos cadastrados — atividade nunca conta como risco (RN-020).
  */
 import { useMemo, useState } from 'react';
-import { Search, ShieldAlert, AlertTriangle, Pencil } from 'lucide-react';
+import { Search, ShieldAlert, AlertTriangle, Pencil, Plus } from 'lucide-react';
 import { type Risk, type Goal, type RiskStatus, type Activity } from '../../data/mockData';
 import {
   matrizDeRiscos, resumoDeRiscos, filtrarRiscos, faixaRisco, textoDoRisco,
@@ -39,7 +39,7 @@ const quebra: React.CSSProperties = { whiteSpace: 'pre-line', overflowWrap: 'any
 interface Local { etapa: string; meta: string; codigo: string }
 
 export function VisaoRiscos({
-  riscos, metas, codigos, atividades, aoAbrirRisco, aoAbrirAtividade,
+  riscos, metas, codigos, atividades, aoAbrirRisco, aoAbrirAtividade, aoNovoRisco,
 }: {
   riscos: Risk[];
   metas: Goal[];
@@ -48,6 +48,7 @@ export function VisaoRiscos({
   atividades: Activity[];
   aoAbrirRisco: (r: Risk) => void;
   aoAbrirAtividade: (a: Activity) => void;
+  aoNovoRisco: () => void;
 }) {
   const { readOnly } = useAuth();
   const [criterios, setCriterios] = useState<CriteriosRisco>(CRITERIOS_RISCO_VAZIOS);
@@ -98,6 +99,15 @@ export function VisaoRiscos({
 
   return (
     <div className="flex flex-col gap-4 p-4">
+      {!readOnly && (
+        <div className="flex justify-end">
+          <button type="button" onClick={aoNovoRisco}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-medium"
+            style={{ borderColor: 'var(--border)', background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+            <Plus size={13} /> Novo risco
+          </button>
+        </div>
+      )}
       {/* Resumo GERAL do projeto — imune a filtro (RN-028) */}
       <div className="flex items-center gap-x-4 gap-y-1 flex-wrap" style={{ fontSize: '0.76rem', color: 'var(--ink-4)' }}>
         <span><strong style={{ color: 'var(--ink-2)' }}>{resumo.total}</strong> riscos no projeto</span>
@@ -116,7 +126,7 @@ export function VisaoRiscos({
             {resumo.semEtapa} risco{resumo.semEtapa === 1 ? '' : 's'} do modelo anterior ainda não
             {resumo.semEtapa === 1 ? ' está vinculado' : ' estão vinculados'} a uma etapa. Continuam contando na matriz;
             a coluna Meta / Etapa mostra a etapa registrada na planilha antiga até a conciliação. Para vincular,
-            abra o risco e use Editar risco.
+            abra o risco e use Editar risco. O vínculo pode ser mantido como está ao editar outros campos.
           </span>
         </div>
       )}

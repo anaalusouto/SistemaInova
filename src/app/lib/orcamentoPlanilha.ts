@@ -166,6 +166,8 @@ export function detectarCabecalho(matriz: Celula[][], limite = 20): CabecalhoEnc
 // ---------------------------------------------------------------------------
 
 export interface LinhaLida {
+  metaReferencia?: string;
+  metaId?: string | null;
   /** Número da linha na planilha, 1-based — é como a pessoa vai procurar no Excel. */
   linhaPlanilha: number;
   grupo: string;
@@ -217,6 +219,8 @@ export function montarPrevia(
   const rejeitadas: { linhaPlanilha: number; motivo: string }[] = [];
   let vazias = 0;
   let grupoCorrente = '';
+  let metaCorrente = '';
+  const colunaMeta = matriz[Math.max(0, primeiraLinhaDados - 1)]?.findIndex(c => /^(meta|meta vinculada|meta do projeto|meta do plano de trabalho|meta_id)$/i.test(texto(c))) ?? -1;
 
   const celula = (linha: Celula[], idx: number): Celula => (idx >= 0 ? linha[idx] : undefined);
 
@@ -240,6 +244,8 @@ export function montarPrevia(
     // as demais em branco. Herdar o último grupo visto é o comportamento que
     // preserva o agrupamento de origem (RF-030).
     if (grupoDaLinha) grupoCorrente = grupoDaLinha;
+    const metaDaLinha = texto(celula(linha, colunaMeta));
+    if (metaDaLinha) metaCorrente = metaDaLinha;
 
     if (!descricao) {
       rejeitadas.push({ linhaPlanilha: numero, motivo: 'Linha sem descrição — não é item nem linha de controle reconhecida.' });
@@ -260,6 +266,7 @@ export function montarPrevia(
     const registro: LinhaLida = {
       linhaPlanilha: numero,
       grupo: grupoCorrente,
+      ...(colunaMeta >= 0 ? { metaReferencia: metaCorrente } : {}),
       categoria,
       descricao,
       qtd: Number.isFinite(qtd) ? qtd : 1,
@@ -319,6 +326,7 @@ export function montarPrevia(
 // ---------------------------------------------------------------------------
 
 export interface ItemExistente {
+  metaId?: string | null;
   id: string;
   chave: string | null;
   descricao: string;
@@ -374,7 +382,8 @@ export function reconciliar(existentes: ItemExistente[], novos: LinhaLida[]): Re
 
     const existente = candidatos[0];
     casados.add(existente.id);
-    if (arredondar(existente.valorProposto) !== arredondar(novo.totalDeclarado)) {
+    if (arredondar(existente.valorProposto) !== arredondar(novo.totalDeclarado) ||
+        (novo.metaId !== undefined && existente.metaId !== novo.metaId)) {
       alterados.push({ existente, novo, de: arredondar(existente.valorProposto), para: arredondar(novo.totalDeclarado) });
     } else {
       inalterados++;

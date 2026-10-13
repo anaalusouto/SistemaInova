@@ -19,6 +19,7 @@ export const NAO_INFORMADO = 'Não informado' as const;
 export type SituacaoItem = 'Ativo' | 'Excluído';
 
 export interface ItemOrcamento {
+  metaId?: string | null;
   id: string;
   grupo: string;
   ordem: number;

@@ -463,18 +463,28 @@ export interface RiscoInput {
   especificacao: string;
 }
 
-function validarRisco(data: RiscoInput): void {
+function validarRisco(data: RiscoInput, permitirSemEtapa = false): void {
   const erros: string[] = [];
   if (!data.titulo.trim()) erros.push('Informe o título do risco.');
   if (!data.categoria.trim()) erros.push('Informe a categoria.');
   if (!data.responsavel.trim()) erros.push('Informe o responsável.');
   if (!data.descricao.trim()) erros.push('Informe a descrição.');
-  if (!(data.probabilidade >= 1 && data.probabilidade <= 5)) erros.push('A probabilidade deve ficar entre 1 e 5.');
-  if (!(data.impacto >= 1 && data.impacto <= 5)) erros.push('O impacto deve ficar entre 1 e 5.');
+  if (!Number.isInteger(data.probabilidade) || !(data.probabilidade >= 1 && data.probabilidade <= 5)) erros.push('A probabilidade deve ser um inteiro entre 1 e 5.');
+  if (!Number.isInteger(data.impacto) || !(data.impacto >= 1 && data.impacto <= 5)) erros.push('O impacto deve ser um inteiro entre 1 e 5.');
+  if (!['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'].includes(data.status)) erros.push('Status de risco inválido.');
   // RN-028: risco NOVO sempre nasce preso a uma etapa. Só as linhas legadas
-  // ficaram sem vínculo, e elas não passam por aqui.
-  if (!data.etapaId) erros.push('O risco precisa pertencer a uma etapa.');
+  // podem continuar sem vínculo ao editar outros campos.
+  if (!data.etapaId && !permitirSemEtapa) erros.push('O risco precisa pertencer a uma etapa.');
   if (erros.length) throw new DadosInvalidos(erros);
+}
+
+async function metaDaEtapaDoRisco(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, etapaId: string, projetoId: number) {
+  const { data: etapa, error } = await supabaseAdmin
+    .from('etapas').select('meta_id').eq('id', etapaId).single();
+  if (error || !etapa) throw new Error('Etapa não encontrada.');
+  const meta = await carregarMeta(supabaseAdmin, etapa.meta_id);
+  if (meta.projeto_id !== projetoId) throw new DadosInvalidos(['A etapa selecionada não pertence a este projeto.']);
+  return meta.id;
 }
 
 export const criarRisco = createServerFn({ method: 'POST' })
@@ -486,14 +496,12 @@ export const criarRisco = createServerFn({ method: 'POST' })
 
     // meta_id é derivada da etapa, nunca informada à parte: duas fontes para o
     // mesmo vínculo acabariam discordando.
-    const { data: etapa, error: erroEtapa } = await supabaseAdmin
-      .from('etapas').select('meta_id').eq('id', data.etapaId).single();
-    if (erroEtapa || !etapa) throw new Error('Etapa não encontrada.');
+    const metaId = await metaDaEtapaDoRisco(supabaseAdmin, data.etapaId, data.projetoId);
 
     const { error } = await supabaseAdmin.from('plano_riscos').insert({
       projeto_id: data.projetoId,
       etapa_id: data.etapaId,
-      meta_id: etapa.meta_id,
+      meta_id: metaId,
       titulo: data.titulo.trim(),
       descricao: data.descricao.trim(),
       categoria: vazioParaNulo(data.categoria),
@@ -511,15 +519,19 @@ export const atualizarRisco = createServerFn({ method: 'POST' })
   .validator((d: { riscoId: string; dados: RiscoInput }) => d)
   .handler(async ({ data: { riscoId, dados } }): Promise<void> => {
     await exigirEscrita();
-    validarRisco(dados);
     const supabaseAdmin = await getAdmin();
-
-    const { data: etapa } = await supabaseAdmin
-      .from('etapas').select('meta_id').eq('id', dados.etapaId).single();
+    const { data: risco, error: erroRisco } = await supabaseAdmin
+      .from('plano_riscos').select('id, projeto_id, etapa_id, meta_id').eq('id', riscoId).single();
+    if (erroRisco || !risco) throw new Error('Risco não encontrado.');
+    if (risco.projeto_id !== dados.projetoId) throw new DadosInvalidos(['O risco não pertence a este projeto.']);
+    validarRisco(dados, !risco.etapa_id);
+    const metaId = dados.etapaId
+      ? await metaDaEtapaDoRisco(supabaseAdmin, dados.etapaId, risco.projeto_id)
+      : risco.meta_id;
 
     const { error } = await supabaseAdmin.from('plano_riscos').update({
-      etapa_id: dados.etapaId,
-      meta_id: etapa?.meta_id ?? null,
+      etapa_id: dados.etapaId || null,
+      meta_id: metaId,
       titulo: dados.titulo.trim(),
       descricao: dados.descricao.trim(),
       categoria: vazioParaNulo(dados.categoria),
@@ -531,6 +543,17 @@ export const atualizarRisco = createServerFn({ method: 'POST' })
       especificacao: vazioParaNulo(dados.especificacao),
     }).eq('id', riscoId);
     if (error) throw new Error(error.message);
+  });
+
+/** Remove qualquer risco; os vínculos usam ON DELETE SET NULL e preservam atividades e orçamento. */
+export const excluirRisco = createServerFn({ method: 'POST' })
+  .validator((d: { riscoId: string }) => d)
+  .handler(async ({ data: { riscoId } }): Promise<void> => {
+    await exigirEscrita();
+    const supabaseAdmin = await getAdmin();
+    const { data: removido, error } = await supabaseAdmin
+      .from('plano_riscos').delete().eq('id', riscoId).select('id').single();
+    if (error || !removido) throw new Error(error?.message ?? 'Risco não encontrado.');
   });
 
 // ---------------------------------------------------------------------------

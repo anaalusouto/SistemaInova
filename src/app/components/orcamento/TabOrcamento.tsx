@@ -326,6 +326,12 @@ export function TabOrcamento({ project }: { project: Project }) {
                           <td className="px-2 py-1.5" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.75rem', color: 'var(--ink-1)', maxWidth: 240 }}>
                             <span className="block truncate" title={item.descricao} style={{ textDecoration: excluido ? 'line-through' : undefined }}>{item.descricao}</span>
+                            <span className="block text-xs mt-1" style={{ color: item.metaId ? 'var(--brand-text)' : 'var(--ink-5)' }}>
+                              {(() => {
+                                const indice = p.goals.findIndex(m => m.id === item.metaId);
+                                return indice >= 0 ? `Meta ${indice + 1} — ${p.goals[indice].name}` : 'Meta não vinculada';
+                              })()}
+                            </span>
                           </td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtd}</td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{item.unidade || '—'}</td>

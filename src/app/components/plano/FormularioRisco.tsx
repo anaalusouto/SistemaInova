@@ -94,7 +94,7 @@ export function FormularioRisco({
 
   const salvar = async () => {
     const problemas: string[] = [];
-    if (!form.etapaId) problemas.push('Selecione a etapa do risco.');
+    if (!form.etapaId && (!risco || risco.stageId)) problemas.push('Selecione a etapa do risco.');
     if (!form.titulo.trim()) problemas.push('Informe o título do risco.');
     if (!form.categoria.trim()) problemas.push('Informe a categoria.');
     if (!form.responsavel.trim()) problemas.push('Informe o responsável.');
@@ -122,15 +122,15 @@ export function FormularioRisco({
     <div className="flex flex-col gap-3">
       <Erros erros={erros} />
 
-      {risco && metas.length > 0 ? (
-        <Campo rotulo="Etapa" obrigatorio>
+      {metas.length > 0 ? (
+        <Campo rotulo="Etapa" obrigatorio={!risco || !!risco.stageId}>
           <select
             className="w-full border rounded-lg px-2.5 py-1.5"
             style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem' }}
             value={form.etapaId}
             onChange={e => alterar('etapaId', e.target.value)}
           >
-            <option value="">Selecione…</option>
+            <option value="" disabled={!!risco?.stageId}>{risco && !risco.stageId ? 'Manter sem etapa vinculada' : 'Selecione…'}</option>
             {metas.map(meta => (
               <optgroup key={meta.id} label={meta.name}>
                 {meta.deliverables.map(e => (

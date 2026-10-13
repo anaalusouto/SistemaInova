@@ -4,15 +4,18 @@
  * Mostra hierarquia, matriz, estratégia e as atividades de resposta — e
  * permite editar, para a equipe PMO. Todo risco é editável: o legado sem
  * etapa vinculada (a migration 0011 só vinculou o que casava sem ambiguidade)
- * diz isso e, ao ser editado, ganha a etapa que a pessoa escolher.
+ * pode manter o vínculo atual ou ganhar a etapa que a pessoa escolher.
  */
 import { useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { useAuth } from '../../auth/authStore';
 import { faixaRisco } from '../../lib/planoTrabalho';
 import { Painel, Linha, Ausente, BotaoAcao } from './PainelBase';
 import { FormularioRisco } from './FormularioRisco';
+import { ConfirmarExclusao } from './camposFormulario';
+import { useStore } from '../../store';
 
 export function PainelRisco({
   risco, etapa, meta, codigoEtapa, projetoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade,
@@ -26,22 +29,30 @@ export function PainelRisco({
   aoAbrirAtividade: (a: Activity) => void;
 }) {
   const { readOnly } = useAuth();
+  const { deleteRisco } = useStore();
   const [editando, setEditando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [removendo, setRemovendo] = useState(false);
   const faixa = faixaRisco(risco.severity);
 
   const caminho = etapa && meta
     ? `${meta.name} › ${etapa.name}${codigoEtapa ? ` (${codigoEtapa})` : ''}`
     : 'Etapa não vinculada';
 
-  // Todo risco é editável. Sem etapa, o formulário não chuta uma: a etapa
-  // vira campo obrigatório (RN-028) e quem edita escolhe.
+  // Riscos antigos podem manter o vínculo atual ao editar outros campos.
   const podeEditar = !readOnly;
 
   const acoes = podeEditar && !editando ? (
-    <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar risco</BotaoAcao>
+    <>
+      <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar risco</BotaoAcao>
+      <BotaoAcao aoClicar={() => { if (!removendo) setExcluindo(true); }} perigo>
+        <Trash2 size={12} /> {removendo ? 'Excluindo…' : 'Excluir risco'}
+      </BotaoAcao>
+    </>
   ) : undefined;
 
   return (
+    <>
     <Painel
       titulo={editando ? 'Editar risco' : (risco.title || risco.description)}
       caminho={caminho}
@@ -65,8 +76,8 @@ export function PainelRisco({
               className="rounded-lg border px-3 py-2 mb-3"
               style={{ borderColor: 'var(--border)', background: 'var(--warning-soft)', fontSize: '0.75rem', color: 'var(--ink-2)' }}
             >
-              Este risco veio do modelo anterior e ainda não está vinculado a uma etapa. Ao editá-lo, escolha a
-              etapa a que ele pertence.
+              Este risco ainda não está vinculado a uma etapa. Você pode editar seus campos mantendo esse
+              vínculo ou escolher uma etapa.
               {risco.stage && <> O registro antigo indicava: <strong>{risco.stage}</strong>.</>}
             </div>
           )}
@@ -119,5 +130,27 @@ export function PainelRisco({
         </>
       )}
     </Painel>
+    {excluindo && (
+      <ConfirmarExclusao
+        titulo="Excluir risco"
+        descricao={`O risco "${risco.title || risco.description}" será removido do projeto e da matriz. As atividades de resposta e os itens de orçamento serão preservados, apenas sem o vínculo com este risco.`}
+        aoCancelar={() => setExcluindo(false)}
+        aoConfirmar={async () => {
+          if (removendo) return;
+          setExcluindo(false);
+          setRemovendo(true);
+          try {
+            await deleteRisco(risco.id);
+            toast.success('Risco excluído.');
+            aoFechar();
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Não foi possível excluir o risco.');
+          } finally {
+            setRemovendo(false);
+          }
+        }}
+      />
+    )}
+    </>
   );
 }

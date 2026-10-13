@@ -26,6 +26,13 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     TabOrcamento: { TabOrcamento: vazio },
     TabFinanceiro: { TabFinanceiro: vazio },
     TabMudancas: { TabMudancas: vazio },
+    'orcamento.server': {},
+    'orcamentoImportacao.server': {},
+    FormularioExecucao: { FormularioExecucao: vazio },
+    FormularioNota: { FormularioNota: vazio },
+    DialogoExclusaoItem: { DialogoExclusaoItem: vazio },
+    PainelHistoricoItem: { PainelHistoricoItem: vazio },
+    DialogoImportacao: { DialogoImportacao: vazio },
   };
   function load(nome) {
     const absoluto = path.resolve(__dirname, '..', nome);
@@ -75,6 +82,15 @@ test('plano administrativo renderiza tabela e controles comuns sem abrir projeto
     for (const campo of ['Tabela', 'Gantt', 'Kanban', 'Responsável', 'Início previsto', 'Fim previsto', 'Justificativa de atraso']) assert.ok(html.includes(campo), campo);
     assert.ok(!html.includes('data-plano-projeto'));
   }
+});
+
+test('orçamento exibe a meta real de cada item e diferencia legado sem vínculo', () => {
+  const item = { id: 'item-a', grupo: 'Materiais', ordem: 1, categoria: 'Consumo', descricao: 'Computador', qtd: 1, unidade: 'un', qtdUnidades: 1, valorUnitario: 10, valorProposto: 10, valorPlanejado: 10, valorExecutado: null, dataCompra: null, justificativaDiferenca: '', execucaoConcluida: false, situacao: 'Ativo', motivoExclusao: null, riscoId: null };
+  const project = { id: 7, goals: [{ id: 'meta-a', name: 'Estruturação', deliverables: [] }], orcamentoItens: [{ ...item, metaId: 'meta-a' }, { ...item, id: 'item-b', descricao: 'Legado', metaId: null }], orcamentoNotas: [] };
+  const { TabOrcamento } = carregarInterface('src/app/components/orcamento/TabOrcamento.tsx', { project, readOnly: true });
+  const html = renderToStaticMarkup(React.createElement(TabOrcamento, { project }));
+  assert.match(html, /Meta 1 — Estruturação/);
+  assert.match(html, /Meta não vinculada/);
 });
 
 test('AT-017/020: desktop e celular apresentam seis seções na ordem e organização corretas', () => {
