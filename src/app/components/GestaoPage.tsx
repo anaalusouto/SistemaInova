@@ -6,6 +6,8 @@ import { useStore } from '../store';
 import { useGestaoTarefas } from '../gestao/useGestaoTarefas';
 import type { TarefaGestao, TarefaGestaoStatus } from '../tarefasGestao.server';
 import { BotaoNovo, LinkNovo } from './BotaoNovo';
+import { resolverPessoasDoQuadro, tarefasAdministrativas } from '../lib/tarefasKanban';
+import { DetalheTarefaVinculada } from './DetalheTarefaVinculada';
 
 const STATUS_LABEL: Record<TarefaGestaoStatus, string> = {
   nao_iniciado: 'Não iniciado',
@@ -39,19 +41,27 @@ function priorityVisual(c: number) {
   return { color: 'var(--ink-4)', bg: 'var(--surface-2)' };
 }
 
-const fmtDate = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString('pt-BR');
+const fmtDate = (iso: string) => iso ? new Date(`${iso}T00:00:00`).toLocaleDateString('pt-BR') : 'Não informado';
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 type FormState =
   | { mode: 'create'; defaultLogin?: string }
   | { mode: 'edit'; task: TarefaGestao };
 
-export function GestaoPage() {
-  const { user } = useAuth();
+export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
+  onOpenProject?: (id: number) => void; onOpenOrg?: (id: string, foco: string) => void; onOpenAdmin?: () => void;
+}) {
+  const { user, readOnly } = useAuth();
   const allPeople = usePeople();
-  const people = useMemo(() => allPeople.filter(p => p.role === 'admin' || p.role === 'estagiario'), [allPeople]);
-  const { projects } = useStore();
-  const { tarefas, loading, create, edit, move, setStatus, remove } = useGestaoTarefas();
+  const { projects, gantt } = useStore();
+  const { tarefas: nativas, loading, error, create, edit, move, setStatus, remove } = useGestaoTarefas();
+  const tarefas = useMemo(() => resolverPessoasDoQuadro([...nativas, ...tarefasAdministrativas(gantt)], allPeople), [nativas, gantt, allPeople]);
+  const people = useMemo(() => {
+    const colunas = new Map<string, CardPerson>(allPeople.filter(p => p.role === 'admin' || p.role === 'estagiario').map(p => [p.login, p]));
+    for (const t of tarefas) if (!colunas.has(t.atribuidoParaLogin)) colunas.set(t.atribuidoParaLogin, { login: t.atribuidoParaLogin, name: t.atribuidoParaNome });
+    return [...colunas.values()];
+  }, [allPeople, tarefas]);
+  const [vinculada, setVinculada] = useState<TarefaGestao | null>(null);
 
   const [formState, setFormState] = useState<FormState | null>(null);
   const [dragOverLogin, setDragOverLogin] = useState<string | null>(null);
@@ -75,7 +85,7 @@ export function GestaoPage() {
     const id = e.dataTransfer.getData('text/plain');
     if (!id) return;
     const task = tarefas.find(t => t.id === id);
-    if (!task || task.atribuidoParaLogin === login) return;
+    if (readOnly || !task || task.origem || task.atribuidoParaLogin === login) return;
     try {
       await move(id, login, name);
       toast.success(`Tarefa movida para ${name}.`);
@@ -105,9 +115,10 @@ export function GestaoPage() {
             Quadro de tarefas por pessoa — arraste um card ou use o seletor para reatribuir.
           </p>
         </div>
-        <BotaoNovo onClick={() => setFormState({ mode: 'create' })}>Nova tarefa</BotaoNovo>
+        {!readOnly && <BotaoNovo onClick={() => setFormState({ mode: 'create' })}>Nova tarefa</BotaoNovo>}
       </div>
 
+      {error && <p role="alert" style={{ color: 'var(--danger)' }}>Não foi possível carregar todas as tarefas. {error instanceof Error ? error.message : 'Tente novamente.'}</p>}
       {people.length === 0 ? (
         <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--ink-5)', fontSize: '0.85rem' }}>
           Nenhum estagiário ou administrador cadastrado ainda.
@@ -160,7 +171,8 @@ export function GestaoPage() {
                       key={t.id}
                       task={t}
                       people={people}
-                      onEdit={() => setFormState({ mode: 'edit', task: t })}
+                      readOnly={readOnly || !!t.origem}
+                      onEdit={() => t.origem ? setVinculada(t) : setFormState({ mode: 'edit', task: t })}
                       onDelete={() => handleDelete(t)}
                       onMove={(login, name) => move(t.id, login, name)}
                       onStatus={s => setStatus(t.id, s)}
@@ -168,14 +180,16 @@ export function GestaoPage() {
                   ))}
                 </div>
 
-                <LinkNovo onClick={() => setFormState({ mode: 'create', defaultLogin: person.login })} className="justify-center py-2 border-t flex-shrink-0">Nova tarefa</LinkNovo>
+                {!readOnly && <LinkNovo onClick={() => setFormState({ mode: 'create', defaultLogin: person.login })} className="justify-center py-2 border-t flex-shrink-0">Nova tarefa</LinkNovo>}
               </div>
             );
           })}
         </div>
       )}
 
-      {formState && (
+      {vinculada && <DetalheTarefaVinculada tarefa={tarefas.find(t => t.id === vinculada.id) ?? vinculada}
+        aoFechar={() => setVinculada(null)} aoProjeto={onOpenProject} aoOrganizacao={onOpenOrg} aoAdministrativo={onOpenAdmin} />}
+      {formState && !readOnly && (
         <TaskForm
           people={people}
           projects={projects}
@@ -193,8 +207,9 @@ export function GestaoPage() {
 
 interface CardPerson { login: string; name: string }
 
-function TaskCard({ task, people, onEdit, onDelete, onMove, onStatus }: {
+function TaskCard({ task, people, readOnly, onEdit, onDelete, onMove, onStatus }: {
   task: TarefaGestao;
+  readOnly: boolean;
   people: CardPerson[];
   onEdit: () => void;
   onDelete: () => void;
@@ -206,18 +221,18 @@ function TaskCard({ task, people, onEdit, onDelete, onMove, onStatus }: {
 
   return (
     <div
-      draggable
+      draggable={!readOnly}
       onDragStart={e => e.dataTransfer.setData('text/plain', task.id)}
-      className="rounded-lg border p-2.5 flex flex-col gap-2 cursor-grab active:cursor-grabbing"
+      className={`rounded-lg border p-2.5 flex flex-col gap-2 ${readOnly ? '' : 'cursor-grab active:cursor-grabbing'}`}
       style={{ borderColor: visual.border, background: 'var(--surface-0)' }}
     >
       <div className="flex items-start justify-between gap-2">
-        <button type="button" onClick={onEdit} className="text-left flex-1 min-w-0">
+        <button type="button" disabled={readOnly && !task.origem} onClick={onEdit} className="text-left flex-1 min-w-0">
           <span className="block" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)', lineHeight: 1.3 }}>{task.titulo}</span>
         </button>
-        <button type="button" onClick={onDelete} className="flex-shrink-0 p-0.5 rounded hover:bg-red-50" title="Excluir tarefa">
+        {!readOnly && <button type="button" onClick={onDelete} className="flex-shrink-0 p-0.5 rounded hover:bg-red-50" title="Excluir tarefa">
           <Trash2 size={12} color="var(--danger)" />
-        </button>
+        </button>}
       </div>
 
       {task.projetos.length > 0 && (
@@ -255,10 +270,11 @@ function TaskCard({ task, people, onEdit, onDelete, onMove, onStatus }: {
         {fmtDate(task.dataEntrada)} → {fmtDate(task.dataLimite)}
       </div>
       <div className="truncate" style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>
-        Atribuída por {task.atribuidoPorNome}
+        Criada por {task.atribuidoPorNome || 'Não informado'}
       </div>
+      {task.origem && <p className="text-xs" style={{ color: 'var(--ink-4)' }}>{task.origem.caminho}</p>}
 
-      <div className="flex items-center gap-1.5">
+      {!readOnly && <div className="flex items-center gap-1.5">
         <select
           className="flex-1 min-w-0"
           style={{ fontSize: '0.68rem', border: '1px solid var(--border)', borderRadius: 6, padding: '3px 4px', background: 'var(--surface-1)', color: 'var(--ink-2)' }}
@@ -279,7 +295,7 @@ function TaskCard({ task, people, onEdit, onDelete, onMove, onStatus }: {
         >
           {people.map(p => <option key={p.login} value={p.login}>{p.name}</option>)}
         </select>
-      </div>
+      </div>}
     </div>
   );
 }

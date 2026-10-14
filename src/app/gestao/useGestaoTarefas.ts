@@ -11,9 +11,10 @@ const QUERY_KEY = ['tarefas-gestao'];
 
 export function useGestaoTarefas() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: () => listarTarefasGestao(),
+    refetchInterval: 30000,
   });
 
   const invalidate = useCallback(() => {
@@ -21,11 +22,11 @@ export function useGestaoTarefas() {
   }, [queryClient]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel('tarefas-gestao-sync')
+    const channels = ['tarefas-gestao-sync', 'projetos-sync', 'atribuicoes-sync'].map(nome => supabase
+      .channel(nome)
       .on('broadcast', { event: 'changed' }, () => invalidate())
-      .subscribe();
-    return () => { void supabase.removeChannel(channel); };
+      .subscribe());
+    return () => { channels.forEach(channel => { void supabase.removeChannel(channel); }); };
   }, [invalidate]);
 
   const create = useCallback(async (input: {
@@ -62,6 +63,7 @@ export function useGestaoTarefas() {
   return {
     tarefas: (data ?? []) as TarefaGestao[],
     loading: isLoading,
+    error,
     create, edit, move, setStatus, remove,
   };
 }

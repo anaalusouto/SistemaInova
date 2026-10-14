@@ -13,6 +13,7 @@
  * junto com a importação.
  */
 import { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, Loader2, X, ArrowRight,
 } from 'lucide-react';
@@ -37,12 +38,13 @@ function Secao({ titulo, children, tom }: { titulo: string; children: React.Reac
 export function DialogoImportacao({
   projetoId, aoFechar,
 }: { projetoId: number; aoFechar: () => void }) {
+  const query = useQueryClient();
+  const confirmando = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [arquivo, setArquivo] = useState<{ nome: string; dataUrl: string } | null>(null);
   const [previa, setPrevia] = useState<PreviaImportacao | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [acaoAusentes, setAcaoAusentes] = useState<'manter' | 'excluir'>('manter');
   const [decisao, setDecisao] = useState('');
   const [metasPorLinha, setMetasPorLinha] = useState<Record<string, string>>({});
 
@@ -87,7 +89,8 @@ export function DialogoImportacao({
   };
 
   const confirmar = async () => {
-    if (!arquivo || !previa) return;
+    if (!arquivo || !previa || confirmando.current) return;
+    confirmando.current = true;
     setOcupado(true);
     setErro(null);
     try {
@@ -99,11 +102,12 @@ export function DialogoImportacao({
           dataUrl: arquivo.dataUrl,
           mapeamento: previa.mapeamento,
           linhaCabecalho: previa.linhaCabecalho,
-          acaoAusentes,
+          antes: previa.antes,
           decisaoJustificada: decisao,
           metasPorLinha,
         },
       });
+      await Promise.all(['projetos', 'organizacoes', 'organizacao'].map(key => query.invalidateQueries({ queryKey: [key] })));
       toast.success(
         `Versão ${r.versao} importada: ${r.incluidos} incluído(s), ${r.alterados} alterado(s).`,
       );
@@ -111,6 +115,7 @@ export function DialogoImportacao({
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não foi possível concluir a importação.');
     } finally {
+      confirmando.current = false;
       setOcupado(false);
     }
   };
@@ -122,7 +127,8 @@ export function DialogoImportacao({
     p.rejeitadas.length > 0 || p.duplicadas.length > 0 || !!p.desacordoDeTotal ||
     p.itens.some(i => i.divergencias.length > 0) || (rec?.ambiguos.length ?? 0) > 0
   );
-  const exigeDecisao = !!p && (p.duplicadas.length > 0 || (rec?.ambiguos.length ?? 0) > 0);
+  const exigeDecisao = !!p && (!!p.desacordoDeTotal || p.itens.some(i => i.divergencias.length > 0));
+  const leituraInvalida = !!p && (p.duplicadas.length > 0 || p.rejeitadas.length > 0);
   const metasPendentes = previa?.vinculosMetas.some(v => !!v.motivo) ?? false;
   const escolherMeta = async (linha: number, metaId: string) => {
     if (!arquivo || !previa) return;
@@ -277,6 +283,9 @@ export function DialogoImportacao({
 
               {rec && (
                 <Secao titulo="Comparação com o que já está no projeto">
+                  <p>A confirmação substitui o orçamento vigente pelos itens desta aba. Total da nova proposta: <strong>{moeda(p!.somaDosItens)}</strong>. Confira a planilha completa antes de confirmar.</p>
+                  {rec.ambiguos.length > 0 && <p role="alert">Itens duplicados no orçamento anterior serão arquivados com seus vínculos preservados. As novas linhas entrarão sem transferir execução entre itens.</p>}
+                  {leituraInvalida && <p role="alert">Corrija as linhas rejeitadas ou repetidas antes de substituir o orçamento.</p>}
                   <span style={{ color: 'var(--success)' }}>{rec.incluidos.length} a incluir</span>
                   {' · '}
                   <span style={{ color: 'var(--warning-strong-text)' }}>{rec.alterados.length} a alterar</span>
@@ -309,20 +318,7 @@ export function DialogoImportacao({
                         {rec.ausentes.map(a => a.descricao).slice(0, 4).join(', ')}
                         {rec.ausentes.length > 4 && ` e mais ${rec.ausentes.length - 4}`}.
                       </span>
-                      {/* RN-031: item ausente não some sozinho. */}
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {([['manter', 'Manter no plano'], ['excluir', 'Marcar como excluídos']] as const).map(([v, r]) => (
-                          <label key={v} className="inline-flex items-center gap-1.5" style={{ fontSize: '0.74rem', color: 'var(--ink-2)' }}>
-                            <input type="radio" name="ausentes" checked={acaoAusentes === v} onChange={() => setAcaoAusentes(v)} />
-                            {r}
-                          </label>
-                        ))}
-                      </div>
-                      {acaoAusentes === 'excluir' && (
-                        <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
-                          Itens com execução registrada não serão marcados — permanecem no plano.
-                        </span>
-                      )}
+                      <p>Esses itens sairão do orçamento vigente. Notas, comprovantes e histórico serão preservados, inclusive para itens com execução.</p>
                     </div>
                   )}
                 </Secao>
@@ -370,7 +366,7 @@ export function DialogoImportacao({
                     Decisão de importação <span style={{ color: 'var(--danger)' }}>*</span>
                   </span>
                   <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>
-                    Há correspondência ambígua ou linhas repetidas. Registre a decisão para prosseguir —
+                    Há divergências nos valores. Corrija o arquivo ou registre a decisão para prosseguir —
                     ela fica gravada junto com esta importação.
                   </span>
                   <textarea
@@ -411,14 +407,14 @@ export function DialogoImportacao({
             </button>
             <button
               onClick={confirmar}
-              disabled={ocupado || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim())}
+              disabled={ocupado || leituraInvalida || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim())}
               className="px-4 py-1.5 rounded-md text-[12.5px] font-medium text-white"
               style={{
                 background: 'var(--primary)',
-                opacity: ocupado || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim()) ? 0.5 : 1,
+                opacity: ocupado || leituraInvalida || metasPendentes || !!erro || p!.itens.length === 0 || (exigeDecisao && !decisao.trim()) ? 0.5 : 1,
               }}
             >
-              {ocupado ? 'Importando…' : `Importar ${p!.itens.length} ${p!.itens.length === 1 ? 'item' : 'itens'}`}
+              {ocupado ? 'Atualizando…' : 'Confirmar orçamento vigente'}
             </button>
           </div>
         )}

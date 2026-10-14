@@ -19,6 +19,8 @@ export const NAO_INFORMADO = 'Não informado' as const;
 export type SituacaoItem = 'Ativo' | 'Excluído';
 
 export interface ItemOrcamento {
+  /** false = item de uma versão substituída; execução e notas são preservadas. */
+  vigente?: boolean;
   metaId?: string | null;
   id: string;
   grupo: string;
@@ -186,6 +188,7 @@ export interface TotaisOrcamento {
  * aprovado "encolher" no relatório, o que não é verdade.
  */
 export function totaisDoOrcamento(itens: ItemOrcamento[]): TotaisOrcamento {
+  itens = itens.filter(i => i.vigente !== false);
   const ativos = itens.filter(i => i.situacao === 'Ativo');
   const excluidos = itens.filter(i => i.situacao === 'Excluído');
   const comExecucao = ativos.filter(i => i.valorExecutado !== null);

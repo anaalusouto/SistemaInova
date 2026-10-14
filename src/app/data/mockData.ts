@@ -54,6 +54,8 @@ export interface Activity {
   nextStep: string;
   nextStepOwner: string;
   nextStepDue: string | null;
+  nextStepCreatedBy?: string;
+  nextStepCreatedByLogin?: string;
 
   /** Preenchido quando a atividade é uma ação de resposta a risco (RN-020).
    *  Continua sendo atividade comum: entra na numeração e nas três visões. */

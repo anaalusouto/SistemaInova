@@ -1,12 +1,11 @@
 /**
  * Escritas do Orçamento (RF-030, RF-039, RF-040, RF-041, RN-032, RN-033).
  *
- * O que a equipe PMO informa na rotina normal é só execução: as notas fiscais
+ * Este módulo registra a execução: as notas fiscais
  * (RF04.3 — o executado do item é a soma delas) e a justificativa exigida
  * quando o executado difere do proposto. Os
- * dados planejados do item são somente leitura (RF-030) — corrigi-los é papel
- * de uma nova versão da planilha, com prévia e reconciliação, não de digitação
- * na tela de execução.
+ * dados planejados são revisados em orcamentoRevisao.server.ts ou pela nova
+ * versão da planilha, sem misturar essa revisão com o lançamento de execução.
  *
  * Toda alteração entra no histórico do item com valor anterior e novo (RN-033).
  * Sem isso, "por que este item mudou de R$ 8.000 para R$ 12.000?" vira uma
@@ -137,13 +136,14 @@ async function conferirItemDaNota(
 ): Promise<void> {
   if (!itemId) return;
   const { data: item } = await supabaseAdmin
-    .from('orcamento_itens').select('projeto_id, situacao').eq('id', itemId).maybeSingle();
+    .from('orcamento_itens').select('projeto_id, situacao, vigente').eq('id', itemId).maybeSingle();
   if (!item || Number(item.projeto_id) !== projetoId) {
     throw new OrcamentoInvalido(['O item escolhido não pertence a este projeto.']);
   }
   if (item.situacao === 'Excluído') {
     throw new OrcamentoInvalido(['O item escolhido está excluído do plano. Reverta a exclusão ou lance a nota sem item.']);
   }
+  if (item.vigente === false) throw new OrcamentoInvalido(['Este item pertence a uma versão anterior. Escolha um item vigente ou lance a nota sem item.']);
 }
 
 const textoOuNulo = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
@@ -194,7 +194,9 @@ export const atualizarNota = createServerFn({ method: 'POST' })
     if (e1 || !antes) throw new Error('Nota não encontrada.');
     // O projeto sai do banco, não do cliente: a nota não muda de projeto.
     const projetoId = Number(antes.projeto_id);
-    await conferirItemDaNota(supabaseAdmin, projetoId, dados.itemId);
+    // Editar a própria nota preserva seu vínculo histórico; apenas uma nova
+    // associação exige item vigente.
+    if (dados.itemId !== antes.item_id) await conferirItemDaNota(supabaseAdmin, projetoId, dados.itemId);
 
     const valor = arredondar(dados.valor!);
     const { error } = await supabaseAdmin

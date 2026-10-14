@@ -32,6 +32,7 @@ import { ComparativoExecucao, ListaNotas } from './NotasOrcamento';
 import { DialogoExclusaoItem } from './DialogoExclusaoItem';
 import { PainelHistoricoItem } from './PainelHistoricoItem';
 import { DialogoImportacao } from './DialogoImportacao';
+import { FormularioPlanejado } from './FormularioPlanejado';
 
 type FiltroSituacao = 'ativos' | 'excluidos' | 'todos';
 
@@ -71,11 +72,16 @@ export function TabOrcamento({ project }: { project: Project }) {
   const [historico, setHistorico] = useState<ItemOrcamento | null>(null);
   const [revertendo, setRevertendo] = useState<ItemOrcamento | null>(null);
   const [motivoReversao, setMotivoReversao] = useState('');
+  const [planejado, setPlanejado] = useState<ItemOrcamento | 'novo' | null>(null);
+  const [verAnteriores, setVerAnteriores] = useState(false);
   const [importando, setImportando] = useState(false);
   // Diálogo da nota: nova (com item pré-escolhido ou não) ou existente.
   const [notaAberta, setNotaAberta] = useState<{ nota?: NotaOrcamento; itemId?: string | null } | null>(null);
 
-  const itens = p.orcamentoItens ?? [];
+  const todosItens = p.orcamentoItens ?? [];
+  const itens = useMemo(() => todosItens.filter(i => i.vigente !== false), [todosItens]);
+  const anteriores = todosItens.filter(i => i.vigente === false);
+  const formularioPlanejado = planejado && <FormularioPlanejado projetoId={p.id} metas={p.goals} item={planejado === 'novo' ? undefined : planejado} aoFechar={() => setPlanejado(null)} />;
   const notas = p.orcamentoNotas ?? [];
   const notasPorItem = useMemo(() => {
     const m = new Map<string, NotaOrcamento[]>();
@@ -90,12 +96,12 @@ export function TabOrcamento({ project }: { project: Project }) {
   // Proposto: da planilha quando há itens, senão o aprovado do cadastro — o
   // mesmo que o cabeçalho do projeto mostra. Executado: todas as notas.
   const proposto = itens.length ? totaisProjeto.proposto : (p.budgetApproved || null);
-  const executado = somaDasNotas(notas) ?? totaisProjeto.executadoConhecido;
+  const executado = somaDasNotas(notas) ?? somaDasNotas(todosItens.filter(i => i.valorExecutado !== null).map(i => ({ valor: i.valorExecutado! })));
 
   const dialogoNota = notaAberta && (
     <FormularioNota
       projetoId={p.id}
-      itens={itens}
+      itens={todosItens}
       nota={notaAberta.nota}
       itemInicial={notaAberta.itemId}
       aoFechar={() => setNotaAberta(null)}
@@ -139,7 +145,7 @@ export function TabOrcamento({ project }: { project: Project }) {
         <ComparativoExecucao proposto={proposto} executado={executado} notas={notas} />
         <ListaNotas
           notas={notas}
-          itens={itens}
+          itens={todosItens}
           aoNovaNota={() => setNotaAberta({})}
           aoAbrirNota={n => setNotaAberta({ nota: n })}
         />
@@ -149,8 +155,8 @@ export function TabOrcamento({ project }: { project: Project }) {
         >
           <Info size={15} color="var(--ink-4)" style={{ flexShrink: 0, marginTop: 1 }} />
           <div style={{ fontSize: '0.8rem', color: 'var(--ink-3)', lineHeight: 1.6 }}>
-            Nenhum item de orçamento neste projeto. Os itens vêm da importação da planilha do
-            orçamento. Enquanto ela não entra, as notas são lançadas sem item e contam no total
+            Nenhum item vigente neste projeto. Adicione um item pela plataforma ou importe a
+            planilha completa do orçamento. Enquanto isso, as notas podem ser lançadas sem item e contam no total
             do projeto; depois, cada nota pode ser vinculada ao item dela.
           </div>
         </div>
@@ -168,6 +174,8 @@ export function TabOrcamento({ project }: { project: Project }) {
         {importando && (
           <DialogoImportacao projetoId={p.id} aoFechar={() => setImportando(false)} />
         )}
+        {!readOnly && <button onClick={() => setPlanejado('novo')} className="border rounded px-3 py-2 self-start">Novo item do orçamento</button>}
+        {formularioPlanejado}
         {dialogoNota}
       </div>
     );
@@ -268,6 +276,8 @@ export function TabOrcamento({ project }: { project: Project }) {
           {filtrados.length} de {itens.length} itens
         </span>
       </div>
+
+      {!readOnly && <button onClick={() => setPlanejado('novo')} className="border rounded px-3 py-2 self-start">Novo item do orçamento</button>}
 
       {/* Tabela por grupo */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
@@ -406,6 +416,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                               </button>
                               {!readOnly && !excluido && (
                                 <>
+                                  <button onClick={() => setPlanejado(item)} aria-label={`Editar planejado de ${item.descricao}`} className="p-1 rounded text-xs">Editar planejado</button>
                                   <button
                                     onClick={() => setEditando(item)}
                                     aria-label={`Execução de ${item.descricao}`}
@@ -443,7 +454,7 @@ export function TabOrcamento({ project }: { project: Project }) {
 
       <ListaNotas
         notas={notas}
-        itens={itens}
+        itens={todosItens}
         aoNovaNota={() => setNotaAberta({})}
         aoAbrirNota={n => setNotaAberta({ nota: n })}
       />
@@ -458,6 +469,12 @@ export function TabOrcamento({ project }: { project: Project }) {
         />
       )}
 
+      {formularioPlanejado}
+      {anteriores.length > 0 && <section className="border rounded p-3 text-sm">
+        <button onClick={() => setVerAnteriores(v => !v)} aria-expanded={verAnteriores}>Itens de versões anteriores ({anteriores.length})</button>
+        {verAnteriores && <><p>Fora do total proposto vigente. Notas continuam no executado do projeto.</p>
+          <ul>{anteriores.map(i => <li key={i.id} className="flex gap-3 py-1"><span>{i.descricao} — {moeda(i.valorProposto)}</span><button onClick={() => setHistorico(i)}>Histórico</button></li>)}</ul></>}
+      </section>}
       {dialogoNota}
 
       {excluindo && (

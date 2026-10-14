@@ -377,6 +377,9 @@ export function reconciliar(existentes: ItemExistente[], novos: LinhaLida[]): Re
     if (candidatos.length === 0) { incluidos.push(novo); continue; }
     if (candidatos.length > 1) {
       ambiguos.push({ chave: novo.chave, quantidade: candidatos.length });
+      // Sem escolher um ID arbitrário: a nova linha é vigente; os registros
+      // legados continuam no histórico com seus vínculos originais.
+      incluidos.push(novo);
       continue;
     }
 
@@ -390,7 +393,7 @@ export function reconciliar(existentes: ItemExistente[], novos: LinhaLida[]): Re
     }
   }
 
-  const ausentes = existentes.filter(e => !casados.has(e.id) && !!e.chave);
+  const ausentes = existentes.filter(e => !casados.has(e.id));
 
   return { incluidos, alterados, ausentes, inalterados, ambiguos };
 }

@@ -93,7 +93,7 @@ function AppShell() {
       case 'organizations':
         return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} />;
       case 'schedule':
-        return <CronogramaPage onOpenProject={handleSelectProject} />;
+        return <CronogramaPage onOpenProject={handleSelectProject} onOpenOrg={(orgId, foco) => navegarOrg({ orgId, secao: 'encaminhamentos', projetoId: null, foco })} />;
       case 'diagnostics':
         return <DiagnosticoModule />;
       case 'reports':

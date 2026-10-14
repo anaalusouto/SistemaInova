@@ -18,7 +18,8 @@
  */
 import { createServerFn } from '@tanstack/react-start';
 import { chaveDeOrigem } from './lib/orcamento';
-import { vincularMetasDoOrcamento, chaveMetaNova, type MetaDoOrcamento, type VinculoMeta } from './lib/orcamentoMetas';
+import { camposPlanejados } from './lib/orcamentoRevisao';
+import { vincularMetasDoOrcamento, type MetaDoOrcamento, type VinculoMeta } from './lib/orcamentoMetas';
 import {
   detectarCabecalho, montarPrevia, reconciliar,
   type Celula, type MapeamentoColunas, type Previa, type Reconciliacao, type ItemExistente,
@@ -86,6 +87,7 @@ export interface PreviaImportacao {
   /** Amostra das primeiras linhas, para a pessoa conferir o alinhamento. */
   amostra: Celula[][];
   versaoAtual: number;
+  antes: string;
 }
 
 /**
@@ -125,14 +127,14 @@ export const lerPlanilha = createServerFn({ method: 'POST' })
     previa.itens.forEach((item, i) => { item.metaId = vinculosMetas[i].metaId; });
     const { data: existentesRaw, error: erroExistentes } = await supabaseAdmin
       .from('orcamento_itens')
-      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao, meta_id')
-      .eq('projeto_id', data.projetoId);
+      .select('*')
+      .eq('projeto_id', data.projetoId).eq('vigente', true).order('id');
 
     if (erroExistentes) throw new Error(`Não foi possível conferir os vínculos do orçamento. Verifique a migração 0020. ${erroExistentes.message}`);
     const existentes: ItemExistente[] = (existentesRaw ?? []).map(i => ({
       id: i.id as string,
       metaId: i.meta_id ?? null,
-      chave: (i.chave_origem as string) ?? null,
+      chave: i.chave_origem || chaveDeOrigem(i.grupo ?? '', i.categoria ?? '', i.item ?? ''),
       descricao: (i.item as string) ?? '',
       valorProposto: Number(i.valor_proposto ?? 0),
       temExecucao: i.valor_executado !== null && Number(i.valor_executado) > 0,
@@ -147,6 +149,7 @@ export const lerPlanilha = createServerFn({ method: 'POST' })
       .limit(1);
 
     return {
+      antes: JSON.stringify(existentesRaw ?? []),
       metas, vinculosMetas,
       abas,
       aba,
@@ -172,8 +175,8 @@ export interface AplicarInput {
   dataUrl: string;
   mapeamento: MapeamentoColunas;
   linhaCabecalho: number;
-  /** Decisão explícita sobre itens ausentes na nova versão (RN-031). */
-  acaoAusentes: 'manter' | 'excluir';
+  /** Snapshot da prévia para detectar revisões concorrentes. */
+  antes: string;
   /** Registro da decisão quando há divergências não resolvidas no arquivo. */
   decisaoJustificada: string;
 }
@@ -186,14 +189,15 @@ export interface AplicarInput {
  * planejado; a execução é do sistema, e uma reimportação que apagasse isso
  * destruiria meses de registro a cada correção de preço na origem.
  *
- * Item ausente na nova versão não some sozinho: ou permanece, ou é marcado
- * conforme decisão explícita de quem importa.
+ * A confirmação substitui a proposta vigente. Itens ausentes são arquivados,
+ * preservando notas, execução e histórico fora do total proposto atual.
  */
 export const aplicarImportacao = createServerFn({ method: 'POST' })
   .validator((d: AplicarInput) => d)
   .handler(async ({ data }): Promise<{ incluidos: number; alterados: number; ausentes: number; versao: number }> => {
     const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
+    if (typeof data.antes !== 'string') throw new PlanilhaInvalida('Reabra a prévia do orçamento antes de confirmar a substituição.');
 
     const workbook = await abrirPlanilha(data.dataUrl);
     const matriz = await matrizDaAba(workbook, data.aba);
@@ -202,12 +206,14 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
     if (previa.itens.length === 0) {
       throw new PlanilhaInvalida('Nenhum item válido foi encontrado nesta aba com o mapeamento informado.');
     }
-    // RN-031: ambiguidade exige conciliação manual, não decisão automática.
-    if (previa.duplicadas.length > 0 && !data.decisaoJustificada.trim()) {
-      throw new PlanilhaInvalida(
-        'Há linhas com grupo, categoria e descrição repetidos. ' +
-        'Corrija a planilha ou registre a decisão de importação antes de confirmar.',
-      );
+    if (previa.duplicadas.length > 0) {
+      throw new PlanilhaInvalida('Há itens repetidos na nova planilha. Corrija as linhas antes de substituir o orçamento.');
+    }
+    if (previa.rejeitadas.length > 0) {
+      throw new PlanilhaInvalida('Há linhas rejeitadas. Corrija a planilha antes de substituir o orçamento para não retirar itens por uma falha de leitura.');
+    }
+    if ((previa.desacordoDeTotal || previa.itens.some(i => i.divergencias.length > 0)) && !data.decisaoJustificada.trim()) {
+      throw new PlanilhaInvalida('Corrija as divergências nos valores ou registre a decisão de importação antes de confirmar.');
     }
 
     // Releitura e resolução no servidor: nenhum ID da prévia é confiado
@@ -222,14 +228,14 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
 
     const { data: existentesRaw, error: erroExistentes } = await supabaseAdmin
       .from('orcamento_itens')
-      .select('id, chave_origem, item, valor_proposto, valor_executado, situacao, meta_id')
-      .eq('projeto_id', data.projetoId);
+      .select('*')
+      .eq('projeto_id', data.projetoId).eq('vigente', true).order('id');
 
     if (erroExistentes) throw new Error(`Não foi possível conferir os vínculos do orçamento. Verifique a migração 0020. ${erroExistentes.message}`);
     const existentes: ItemExistente[] = (existentesRaw ?? []).map(i => ({
       id: i.id as string,
       metaId: i.meta_id ?? null,
-      chave: (i.chave_origem as string) ?? null,
+      chave: i.chave_origem || chaveDeOrigem(i.grupo ?? '', i.categoria ?? '', i.item ?? ''),
       descricao: (i.item as string) ?? '',
       valorProposto: Number(i.valor_proposto ?? 0),
       temExecucao: i.valor_executado !== null && Number(i.valor_executado) > 0,
@@ -237,162 +243,27 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
     }));
 
     previa.itens.forEach((item, i) => { item.metaId = vinculos[i].metaId; });
-    let plano = reconciliar(existentes, previa.itens);
-    if (plano.ambiguos.length > 0 && !data.decisaoJustificada.trim()) {
-      throw new PlanilhaInvalida(
-        'A correspondência com itens já cadastrados é ambígua. Registre a decisão antes de confirmar.',
-      );
-    }
+    const plano = reconciliar(existentes, previa.itens);
 
-    // Só a confirmação cria metas. A leitura da planilha permanece sem escrita.
-    const criadas = new Map<string, string>();
-    let ordemMeta = Math.max(0, ...(metasRaw ?? []).map(m => Number(m.ordem ?? 0)));
-    for (const vinculo of vinculos) {
-      if (!vinculo.criarMeta) continue;
-      const chave = chaveMetaNova(vinculo.criarMeta);
-      if (!criadas.has(chave)) {
-        const { data: novaMeta, error } = await supabaseAdmin.from('metas')
-          .insert({ projeto_id: data.projetoId, nome: vinculo.criarMeta, ordem: ++ordemMeta })
-          .select('id').single();
-        if (error) throw new Error(error.message);
-        criadas.set(chave, novaMeta.id);
-      }
-      vinculo.metaId = criadas.get(chave)!;
-    }
-    previa.itens.forEach((item, i) => { item.metaId = vinculos[i].metaId; });
-    plano = reconciliar(existentes, previa.itens);
-
-    const { data: ultima } = await supabaseAdmin
-      .from('orcamento_importacoes')
-      .select('versao').eq('projeto_id', data.projetoId).order('versao', { ascending: false }).limit(1);
-    const versao = (ultima?.length ? Number(ultima[0].versao) : 0) + 1;
-
-    const { data: importacao, error: erroImp } = await supabaseAdmin
-      .from('orcamento_importacoes')
-      .insert({
-        projeto_id: data.projetoId,
-        nome_arquivo: data.nomeArquivo,
-        aba: data.aba,
-        versao,
-        autor: sessao.displayName,
-        resumo: {
-          incluidos: plano.incluidos.length,
-          alterados: plano.alterados.length,
-          ausentes: plano.ausentes.length,
-          inalterados: plano.inalterados,
-          rejeitadas: previa.rejeitadas,
-          duplicadas: previa.duplicadas,
-          desacordoDeTotal: previa.desacordoDeTotal,
+    const porChave = new Map(existentes.map(i => [i.chave, i]));
+    const itens = previa.itens.map((i, indice) => ({
+      ...camposPlanejados({ ...i, metaId: i.metaId ?? null, valorProposto: i.totalDeclarado }),
+      ...(vinculos[indice].criarMeta ? { meta_nova: vinculos[indice].criarMeta } : {}),
+      id: plano.ambiguos.some(a => a.chave === i.chave) ? null : porChave.get(i.chave)?.id ?? null,
+    }));
+    const { data: resultado, error } = await supabaseAdmin.rpc('salvar_versao_orcamento', {
+      p_projeto: data.projetoId,
+      p_antes: JSON.parse(data.antes),
+      p_itens: itens,
+      p_autor: sessao.displayName,
+      p_importacao: {
+        nome_arquivo: data.nomeArquivo, aba: data.aba,
+        resumo: { incluidos: plano.incluidos.length, alterados: plano.alterados.length,
+          ausentes: plano.ausentes.length, inalterados: plano.inalterados,
           decisaoJustificada: data.decisaoJustificada.trim() || null,
-          acaoAusentes: data.acaoAusentes,
-          metasCriadas: [...criadas.values()],
-          vinculosMetas: vinculos,
-        },
-      })
-      .select('id')
-      .single();
-    if (erroImp) throw new Error(erroImp.message);
-
-    const historico: any[] = [];
-
-    // Alterados: só o PLANEJADO muda. Execução e exclusão ficam como estão.
-    for (const alt of plano.alterados) {
-      const { error } = await supabaseAdmin
-        .from('orcamento_itens')
-        .update({
-          grupo: alt.novo.grupo,
-          meta_id: alt.novo.metaId,
-          categoria: alt.novo.categoria,
-          item: alt.novo.descricao,
-          qtd: alt.novo.qtd,
-          unidade: alt.novo.unidade,
-          qtd_unidades: alt.novo.qtdUnidades,
-          valor_unitario: Number.isFinite(alt.novo.valorUnitario) ? alt.novo.valorUnitario : 0,
-          valor_proposto: alt.novo.totalDeclarado,
-          chave_origem: alt.novo.chave,
-          importacao_id: importacao.id,
-        })
-        .eq('id', alt.existente.id);
-      if (error) throw new Error(error.message);
-
-      historico.push({
-        item_id: alt.existente.id, evento: 'correção de origem', autor: sessao.displayName,
-        valor_anterior: alt.de.toFixed(2), valor_novo: alt.para.toFixed(2),
-        detalhe: `Versão ${versao} da planilha (${data.nomeArquivo}).`,
-      });
-    }
-
-    // Incluídos: entram no fim, preservando a ordem de leitura da planilha.
-    const { data: maiorOrdem } = await supabaseAdmin
-      .from('orcamento_itens').select('ordem').eq('projeto_id', data.projetoId).order('ordem', { ascending: false }).limit(1);
-    let ordem = maiorOrdem?.length ? Number(maiorOrdem[0].ordem) : 0;
-
-    for (const novo of plano.incluidos) {
-      ordem += 1;
-      const { data: criado, error } = await supabaseAdmin
-        .from('orcamento_itens')
-        .insert({
-          projeto_id: data.projetoId,
-          meta_id: novo.metaId,
-          grupo: novo.grupo,
-          categoria: novo.categoria,
-          item: novo.descricao,
-          qtd: novo.qtd,
-          unidade: novo.unidade,
-          qtd_unidades: novo.qtdUnidades,
-          valor_unitario: Number.isFinite(novo.valorUnitario) ? novo.valorUnitario : 0,
-          valor_proposto: novo.totalDeclarado,
-          // Execução nasce ausente, nunca zero (RF-029).
-          valor_executado: null,
-          chave_origem: novo.chave,
-          importacao_id: importacao.id,
-          ordem,
-          situacao: 'Ativo',
-        })
-        .select('id')
-        .single();
-      if (error) throw new Error(error.message);
-
-      historico.push({
-        item_id: criado.id, evento: 'importação', autor: sessao.displayName,
-        valor_anterior: null, valor_novo: novo.totalDeclarado.toFixed(2),
-        detalhe: `Versão ${versao} da planilha (${data.nomeArquivo}), linha ${novo.linhaPlanilha}.`,
-      });
-    }
-
-    // Ausentes: nunca apagados. Só marcados, e só com decisão explícita.
-    if (data.acaoAusentes === 'excluir') {
-      for (const ausente of plano.ausentes) {
-        if (ausente.excluido) continue;
-        if (ausente.temExecucao) continue; // RN-032 vale aqui também
-        const { error } = await supabaseAdmin
-          .from('orcamento_itens')
-          .update({
-            situacao: 'Excluído',
-            motivo_exclusao: `Ausente na versão ${versao} da planilha (${data.nomeArquivo}).`,
-            excluido_em: new Date().toISOString(),
-            excluido_por: sessao.displayName,
-          })
-          .eq('id', ausente.id);
-        if (error) throw new Error(error.message);
-
-        historico.push({
-          item_id: ausente.id, evento: 'exclusão', autor: sessao.displayName,
-          valor_anterior: 'Ativo', valor_novo: 'Excluído',
-          detalhe: `Ausente na versão ${versao} da planilha.`,
-        });
-      }
-    }
-
-    if (historico.length) {
-      const { error } = await supabaseAdmin.from('orcamento_item_historico').insert(historico);
-      if (error) console.error('[orçamento] histórico da importação não gravado:', error.message);
-    }
-
-    return {
-      incluidos: plano.incluidos.length,
-      alterados: plano.alterados.length,
-      ausentes: plano.ausentes.length,
-      versao,
-    };
+          acaoAusentes: 'substituir', vinculosMetas: vinculos },
+      },
+    });
+    if (error) throw new Error(`Não foi possível atualizar o orçamento. Verifique a migração 0022. ${error.message}`);
+    return resultado as { incluidos: number; alterados: number; ausentes: number; versao: number };
   });

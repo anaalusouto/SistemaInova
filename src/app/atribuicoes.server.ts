@@ -94,6 +94,8 @@ export const criarAtribuicoes = createServerFn({ method: 'POST' })
     itens: { atividadeId: string; pessoaLogin: string; pessoaNome: string }[];
   }) => d)
   .handler(async ({ data }): Promise<void> => {
+    const { exigirEscrita } = await import('./sessao.server');
+    const sessao = await exigirEscrita();
     if (!data.itens.length) return;
     const supabaseAdmin = await getAdmin();
     const rows = data.itens.slice(0, MAX_ITENS).map(it => ({
@@ -101,8 +103,8 @@ export const criarAtribuicoes = createServerFn({ method: 'POST' })
       atividade_id: it.atividadeId,
       atribuido_para_login: it.pessoaLogin,
       atribuido_para_nome: it.pessoaNome,
-      atribuido_por_login: data.atribuidoPorLogin,
-      atribuido_por_nome: data.atribuidoPorNome,
+      atribuido_por_login: sessao.login,
+      atribuido_por_nome: sessao.displayName,
     }));
     const { error } = await supabaseAdmin.from('mensagem_atribuicoes').insert(rows);
     if (error) throw new Error(error.message);

@@ -361,14 +361,15 @@ function linhaAtividade(data: AtividadeInput) {
 export const criarAtividade = createServerFn({ method: 'POST' })
   .validator((d: AtividadeInput) => d)
   .handler(async ({ data }): Promise<string> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     await validarAtividade(supabaseAdmin, data);
 
     const ordem = await proximaOrdem(supabaseAdmin, 'atividades', 'etapa_id', data.etapaId);
     const { data: criada, error } = await supabaseAdmin
       .from('atividades')
-      .insert({ ...linhaAtividade(data), ordem })
+      .insert({ ...linhaAtividade(data), ordem, criado_por: sessao.displayName, criado_por_login: sessao.login,
+        ...(data.proximoPasso.trim() ? { proximo_passo_criado_por: sessao.displayName, proximo_passo_criado_por_login: sessao.login } : {}) })
       .select('id')
       .single();
     if (error) throw new Error(error.message);
@@ -378,13 +379,20 @@ export const criarAtividade = createServerFn({ method: 'POST' })
 export const atualizarAtividade = createServerFn({ method: 'POST' })
   .validator((d: { atividadeId: string; dados: AtividadeInput }) => d)
   .handler(async ({ data: { atividadeId, dados } }): Promise<void> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     await validarAtividade(supabaseAdmin, dados);
 
+    let autoriaAcao = {};
+    if (dados.proximoPasso.trim()) {
+      const { data: anterior, error } = await supabaseAdmin.from('atividades').select('proximo_passo').eq('id', atividadeId).single();
+      if (error || !anterior) throw new Error('Não foi possível conferir a ação anterior.');
+      if (!anterior.proximo_passo?.trim()) autoriaAcao = { proximo_passo_criado_por: sessao.displayName, proximo_passo_criado_por_login: sessao.login };
+    }
+
     const { error } = await supabaseAdmin
       .from('atividades')
-      .update(linhaAtividade(dados))
+      .update({ ...linhaAtividade(dados), ...autoriaAcao })
       .eq('id', atividadeId);
     if (error) throw new Error(error.message);
   });
@@ -415,13 +423,13 @@ export const excluirAtividade = createServerFn({ method: 'POST' })
 export const criarTarefa = createServerFn({ method: 'POST' })
   .validator((d: { atividadeId: string; titulo: string }) => d)
   .handler(async ({ data: { atividadeId, titulo } }): Promise<void> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     if (!titulo.trim()) throw new DadosInvalidos(['Informe o título da tarefa.']);
     const supabaseAdmin = await getAdmin();
     const ordem = await proximaOrdem(supabaseAdmin, 'tarefas', 'atividade_id', atividadeId);
     const { error } = await supabaseAdmin
       .from('tarefas')
-      .insert({ atividade_id: atividadeId, titulo: titulo.trim(), ordem });
+      .insert({ atividade_id: atividadeId, titulo: titulo.trim(), ordem, criado_por: sessao.displayName, criado_por_login: sessao.login });
     if (error) throw new Error(error.message);
   });
 
@@ -492,7 +500,7 @@ async function metaDaEtapaDoRisco(supabaseAdmin: Awaited<ReturnType<typeof getAd
 export const criarRisco = createServerFn({ method: 'POST' })
   .validator((d: RiscoInput) => d)
   .handler(async ({ data }): Promise<void> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     validarRisco(data);
     const supabaseAdmin = await getAdmin();
 
@@ -501,6 +509,8 @@ export const criarRisco = createServerFn({ method: 'POST' })
     const metaId = await metaDaEtapaDoRisco(supabaseAdmin, data.etapaId, data.projetoId);
 
     const { error } = await supabaseAdmin.from('plano_riscos').insert({
+      criado_por: sessao.displayName, criado_por_login: sessao.login,
+      resposta_criada_por: sessao.displayName, resposta_criada_por_login: sessao.login,
       projeto_id: data.projetoId,
       etapa_id: data.etapaId,
       meta_id: metaId,
@@ -520,10 +530,10 @@ export const criarRisco = createServerFn({ method: 'POST' })
 export const atualizarRisco = createServerFn({ method: 'POST' })
   .validator((d: { riscoId: string; dados: RiscoInput }) => d)
   .handler(async ({ data: { riscoId, dados } }): Promise<void> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { data: risco, error: erroRisco } = await supabaseAdmin
-      .from('plano_riscos').select('id, projeto_id, etapa_id, meta_id').eq('id', riscoId).single();
+      .from('plano_riscos').select('id, projeto_id, etapa_id, meta_id, estrategia_mitigacao').eq('id', riscoId).single();
     if (erroRisco || !risco) throw new Error('Risco não encontrado.');
     if (risco.projeto_id !== dados.projetoId) throw new DadosInvalidos(['O risco não pertence a este projeto.']);
     validarRisco(dados, !risco.etapa_id);
@@ -532,6 +542,9 @@ export const atualizarRisco = createServerFn({ method: 'POST' })
       : risco.meta_id;
 
     const { error } = await supabaseAdmin.from('plano_riscos').update({
+      ...(!risco.estrategia_mitigacao?.trim() && dados.estrategiaResposta.trim() ? {
+        resposta_criada_por: sessao.displayName, resposta_criada_por_login: sessao.login,
+      } : {}),
       etapa_id: dados.etapaId || null,
       meta_id: metaId,
       titulo: dados.titulo.trim(),

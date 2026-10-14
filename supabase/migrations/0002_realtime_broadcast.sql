@@ -30,6 +30,7 @@ BEGIN
     'projetos', 'projeto_equipe', 'metas', 'entregas', 'atividades',
     'plano_riscos', 'mudancas', 'orcamento_itens', 'orcamento_contrapartidas',
     'evidencias', 'aportes', 'contatos', 'logs_comunicacao',
+
     'log_alteracoes_meta', 'aprovacoes_pendentes'
   ]) LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS broadcast_change ON public.%I', t);

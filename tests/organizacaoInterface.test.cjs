@@ -8,15 +8,16 @@ const { renderToStaticMarkup } = require('react-dom/server');
 
 // Renderização dos componentes reais com hooks de sessão/leitura isolados.
 // Não substitui ensaio no navegador para rolagem, foco e operações persistidas.
-function carregarInterface(arquivo, { readOnly = false, org, project, listaState, gantt = [] } = {}) {
+function carregarInterface(arquivo, { readOnly = false, org, project, listaState, gantt = [], tarefas = [] } = {}) {
   const cache = new Map();
   const vazio = () => null;
   const mocks = {
-    authStore: { useAuth: () => ({ user: { login: 'teste', displayName: 'Verificador', role: readOnly ? 'visualizador' : 'admin' }, readOnly, isAdmin: !readOnly }) },
+    authStore: { useAuth: () => ({ user: { login: 'teste', displayName: 'Verificador', role: readOnly ? 'visualizador' : 'admin' }, readOnly, isAdmin: !readOnly }), usePeople: () => [{ login:'maria', name:'Maria', role:'admin' }] },
     auditStore: { useAudit: () => ({ log: () => {} }) },
     useAgenda: { useAgenda: () => ({ paraMim: [] }) },
     useOrganizacoes: { useFichaOrganizacao: () => ({ data: org }), useListaOrganizacoes: () => listaState ?? ({ data: org ? [org] : [] }), useEscritaOrganizacao: () => ({ salvarLinkRelatorio: async () => {} }) },
-    store: { useStore: () => ({ gantt, getProject: id => project?.id === id ? project : undefined }) },
+    store: { useStore: () => ({ gantt, projects: project ? [project] : [], getProject: id => project?.id === id ? project : undefined }) },
+    useGestaoTarefas: { useGestaoTarefas: () => ({ tarefas, loading:false }) },
     AbaRegistrosContato: { AbaRegistrosContato: vazio },
     AbaEncaminhamentos: { AbaEncaminhamentos: vazio },
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
@@ -29,6 +30,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     'orcamento.server': {},
     'orcamentoImportacao.server': {},
     FormularioExecucao: { FormularioExecucao: vazio },
+    FormularioPlanejado: { FormularioPlanejado: vazio },
     FormularioNota: { FormularioNota: vazio },
     DialogoExclusaoItem: { DialogoExclusaoItem: vazio },
     PainelHistoricoItem: { PainelHistoricoItem: vazio },
@@ -70,6 +72,17 @@ test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   assert.ok(html.indexOf('</nav>') < html.indexOf('Configurações'));
   assert.ok(html.indexOf('Configurações') < html.indexOf('Verificador'));
   assert.equal((html.match(/Configurações/g) ?? []).length, 1);
+});
+
+test('Kanban exibe responsável sem conta e criador da tarefa automática; consulta não oferece escrita', () => {
+  const tarefa={id:'atividade:a1',titulo:'Cotação de material',atribuidoParaLogin:'nome:responsavel externo',atribuidoParaNome:'Responsável externo',
+    atribuidoPorNome:'Pessoa que abriu',atribuidoPorLogin:'criadora',dataEntrada:'',dataLimite:'',criticidade:0,status:'nao_iniciado',
+    projetos:[],origem:{tipo:'atividade',registroId:'a1',caminho:'Projeto › Meta › Etapa'},criadoEm:'',atualizadoEm:'',concluidaEm:null};
+  const {GestaoPage}=carregarInterface('src/app/components/GestaoPage.tsx',{readOnly:true,tarefas:[tarefa]});
+  const html=renderToStaticMarkup(React.createElement(GestaoPage));
+  assert.match(html,/Responsável externo/);assert.match(html,/Criada por Pessoa que abriu/);
+  assert.match(html,/Cotação de material/);assert.match(html,/Projeto › Meta › Etapa/);
+  assert.doesNotMatch(html,/Invalid Date|Nova tarefa|Excluir tarefa|<select/);
 });
 
 test('plano administrativo renderiza tabela e controles comuns sem abrir projeto de organização', () => {

@@ -1,0 +1,103 @@
+REVISÃO DO ORÇAMENTO E QUADRO AUTOMÁTICO DE TAREFAS
+Data: 14/10/2026
+Implementação e verificação: Codex
+Estado: código local. Migrações e publicação ainda não aplicadas por esta rodada.
+
+1. ORÇAMENTO VIGENTE
+
+Confirmar uma planilha completa substitui a proposta vigente pelos itens da aba
+selecionada. Não há mais a opção padrão de somar os itens da versão anterior.
+O total apresentado na prévia é o da nova proposta.
+
+Correspondências inequívocas por grupo, categoria e descrição mantêm o ID do
+item e recebem os novos valores planejados. Todos os campos planejados são
+atualizados, inclusive quantidades/unidade quando o total não mudou.
+
+Itens ausentes são marcados como não vigentes, independentemente de haver
+execução. Não são apagados: notas, comprovantes, riscos, justificativas e
+histórico continuam vinculados aos IDs originais. O executado do projeto
+continua incluindo as notas dos itens históricos. A exclusão operacional
+manual permanece distinta do arquivamento por substituição de versão.
+
+Cabeçalho, indicadores, relatórios e aba Orçamento passam a calcular a proposta
+somente com itens vigentes. A aba apresenta os itens das versões anteriores e
+permite abrir o histórico. As notas continuam acessíveis com seus vínculos.
+
+Duplicidades na planilha nova e linhas rejeitadas impedem a substituição,
+evitando uma proposta incompleta por falha na leitura. Divergências de valores
+exigem correção ou justificativa registrada. Duplicidades no orçamento antigo
+são apresentadas na prévia: esses registros são arquivados e uma nova linha
+vigente é criada, sem transferir notas entre IDs por correspondência ambígua.
+
+Botões Novo item do orçamento e Editar planejado permitem inserir e revisar
+valores diretamente na plataforma. Exigem meta do projeto, números válidos e
+sessão de escrita. Edição preserva ID e execução. Um item repetido orienta a
+editar o registro existente. Revisão concorrente exige reabrir os dados.
+
+A RPC salvar_versao_orcamento bloqueia o projeto, compara a fotografia anterior
+e grava itens, metas novas, versão e auditoria na mesma transação. Falha em
+qualquer parte desfaz o conjunto. Apenas service_role pode executá-la; os
+handlers verificam a sessão real antes de chamá-la.
+
+Implantação: aplicar 0022_orcamento_vigente.sql antes de publicar a aplicação.
+A migração preserva os dados e marca os itens existentes como vigentes. Uma
+duplicação já existente é corrigida ao confirmar a planilha completa correta;
+não se escolhe automaticamente uma versão histórica dos dados reais.
+
+2. KANBAN DA GESTÃO INTERNA
+
+O quadro reúne tarefas próprias e projeções dos registros atribuídos:
+- atividades do plano de trabalho;
+- subtarefas, com o responsável herdado da atividade, pois ainda não possuem
+  responsável independente no modelo;
+- ações de acompanhamento com responsável próprio;
+- encaminhamentos das organizações;
+- estratégias de resposta a riscos com responsável;
+- atribuições feitas por mensagens;
+- atividades e subatividades do cronograma/plano administrativo.
+
+Não há gravação de cópias em tarefas_gestao. Cada cartão automático usa chave
+estável da origem. Reatribuição, conclusão, exclusão e retirada do responsável
+são refletidas ao reler a origem. A leitura é paginada para não truncar os
+registros no limite padrão da API. O quadro atualiza por eventos e também a
+cada 30 segundos enquanto está aberto. Nova abertura consulta os dados atuais.
+
+Nome sem conta correspondente continua visível em uma coluna nominal. Nomes
+ambíguos não são associados arbitrariamente a uma conta. Uma atividade e uma
+menção à mesma atividade para a mesma pessoa não duplicam o cartão.
+
+Cartões apresentam Criada por e o caminho de origem. Os automáticos abrem um
+detalhe e oferecem acesso ao módulo correspondente; são editados na origem.
+Tarefas próprias do quadro mantêm seus controles de edição e movimentação.
+O perfil de consulta não recebe controles de escrita; os handlers do quadro
+também recusam operações de escrita diretamente na API.
+
+Criador vem da sessão nos handlers de criação, nunca do nome do responsável ou
+de autoria fornecida pelo cliente. Campos são preservados na reatribuição.
+Uma ação criada depois da atividade guarda autoria própria. Legados sem
+autoria comprovada exibem Não informado. Não há preenchimento retroativo por
+suposição. Aplicar 0023_autoria_tarefas.sql antes de publicar.
+
+Limitação preexistente preservada: cronograma/plano administrativo usa
+localStorage. Seus cartões acompanham os dados disponíveis naquele navegador;
+esta alteração não migra esse módulo para um armazenamento compartilhado.
+
+3. VERIFICAÇÃO
+
+79 testes automatizados aprovados; TypeScript sem erros; build de produção
+concluído. Avisos existentes do build: tamanho de chunks e importação dinâmica
+ineficaz de reportExport. Teste SQL isolado aprovado.
+
+Testes automatizados de handlers, regras e renderização cobrem as fontes de
+cartões, responsável e criador distintos, autoria não forjável, reatribuição,
+status, ausência de conta, nomes ambíguos, deduplicação, paginação, permissões,
+edição manual, substituição de orçamento e preservação de execução.
+
+scripts/testarOrcamentoSql.mjs executa a migração 0022 em PostgreSQL/PGlite
+isolado e verifica troca de 300 por 450 sem acumular, manutenção de IDs e notas,
+comprovantes e execução históricos, reimportação, edição, criação de meta única,
+conflito de revisão, isolamento por projeto, duplicidades, rollback incluindo
+meta/versão/auditoria e permissões da função. Não acessa o banco real.
+
+Não foi realizado aceite em ambiente publicado nem ensaio de gravação via
+navegador nesta rodada. Nenhum orçamento ou tarefa operacional foi alterado.

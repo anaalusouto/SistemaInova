@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './auth/authStore';
 import { supabase } from '../integrations/supabase/client';
 import {
   type Project, type Risk, type Change, type FinancialItem, type ContrapartidaItem, type Evidence, type ActivityStatus,
@@ -289,6 +290,7 @@ function nextGanttId(blocos: GanttBloco[]): number {
 }
 
 export function ProjectsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const initialLocal = useMemo(loadInitialLocal, []);
 
@@ -421,6 +423,19 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     // Acompanhamento por projeto das atividades do cronograma — ainda local (onda 3)
     ganttTracking,
     salvarPlanoAdministrativo: (blocos) => {
+      const anteriores = new Map(gantt.flatMap(b => b.entregas.flatMap(e => e.atividades.flatMap(a => [a, ...(a.subatividades ?? [])]))).map(a => [a.id, a]));
+      const comAutoria = (a: GanttActivity): GanttActivity => {
+        const anterior = anteriores.get(a.id);
+        return { ...a,
+          ...(anterior ? { criadoPor: anterior.criadoPor, criadoPorLogin: anterior.criadoPorLogin, criadoEm: anterior.criadoEm }
+            : { criadoPor: user?.displayName, criadoPorLogin: user?.login, criadoEm: new Date().toISOString() }),
+          plano: { ...a.plano, ...(a.plano?.nextStep?.trim() && !anterior?.plano?.nextStep?.trim()
+            ? { nextStepCreatedBy: user?.displayName, nextStepCreatedByLogin: user?.login }
+            : { nextStepCreatedBy: anterior?.plano?.nextStepCreatedBy, nextStepCreatedByLogin: anterior?.plano?.nextStepCreatedByLogin }) },
+          subatividades: a.subatividades?.map(comAutoria),
+        };
+      };
+      blocos = blocos.map(b => ({ ...b, entregas: b.entregas.map(e => ({ ...e, atividades: e.atividades.map(comAutoria) })) }));
       // Esta área já usa armazenamento local. Recusar antes de mudar a tela
       // quando ele estiver indisponível evita anunciar uma gravação perdida.
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ communities, routes, events, gantt: blocos, ganttTracking }));
@@ -498,6 +513,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
           ...en,
           atividades: [...en.atividades, {
             id: nextId, atividade, inicio: en.inicio, fim: en.fim,
+            criadoPor: user?.displayName, criadoPorLogin: user?.login, criadoEm: new Date().toISOString(),
             responsavel: en.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
             projetoId: null, subatividades: [],
           }],
@@ -516,6 +532,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
             ...a,
             subatividades: [...(a.subatividades ?? []), {
               id: nextId, atividade, inicio: a.inicio, fim: a.fim,
+              criadoPor: user?.displayName, criadoPorLogin: user?.login, criadoEm: new Date().toISOString(),
               responsavel: a.responsavel, status: 'Não iniciado' as GanttStatus, progress: 0,
               projetoId: a.projetoId ?? null, subatividades: [],
             }],
@@ -583,7 +600,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
       void invalidate();
     },
-  }), [projects, projectsLoading, communities, routes, events, gantt, ganttTracking, run, invalidate, persistLocal]);
+  }), [projects, projectsLoading, communities, routes, events, gantt, ganttTracking, run, invalidate, persistLocal, user]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

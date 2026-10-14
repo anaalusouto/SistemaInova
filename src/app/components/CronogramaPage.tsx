@@ -32,7 +32,7 @@ const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLO
 
 type GestaoInternaTab = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 
-export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: number) => void }) {
+export function CronogramaPage({ onOpenProject, onOpenOrg }: { onOpenProject: (projectId: number) => void; onOpenOrg?: (id: string, foco: string) => void }) {
   const [tab, setTab] = useState<GestaoInternaTab>('plano');
   const nestedPage = tab === 'kanban' || tab === 'mensagens';
 
@@ -74,7 +74,7 @@ export function CronogramaPage({ onOpenProject }: { onOpenProject: (projectId: n
         {tab === 'rotas' && <RotasTab />}
         {tab === 'calendario' && <CalendarioTab />}
         {tab === 'kanban' && (
-          <div className="flex-1 min-h-0"><GestaoPage /></div>
+          <div className="flex-1 min-h-0"><GestaoPage onOpenProject={onOpenProject} onOpenOrg={onOpenOrg} onOpenAdmin={() => setTab('plano')} /></div>
         )}
         {tab === 'mensagens' && (
           <div className="flex-1 min-h-0"><MensagensPage onOpenProject={onOpenProject} /></div>

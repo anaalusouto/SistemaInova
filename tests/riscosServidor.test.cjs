@@ -43,7 +43,7 @@ function ambiente({ consulta = false, risco = { id: 'r1', projeto_id: 1, etapa_i
         return fn;
       } };
       if (request.endsWith('/client.server')) return { supabaseAdmin: db };
-      if (request === './sessao.server') return { exigirEscrita: async () => { if (consulta) throw new Error('Sem permissão.'); } };
+      if (request === './sessao.server') return { exigirEscrita: async () => { if (consulta) throw new Error('Sem permissão.'); return { login: 'teste', displayName: 'Verificador', role: 'admin' }; } };
       return carregar(path.resolve(path.dirname(absoluto), request));
     }, mod, mod.exports);
     return mod.exports;

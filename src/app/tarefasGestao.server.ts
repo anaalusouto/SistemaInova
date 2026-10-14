@@ -1,9 +1,8 @@
 // Quadro de gestão interna (estilo Trello) — ver supabase/migrations/0008_tarefas_gestao.sql.
-// Tarefas de gestão têm vida própria (título, prioridade, pode tocar mais de um
-// projeto) e não devem ser confundidas com as atividades do plano de trabalho
-// (src/app/projetos.server.ts) nem com as atribuições nascidas de menções no
-// mural (src/app/atribuicoes.server.ts) — são conceitos independentes.
+// O quadro reúne tarefas próprias e projeções de tarefas atribuídas nos outros
+// módulos. As projeções mantêm os IDs, o estado e a autoria da origem.
 import { createServerFn } from '@tanstack/react-start';
+import { tarefasVinculadas, type OrigemTarefa } from './lib/tarefasKanban';
 
 export type TarefaGestaoStatus = 'nao_iniciado' | 'em_andamento' | 'concluido';
 
@@ -14,6 +13,7 @@ export interface TarefaGestaoProjeto {
 }
 
 export interface TarefaGestao {
+  origem?: OrigemTarefa;
   id: string;
   titulo: string;
   atribuidoParaLogin: string;
@@ -33,6 +33,22 @@ export interface TarefaGestao {
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
   return supabaseAdmin;
+}
+
+async function exigirEscrita() {
+  const { exigirEscrita } = await import('./sessao.server');
+  return exigirEscrita();
+}
+
+/** Paginação explícita: o limite padrão da API não pode esconder tarefas. */
+async function lerTodas(db: Awaited<ReturnType<typeof getAdmin>>, tabela: string, select: string): Promise<any[]> {
+  const resultado: any[] = [];
+  for (let inicio = 0; ; inicio += 500) {
+    const { data, error } = await db.from(tabela).select(select).order('id').range(inicio, inicio + 499);
+    if (error) throw new Error(`Não foi possível carregar as tarefas de ${tabela}: ${error.message}`);
+    resultado.push(...(data ?? []));
+    if (!data || data.length < 500) return resultado;
+  }
 }
 
 const SELECT = `
@@ -77,10 +93,18 @@ async function setProjetos(tarefaId: string, projetoIds: number[]) {
 /** Todas as tarefas do quadro (o cliente agrupa por coluna/pessoa). */
 export const listarTarefasGestao = createServerFn({ method: 'GET' })
   .handler(async (): Promise<TarefaGestao[]> => {
+    const { exigirSessao } = await import('./sessao.server');
+    await exigirSessao();
     const supabaseAdmin = await getAdmin();
-    const { data, error } = await supabaseAdmin.from('tarefas_gestao').select(SELECT).order('criado_em', { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []).map(toTarefa);
+    const hierarquia = 'etapas(nome,metas(nome,projetos(id,nome,code)))';
+    const [nativas, atividades, encaminhamentos, riscos, atribuicoes] = await Promise.all([
+      lerTodas(supabaseAdmin, 'tarefas_gestao', SELECT),
+      lerTodas(supabaseAdmin, 'atividades', `*,tarefas(*),${hierarquia}`),
+      lerTodas(supabaseAdmin, 'encaminhamentos', '*,comunidades(nome)'),
+      lerTodas(supabaseAdmin, 'plano_riscos', '*,projetos(id,nome,code)'),
+      lerTodas(supabaseAdmin, 'mensagem_atribuicoes', `*,mensagens(texto),atividades(nome,status,excluido_em,fim_previsto,${hierarquia})`),
+    ]);
+    return [...nativas.map(toTarefa), ...tarefasVinculadas({ atividades, encaminhamentos, riscos, atribuicoes })];
   });
 
 export const criarTarefaGestao = createServerFn({ method: 'POST' })
@@ -96,6 +120,7 @@ export const criarTarefaGestao = createServerFn({ method: 'POST' })
     projetoIds: number[];
   }) => d)
   .handler(async ({ data }): Promise<{ id: string }> => {
+    const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('tarefas_gestao')
@@ -103,8 +128,8 @@ export const criarTarefaGestao = createServerFn({ method: 'POST' })
         titulo: data.titulo,
         atribuido_para_login: data.atribuidoParaLogin,
         atribuido_para_nome: data.atribuidoParaNome,
-        atribuido_por_login: data.atribuidoPorLogin,
-        atribuido_por_nome: data.atribuidoPorNome,
+        atribuido_por_login: sessao.login,
+        atribuido_por_nome: sessao.displayName,
         data_entrada: data.dataEntrada,
         data_limite: data.dataLimite,
         criticidade: data.criticidade,
@@ -127,6 +152,7 @@ export const editarTarefaGestao = createServerFn({ method: 'POST' })
     projetoIds: number[];
   }) => d)
   .handler(async ({ data }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin
       .from('tarefas_gestao')
@@ -145,6 +171,7 @@ export const editarTarefaGestao = createServerFn({ method: 'POST' })
 export const moverTarefaGestao = createServerFn({ method: 'POST' })
   .validator((d: { id: string; atribuidoParaLogin: string; atribuidoParaNome: string }) => d)
   .handler(async ({ data }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin
       .from('tarefas_gestao')
@@ -157,6 +184,7 @@ export const moverTarefaGestao = createServerFn({ method: 'POST' })
 export const atualizarStatusTarefaGestao = createServerFn({ method: 'POST' })
   .validator((d: { id: string; status: TarefaGestaoStatus }) => d)
   .handler(async ({ data }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin
       .from('tarefas_gestao')
@@ -168,6 +196,7 @@ export const atualizarStatusTarefaGestao = createServerFn({ method: 'POST' })
 export const excluirTarefaGestao = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }): Promise<void> => {
+    await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('tarefas_gestao').delete().eq('id', data.id);
     if (error) throw new Error(error.message);

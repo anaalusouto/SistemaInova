@@ -119,6 +119,7 @@ function mapMudanca(c: any): Change {
 }
 function mapItemOrcamento(i: any): ItemOrcamento {
   return {
+    vigente: i.vigente !== false,
     metaId: i.meta_id ?? null,
     id: i.id, grupo: i.grupo ?? '', ordem: n2(i.ordem),
     categoria: i.categoria ?? '', descricao: i.item ?? '',
@@ -192,7 +193,7 @@ function mapAprovacao(a: any): PendingApproval {
 
 function mapProjeto(row: any): ProjectExt {
   const metas: Goal[] = (row.metas ?? []).map(mapMeta).sort((a: Goal, b: Goal) => a.order - b.order || a.id.localeCompare(b.id));
-  const financeiro: FinancialItem[] = (row.orcamento_itens ?? []).map(mapFinanceiro);
+  const financeiro: FinancialItem[] = (row.orcamento_itens ?? []).filter((i: any) => i.vigente !== false).map(mapFinanceiro);
   const allActivities = metas.flatMap(g => g.deliverables.flatMap(d => d.activities));
   const progress = allActivities.length
     ? Math.round(allActivities.reduce((a, x) => a + x.progress, 0) / allActivities.length)
@@ -202,14 +203,14 @@ function mapProjeto(row: any): ProjectExt {
   // são fallback de projeto sem itens. Ler de fontes diferentes fazia o
   // cabeçalho dizer "proposto: Não informado" enquanto a aba Orçamento somava
   // R$ 100.000 para o mesmo projeto (RF-004 e RF-029 precisam concordar).
-  const itensOrcamento = (row.orcamento_itens ?? []) as any[];
+  const itensOrcamento = ((row.orcamento_itens ?? []) as any[]).filter(i => i.vigente !== false);
   // Desde a 0016 o executado é a soma das NOTAS, inclusive as que ainda não
   // têm item (RF04.3). Sem nota, vale o que havia antes.
   const notas = (row.orcamento_notas ?? []) as any[];
   const budgetExecuted = notas.length
     ? notas.reduce((a, n) => a + n2(n.valor), 0)
-    : financeiro.length
-      ? financeiro.reduce((a, i) => a + i.executedValue, 0)
+    : (row.orcamento_itens ?? []).length
+      ? (row.orcamento_itens ?? []).reduce((a: number, i: any) => a + n2(i.valor_executado), 0)
       : n2(row.orcamento_executado);
   const budgetApproved = itensOrcamento.length
     // Inclui itens excluídos: o valor original da proposta não encolhe porque
@@ -439,7 +440,7 @@ async function computeOrdemInsercao(
   return nova;
 }
 
-async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, projetoId: number, op: ProjectOp): Promise<void> {
+async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>, projetoId: number, op: ProjectOp, criador: string): Promise<void> {
   const field = op.field ?? 'nome';
   const to = op.to ?? '';
   const payload = (op.payload ?? {}) as Record<string, unknown>;
@@ -480,6 +481,7 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
       if (op.action === 'criar') {
         const ordem = await computeOrdemInsercao(supabaseAdmin, 'atividades', 'etapa_id', op.parentId!, str(payload.afterId, '') || undefined);
         const { error } = await supabaseAdmin.from('atividades').insert({
+          criado_por: criador,
           etapa_id: op.parentId, nome: str(payload.name, to || 'Nova atividade'), responsavel: str(payload.responsible, '') || null,
           data_planejada: str(payload.plannedDate, '') || null,
           data_inicio: payload.startDate ? String(payload.startDate) : null,
@@ -532,6 +534,8 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         const prob = num(payload.probability, 3);
         const imp = num(payload.impact, 3);
         const { error } = await supabaseAdmin.from('plano_riscos').insert({
+          criado_por: criador,
+          resposta_criada_por: criador,
           projeto_id: projetoId, meta_id: payload.goalId ? String(payload.goalId) : null,
           descricao: str(payload.description), categoria: str(payload.category, 'Operacional'),
           probabilidade: prob, impacto: imp, estrategia_mitigacao: str(payload.responseStrategy),
@@ -683,7 +687,7 @@ export const submeterEdicaoMeta = createServerFn({ method: 'POST' })
       } catch (e) { console.error('[email] falha ao avisar admins:', e); }
       return 'pendente';
     }
-    await aplicarOperacaoSql(supabaseAdmin, projectId, edit);
+    await aplicarOperacaoSql(supabaseAdmin, projectId, edit, author.name);
     const { error: logError } = await supabaseAdmin.from('log_alteracoes_meta').insert({
       projeto_id: projectId, entidade: edit.entity, acao: edit.action, target_id: edit.targetId ?? null,
       parent_id: edit.parentId ?? null, target_path: edit.targetPath, campo: edit.field ?? null,
@@ -708,7 +712,7 @@ export const aprovarEdicaoMeta = createServerFn({ method: 'POST' })
       targetPath: req.target_path, field: req.campo ?? undefined, from: req.de_valor ?? undefined,
       to: req.para_valor ?? undefined, payload: req.payload ?? undefined,
     };
-    await aplicarOperacaoSql(supabaseAdmin, projectId, edit);
+    await aplicarOperacaoSql(supabaseAdmin, projectId, edit, req.autor);
     const { error: logError } = await supabaseAdmin.from('log_alteracoes_meta').insert({
       projeto_id: projectId, entidade: edit.entity, acao: edit.action, target_id: edit.targetId ?? null,
       parent_id: edit.parentId ?? null, target_path: edit.targetPath, campo: edit.field ?? null,
@@ -752,9 +756,11 @@ export const rejeitarEdicaoMeta = createServerFn({ method: 'POST' })
 export const addRisco = createServerFn({ method: 'POST' })
   .validator((d: { projectId: number; risco: Omit<Risk, 'id' | 'severity'> }) => d)
   .handler(async ({ data: { projectId, risco } }): Promise<void> => {
-    await exigirEscrita();
+    const sessao = await exigirEscrita();
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('plano_riscos').insert({
+      criado_por: sessao.displayName, criado_por_login: sessao.login,
+      resposta_criada_por: sessao.displayName, resposta_criada_por_login: sessao.login,
       projeto_id: projectId, meta_id: risco.goalId ?? null, descricao: risco.description, categoria: risco.category,
       probabilidade: risco.probability, impacto: risco.impact, estrategia_mitigacao: risco.responseStrategy,
       responsavel: risco.responsible, status: risco.status, etapa_nome_legado: risco.stage ?? null, especificacao_legado: risco.spec ?? null,

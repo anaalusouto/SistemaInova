@@ -47,7 +47,7 @@ export function FormularioNota({
   // Só item ativo recebe nota; o da própria nota continua na lista mesmo se
   // tiver sido excluído depois, para a edição não trocar o vínculo sozinha.
   const opcoes = useMemo(
-    () => itens.filter(i => i.situacao === 'Ativo' || i.id === nota?.itemId),
+    () => itens.filter(i => (i.vigente !== false && i.situacao === 'Ativo') || i.id === nota?.itemId),
     [itens, nota?.itemId],
   );
   const valor = lerValor(valorTexto);

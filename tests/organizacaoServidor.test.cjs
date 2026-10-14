@@ -47,7 +47,7 @@ function ambiente({ consulta = false, vinculados = [], orgExiste = true, etapa }
     const compilado = ts.transpileModule(fs.readFileSync(absoluto, 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     });
-    const exigir = async () => { if (consulta) throw new Error('Sem permissão para esta operação.'); };
+    const exigir = async () => { if (consulta) throw new Error('Sem permissão para esta operação.'); return { login: 'teste', displayName: 'Verificador', role: 'admin' }; };
     new Function('require', 'module', 'exports', compilado.outputText)(request => {
       if (request === '@tanstack/react-start') return { createServerFn: () => {
         let validar = d => d;

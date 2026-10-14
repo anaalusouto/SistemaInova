@@ -16,6 +16,9 @@ export const ganttStatusColors: Record<GanttStatus, string> = {
 };
 
 export interface GanttActivity {
+  criadoPor?: string;
+  criadoPorLogin?: string;
+  criadoEm?: string;
   /** Campos do plano administrativo; o cronograma legado continua preservado. */
   plano?: Partial<Omit<Activity, 'id' | 'tasks'>>;
   id: number;
