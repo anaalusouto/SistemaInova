@@ -4,6 +4,8 @@ import { formatDateOnly } from './dateOnly';
 
 export type TipoRegistroPlano = 'meta' | 'etapa' | 'atividade' | 'tarefa' | 'risco' | 'parecer';
 export type OrdemCamposPlano = Partial<Record<TipoRegistroPlano, string[]>>;
+/** A área Parecer da organização é informativa; o plano não reabre os registros técnicos antigos. */
+export const CAMPOS_RELATORIO_PLANO = ['cadastro', 'metas', 'riscos'] as const;
 export interface CampoPlano { chave: string; rotulo: string; valor: string; preenchido: boolean }
 export interface RegistroPlano { id: string; tipo: TipoRegistroPlano; titulo: string; campos: CampoPlano[] }
 

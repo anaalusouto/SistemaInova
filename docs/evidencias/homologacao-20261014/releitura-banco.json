@@ -1,0 +1,250 @@
+{
+  "dataUTC": "2026-10-14T13:29:06.728Z",
+  "ambienteBanco": "tgkfysmwllbocwxlpyai.supabase.co",
+  "verificador": "Codex, REST administrativo somente leitura",
+  "limite": "Complementa a evidência de interface; não substitui teste real de perfil nem aceite de negócio.",
+  "organizacao": {
+    "id": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+    "code": "HOMOLOG-AT-20261005",
+    "nome": "HOMOLOGAÇÃO AT — organização de teste"
+  },
+  "projeto": {
+    "id": 64,
+    "code": "HOMOLOG-AT-PROJ-20261005",
+    "comunidade_id": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+    "drive_link": "https://example.org/"
+  },
+  "metas": [
+    {
+      "id": "ddbf409d-835d-4bb2-82ed-3481255267b1",
+      "nome": "HOMOLOGAÇÃO AT — meta",
+      "ordem": 1
+    }
+  ],
+  "etapas": [
+    {
+      "id": "6798b66f-e4cb-4aec-b9ff-289e8abf72e9",
+      "meta_id": "ddbf409d-835d-4bb2-82ed-3481255267b1",
+      "nome": "HOMOLOGAÇÃO AT — etapa",
+      "ordem": 1
+    }
+  ],
+  "atividades": [
+    {
+      "id": "df6596eb-5f61-424b-81f2-e76e0730aa2a",
+      "etapa_id": "6798b66f-e4cb-4aec-b9ff-289e8abf72e9",
+      "nome": "HOMOLOGAÇÃO AT — atividade",
+      "inicio_realizado": null,
+      "fim_realizado": null,
+      "justificativa_atraso": null,
+      "responsavel": "Equipe de teste",
+      "status": "A iniciar",
+      "excluido_em": null
+    }
+  ],
+  "riscos": [
+    {
+      "id": "a9093873-e8cf-4dd2-bcd6-0872cf3eade0",
+      "status": "Encerrado"
+    }
+  ],
+  "mudancas": [],
+  "pareceres": [
+    {
+      "id": "f40c5647-a3d5-4577-9325-d4e3a2e43585",
+      "projeto_id": 64,
+      "log_comunicacao_id": "b9db21a2-1438-46e7-8765-5345b7bd1aaf"
+    }
+  ],
+  "anexos": [
+    {
+      "id": "4dca1f09-e01a-4d82-824f-9bb591bc0d04",
+      "projeto_id": 64,
+      "log_comunicacao_id": "b9db21a2-1438-46e7-8765-5345b7bd1aaf",
+      "nome_arquivo": "HOMOLOGACAO-AT.png"
+    }
+  ],
+  "registros": [
+    {
+      "id": "b9db21a2-1438-46e7-8765-5345b7bd1aaf",
+      "comunidade_id": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+      "assunto": "HOMOLOGAÇÃO AT"
+    }
+  ],
+  "notas": [
+    {
+      "id": "0ac34ff0-ff9a-43ef-903d-34e18d248fb7",
+      "comunidade_id": "bea269e2-199a-4bb7-b6dc-cc926fbc27f8",
+      "versao": 2
+    }
+  ],
+  "contadores": {
+    "riscosAbertos": 0,
+    "riscosTotais": 1,
+    "mudancas": 0
+  },
+  "atividadeRestaurada": true,
+  "linksCadastrados": [
+    {
+      "projetoId": 11,
+      "codigo": "11-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 1,
+      "codigo": "01-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 1,
+      "codigo": "01-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 4,
+      "codigo": "04-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 4,
+      "codigo": "04-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 5,
+      "codigo": "05-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 5,
+      "codigo": "05-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 10,
+      "codigo": "10-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 10,
+      "codigo": "10-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 7,
+      "codigo": "07-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 7,
+      "codigo": "07-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 64,
+      "codigo": "HOMOLOG-AT-PROJ-20261005",
+      "campo": "drive_link",
+      "dominio": "example.org",
+      "urlValida": true
+    },
+    {
+      "projetoId": 15,
+      "codigo": "15-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 15,
+      "codigo": "15-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 17,
+      "codigo": "17-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 17,
+      "codigo": "17-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 3,
+      "codigo": "03-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 3,
+      "codigo": "03-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 14,
+      "codigo": "14-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 14,
+      "codigo": "14-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 19,
+      "codigo": "19-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 18,
+      "codigo": "18-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    },
+    {
+      "projetoId": 18,
+      "codigo": "18-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "urlValida": true
+    }
+  ]
+}

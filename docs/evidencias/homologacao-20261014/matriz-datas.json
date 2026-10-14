@@ -1,0 +1,40 @@
+{
+  "previsto": {
+    "inicio": "2026-10-10",
+    "fim": "2026-10-20"
+  },
+  "casos": [
+    {
+      "inicio": "2026-10-09",
+      "fim": "2026-10-19",
+      "atraso": false,
+      "resultado": "Salvo pela interface; datas e ausência de justificativa visíveis no painel."
+    },
+    {
+      "inicio": "2026-10-11",
+      "fim": "2026-10-21",
+      "atraso": true,
+      "resultado": "Bloqueado sem justificativa; campo obrigatório recebeu foco; salvo com justificativa e datas visíveis no painel."
+    },
+    {
+      "inicio": "2026-10-10",
+      "fim": "2026-10-20",
+      "atraso": false,
+      "resultado": "Salvo e relido no painel sem justificativa."
+    },
+    {
+      "inicio": "2026-10-11",
+      "fim": "2026-10-20",
+      "atraso": true,
+      "resultado": "Bloqueio específico de início confirmado.",
+      "gravacao": "Não submetido ao servidor: bloqueado no formulário."
+    },
+    {
+      "inicio": "2026-10-10",
+      "fim": "2026-10-21",
+      "atraso": true,
+      "resultado": "Bloqueio específico de fim confirmado.",
+      "gravacao": "Não submetido ao servidor: bloqueado no formulário."
+    }
+  ]
+}

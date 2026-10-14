@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
   BarChart3,
@@ -17,6 +17,7 @@ import { SUBAREAS_GESTAO } from '../lib/gestaoInterna';
 import { useListaOrganizacoes } from './organizacoes/useOrganizacoes';
 import { SECOES_ORG, nomeCurtoOrg, type RotaOrg } from '../lib/navegacaoOrg';
 import './organizacoes/organizacoes.css';
+import { ativarFocoMenu } from '../lib/focoMenu';
 
 /** O menu "Projetos" saiu (29/09/2026): projeto se abre dentro da organização. */
 export type NavItem =
@@ -50,6 +51,16 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
   const { user, isAdmin, signOut } = useAuth();
   const { paraMim } = useAgenda();
   const [gestaoAberta, setGestaoAberta] = useState(true);
+  const menuRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!isOpen || !menuRef.current || !onClose) return;
+    const celular = window.matchMedia('(max-width: 1023px)');
+    if (!celular.matches) return;
+    const limparFoco = ativarFocoMenu(menuRef.current, onClose);
+    const aoMudarLargura = () => { if (!celular.matches) onClose(); };
+    celular.addEventListener('change', aoMudarLargura);
+    return () => { celular.removeEventListener('change', aoMudarLargura); limparFoco(); };
+  }, [isOpen, onClose]);
   const naGestao = SUBAREAS_GESTAO.some(s => s.id === activeItem);
   const pendentes = paraMim.filter(a => !a.concluidaEm).length;
 
@@ -104,8 +115,11 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         />
       )}
       <aside
+        id="menu-principal"
+        ref={menuRef}
+        aria-label="Menu principal"
         className={`flex flex-col h-full w-60 flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible'
         }`}
         style={{ background: 'var(--sidebar)' }}
       >

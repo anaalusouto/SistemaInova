@@ -1,0 +1,217 @@
+{
+  "limite": "Conferência de abertura e título/acesso; documentos não editados; URLs completas não registradas.",
+  "resultados": [
+    {
+      "projetoId": 1,
+      "codigo": "01-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "resultado": "ABERTO",
+      "titulo": "ACREPAF - Google Drive",
+      "dataUTC": "2026-10-14T13:29:20.529Z"
+    },
+    {
+      "projetoId": 1,
+      "codigo": "01-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "resultado": "ABERTO",
+      "titulo": "REAJUSTADA_Planilha Orcamentária Projetos - ACREPAF 23.10.xlsx - Google Planilhas",
+      "dataUTC": "2026-10-14T13:29:20.530Z"
+    },
+    {
+      "projetoId": 11,
+      "codigo": "11-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:30:02.622Z",
+      "titulo": "PROPOSTA DE PLANO DE TRABALHO - OFICIAL Turiwara-ka'i de Tomé-Açu 24.10.docx - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 4,
+      "codigo": "04-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "dataUTC": "2026-10-14T13:30:03.070Z",
+      "titulo": "ADESC - Google Drive",
+      "resultado": "ABERTO",
+      "estruturaPastaCarregada": true
+    },
+    {
+      "projetoId": 4,
+      "codigo": "04-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:30:07.267Z",
+      "titulo": "REAJUSTADO - Planilha Orcamentária Projetos ADESC - valores atualizados.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 5,
+      "codigo": "05-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:30:12.132Z",
+      "titulo": "AJUSTADO_PROPOSTA DE PLANO DE TRABALHO_ YTE_23.10 MEBENGOKRE.docx - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 5,
+      "codigo": "05-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:30:40.073Z",
+      "titulo": "REAJUSTE - Planilha Orcamentária Projetos - Mebengokre Yte 22.10.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 10,
+      "codigo": "10-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "dataUTC": "2026-10-14T13:30:45.284Z",
+      "titulo": "COOMAP - Google Drive",
+      "resultado": "ABERTO",
+      "estruturaPastaCarregada": true
+    },
+    {
+      "projetoId": 10,
+      "codigo": "10-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:30:49.270Z",
+      "titulo": "Ajustado PLANILHA ORÇAMENTÁRIA. Agroindustria de polpas de frutas da floresta. COOMAP 21.10.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 7,
+      "codigo": "07-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "dataUTC": "2026-10-14T13:30:55.610Z",
+      "titulo": "ATAIC - Google Drive",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 7,
+      "codigo": "07-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:03.616Z",
+      "titulo": "ATAIC Planilha Orcamentária Projetos 24.10.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 64,
+      "codigo": "HOMOLOG-AT-PROJ-20261005",
+      "campo": "drive_link",
+      "dominio": "example.org",
+      "dataUTC": "2026-10-14T13:31:09.736Z",
+      "titulo": "Example Domain",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 15,
+      "codigo": "15-2026",
+      "campo": "drive_link",
+      "dominio": "drive.google.com",
+      "dataUTC": "2026-10-14T13:31:11.321Z",
+      "titulo": "MANEJAÍ - Google Drive",
+      "resultado": "ABERTO",
+      "estruturaPastaCarregada": true
+    },
+    {
+      "projetoId": 15,
+      "codigo": "15-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:14.913Z",
+      "titulo": "Planilha Orcamentária Projetos - COOPERATIVA MANEJAÍ 23.10.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 17,
+      "codigo": "17-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:41.759Z",
+      "titulo": "REAJUSTE de PROPOSTA DE PLANO DE TRABALHO AIKATUK 23.10.docx - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 17,
+      "codigo": "17-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:46.083Z",
+      "titulo": "REAJUSTE de Planilha Orcamentária Projetos (AIKATUK) 20.10.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 3,
+      "codigo": "03-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:51.417Z",
+      "titulo": "AJUSTADO - AMIG PROPOSTA DE PLANO DE TRABALHO MULHERES INDIGENAS DO GURUPI 09.06.26.docx - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 3,
+      "codigo": "03-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:31:53.817Z",
+      "titulo": "AJUSTADO - AMIG Planilha Orcamentária Projetos MULHERES INDIGENAS DO GURUPI 09.06.26.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 14,
+      "codigo": "14-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:32:02.966Z",
+      "titulo": "PROPOSTA DE PLANO DE TRABALHO Riktiko 25.09.25 ok.docx - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 14,
+      "codigo": "14-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:32:05.715Z",
+      "titulo": "Planilha Orcamentária Projetos - RIktiko 25.09.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 19,
+      "codigo": "19-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:32:09.774Z",
+      "titulo": "COOPAVISEU Planilha Orcamentária Projetos - AJUSTADO.xlsx - Google Planilhas",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 18,
+      "codigo": "18-2026",
+      "campo": "drive_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:32:15.794Z",
+      "titulo": "AASFLOR PROPOSTA DE PLANO DE TRABALHO - AJUSTADO - Google Docs",
+      "resultado": "ABERTO"
+    },
+    {
+      "projetoId": 18,
+      "codigo": "18-2026",
+      "campo": "budget_link",
+      "dominio": "docs.google.com",
+      "dataUTC": "2026-10-14T13:32:17.871Z",
+      "resultado": "ABERTO",
+      "motivo": "Error: Timed out after 10000ms waiting for CDP command Page.navigate.",
+      "titulo": "Planilha Orcamentária Projetos AASFLOR.xlsx - Google Planilhas",
+      "observacao": "Navegação inicialmente excedeu o tempo; a aba terminou de carregar e o acesso foi confirmado."
+    }
+  ]
+}

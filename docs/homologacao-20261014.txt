@@ -1,0 +1,156 @@
+SISTEMA INOVA — HOMOLOGAÇÃO DO CHECKLIST DE 02/10/2026
+Execução: 14/10/2026. Verificador: Codex.
+
+SITUAÇÃO DO ACEITE
+Aceite técnico parcial dos itens comprovados abaixo. Pacote integral NÃO liberado.
+Não há aceite de negócio presumido pelo commit, build ou testes automatizados.
+
+AMBIENTE E VERSÃO
+- Aplicação publicada: https://sistema-inova-rose.vercel.app/
+- Produção identificada no painel autenticado da Vercel como Ready.
+- Deployment: sistema-inova-b4w9hjwi4-ana-luizas-projects-4b9b93c5.vercel.app
+- Identificador na URL do painel: ALuEuF4KiyQYVVbJsevNgLqYbVBq.
+- Commit publicado e base local: 5e29b1f414c7817889c7ba12c930d53d022b7f63.
+- As correções encontradas nesta execução são locais, posteriores a esse commit;
+  seus hashes estão em evidencias/homologacao-20261014/manifesto.json.
+- Perfil real exercitado: Administrador Master - Teste (Administrador).
+- Computador: viewport de 1536 × 639. Celular: emulação de 390 × 844.
+- A emulação foi retirada ao final e o navegador voltou ao tamanho original.
+
+1. PLANO DE TRABALHO — JUSTIFICATIVA DE ATRASO
+Resultado: CONFORME no ambiente publicado, com gravação e releitura.
+- Previsto da atividade sintética: início 10/10/2026 e fim 20/10/2026.
+- Realizado 09/10/2026 e 19/10/2026: salvou sem justificativa.
+- Realizado 10/10/2026 e 20/10/2026: salvou sem justificativa; valores preservados
+  depois de recarregar e reabrir a organização/projeto.
+- Realizado 11/10/2026 e 21/10/2026: bloqueou sem justificativa, explicou os dois
+  motivos e salvou com justificativa preenchida.
+- Atraso apenas no início (11/10 e 20/10): aviso específico do início.
+- Atraso apenas no fim (10/10 e 21/10): aviso específico do fim.
+- O campo recebeu foco e tinha required=true e aria-invalid=true na recusa.
+- Os nove pares de antecipação/igualdade/atraso também passaram nos testes
+  automatizados da regra e dos handlers, sem confundir esse ensaio com o navegador.
+- No navegador, as datas foram confirmadas por teclado para disparar os eventos
+  nativos do controle de data antes de salvar.
+Evidências: matriz-datas.json; 01 a 04 nas capturas; releitura-banco.json.
+
+2. CABEÇALHO CONTEXTUAL
+Resultado: CONFORME no ambiente publicado.
+- A organização fica identificada no H1 e no menu correspondente.
+- Na Agromel, o H1 permaneceu em y=64 px antes/depois da rolagem nos dois tamanhos.
+- O título do projeto e o seletor Tabela/Gantt/Kanban mudaram de posição com a
+  rolagem, saindo da área visível. Eles não ficaram fixos com o H1.
+Evidências: evidencias-ui.json; capturas 06, 07, 08 e 09.
+
+3. ROLAGEM E ALTURA ÚTIL
+Resultado: CONFORME para a rolagem vertical e o cabeçalho nos cenários ensaiados.
+- Plano longo da Agromel: 4 metas, 30 etapas e 59 atividades, expandido.
+- Desktop: posição vertical do conteúdo passou de 0 para aproximadamente 1278 px.
+- Celular: posição vertical do conteúdo passou de 0 para 1688 px.
+- Largura do documento permaneceu igual à do viewport (1536 ou 390 px).
+- A tabela mantém rolagem horizontal própria para as colunas em tela estreita;
+  esta execução não mede cada célula individualmente por dispositivo físico.
+- O problema de teclado do menu móvel consta do item 7 e impede aceite integral.
+
+4. RISCOS, MUDANÇAS, LINKS E PARECER
+Resultado: PARCIAL no ambiente publicado; divergência F01 corrigida localmente.
+- Organização de homologação: Riscos (0), um risco total Encerrado e nenhum em
+  aberto; Mudanças (0), lista sem registros. Contagens conferidas na base real.
+- Agromel: navegação abriu o projeto correto; cabeçalho mostrava 9 riscos em
+  aberto e 1 mudança. Não houve edição de seus dados operacionais.
+- Links: inventariados 23 endereços em 21 projetos; 23/23 abriram na sessão
+  disponível, incluindo pastas do Drive, documentos, planilhas e link sintético.
+  O ensaio confere abertura, título e ausência de barreira de acesso; não valida
+  o conteúdo de negócio de cada documento nem acesso por outros usuários Google.
+- Uma planilha excedeu o tempo inicial de navegação, terminou de carregar e foi
+  confirmada. Três pastas foram reconferidas após o título inicial genérico;
+  os títulos ADESC, COOMAP e MANEJAÍ e a lista de itens ficaram disponíveis.
+- Parecer (Em construção) abre página informativa, sem formulário técnico.
+- F01: o Plano ainda expunha Exportar parecer e registros técnicos na visão
+  Todos os campos, contrariando a retirada desse acesso no checklist.
+  Correção local: Exportar plano usa apenas cadastro, metas e riscos; a visão
+  completa do plano usa as mesmas seções. Histórico preservado no banco e no
+  relatório geral quando a seção de pareceres é escolhida explicitamente.
+Evidências: abertura-links.json; releitura-banco.json; captura 05; teste novo de
+regressão em tests/planoRelatorio.test.cjs. Publicação/reteste de F01 pendentes.
+
+5. TABELA, GANTT, KANBAN E FILTROS
+Resultado: CONFORME nos cenários ensaiados no ambiente publicado.
+- Busca Notebook e Impressora na Agromel: 1 de 59 atividades nas três visões;
+  mesma atividade 2.4.1, Cotação com Fornecedores de Notebook e Impressora.
+- Gantt: alternância para Trimestre disponível e exercitada.
+- Kanban: alternância Por responsável acionada por Enter; mesmo cartão no grupo
+  Sem responsável. Não houve arraste nem mudança de status de dado operacional.
+- Busca ZZZHOMOLOGSEMRESULTADOS: 0 de 59, com mensagem de ausência de resultados.
+- Limpar filtros restaurou o conjunto do projeto.
+- Descrição e Orçamento mantiveram o H1 CAANP AGROMEL e o contexto do projeto.
+Evidências: evidencias-ui.json; capturas 11 e 12.
+
+6. REGISTRO DE ACEITE E PENDÊNCIAS
+Resultado: registro desta rodada CONCLUÍDO; aceite integral PENDENTE.
+- Este arquivo reúne ambiente, versão, verificador, resultados, falhas e limites.
+- manifesto.json relaciona evidências e hashes da correção local.
+- Há 13 capturas, resultados de navegador, releitura do banco, abertura de links,
+  códigos HTTP observados e resultados dos comandos locais.
+- Respostas Fetch observadas no navegador: HTTP 200. Nenhum aviso/erro no console
+  capturado ao final. O registro de rede omite parâmetros, cookies e cabeçalhos.
+
+7. COMPUTADOR, CELULAR E TECLADO
+Resultado: PARCIAL no publicado; F02 e nomes dos controles corrigidos localmente.
+- Conferidos contexto, leitura, rolagem, menu móvel e equivalentes das seis seções.
+- Confirmados foco do erro de atraso, fechamento do painel de Mudanças por Escape
+  e acionamento do agrupamento do Kanban por Enter.
+- F02: Escape não fechava o menu móvel; abrir o menu não transferia o foco aos
+  seus controles. O menu fechado permanecia apenas deslocado para fora da tela.
+  Correção local: ocultação por visibilidade no celular; foco no primeiro controle;
+  ciclo de Tab/Shift+Tab; Escape fecha; fechamento devolve foco ao acionador;
+  acionador informa aria-expanded/aria-controls. Abrir largura de desktop fecha
+  o menu móvel aberto. Teste automatizado cobre a navegação e a limpeza do foco.
+- Correção adicional: rótulos de Expandir/Recolher etapa e tarefas agora refletem
+  o estado efetivo, em vez de manter um nome fixo contraditório.
+Evidências: captura 10; evidencias-ui.json; tests/focoMenu.test.cjs.
+Publicação e reteste real dessas correções permanecem pendentes.
+
+8. PERFIS E PERMISSÕES EXISTENTES
+Resultado: PARCIAL.
+- O administrador real de teste abriu menus, projetos e links e gravou a atividade
+  sintética. A navegação manteve o contexto de HOMOLOGAÇÃO AT, Agromel e ACREPAF.
+- Os testes isolados de perfil de consulta negam criação/edição/exclusão e ocultam
+  controles de escrita; não são apresentados como teste real do usuário SEMAS.
+- Foi solicitada uma sessão real de consulta em outro perfil de navegador. Não
+  havia essa sessão disponível na execução. Não foram criadas contas, alteradas
+  permissões ou presumido aceite desse cenário.
+
+DADOS DE TESTE E PRESERVAÇÃO
+- Organização: bea269e2-199a-4bb7-b6dc-cc926fbc27f8, HOMOLOG-AT-20261005.
+- Projeto: 64, HOMOLOG-AT-PROJ-20261005.
+- Atividade: df6596eb-5f61-424b-81f2-e76e0730aa2a.
+- As gravações desta rodada ficaram restritas a essa atividade sintética.
+- Início/fim realizados e justificativa foram restaurados ao estado original
+  sem preenchimento; a releitura administrativa confirmou a restauração.
+- Os demais projetos foram apenas consultados e os documentos externos não
+  foram editados. As abas externas criadas para os ensaios foram fechadas.
+
+VERIFICAÇÃO LOCAL DAS CORREÇÕES
+- 68 testes aprovados, zero falhas.
+- TypeScript sem erros; build de produção concluído; git diff --check aprovado.
+- Avisos de tamanho de chunks/importação dinâmica não impediram o build.
+- Resultado detalhado: evidencias/homologacao-20261014/verificacao-local.json.
+
+CONDIÇÕES PARA LIBERAR O PACOTE INTEGRAL
+1. Publicar a versão corrigida e repetir F01, F02 e os rótulos de expansão no
+   navegador, identificando o novo deployment/commit nas evidências.
+2. Exercitar o perfil real de consulta/SEMAS com sessão autorizada, verificando
+   acesso permitido e ausência de escrita pela interface e servidor.
+3. Registrar a aprovação de negócio da equipe após resolver essas ressalvas.
+
+ÍNDICE DAS EVIDÊNCIAS
+Pasta: docs/evidencias/homologacao-20261014/
+- manifesto.json: versão publicada, escopo, pendências, hashes e capturas.
+- evidencias-ui.json: observações e medições feitas no navegador autenticado.
+- matriz-datas.json: cinco cenários exercitados no navegador e resultados.
+- releitura-banco.json: IDs, contadores, preservação e inventário de links.
+- abertura-links.json: resultado de abertura dos 23 links cadastrados.
+- rede-recarregamento.json: caminhos das requisições e códigos HTTP, sem credenciais.
+- verificacao-local.json: comandos, resultado dos 68 testes, TypeScript e build.
+- 00-versao-publicada.jpg a 12-filtro-kanban-celular.jpg: capturas dos ensaios.

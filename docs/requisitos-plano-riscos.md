@@ -22,7 +22,7 @@ Campos vazios aparecem como “Não informado”; zero é um valor preenchido. I
 
 ## Decisões e comportamento
 
-- REQ-01: exportação completa das seções escolhidas; botão “Exportar parecer” no plano inclui cadastro, plano, riscos e pareceres técnicos registrados.
+- REQ-01: exportação completa das seções escolhidas. Após a homologação de 14/10/2026, o botão “Exportar plano” inclui cadastro, plano e riscos. A visão completa do plano não reabre os pareceres técnicos antigos; a área Parecer da organização segue informativa, conforme o checklist. Os registros técnicos históricos continuam preservados no banco e disponíveis no relatório geral quando sua seção é escolhida explicitamente.
 - REQ-02: visão “Todos os campos” permite reordenar os campos por tipo de registro. A ordem vale durante a sessão da tela e é aplicada ao PDF exportado por ela. As demais visões seguem seus layouts próprios.
 - REQ-03: hierarquia preservada: Meta → Etapa → Atividade → Subtarefa. Ação é o próximo passo de acompanhamento. Subtarefas suportam Enter, bloqueiam submissões simultâneas e preservam o rascunho em caso de falha.
 - REQ-04: próximos passos aparecem automaticamente em Encaminhamentos da organização vinculada como projeção das atividades. Sua edição abre a fonte original. Status acompanha o da atividade; não existe estado independente de conclusão da ação. Pendências entram nos contadores da organização.

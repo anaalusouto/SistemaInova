@@ -37,7 +37,7 @@ import { PainelRisco } from './PainelRisco';
 import { Painel } from './PainelBase';
 import { FormularioRisco } from './FormularioRisco';
 import { useAuth } from '../../auth/authStore';
-import { ordenarPlano, registrosDoPlano, type OrdemCamposPlano } from '../../lib/planoRelatorio';
+import { CAMPOS_RELATORIO_PLANO, ordenarPlano, registrosDoPlano, type OrdemCamposPlano } from '../../lib/planoRelatorio';
 import { VisaoCompleta } from './VisaoCompleta';
 import { VisaoOrdenacao } from './VisaoOrdenacao';
 
@@ -293,11 +293,11 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
             setExportando(true);
             try {
               const { buildReportModel, exportReportPdf } = await import('../../lib/reportExport');
-              exportReportPdf(buildReportModel(`Parecer e plano de trabalho - ${p.name}`, [p], ['cadastro', 'metas', 'riscos', 'pareceres'], ordemCampos));
-              toast.success('Parecer e plano completos exportados.');
+              exportReportPdf(buildReportModel(`Plano de trabalho e riscos - ${p.name}`, [p], [...CAMPOS_RELATORIO_PLANO], ordemCampos));
+              toast.success('Plano de trabalho e riscos exportados.');
             } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível exportar.'); }
             finally { setExportando(false); }
-          }}>{exportando ? 'Exportando…' : 'Exportar parecer'}</button>
+          }}>{exportando ? 'Exportando…' : 'Exportar plano'}</button>
           {acoesDaVisao}
         </div>
       </div>
@@ -305,7 +305,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
       {/* Visão */}
       <div className="px-6 pb-6">
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, undefined, ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} />}
+          {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, [...CAMPOS_RELATORIO_PLANO], ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} />}
           {visao === 'ordenar' && <VisaoOrdenacao projetoId={p.id} metas={metas} codigos={codigos} />}
           {visao === 'tabela' && (
             <VisaoTabela

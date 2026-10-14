@@ -83,6 +83,19 @@ test('REQ-01/02: vazio é explícito, zero é preenchido e ordem escolhida chega
   assert.ok(!modelo.projects[0].detalhes.some(r => r.tipo === 'risco'));
 });
 
+test('plano e sua exportação não reabrem o parecer técnico antigo; relatório geral preserva os registros', () => {
+  const p = fixture();
+  const antes = structuredClone(p.pareceres);
+  const registros = plano.registrosDoPlano(p, [...plano.CAMPOS_RELATORIO_PLANO]);
+  assert.ok(registros.some(r => r.tipo === 'atividade'));
+  assert.ok(registros.some(r => r.tipo === 'risco'));
+  assert.ok(!registros.some(r => r.tipo === 'parecer'));
+  const modelo = relatorio.buildReportModel('Plano de trabalho', [p], [...plano.CAMPOS_RELATORIO_PLANO]);
+  assert.ok(!modelo.projects[0].detalhes.some(r => r.tipo === 'parecer'));
+  assert.ok(relatorio.buildReportModel('Histórico', [p], ['pareceres']).projects[0].detalhes.some(r => r.tipo === 'parecer'));
+  assert.deepEqual(p.pareceres, antes);
+});
+
 test('REQ-04: acompanhamento mantém origem, reflete edição e não cruza organizações', () => {
   const p = fixture(); const outro = fixture(); outro.organizacao.id = 'org-b';
   let linhas = plano.encaminhamentosDoPlano([p, outro], 'org-a');

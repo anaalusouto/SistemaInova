@@ -1,0 +1,71 @@
+{
+  "dataUTC": "2026-10-14T13:36:13.400Z",
+  "verificador": "Codex",
+  "ambientePublicado": "https://sistema-inova-rose.vercel.app/",
+  "commitPublicado": "5e29b1f414c7817889c7ba12c930d53d022b7f63",
+  "situacao": "HOMOLOGACAO PARCIAL; ACEITE INTEGRAL NAO CONCEDIDO",
+  "perfilRealExercitado": "Administrador Master - Teste",
+  "perfilConsulta": "Pendente de sessão real disponível",
+  "capturas": [
+    "00-versao-publicada.jpg",
+    "01-datas-antecipadas.jpg",
+    "02-atraso-bloqueado.jpg",
+    "03-atraso-somente-fim.jpg",
+    "04-datas-persistidas-reload.jpg",
+    "05-parecer-informativo.jpg",
+    "06-desktop-topo.jpg",
+    "07-desktop-rolagem.jpg",
+    "08-celular-topo.jpg",
+    "09-celular-rolagem.jpg",
+    "10-menu-celular.jpg",
+    "11-filtro-tabela-celular.jpg",
+    "12-filtro-kanban-celular.jpg"
+  ],
+  "linksCadastrados": 23,
+  "atividadeRestaurada": true,
+  "correcoesLocaisNaoPublicadas": [
+    {
+      "arquivo": "src/app/App.tsx",
+      "sha256": "694a8e12807f1b969727d66a391deda4dc6dd5cf858eddb1e5880fb69934f42a"
+    },
+    {
+      "arquivo": "src/app/components/Sidebar.tsx",
+      "sha256": "e94545ade9ed053f12bfbcc36b9e0f430d7e23f2f7c046bb56fd6ec7a0cbd6ea"
+    },
+    {
+      "arquivo": "src/app/components/plano/TabPlanoTrabalho.tsx",
+      "sha256": "264fda1e25c84a2a7d1756b2de0aada0c1871f7357d3ad139ee3b5083479ec1e"
+    },
+    {
+      "arquivo": "src/app/components/plano/VisaoTabela.tsx",
+      "sha256": "775dbd3bd2c82ee924d969e52ef4198d4c524c0b686234041967445af8c05714"
+    },
+    {
+      "arquivo": "src/app/lib/focoMenu.ts",
+      "sha256": "681a89d711ce786d87bc8647e69c811f21744e395f40351d15f22c8c24cc354c"
+    },
+    {
+      "arquivo": "src/app/lib/planoRelatorio.ts",
+      "sha256": "5501d5332c4382d14cb63870a8b1018e8823e6a523a936577eca5cdf8d066d03"
+    },
+    {
+      "arquivo": "tests/focoMenu.test.cjs",
+      "sha256": "0cacdffdf105109b467c5b428e8d0c2370255a57563e3c1bc756c9357f9aaf05"
+    },
+    {
+      "arquivo": "tests/planoRelatorio.test.cjs",
+      "sha256": "9c11059d411cbcf89d8c918301f6239e890a53d53d33ba076f3bf50c79e7c9ab"
+    },
+    {
+      "arquivo": "scripts/verificarHomologacaoUi.mjs",
+      "sha256": "4e8151fd533901b80df068ec73afe6af5edd3d7c030fa3c0ae87f0f01eec2410"
+    }
+  ],
+  "pendencias": [
+    "Publicar e retestar retirada do parecer técnico do plano",
+    "Publicar e retestar foco/Tab/Escape do menu móvel",
+    "Testar perfil real de consulta e registrar o aceite de negócio"
+  ],
+  "linksAbertos": 23,
+  "relatorio": "docs/homologacao-20261014.txt"
+}

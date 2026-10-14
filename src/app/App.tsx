@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
@@ -43,6 +43,7 @@ function AppShell() {
   // não ficar inacessível.
   const [projetoAvulso, setProjetoAvulso] = useState<number | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const fecharMenu = useCallback(() => setMobileNavOpen(false), []);
   const { getProject } = useStore();
   const { user } = useAuth();
   const { log } = useAudit();
@@ -113,7 +114,7 @@ function AppShell() {
         rotaOrg={rotaOrg}
         aoNavegarOrg={navegarOrg}
         isOpen={mobileNavOpen}
-        onClose={() => setMobileNavOpen(false)}
+        onClose={fecharMenu}
       />
       <div className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
         <header
@@ -123,6 +124,8 @@ function AppShell() {
           <button
             onClick={() => setMobileNavOpen(true)}
             aria-label="Abrir menu"
+            aria-expanded={mobileNavOpen}
+            aria-controls="menu-principal"
             className="flex items-center justify-center rounded-md p-2 text-foreground hover:bg-accent lg:hidden"
           >
             <Menu size={20} />

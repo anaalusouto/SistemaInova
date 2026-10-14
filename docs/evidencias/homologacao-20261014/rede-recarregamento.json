@@ -1,0 +1,101 @@
+{
+  "dataUTC": "2026-10-14T13:23:42.011Z",
+  "respostas": [
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/ef11c2a7526aa694978e926061c4cf77bba3a2dd609229ee0d84e1176d1b3cd7"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/daaf16137d7c49bda31104b8ae12b5ed64b882c84a4c26ef3145adf60e001fd3"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/ef11c2a7526aa694978e926061c4cf77bba3a2dd609229ee0d84e1176d1b3cd7"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/daaf16137d7c49bda31104b8ae12b5ed64b882c84a4c26ef3145adf60e001fd3"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/ef11c2a7526aa694978e926061c4cf77bba3a2dd609229ee0d84e1176d1b3cd7"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/daaf16137d7c49bda31104b8ae12b5ed64b882c84a4c26ef3145adf60e001fd3"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/ef11c2a7526aa694978e926061c4cf77bba3a2dd609229ee0d84e1176d1b3cd7"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/daaf16137d7c49bda31104b8ae12b5ed64b882c84a4c26ef3145adf60e001fd3"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/ef11c2a7526aa694978e926061c4cf77bba3a2dd609229ee0d84e1176d1b3cd7"
+    },
+    {
+      "tipo": "Fetch",
+      "status": 200,
+      "caminho": "/_serverFn/daaf16137d7c49bda31104b8ae12b5ed64b882c84a4c26ef3145adf60e001fd3"
+    },
+    {
+      "tipo": "Document",
+      "status": 200,
+      "caminho": "/"
+    },
+    {
+      "tipo": "Stylesheet",
+      "status": 200,
+      "caminho": "/assets/styles-CnYELrYp.css"
+    },
+    {
+      "tipo": "Stylesheet",
+      "status": 200,
+      "caminho": "/assets/routes-OFlw3bnk.css"
+    },
+    {
+      "tipo": "Script",
+      "status": 200,
+      "caminho": "/assets/typeof-B5XbjTb1.js"
+    },
+    {
+      "tipo": "Script",
+      "status": 200,
+      "caminho": "/assets/index-BujYg9Ha.js"
+    },
+    {
+      "tipo": "Script",
+      "status": 200,
+      "caminho": "/assets/routes-D_oq6WfC.js"
+    },
+    {
+      "tipo": "Image",
+      "status": 200,
+      "caminho": "/images/cursor-chat.png"
+    },
+    {
+      "tipo": "Image",
+      "status": 200,
+      "caminho": "/wp-content/uploads/2022/09/MundoLenny_DiaDaAmazonia.gif"
+    },
+    {
+      "tipo": "Other",
+      "status": 200,
+      "caminho": "/favicon.ico"
+    }
+  ],
+  "limite": "URLs sem parâmetros; nenhum cabeçalho, cookie ou credencial foi registrado."
+}

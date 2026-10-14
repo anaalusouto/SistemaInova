@@ -213,7 +213,7 @@ export function VisaoTabela({
                       <tr style={{ background: 'var(--surface-1)' }}>
                         <td colSpan={COLUNAS.length} className="px-3 py-1.5" style={{ borderBottom: '1px solid var(--line-1)' }}>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <button onClick={() => alternarRecolhido(etapa.id)} aria-expanded={!etapaRecolhida} aria-label="Recolher etapa">
+                            <button onClick={() => alternarRecolhido(etapa.id)} aria-expanded={!etapaRecolhida} aria-label={etapaRecolhida ? 'Expandir etapa' : 'Recolher etapa'}>
                               {etapaRecolhida ? <ChevronRight size={13} color="var(--ink-4)" /> : <ChevronDown size={13} color="var(--ink-4)" />}
                             </button>
                             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-4)' }}>
@@ -267,7 +267,7 @@ export function VisaoTabela({
                                     <button
                                       onClick={() => alternarRecolhido(atividade.id)}
                                       aria-expanded={!atividadeRecolhida}
-                                      aria-label="Expandir tarefas"
+                                      aria-label={atividadeRecolhida ? 'Expandir tarefas' : 'Recolher tarefas'}
                                       style={{ marginTop: 1 }}
                                     >
                                       {atividadeRecolhida ? <ChevronRight size={12} color="var(--ink-5)" /> : <ChevronDown size={12} color="var(--ink-5)" />}
