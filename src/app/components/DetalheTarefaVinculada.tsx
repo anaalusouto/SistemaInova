@@ -16,7 +16,7 @@ export function DetalheTarefaVinculada({ tarefa, aoFechar, aoProjeto, aoOrganiza
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }}>
     <div ref={dialogo} role="dialog" aria-modal="true" aria-label="Detalhes da tarefa" className="bg-card border rounded-xl p-5 w-full max-w-xl max-h-[90dvh] overflow-y-auto space-y-3">
       <h2 className="font-semibold">{tarefa.titulo}</h2>
-      <p>Responsável: {tarefa.atribuidoParaNome}</p>
+      <p>Responsável: {tarefa.responsaveisDoQuadro?.map(p => p.name).join(', ') || tarefa.atribuidoParaNome}</p>
       <p>Criada por: {tarefa.atribuidoPorNome || 'Não informado'}</p>
       <p>Prazo: {tarefa.dataLimite || 'Não informado'}</p>
       <p className="text-sm">{o?.caminho}</p>

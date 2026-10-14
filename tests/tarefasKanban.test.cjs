@@ -74,7 +74,57 @@ test('nomes ambíguos ficam visíveis sem associar conta errada; menção à mes
   const cards=tarefasVinculadas({atividades:[{...atividade,tarefas:[],proximo_passo:''}],atribuicoes:[{
     id:'m1',atividade_id:'a1',atividades:atividade,atribuido_para_login:'maria',atribuido_para_nome:'Maria',atribuido_por_nome:'João'}]});
   assert.equal(resolverPessoasDoQuadro(cards,[{login:'maria',name:'Maria'}]).length,1);
-  assert.equal(resolverPessoasDoQuadro(cards,[{login:'maria1',name:'Maria'},{login:'maria2',name:'Maria'}])[0].atribuidoParaLogin,'nome:maria');
+  assert.equal(resolverPessoasDoQuadro(cards,[{login:'maria1',name:'Maria'},{login:'maria2',name:'Maria'}])[0].atribuidoParaLogin,'pessoa:maria');
+});
+
+test('Ana Luiza e Ana Souto usam a coluna Ana Luiza Souto, inclusive com contas ou tarefas repetidas',()=>{
+  const {resolverPessoasDoQuadro}=ambiente().carregar('src/app/lib/tarefasKanban');
+  const {pessoasDoQuadro}=ambiente().carregar('src/app/lib/responsaveisKanban');
+  const pessoas=[{login:'ana',name:'Ana Luiza'},{login:'souto',name:'Ana Souto'},{login:'completa',name:'Ana Luiza Souto'}];
+  const nomes=['Ana Luiza','Ana Souto','  ANA LUIZA SOUTO  ','Ana Luiza + Ana Souto'];
+  const cards=resolverPessoasDoQuadro(nomes.map((responsavel,i)=>({id:`t${i}`,atribuidoParaNome:responsavel,atribuidoParaLogin:`nome:${i}`,atribuidoPorNome:'Quem abriu'})),pessoas);
+  assert.equal(cards.length,4);assert.ok(cards.every(t=>t.atribuidoParaNome==='Ana Luiza Souto'&&t.atribuidoParaLogin==='completa'));
+  assert.equal(pessoasDoQuadro(pessoas,cards).length,1);
+  assert.ok(cards.every(t=>t.atribuidoPorNome==='Quem abriu'));
+});
+
+test('abreviações claras seguem o nome completo e nomes com dois candidatos não misturam pessoas',()=>{
+  const {criarResolvedorResponsaveis}=ambiente().carregar('src/app/lib/responsaveisKanban');
+  const resolver=criarResolvedorResponsaveis([{login:'jm',name:'João Marcelo Silva'},{login:'jp',name:'João Paulo'}],['João Marcelo','João','José Dias']);
+  assert.deepEqual(resolver('JOAO MARCELO'),[{login:'jm',name:'João Marcelo Silva'}]);
+  assert.deepEqual(resolver('João'),[{login:'nome:joao',name:'João'}]);
+  assert.deepEqual(resolver('João','jp'),[{login:'jp',name:'João Paulo'}]);
+  assert.deepEqual(resolver('José Dias'),[{login:'nome:jose dias',name:'José Dias'}]);
+});
+
+test('instituições e coordenadores compartilham uma coluna; CESUPA + João aparece no grupo e na pessoa',()=>{
+  const {resolverPessoasDoQuadro}=ambiente().carregar('src/app/lib/tarefasKanban');
+  const cards=resolverPessoasDoQuadro(['CESUPA','fas','FUNBIO','SEMAS','Coordenadores','CESUPA + João','FAS / SEMAS + João + CESUPA'].map((nome,i)=>({
+    id:`t${i}`,atribuidoParaNome:nome,atribuidoParaLogin:`origem:${i}`,atribuidoPorNome:'Criadora',origem:{tipo:'atividade',registroId:`a${i}`},
+  })),[{login:'joao',name:'João Marcelo'}]);
+  const equipes=cards.filter(t=>t.atribuidoParaLogin==='equipe:instituicoes-coordenadores');
+  assert.equal(equipes.length,7);assert.equal(cards.filter(t=>t.atribuidoParaLogin==='joao').length,2);
+  assert.equal(new Set(cards.filter(t=>t.id==='t6').map(t=>t.atribuidoParaLogin)).size,2);
+  assert.ok(cards.every(t=>t.atribuidoPorNome==='Criadora'));
+});
+
+test('separadores de responsáveis conjuntos não quebram nomes compostos e o agrupamento é idempotente',()=>{
+  const {resolverPessoasDoQuadro}=ambiente().carregar('src/app/lib/tarefasKanban');
+  const pessoas=[{login:'ana',name:'Ana Luiza Souto'},{login:'joao',name:'João Marcelo'}];
+  const nomes=['Ana Luiza + João','Ana Souto / João','Ana Luiza; João','Ana Souto, João','Ana Luiza e João','Ana Luiza & João'];
+  const originais=nomes.map((nome,i)=>({id:`t${i}`,atribuidoParaNome:nome,atribuidoParaLogin:`x${i}`}));
+  const antes=structuredClone(originais);const uma=resolverPessoasDoQuadro(originais,pessoas);
+  assert.equal(uma.length,12);assert.deepEqual(originais,antes);
+  const duas=resolverPessoasDoQuadro(uma,pessoas);
+  assert.deepEqual(duas,uma);
+});
+
+test('mover uma pessoa de tarefa conjunta preserva a equipe e o agrupamento após recarregar',()=>{
+  const {criarResolvedorResponsaveis,substituirResponsavelDoQuadro}=ambiente().carregar('src/app/lib/responsaveisKanban');
+  const resolver=criarResolvedorResponsaveis([{login:'joao',name:'João Marcelo'},{login:'ana',name:'Ana Luiza Souto'}]);
+  const atuais=resolver('CESUPA + João');
+  const destino=substituirResponsavelDoQuadro(atuais,'joao',{login:'ana',name:'Ana Luiza Souto'});
+  assert.deepEqual(resolver(destino.name).map(p=>p.login),['equipe:instituicoes-coordenadores','ana']);
 });
 
 test('atividades administrativas e subatividades entram com autoria original e herança explícita de responsável',()=>{

@@ -66,6 +66,18 @@ Nome sem conta correspondente continua visível em uma coluna nominal. Nomes
 ambíguos não são associados arbitrariamente a uma conta. Uma atividade e uma
 menção à mesma atividade para a mesma pessoa não duplicam o cartão.
 
+Complemento de agrupamento: Ana Luiza e Ana Souto são aliases explícitos de
+Ana Luiza Souto. As demais abreviações usam o nome completo quando há uma única
+correspondência. Colunas de contas com nomes iguais também são consolidadas na
+exibição, sem mesclar ou alterar contas no banco.
+CESUPA, FAS, FUNBIO, SEMAS e Coordenadores aparecem no grupo único Instituições
+/ Coordenadores. Campos conjuntos (+, /, vírgula, ponto e vírgula, & e "e")
+geram participação da mesma tarefa em cada coluna. Participações repetidas da
+mesma pessoa/equipe são contadas uma vez por tarefa. Ao mover uma participação
+de tarefa própria do quadro, os demais responsáveis são preservados. Os textos
+originais e a autoria dos registros de origem não são reescritos por agrupar.
+Este complemento não exige nova migração SQL.
+
 Cartões apresentam Criada por e o caminho de origem. Os automáticos abrem um
 detalhe e oferecem acesso ao módulo correspondente; são editados na origem.
 Tarefas próprias do quadro mantêm seus controles de edição e movimentação.

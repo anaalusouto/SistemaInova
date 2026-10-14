@@ -85,6 +85,20 @@ test('Kanban exibe responsável sem conta e criador da tarefa automática; consu
   assert.doesNotMatch(html,/Invalid Date|Nova tarefa|Excluir tarefa|<select/);
 });
 
+test('Kanban unifica colunas dos apelidos e apresenta tarefa conjunta na equipe e na pessoa', () => {
+  const gantt=[{id:1,bloco:'Interno',entregas:[{id:2,entrega:'Etapa',atividades:[
+    {id:3,atividade:'Primeira',responsavel:'Ana Luiza',status:'Não iniciado',inicio:'',fim:''},
+    {id:4,atividade:'Segunda',responsavel:'Ana Souto',status:'Não iniciado',inicio:'',fim:''},
+    {id:5,atividade:'Compartilhada',responsavel:'CESUPA + João Marcelo',status:'Não iniciado',inicio:'',fim:''},
+  ]}]}];
+  const {GestaoPage}=carregarInterface('src/app/components/GestaoPage.tsx',{readOnly:true,gantt});
+  const html=renderToStaticMarkup(React.createElement(GestaoPage));
+  assert.equal((html.match(/>Ana Luiza Souto</g)??[]).length,1);
+  assert.doesNotMatch(html,/>Ana Souto<|>Ana Luiza</);
+  assert.match(html,/Instituições \/ Coordenadores/);assert.match(html,/João Marcelo/);
+  assert.equal((html.match(/>Compartilhada</g)??[]).length,2);
+});
+
 test('plano administrativo renderiza tabela e controles comuns sem abrir projeto de organização', () => {
   const gantt = [{ id: 1, bloco: 'Administração', entregas: [{ id: 2, entrega: 'Etapa interna', inicio: '2026-10-01', fim: '2026-10-31', atividades: [{ id: 3, atividade: 'Atividade interna', inicio: '2026-10-01', fim: '2026-10-31', status: 'Não iniciado' }] }] }];
   for (const readOnly of [false, true]) {
