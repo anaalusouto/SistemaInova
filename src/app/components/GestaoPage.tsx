@@ -8,6 +8,7 @@ import type { TarefaGestao, TarefaGestaoStatus } from '../tarefasGestao.server';
 import { BotaoNovo, LinkNovo } from './BotaoNovo';
 import { resolverPessoasDoQuadro, tarefasAdministrativas } from '../lib/tarefasKanban';
 import { DetalheTarefaVinculada } from './DetalheTarefaVinculada';
+import { pessoasDoQuadro, substituirResponsavelDoQuadro } from '../lib/responsaveisKanban';
 
 const STATUS_LABEL: Record<TarefaGestaoStatus, string> = {
   nao_iniciado: 'Não iniciado',
@@ -57,9 +58,7 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
   const { tarefas: nativas, loading, error, create, edit, move, setStatus, remove } = useGestaoTarefas();
   const tarefas = useMemo(() => resolverPessoasDoQuadro([...nativas, ...tarefasAdministrativas(gantt)], allPeople), [nativas, gantt, allPeople]);
   const people = useMemo(() => {
-    const colunas = new Map<string, CardPerson>(allPeople.filter(p => p.role === 'admin' || p.role === 'estagiario').map(p => [p.login, p]));
-    for (const t of tarefas) if (!colunas.has(t.atribuidoParaLogin)) colunas.set(t.atribuidoParaLogin, { login: t.atribuidoParaLogin, name: t.atribuidoParaNome });
-    return [...colunas.values()];
+    return pessoasDoQuadro(allPeople.filter(p => p.role === 'admin' || p.role === 'estagiario'), tarefas);
   }, [allPeople, tarefas]);
   const [vinculada, setVinculada] = useState<TarefaGestao | null>(null);
 
@@ -84,14 +83,20 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
     setDragOverLogin(null);
     const id = e.dataTransfer.getData('text/plain');
     if (!id) return;
-    const task = tarefas.find(t => t.id === id);
+    const colunaOrigem = e.dataTransfer.getData('application/x-inova-responsavel');
+    const task = tarefas.find(t => t.id === id && (!colunaOrigem || t.atribuidoParaLogin === colunaOrigem));
     if (readOnly || !task || task.origem || task.atribuidoParaLogin === login) return;
     try {
-      await move(id, login, name);
+      await moverParticipacao(task, login, name);
       toast.success(`Tarefa movida para ${name}.`);
     } catch {
       toast.error('Não foi possível mover a tarefa.');
     }
+  };
+
+  const moverParticipacao = (t: TarefaGestao, login: string, name: string) => {
+    const destino = substituirResponsavelDoQuadro(t.responsaveisDoQuadro ?? [{ login: t.atribuidoParaLogin, name: t.atribuidoParaNome }], t.atribuidoParaLogin, { login, name });
+    return move(t.id, destino.login, destino.name);
   };
 
   const handleDelete = async (t: TarefaGestao) => {
@@ -174,7 +179,7 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
                       readOnly={readOnly || !!t.origem}
                       onEdit={() => t.origem ? setVinculada(t) : setFormState({ mode: 'edit', task: t })}
                       onDelete={() => handleDelete(t)}
-                      onMove={(login, name) => move(t.id, login, name)}
+                      onMove={(login, name) => moverParticipacao(t, login, name)}
                       onStatus={s => setStatus(t.id, s)}
                     />
                   ))}
@@ -187,7 +192,7 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
         </div>
       )}
 
-      {vinculada && <DetalheTarefaVinculada tarefa={tarefas.find(t => t.id === vinculada.id) ?? vinculada}
+      {vinculada && <DetalheTarefaVinculada tarefa={tarefas.find(t => t.id === vinculada.id && t.atribuidoParaLogin === vinculada.atribuidoParaLogin) ?? vinculada}
         aoFechar={() => setVinculada(null)} aoProjeto={onOpenProject} aoOrganizacao={onOpenOrg} aoAdministrativo={onOpenAdmin} />}
       {formState && !readOnly && (
         <TaskForm
@@ -222,7 +227,7 @@ function TaskCard({ task, people, readOnly, onEdit, onDelete, onMove, onStatus }
   return (
     <div
       draggable={!readOnly}
-      onDragStart={e => e.dataTransfer.setData('text/plain', task.id)}
+      onDragStart={e => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.setData('application/x-inova-responsavel', task.atribuidoParaLogin); }}
       className={`rounded-lg border p-2.5 flex flex-col gap-2 ${readOnly ? '' : 'cursor-grab active:cursor-grabbing'}`}
       style={{ borderColor: visual.border, background: 'var(--surface-0)' }}
     >

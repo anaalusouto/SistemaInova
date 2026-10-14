@@ -1,5 +1,6 @@
 import type { TarefaGestao, TarefaGestaoStatus } from '../tarefasGestao.server';
 import type { GanttBloco, GanttActivity } from '../data/cronogramaExecutivo';
+import { criarResolvedorResponsaveis } from './responsaveisKanban';
 
 export interface OrigemTarefa {
   tipo: 'atividade' | 'subtarefa' | 'acao' | 'risco' | 'encaminhamento' | 'mensagem' | 'administrativo';
@@ -85,18 +86,17 @@ export function tarefasAdministrativas(blocos: GanttBloco[]): TarefaGestao[] {
   return resultado;
 }
 
-/** Nome só é associado a uma conta quando a correspondência é inequívoca. */
+/** Canoniza identidades e apresenta a mesma tarefa em cada responsável. */
 export function resolverPessoasDoQuadro(tarefas: TarefaGestao[], pessoas: { login: string; name: string }[]) {
-  const resolvidas = tarefas.map(t => {
-    if (pessoas.some(p => p.login === t.atribuidoParaLogin)) return t;
-    const candidatas = pessoas.filter(p => normalizar(p.name) === normalizar(t.atribuidoParaNome));
-    return candidatas.length === 1 ? { ...t, atribuidoParaLogin: candidatas[0].login } : t;
+  const resolver = criarResolvedorResponsaveis(pessoas, tarefas.map(t => t.atribuidoParaNome));
+  const resolvidas = tarefas.flatMap(t => {
+    const responsaveis = resolver(t.responsaveisDoQuadro?.map(p => p.name).join(' + ') || t.atribuidoParaNome, t.atribuidoParaLogin);
+    return responsaveis.map(p => ({ ...t, atribuidoParaLogin: p.login, atribuidoParaNome: p.name, responsaveisDoQuadro: responsaveis }));
   });
   const vistos = new Set<string>();
   return resolvidas.filter(t => {
     const atividade = t.origem?.atividadeId;
-    if (!atividade) return true;
-    const chave = `${atividade}:${t.atribuidoParaLogin}`;
+    const chave = `${atividade ? `atividade:${atividade}` : t.id}:${t.atribuidoParaLogin}`;
     if (vistos.has(chave)) return false;
     vistos.add(chave); return true;
   });

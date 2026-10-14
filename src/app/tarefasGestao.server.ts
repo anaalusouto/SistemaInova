@@ -13,6 +13,7 @@ export interface TarefaGestaoProjeto {
 }
 
 export interface TarefaGestao {
+  responsaveisDoQuadro?: { login: string; name: string }[];
   origem?: OrigemTarefa;
   id: string;
   titulo: string;
