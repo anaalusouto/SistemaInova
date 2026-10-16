@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   FileText,
   ClipboardList,
@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Link2,
   Info,
+  ListChecks,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -34,7 +35,7 @@ import { riscoEmAberto, faixaRisco } from '../lib/planoTrabalho';
  */
 // A aba Contato saiu (RC-03): o histórico de contatos é da organização e
 // fica na ficha dela, em Organizações.
-type TabId = 'descricao' | 'plano' | 'orcamento';
+type TabId = 'descricao' | 'plano' | 'orcamento' | 'encaminhamentos';
 
 const tabs: { id: TabId; label: string; icon: typeof FileText }[] = [
   { id: 'descricao',  label: 'Descrição',         icon: FileText },
@@ -57,10 +58,16 @@ interface ProjectViewProps {
   /** A ficha já apresenta o único H1 fixo com o nome da organização. */
   dentroDaOrganizacao?: boolean;
   aoEncaminhamentos?: (atividadeId?: string) => void;
+  renderEncaminhamentos?: (atividadeId: string | null) => ReactNode;
 }
 
-export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos }: ProjectViewProps) {
+export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos, renderEncaminhamentos }: ProjectViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('plano');
+  const [focoEncaminhamento, setFocoEncaminhamento] = useState<string | null>(null);
+  const abrirEncaminhamentos = renderEncaminhamentos ? (atividadeId?: string) => {
+    setFocoEncaminhamento(atividadeId ?? null);
+    setActiveTab('encaminhamentos');
+  } : aoEncaminhamentos;
   const [panel, setPanel] = useState<'mudancas' | null>(null);
   // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
   // no lugar da gaveta antiga. Um contador, e não um booleano, para que clicar
@@ -93,8 +100,9 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
   const renderTab = () => {
     switch (activeTab) {
       case 'descricao': return <TabDescricao project={project} />;
-      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} aoEncaminhamentos={aoEncaminhamentos} />;
+      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} aoEncaminhamentos={abrirEncaminhamentos} />;
       case 'orcamento': return <TabOrcamentoInterino project={project} />;
+      case 'encaminhamentos': return renderEncaminhamentos?.(focoEncaminhamento);
       default:          return null;
     }
   };
@@ -252,6 +260,13 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
                   </button>
                 );
               })}
+              {abrirEncaminhamentos && <button onClick={() => abrirEncaminhamentos()}
+                aria-label="Encaminhamentos"
+                aria-current={activeTab === 'encaminhamentos' ? 'page' : undefined}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 whitespace-nowrap"
+                style={{ color: activeTab === 'encaminhamentos' ? 'var(--primary)' : 'var(--ink-4)', borderBottomColor: activeTab === 'encaminhamentos' ? 'var(--primary)' : 'transparent' }}>
+                <ListChecks size={13} /> Encaminhamentos
+              </button>}
             </div>
           </div>
         </div>

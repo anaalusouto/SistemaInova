@@ -45,9 +45,10 @@ interface CartaoDados {
 }
 
 function Cartao({
-  dados, codigo, risco, arrastavel, aoAbrir, aoAbrirEtapa, aoAbrirAnexo, aoIniciarArraste,
+  dados, codigo, risco, arrastavel, administrativo, aoAbrir, aoAbrirEtapa, aoAbrirAnexo, aoIniciarArraste,
 }: {
   dados: CartaoDados;
+  administrativo: boolean;
   codigo: string;
   risco: ReturnType<typeof riscoDaEtapa>;
   arrastavel: boolean;
@@ -97,9 +98,7 @@ function Cartao({
       </div>
 
       <div className="flex items-center gap-x-2 gap-y-1 flex-wrap" style={{ fontSize: '0.68rem' }}>
-        <span style={{ color: 'var(--ink-4)' }}>
-          {atividade.responsible || 'sem responsável'}
-        </span>
+        {administrativo && <span style={{ color: 'var(--ink-4)' }}>{atividade.responsible || 'sem responsável'}</span>}
         <span style={{ color: atrasada ? 'var(--alert)' : 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
           {atividade.plannedEnd ? formatDateOnly(atividade.plannedEnd) : 'sem prazo'}
         </span>
@@ -143,6 +142,7 @@ function Cartao({
 }
 
 export interface VisaoKanbanProps {
+  administrativo?: boolean;
   metas: Goal[];
   riscos: Risk[];
   agrupamento: AgrupamentoKanban;
@@ -155,7 +155,7 @@ export interface VisaoKanbanProps {
 }
 
 export function VisaoKanban({
-  metas, riscos, agrupamento, codigos,
+  metas, riscos, agrupamento, codigos, administrativo = false,
   aoAbrirEtapa, aoAbrirAtividade, aoAbrirAnexo, aoMoverStatus, aoMoverResponsavel,
 }: VisaoKanbanProps) {
   const { readOnly } = useAuth();
@@ -276,6 +276,7 @@ export function VisaoKanban({
               )}
               {coluna.cartoes.map(dados => (
                 <Cartao
+                  administrativo={administrativo}
                   key={dados.atividade.id}
                   dados={dados}
                   codigo={codigos.get(dados.atividade.id) ?? ''}

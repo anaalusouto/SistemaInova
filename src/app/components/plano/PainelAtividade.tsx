@@ -185,7 +185,6 @@ export function PainelAtividade({
           <FormularioAtividade etapa={etapa} atividade={atividade} aoFechar={() => setEditando(false)} />
         ) : (
           <>
-            <Linha rotulo="Responsável">{atividade.responsible || <Ausente />}</Linha>
 
             <Linha rotulo="Status e progresso">
               <span className="inline-flex items-center gap-2">

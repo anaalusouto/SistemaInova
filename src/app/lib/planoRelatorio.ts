@@ -46,7 +46,7 @@ export function registrosDoPlano(p: Project, selecionados = ['metas', 'riscos', 
       adicionar(e.id, 'etapa', `Etapa: ${m.name} / ${e.name}`, [campo('name', 'Nome', e.name), campo('expectedResult', 'Resultado esperado', e.expectedResult), ...periodo(e)]);
       for (const a of e.activities) {
         adicionar(a.id, 'atividade', `Atividade: ${m.name} / ${e.name} / ${a.name}`, [
-          campo('name', 'Título', a.name), campo('responsible', 'Responsável', a.responsible),
+          campo('name', 'Título', a.name),
           campo('status', 'Status', a.status), campo('progress', 'Progresso (%)', a.progress), ...periodo(a),
           campo('delayJustification', 'Justificativa de atraso', a.delayJustification), campo('budgetLink', 'Vínculo orçamentário', a.budgetLink),
           campo('observations', 'Observação', a.observations), campo('nextStep', 'Ação de acompanhamento', a.nextStep),

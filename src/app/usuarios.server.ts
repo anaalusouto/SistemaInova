@@ -12,6 +12,7 @@ import { notificarNovaSolicitacao, notificarSolicitacaoDecidida } from './email.
 export type UserRole = 'admin' | 'estagiario' | 'visualizador';
 
 export interface PublicUser {
+  id?: string;
   login: string;
   displayName: string;
   role: UserRole;
@@ -55,7 +56,7 @@ function verifyPassword(password: string, stored: string): boolean {
 
 function toPublicUser(row: any): PublicUser {
   return {
-    login: row.login, displayName: row.nome_exibicao, role: row.papel, adminOverride: row.admin_override,
+    id: row.id, login: row.login, displayName: row.nome_exibicao, role: row.papel, adminOverride: row.admin_override,
     ultimoAcesso: row.ultimo_acesso ?? null, avatarUrl: row.avatar_data_url ?? null,
   };
 }

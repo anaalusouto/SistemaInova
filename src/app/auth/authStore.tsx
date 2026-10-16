@@ -257,7 +257,7 @@ export function usePeople() {
   return useMemo(
     () => people
       .filter(p => p.login !== 'LJCRIA' && p.login !== 'ADMCRIA')
-      .map(p => ({ name: p.displayName, role: p.role, login: p.login, ultimoAcesso: p.ultimoAcesso, avatarUrl: p.avatarUrl })),
+      .map(p => ({ id: p.id, name: p.displayName, role: p.role, login: p.login, ultimoAcesso: p.ultimoAcesso, avatarUrl: p.avatarUrl })),
     [people],
   );
 }

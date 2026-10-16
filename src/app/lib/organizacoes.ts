@@ -156,6 +156,7 @@ export interface Encaminhamento {
   id: string;
   descricao: string;
   responsavel: string | null;
+  responsavelUsuarioId?: string | null;
   dataInicio: string | null;  // AAAA-MM-DD
   dataFim: string | null;     // AAAA-MM-DD
   status: StatusEncaminhamento;
@@ -270,6 +271,7 @@ export interface EncaminhamentoInput {
   organizacaoId: string;
   descricao: string;
   responsavel: string;
+  responsavelUsuarioId?: string | null;
   dataInicio: string | null;
   dataFim: string | null;
   status: StatusEncaminhamento;

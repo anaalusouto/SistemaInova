@@ -45,7 +45,7 @@ export function tarefasVinculadas(fontes: { atividades?: any[]; encaminhamentos?
       fim: a.proximo_passo_prazo, origem: { tipo: 'acao', registroId: a.id, caminho, projetoId: projeto?.id } });
   }
   for (const e of fontes.encaminhamentos ?? []) incluir({ id: e.id, titulo: e.descricao,
-    responsavel: e.responsavel, criador: e.criado_por, criadoEm: e.criado_em,
+    responsavel: e.responsavel, login: e.responsavel_login, criador: e.criado_por, criadoEm: e.criado_em,
     inicio: e.data_inicio, fim: e.data_fim, status: e.status,
     origem: { tipo: 'encaminhamento', registroId: e.id, caminho: `${e.comunidades?.nome ?? 'Organização'} › Encaminhamento`, organizacaoId: e.comunidade_id } });
   for (const r of fontes.riscos ?? []) {

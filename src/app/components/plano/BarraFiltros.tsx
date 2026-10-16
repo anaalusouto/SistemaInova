@@ -70,9 +70,10 @@ function Etiqueta({ texto, aoRemover }: { texto: string; aoRemover: () => void }
 }
 
 export function BarraFiltros({
-  metas, criterios, aoMudar, visiveis, total,
+  metas, criterios, aoMudar, visiveis, total, administrativo = false,
 }: {
   metas: Goal[];
+  administrativo?: boolean;
   criterios: CriteriosFiltro;
   aoMudar: (c: CriteriosFiltro) => void;
   visiveis: number;
@@ -96,7 +97,7 @@ export function BarraFiltros({
             type="search"
             className="w-full border rounded-lg pl-7 pr-2 py-1.5"
             style={estiloCampo}
-            placeholder="Buscar atividade, tarefa, etapa, responsável ou risco"
+            placeholder={administrativo ? 'Buscar atividade, tarefa, etapa, responsável ou risco' : 'Buscar atividade, tarefa, etapa ou risco'}
             value={criterios.busca}
             onChange={e => alterar('busca', e.target.value)}
           />
@@ -189,12 +190,14 @@ export function BarraFiltros({
             selecionados={criterios.etapaIds}
             aoMudar={v => alterar('etapaIds', v)}
           />
+          {administrativo && (
           <MultiSelecao
             rotulo="Responsável"
             opcoes={responsaveis.map(r => ({ valor: r, rotulo: r }))}
             selecionados={criterios.responsaveis}
             aoMudar={v => alterar('responsaveis', v)}
           />
+          )}
           <MultiSelecao
             rotulo="Status"
             opcoes={STATUS.map(s => ({ valor: s, rotulo: s }))}

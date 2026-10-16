@@ -49,7 +49,7 @@ export function PlanoAdministrativo() {
   };
   return <section aria-label="Plano de Trabalho administrativo" className="space-y-3">
     <p className="text-sm text-muted-foreground">Projeto administrativo · Meta &gt; Etapa &gt; Atividade &gt; Tarefa. Os registros deste cronograma são guardados neste navegador.</p>
-    <BarraFiltros metas={metas} criterios={criterios} aoMudar={c => {
+    <BarraFiltros administrativo metas={metas} criterios={criterios} aoMudar={c => {
       if (!temFiltroAtivo(criterios) && temFiltroAtivo(c)) setExpandidos(new Set(recolhiveis)); setCriterios(c);
     }} visiveis={filtradas.flatMap(m => m.deliverables.flatMap(e => e.activities)).length} total={metas.flatMap(m => m.deliverables.flatMap(e => e.activities)).length} />
     {visao !== 'kanban' && <button className="border rounded px-3 py-2 text-sm" onClick={() => setExpandidos(recolhiveis.every(id => expandidos.has(id)) ? new Set() : new Set(recolhiveis))}>
@@ -61,9 +61,9 @@ export function PlanoAdministrativo() {
       {visao === 'kanban' && <label>Agrupar <select value={agrupamento} onChange={e => setAgrupamento(e.target.value as AgrupamentoKanban)}><option value="status">Por status</option><option value="responsavel">Por responsável</option></select></label>}
     </div>
     <div className="border rounded-xl overflow-hidden">
-      {visao === 'tabela' && <VisaoTabela {...props} recolhidos={recolhidosDe(recolhiveis, expandidos)} alternarRecolhido={alternar} aoAbrirMeta={abrirMeta} aoAbrirRisco={() => {}} />}
+      {visao === 'tabela' && <VisaoTabela administrativo {...props} recolhidos={recolhidosDe(recolhiveis, expandidos)} alternarRecolhido={alternar} aoAbrirMeta={abrirMeta} aoAbrirRisco={() => {}} />}
       {visao === 'gantt' && <VisaoGantt {...props} escala={escala} recolhidos={recolhidosDe(recolhiveis, expandidos)} alternarRecolhido={alternar} />}
-      {visao === 'kanban' && <VisaoKanban {...props} agrupamento={agrupamento} aoMoverStatus={async (a, status) => {
+      {visao === 'kanban' && <VisaoKanban administrativo {...props} agrupamento={agrupamento} aoMoverStatus={async (a, status) => {
         try { salvarAtividade(numeroAdministrativo(a.id), { status: statusDoCronograma(status), progress: status === 'Concluído' ? 100 : status === 'A iniciar' ? 0 : Math.min(99, a.progress) }); }
         catch (e) { toast.error((e as Error).message); }
       }} aoMoverResponsavel={async (a, responsavel) => {
@@ -74,7 +74,7 @@ export function PlanoAdministrativo() {
     {alvo && meta && <Painel titulo={atividade?.name ?? etapa?.name ?? meta.name} caminho={`Gestão Interna > Projeto > ${codigos.get(alvo.id) ?? ''}`} aoFechar={fechar}>
       {alvo.tipo === 'atividade' && atividade && etapa ? <>
         <fieldset disabled={readOnly}>
-          <FormularioAtividade key={atividade.id} atividade={atividade} etapa={etapa} aoFechar={fechar} aoSalvar={form => {
+          <FormularioAtividade administrativo key={atividade.id} atividade={atividade} etapa={etapa} aoFechar={fechar} aoSalvar={form => {
             exigirEscrita(); const atual = store.gantt.flatMap(b => b.entregas.flatMap(e => e.atividades)).find(a => a.id === numeroAdministrativo(atividade.id));
             if (!atual) throw new Error('Registro administrativo não encontrado.');
             salvarAtividade(atual.id, patchAtividadeAdministrativa(form, atual));

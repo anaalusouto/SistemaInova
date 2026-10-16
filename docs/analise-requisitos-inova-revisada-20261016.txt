@@ -1,0 +1,128 @@
+SISTEMA INOVA — ANÁLISE DE REQUISITOS REVISADA
+Revisão e implementação local: 16/10/2026
+Origem: análise dos oito áudios de WhatsApp de 14/10/2026, no chat
+“Analisar requisitos dos áudios”. A análise original foi preservada no projeto
+em docs/analise-audios-20261014-origem.txt. Não foi realizada nova transcrição.
+
+CONCLUSÃO DA REVISÃO
+
+A análise identifica corretamente a separação entre o plano da comunidade e
+as ações da equipe. Retirar responsável da atividade não significa retirar o
+responsável de encaminhamentos, riscos ou do plano administrativo da equipe.
+A separação das versões do orçamento já existia. Nesta rodada foi corrigida
+também a soma de itens excluídos no proposto, tanto na aba quanto no cabeçalho.
+
+R01 — RESPONSÁVEL DO ENCAMINHAMENTO
+Origem: áudio 07.49.52.
+Selecionar uma pessoa cadastrada e salvar seu identificador permanente.
+Implementado no código: seleção por UUID, confirmação da pessoa no servidor,
+nome obtido do cadastro e uso da identidade no Kanban. Homônimos são separados
+pelo login. Renomear a pessoa não troca o vínculo. Registros antigos sem vínculo
+continuam identificados como legados, sem associação automática por nome.
+Aceite proposto: selecionar, salvar, reabrir e conferir a mesma pessoa; testar
+duas pessoas com o mesmo nome e uma renomeação.
+Estado: testes isolados aprovados. Depende da migração nova no banco conectado.
+
+R02 — RETIRAR RESPONSÁVEL DO PLANO DA COMUNIDADE
+Origem: áudios 07.49.56 (1) e 07.49.56.
+Retirado da edição e do detalhe da atividade, da tabela, dos cartões e do
+agrupamento do Kanban do plano, do filtro operacional e do registro completo
+da atividade usado nas exportações. O modelo de etapa não possuía esse campo.
+Dados antigos continuam no banco e não são apagados ao editar datas/status.
+Responsáveis de metas, riscos, ações/encaminhamentos e do plano administrativo
+continuam conforme os seus contextos existentes.
+Estado: implementado e verificado localmente.
+
+R03 — OBSERVAÇÕES VISÍVEIS
+Origem: áudios 07.49.56 (1), 07.49.56 e 07.49.57 (2).
+A tabela apresenta observações em coluna própria, com quebras de linha.
+Decisão de implementação: utilizar o campo existente “observações”; a
+alternativa de ícone não foi necessária na tabela com rolagem horizontal.
+Aceite proposto: ler uma observação longa sem abrir o detalhe da atividade.
+Estado: implementado; renderização automatizada verificada.
+
+R04 — ENCAMINHAMENTO JUNTO À ATIVIDADE
+Origem: áudio 07.49.56; pedido condicionado à legibilidade.
+O próximo passo/ação de acompanhamento já vinculado à atividade aparece junto
+ao título, com responsável e acesso aos encaminhamentos da organização.
+Encaminhamentos gerais sem vínculo com atividade não são associados por suposição.
+Estado: implementado para o vínculo já existente no modelo.
+
+R05 — ACESSO RÁPIDO A ENCAMINHAMENTOS
+Origem: áudio 07.49.56 (2); abas eram sugestão de solução.
+Acrescentada aba ao lado de Descrição, Plano de Trabalho e Orçamento quando
+o projeto está no contexto da organização. Apresenta a área existente de
+encaminhamentos da organização dentro da ficha do projeto. Permite alternar
+de volta ao plano/orçamento sem sair da ficha. O vínculo na atividade abre
+a aba com a atividade em foco. O atalho da organização foi mantido.
+Estado: implementado e testado em interação isolada; sessão real pendente.
+
+R06 — EDITAR DATAS E STATUS NA TABELA
+Origem: áudios 07.49.57 (1) e 07.49.57.
+“Editar datas e status” abre os controles na própria linha, com Salvar/Cancelar.
+Decisão: disponibilizar início/fim previstos e realizados, além do status,
+mantendo datas realizadas vazias até serem informadas. Progresso é normalizado
+ao mudar status. As mesmas validações de período e atraso são aplicadas.
+Justificativa pode ser preenchida na linha quando exigida. Falha de gravação
+mantém o rascunho e apresenta o erro. Consulta não recebe edição.
+Estado: implementado. Fluxo de interação verificado com persistência simulada;
+gravação no banco real após login ainda pendente.
+
+R07 — ORÇAMENTO VIGENTE APÓS REIMPORTAÇÃO
+Origem: áudio 08.37.16.
+A implementação anterior substitui a proposta vigente e preserva itens antigos,
+execução, comprovantes e histórico. Não soma as propostas de versões diferentes.
+Reverificada com testes existentes e PostgreSQL isolado: troca de 300 por 450,
+reimportação repetida, preservação de notas e rollback.
+Complemento desta rodada: o proposto vigente agora soma somente itens ativos;
+itens excluídos continuam no histórico sem aumentar o valor. Cabeçalho e aba
+concordam, inclusive quando todos os itens foram excluídos ou substituídos:
+o total é zero, sem recorrer ao valor antigo salvo no cadastro do projeto.
+Estado: cálculo local verificado. Banco conectado consultado em 16/10/2026:
+coluna vigente e função salvar_versao_orcamento com arquivamento de substituídos
+presentes; execução da função restrita à service_role. Caso Agromel conferido
+e tratado conforme R08. Interface publicada ainda não verificada.
+
+R08 — TRATAR HISTÓRICO DO CASO CITADO COMO “AGROMEL”
+Origem: áudio 08.37.16; nome proveniente de transcrição automática.
+Projeto confirmado pelo usuário nesta conversa: Caamp Agromel.
+Referência confirmada pelo usuário: última versão atualizada.
+Identificação no banco: projeto 12-2026 (id 12), organização CAANP AGROMEL.
+Última importação: versão 2, 14/10/2026, Orcamento_AGROMEL_importar.xlsx,
+31 itens ativos, total proposto R$ 164.285,71.
+Tratamento executado em 16/10/2026: os 38 itens excluídos da versão 1 estavam
+indevidamente marcados como vigentes. Alterado somente vigente para false,
+preservando seus valores e registros. Cada alteração recebeu auditoria.
+A versão 2 recebeu snapshot dos 31 itens em resumo.r08_referencia, com data,
+critério confirmado e total, para comparação de alterações futuras.
+Conferência posterior: todos os itens preservados; nos antigos mudou somente
+vigente. As 4 notas (R$ 27.320,00) e 111 registros anteriores de histórico
+permaneceram idênticos; 38 registros de auditoria foram acrescentados.
+Backup anterior e resultado: docs/evidencias/agromel-r08-antes-20261016.json
+e docs/evidencias/agromel-r08-resultado-20261016.json.
+Estado: concluído e verificado no banco; nenhum histórico foi apagado.
+
+VERIFICAÇÕES REALIZADAS
+
+- 92 testes automatizados aprovados, incluindo soma de excluídos, total zero
+  e alternância entre encaminhamentos e plano dentro da ficha do projeto.
+- TypeScript sem erros e compilação de produção concluída.
+- Verificação de diferenças sem erros de espaços em branco.
+- PostgreSQL isolado: testes de orçamento e da nova referência de responsável.
+- Servidor local iniciado em http://127.0.0.1:8080.
+- Navegador do Codex apresentou a tela de login do Sistema Inova.
+- Abertura do projeto confirmada pelo log do PyCharm; configuração compartilhada
+  “Inova local” incluída em .run/Inova local.run.xml, para executar npm run dev.
+
+PENDÊNCIAS PARA ACEITE COMPLETO
+
+1. Migração do responsável informada como aplicada pelo usuário. A presença
+   da coluna responsavel_usuario_id foi confirmada no banco conectado.
+2. Função de orçamento da 0022 confirmada no banco. Conferência da migração
+   0023 de autoria de tarefas permanece fora desta verificação de orçamento.
+3. Fazer login e validar salvar/reabrir na tabela, vínculo de pessoa e navegação
+   usando registros de teste autorizados, inclusive com perfil de consulta.
+4. R08 concluído no banco, com referência confirmada e histórico preservado.
+
+Execução local e testes não equivalem a publicação ou aceite em produção.
+

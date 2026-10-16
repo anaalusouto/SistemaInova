@@ -167,9 +167,9 @@ export function justificativaPendente(
 // ---------------------------------------------------------------------------
 
 export interface TotaisOrcamento {
-  /** Soma dos totais originais importados, INCLUSIVE de itens depois excluídos. */
+  /** Proposta vigente: somente itens ativos da versão atual. */
   proposto: number;
-  /** Soma dos itens não excluídos — indicador derivado, não substitui o proposto. */
+  /** Soma dos itens ativos da versão atual. */
   ativo: number;
   /** Soma dos executados informados em itens ativos. null = nenhum informado. */
   executadoConhecido: number | null;
@@ -182,10 +182,8 @@ export interface TotaisOrcamento {
 /**
  * Totais do projeto ou de um grupo.
  *
- * `proposto` inclui os itens excluídos de propósito (RF-029): o valor original
- * da proposta não muda porque a equipe decidiu não comprar algo — o que muda é
- * o plano ativo, que aparece separado. Misturar os dois faria o orçamento
- * aprovado "encolher" no relatório, o que não é verdade.
+ * A proposta vigente exclui itens retirados e versões substituídas (R07).
+ * Os registros e seus valores permanecem disponíveis para consulta histórica.
  */
 export function totaisDoOrcamento(itens: ItemOrcamento[]): TotaisOrcamento {
   itens = itens.filter(i => i.vigente !== false);
@@ -194,7 +192,7 @@ export function totaisDoOrcamento(itens: ItemOrcamento[]): TotaisOrcamento {
   const comExecucao = ativos.filter(i => i.valorExecutado !== null);
 
   return {
-    proposto: arredondar(itens.reduce((s, i) => s + i.valorProposto, 0)),
+    proposto: arredondar(ativos.reduce((s, i) => s + i.valorProposto, 0)),
     ativo: arredondar(ativos.reduce((s, i) => s + i.valorProposto, 0)),
     // null, e não zero: "ninguém informou execução" é diferente de "executou zero".
     executadoConhecido: comExecucao.length

@@ -105,7 +105,17 @@ export const listarTarefasGestao = createServerFn({ method: 'GET' })
       lerTodas(supabaseAdmin, 'plano_riscos', '*,projetos(id,nome,code)'),
       lerTodas(supabaseAdmin, 'mensagem_atribuicoes', `*,mensagens(texto),atividades(nome,status,excluido_em,fim_previsto,${hierarquia})`),
     ]);
-    return [...nativas.map(toTarefa), ...tarefasVinculadas({ atividades, encaminhamentos, riscos, atribuicoes })];
+    // Resolve por UUID antes de projetar o quadro: nomes iguais e renomeações
+    // não podem trocar o responsável de um encaminhamento vinculado.
+    const ids = [...new Set(encaminhamentos.map(e => e.responsavel_usuario_id).filter(Boolean))];
+    const pessoas = ids.length ? await supabaseAdmin.from('usuarios').select('id,login,nome_exibicao').in('id', ids) : { data: [], error: null };
+    if (pessoas.error) throw new Error(pessoas.error.message);
+    const porId = new Map((pessoas.data ?? []).map((p: any) => [p.id, p]));
+    const encaminhamentosVinculados = encaminhamentos.map(e => {
+      const p = porId.get(e.responsavel_usuario_id) as { login: string; nome_exibicao: string } | undefined;
+      return p ? { ...e, responsavel: p.nome_exibicao, responsavel_login: p.login } : e;
+    });
+    return [...nativas.map(toTarefa), ...tarefasVinculadas({ atividades, encaminhamentos: encaminhamentosVinculados, riscos, atribuicoes })];
   });
 
 export const criarTarefaGestao = createServerFn({ method: 'POST' })

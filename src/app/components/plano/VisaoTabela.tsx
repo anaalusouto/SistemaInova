@@ -1,36 +1,20 @@
-/**
- * Visão Tabela do Plano de Trabalho (RF-015, RF-016).
- *
- * As dez colunas são as que o documento lista, nesta ordem e sem acréscimos:
- * Atividade · Responsável · Início previsto · Fim previsto · Início · Fim ·
- * Status · Justificativa de atraso · Nível risco · Anexo.
- *
- * "Início" e "Fim" (sem qualificador) são as datas REALIZADAS. Elas ficam
- * vazias até que a equipe PMO as informe — nunca são preenchidas a partir das
- * previstas (RN-013). Essa é a distinção central da tela: o que estava
- * planejado versus o que de fato aconteceu.
- *
- * Nenhuma ação de criar/editar aparece nas linhas (RF-014). Criar atividade,
- * criar risco e editar período vivem no painel da etapa, que abre ao clicar no
- * nome dela. Linha de tabela com três botões vira ruído e faz o olho perder a
- * informação, que é o que a tabela existe para mostrar.
- *
- * A linha de meta é a exceção pedida no RF04.1: um único botão "Editar meta",
- * que abre o painel da meta — é lá que ficam título, prazo, responsável e as
- * etapas. O clique no nome continua só recolhendo/expandindo.
- */
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert, CornerDownRight, Pencil, Eye } from 'lucide-react';
 import { type Goal, type Activity, type Risk, type Deliverable } from '../../data/mockData';
 import { formatDateOnly } from '../../lib/dateOnly';
 import { useAuth } from '../../auth/authStore';
+import { useStore } from '../../store';
+import { toast } from 'sonner';
+import { dadosDaAtividade, errosDaEdicao } from '../../lib/edicaoLinhaPlano';
+import type { AtividadeInput } from '../../planoTrabalho.server';
+import { progressoParaStatus } from '../../lib/planoTrabalho';
 import {
   estaAtrasada, riscoDaEtapa, hojeISO, prazoDaMeta, divergenciaDaMeta,
   type RiscoDaLinha,
 } from '../../lib/planoTrabalho';
 
 const COLUNAS = [
-  'Atividade', 'Responsável', 'Início previsto', 'Fim previsto',
+  'Atividade', 'Observações', 'Início previsto', 'Fim previsto',
   'Início', 'Fim', 'Status', 'Justificativa de atraso', 'Nível risco', 'Anexo',
 ];
 
@@ -96,6 +80,7 @@ function NivelRisco({ risco }: { risco: RiscoDaLinha | null }) {
 
 export interface VisaoTabelaProps {
   metas: Goal[];
+  administrativo?: boolean;
   riscos: Risk[];
   /** Ids recolhidos (metas, etapas ou atividades). Estado vive no pai para sobreviver à troca de visão (RF-013). */
   recolhidos: Set<string>;
@@ -107,14 +92,43 @@ export interface VisaoTabelaProps {
   aoAbrirAtividade: (atividade: Activity, etapa: Deliverable, meta: Goal) => void;
   aoAbrirRisco: (risco: Risk) => void;
   aoAbrirAnexo: (atividade: Activity) => void;
+  aoEncaminhamentos?: (atividadeId?: string) => void;
 }
 
 export function VisaoTabela({
-  metas, riscos, recolhidos, alternarRecolhido, codigos,
-  aoAbrirMeta, aoAbrirEtapa, aoAbrirAtividade, aoAbrirRisco, aoAbrirAnexo,
+  metas, riscos, administrativo = false, recolhidos, alternarRecolhido, codigos,
+  aoAbrirMeta, aoAbrirEtapa, aoAbrirAtividade, aoAbrirRisco, aoAbrirAnexo, aoEncaminhamentos,
 }: VisaoTabelaProps) {
+  const colunas = administrativo ? COLUNAS.map(c => c === 'Observações' ? 'Responsável' : c) : COLUNAS;
   const hoje = hojeISO();
   const { readOnly } = useAuth();
+  const { updateAtividade } = useStore();
+  const [edicao, setEdicao] = useState<{ id: string; dados: AtividadeInput } | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const [erros, setErros] = useState<string[]>([]);
+  const alterar = <K extends keyof AtividadeInput>(campo: K, valor: AtividadeInput[K]) => {
+    setEdicao(atual => atual ? { ...atual, dados: { ...atual.dados, [campo]: valor } } : null);
+    setErros([]);
+  };
+  const salvar = async (etapa: Deliverable) => {
+    if (!edicao || readOnly || salvando) return;
+    const problemas = errosDaEdicao(edicao.dados, etapa);
+    setErros(problemas);
+    if (problemas.length) return;
+    setSalvando(true);
+    try {
+      await updateAtividade(edicao.id, edicao.dados);
+      setEdicao(null);
+      toast.success('Atividade atualizada.');
+    } catch (e) { setErros([e instanceof Error ? e.message : 'Não foi possível salvar a atividade.']); }
+    finally { setSalvando(false); }
+  };
+  const dataNaLinha = (a: Activity, campo: 'inicioPrevisto' | 'fimPrevisto' | 'inicioRealizado' | 'fimRealizado', rotulo: string, valor: string | null) =>
+    edicao?.id === a.id && !readOnly
+      ? <input type="date" aria-label={`${rotulo}: ${a.name}`} value={edicao.dados[campo] ?? ''}
+          disabled={salvando} onChange={e => alterar(campo, e.target.value || null)}
+          className="border rounded px-1 py-1 text-xs" style={{ background: 'var(--surface-0)', borderColor: 'var(--border)' }} />
+      : <Data valor={valor} />;
 
   if (metas.length === 0) {
     return (
@@ -129,7 +143,7 @@ export function VisaoTabela({
       <table className="w-full" style={{ borderCollapse: 'separate', borderSpacing: 0, minWidth: 1060 }}>
         <thead>
           <tr>
-            {COLUNAS.map(c => (
+            {colunas.map(c => (
               <th
                 key={c}
                 className="text-left px-2.5 py-2"
@@ -154,7 +168,7 @@ export function VisaoTabela({
               <Fragment key={meta.id}>
                 {/* Linha de meta */}
                 <tr style={{ background: 'var(--surface-2)' }}>
-                  <td colSpan={COLUNAS.length} className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td colSpan={colunas.length} className="px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
                     <div className="flex items-center gap-3 flex-wrap">
                     <button
                       onClick={() => alternarRecolhido(meta.id)}
@@ -211,7 +225,7 @@ export function VisaoTabela({
                     <Fragment key={etapa.id}>
                       {/* Linha de etapa */}
                       <tr style={{ background: 'var(--surface-1)' }}>
-                        <td colSpan={COLUNAS.length} className="px-3 py-1.5" style={{ borderBottom: '1px solid var(--line-1)' }}>
+                        <td colSpan={colunas.length} className="px-3 py-1.5" style={{ borderBottom: '1px solid var(--line-1)' }}>
                           <div className="flex items-center gap-2 flex-wrap">
                             <button onClick={() => alternarRecolhido(etapa.id)} aria-expanded={!etapaRecolhida} aria-label={etapaRecolhida ? 'Expandir etapa' : 'Recolher etapa'}>
                               {etapaRecolhida ? <ChevronRight size={13} color="var(--ink-4)" /> : <ChevronDown size={13} color="var(--ink-4)" />}
@@ -286,6 +300,19 @@ export function VisaoTabela({
                                       </span>
                                       {atividade.name}
                                     </button>
+                                    {!readOnly && !administrativo && (edicao?.id === atividade.id ? (
+                                      <div className="flex gap-2 mt-2">
+                                        <button disabled={salvando} onClick={() => void salvar(etapa)} className="text-xs underline">{salvando ? 'Salvando…' : 'Salvar linha'}</button>
+                                        <button disabled={salvando} onClick={() => { setEdicao(null); setErros([]); }} className="text-xs underline">Cancelar</button>
+                                      </div>
+                                    ) : <button disabled={edicao !== null} onClick={() => { setEdicao({ id: atividade.id, dados: dadosDaAtividade(atividade, etapa.id) }); setErros([]); }}
+                                      className="block text-xs underline mt-1" aria-label={`Editar datas e status: ${atividade.name}`}>Editar datas e status</button>)}
+                                    {edicao?.id === atividade.id && erros.length > 0 && <div role="alert" className="text-xs mt-2" style={{ color: 'var(--danger)' }}>{erros.join(' ')}</div>}
+                                    {atividade.nextStep.trim() && <div className="text-xs mt-2 whitespace-pre-wrap" style={{ color: 'var(--ink-3)' }}>
+                                      <strong>Encaminhamento: </strong>{atividade.nextStep}
+                                      {atividade.nextStepOwner && <span> · {atividade.nextStepOwner}</span>}
+                                      {aoEncaminhamentos && <button className="block underline mt-1" onClick={() => aoEncaminhamentos(atividade.id)}>Ver encaminhamento</button>}
+                                    </div>}
                                     {/* RN-020: ação derivada de risco mostra de onde veio. */}
                                     {riscoOrigem && (
                                       <button
@@ -300,17 +327,25 @@ export function VisaoTabela({
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-3 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
-                                {atividade.responsible || <span style={{ color: 'var(--ink-5)' }}>—</span>}
+                              <td className="px-3 py-2" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>
+                                <span className="block whitespace-pre-wrap" style={{ minWidth: 150, maxWidth: 280 }}>{(administrativo ? atividade.responsible : atividade.observations) || '—'}</span>
                               </td>
-                              <td className="px-3 py-2"><Data valor={atividade.plannedStart} /></td>
-                              <td className="px-3 py-2"><Data valor={atividade.plannedEnd} /></td>
+                              <td className="px-3 py-2">{dataNaLinha(atividade, 'inicioPrevisto', 'Início previsto', atividade.plannedStart)}</td>
+                              <td className="px-3 py-2">{dataNaLinha(atividade, 'fimPrevisto', 'Fim previsto', atividade.plannedEnd)}</td>
                               {/* Início e Fim = datas REALIZADAS (RF-015, RN-013). */}
-                              <td className="px-3 py-2"><Data valor={atividade.actualStart} /></td>
-                              <td className="px-3 py-2"><Data valor={atividade.actualEnd} /></td>
-                              <td className="px-3 py-2"><Estado atividade={atividade} hoje={hoje} /></td>
+                              <td className="px-3 py-2">{dataNaLinha(atividade, 'inicioRealizado', 'Início realizado', atividade.actualStart)}</td>
+                              <td className="px-3 py-2">{dataNaLinha(atividade, 'fimRealizado', 'Fim realizado', atividade.actualEnd)}</td>
+                              <td className="px-3 py-2">{edicao?.id === atividade.id && !readOnly
+                                ? <select aria-label={`Status: ${atividade.name}`} value={edicao.dados.status} disabled={salvando}
+                                    onChange={e => { const status = e.target.value as Activity['status']; setEdicao(atual => atual ? { ...atual, dados: { ...atual.dados, status, progresso: progressoParaStatus(status, atual.dados.progresso) } } : null); }}
+                                    className="border rounded px-1 py-1 text-xs">
+                                    {(['A iniciar', 'Em andamento', 'Concluído'] as const).map(s => <option key={s}>{s}</option>)}
+                                  </select>
+                                : <Estado atividade={atividade} hoje={hoje} />}</td>
                               <td className="px-3 py-2" style={{ maxWidth: 160 }}>
-                                {atividade.delayJustification ? (
+                                {edicao?.id === atividade.id && !readOnly ? <textarea aria-label={`Justificativa de atraso: ${atividade.name}`}
+                                  value={edicao.dados.justificativaAtraso} disabled={salvando} onChange={e => alterar('justificativaAtraso', e.target.value)}
+                                  className="border rounded p-1 text-xs" rows={3} /> : atividade.delayJustification ? (
                                   <span
                                     className="block truncate"
                                     style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}
@@ -342,7 +377,7 @@ export function VisaoTabela({
                             {/* Tarefas: expandem dentro da atividade, sem renumerar nada (RN-004). */}
                             {!atividadeRecolhida && atividade.tasks.map(tarefa => (
                               <tr key={tarefa.id} style={{ borderBottom: '1px solid var(--line-1)' }}>
-                                <td className="px-3 py-1.5" colSpan={COLUNAS.length}>
+                                <td className="px-3 py-1.5" colSpan={colunas.length}>
                                   <div className="flex items-center gap-2" style={{ paddingLeft: 34 }}>
                                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-5)' }}>
                                       {codigos.get(tarefa.id)}
@@ -358,7 +393,7 @@ export function VisaoTabela({
 
                       {!etapaRecolhida && etapa.activities.length === 0 && (
                         <tr style={{ borderBottom: '1px solid var(--line-1)' }}>
-                          <td colSpan={COLUNAS.length} className="px-3 py-2" style={{ paddingLeft: 46, fontSize: '0.75rem', color: 'var(--ink-5)' }}>
+                          <td colSpan={colunas.length} className="px-3 py-2" style={{ paddingLeft: 46, fontSize: '0.75rem', color: 'var(--ink-5)' }}>
                             Nenhuma atividade nesta etapa.
                           </td>
                         </tr>

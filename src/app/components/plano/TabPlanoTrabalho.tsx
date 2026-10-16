@@ -83,7 +83,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
   const [escala, setEscala] = useState<EscalaGantt>('mes');
-  const [agrupamento, setAgrupamento] = useState<AgrupamentoKanban>('status');
+  const agrupamento: AgrupamentoKanban = 'status';
 
   // O botão Riscos do cabeçalho abre esta visão e rola até ela.
   const seletorRef = useRef<HTMLDivElement>(null);
@@ -262,25 +262,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
         )}
 
         {/* RF-019: agrupamento só faz sentido no Kanban. */}
-        {visao === 'kanban' && (
-          <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-            {([['status', 'Por status'], ['responsavel', 'Por responsável']] as const).map(([valor, rotulo], i) => (
-              <button
-                key={valor}
-                onClick={() => setAgrupamento(valor)}
-                className="px-2.5 py-1.5 text-[12px]"
-                style={{
-                  background: agrupamento === valor ? 'var(--brand-soft)' : 'transparent',
-                  color: agrupamento === valor ? 'var(--brand)' : 'var(--ink-3)',
-                  fontWeight: agrupamento === valor ? 600 : 400,
-                  borderRight: i === 0 ? '1px solid var(--border)' : undefined,
-                }}
-              >
-                {rotulo}
-              </button>
-            ))}
-          </div>
-        )}
+
 
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
           {metas.length} meta{metas.length === 1 ? '' : 's'} ·{' '}
@@ -319,6 +301,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
               aoAbrirAnexo={abrirAnexoDaAtividade}
+              aoEncaminhamentos={aoEncaminhamentos}
             />
           )}
 

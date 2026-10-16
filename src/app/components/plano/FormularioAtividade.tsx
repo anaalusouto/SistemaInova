@@ -47,8 +47,8 @@ function inicial(etapa: Deliverable, atividade?: Activity): AtividadeInput {
 }
 
 export function FormularioAtividade({
-  etapa, atividade, aoFechar, aoSalvar,
-}: { etapa: Deliverable; atividade?: Activity; aoFechar: () => void; aoSalvar?: (form: AtividadeInput) => Promise<void> | void }) {
+  etapa, atividade, aoFechar, aoSalvar, administrativo = false,
+}: { administrativo?: boolean; etapa: Deliverable; atividade?: Activity; aoFechar: () => void; aoSalvar?: (form: AtividadeInput) => Promise<void> | void }) {
   const { createAtividade, updateAtividade } = useStore();
   const pessoas = usePeople();
   const [form, setForm] = useState<AtividadeInput>(() => inicial(etapa, atividade));
@@ -153,18 +153,9 @@ export function FormularioAtividade({
       </Campo>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Campo rotulo="Responsável">
-          <select
-            className="w-full border rounded-lg px-2.5 py-1.5"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)', fontSize: '0.8rem' }}
-            value={form.responsavel}
-            onChange={e => alterar('responsavel', e.target.value)}
-          >
-            <option value="">Não informado</option>
-            {pessoas.map(p => <option key={p.login} value={p.name}>{p.name}</option>)}
-          </select>
-        </Campo>
-
+        {administrativo && <Campo rotulo="Responsável">
+          <Texto valor={form.responsavel} aoMudar={v => alterar('responsavel', v)} />
+        </Campo>}
         <Campo rotulo="Status">
           <Selecao
             valor={form.status}

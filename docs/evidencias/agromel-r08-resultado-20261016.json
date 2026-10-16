@@ -1,0 +1,18 @@
+{
+  "verificadoEm": "2026-10-16T14:01:52.144908+00:00",
+  "projetoId": 12,
+  "projetoCodigo": "12-2026",
+  "versaoReferencia": 2,
+  "arquivo": "Orcamento_AGROMEL_importar.xlsx",
+  "importacaoId": "6e77bc91-c9a8-4d6d-bb0c-67ce7ad8b47c",
+  "referenciaRegistradaEm": "2026-10-16T14:01:18.039706+00:00",
+  "itensVigentes": 31,
+  "itensArquivados": 38,
+  "totalProposto": 164285.71,
+  "notasPreservadas": 4,
+  "executado": 27320,
+  "historicosAnterioresPreservados": 111,
+  "novosRegistrosAuditoria": 38,
+  "alteracao": "Somente vigente true → false nos 38 itens excluídos da v1; snapshot dos 31 itens atuais em resumo.r08_referencia da v2.",
+  "limite": "Verificação no banco. Interface publicada não verificada."
+}

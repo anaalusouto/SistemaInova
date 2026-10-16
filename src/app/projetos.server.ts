@@ -212,10 +212,10 @@ function mapProjeto(row: any): ProjectExt {
     : (row.orcamento_itens ?? []).length
       ? (row.orcamento_itens ?? []).reduce((a: number, i: any) => a + n2(i.valor_executado), 0)
       : n2(row.orcamento_executado);
-  const budgetApproved = itensOrcamento.length
-    // Inclui itens excluídos: o valor original da proposta não encolhe porque
-    // a equipe decidiu não comprar algo (RF-029).
-    ? itensOrcamento.reduce((a, i) => a + n2(i.valor_proposto), 0)
+  const budgetApproved = (row.orcamento_itens ?? []).length
+    // R07: a proposta vigente considera apenas itens ativos da versão atual.
+    // Mesmo sem itens vigentes, não reutilizar o total antigo do projeto.
+    ? itensOrcamento.filter(i => i.situacao === 'Ativo').reduce((a, i) => a + n2(i.valor_proposto), 0)
     : n2(row.orcamento_aprovado);
 
   const plano: PlanoTrabalho = {

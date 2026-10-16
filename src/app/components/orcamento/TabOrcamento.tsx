@@ -95,7 +95,7 @@ export function TabOrcamento({ project }: { project: Project }) {
   const totaisProjeto = useMemo(() => totaisDoOrcamento(itens), [itens]);
   // Proposto: da planilha quando há itens, senão o aprovado do cadastro — o
   // mesmo que o cabeçalho do projeto mostra. Executado: todas as notas.
-  const proposto = itens.length ? totaisProjeto.proposto : (p.budgetApproved || null);
+  const proposto = todosItens.length ? totaisProjeto.proposto : (p.budgetApproved || null);
   const executado = somaDasNotas(notas) ?? somaDasNotas(todosItens.filter(i => i.valorExecutado !== null).map(i => ({ valor: i.valorExecutado! })));
 
   const dialogoNota = notaAberta && (
@@ -192,7 +192,7 @@ export function TabOrcamento({ project }: { project: Project }) {
             valor: String(totaisProjeto.itensSemExecucao),
             nota: totaisProjeto.itensSemExecucao > 0 ? 'nenhuma nota vinculada' : 'todos os itens com nota',
           },
-          { rotulo: 'Plano ativo', valor: moeda(totaisProjeto.ativo), nota: 'proposto menos itens excluídos' },
+          { rotulo: 'Plano ativo', valor: moeda(totaisProjeto.ativo), nota: 'somente itens ativos da versão vigente' },
           {
             rotulo: 'Itens excluídos',
             valor: String(totaisProjeto.itensExcluidos),

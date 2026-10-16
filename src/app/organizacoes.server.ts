@@ -89,6 +89,7 @@ function mapEncaminhamento(e: any): Encaminhamento {
     id: e.id,
     descricao: e.descricao,
     responsavel: e.responsavel ?? null,
+    responsavelUsuarioId: e.responsavel_usuario_id ?? null,
     dataInicio: e.data_inicio ?? null,
     dataFim: e.data_fim ?? null,
     status: e.status,
@@ -284,10 +285,19 @@ async function linhaEncaminhamento(
     if (!reg) throw new Error('O registro de contato escolhido como origem não pertence a esta organização.');
   }
 
+  let responsavel = vazioParaNulo(d.responsavel);
+  if (d.responsavelUsuarioId) {
+    const { data: pessoa, error } = await supabaseAdmin.from('usuarios').select('id,nome_exibicao')
+      .eq('id', d.responsavelUsuarioId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!pessoa) throw new Error('A pessoa selecionada não está mais cadastrada. Escolha outra.');
+    responsavel = pessoa.nome_exibicao;
+  }
   return {
+    ...(d.responsavelUsuarioId !== undefined ? { responsavel_usuario_id: d.responsavelUsuarioId || null } : {}),
     comunidade_id: d.organizacaoId,
     descricao: d.descricao.trim(),
-    responsavel: vazioParaNulo(d.responsavel),
+    responsavel,
     data_inicio: d.dataInicio || null,
     data_fim: d.dataFim || null,
     status: d.status,

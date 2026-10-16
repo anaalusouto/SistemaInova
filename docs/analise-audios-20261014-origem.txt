@@ -1,0 +1,61 @@
+Analisei os oito áudios. Os pedidos se concentram em **melhorar a operação do plano de trabalho, organizar os encaminhamentos e corrigir o cálculo do orçamento após uma reimportação**.
+
+A análise abaixo se baseia na transcrição automática. Alguns trechos de abertura e nomes ficaram pouco claros; sinalizei as incertezas relevantes. As prioridades e os critérios de aceite são propostas minhas, separadas dos pedidos.
+
+**O que foi pedido em cada áudio**
+
+Todos os arquivos são de 14/10/2026; mantive os horários e sufixos para identificá-los.
+
+| Áudio | Pedido identificado | Natureza |
+|---|---|---|
+| **1 — 07.49.52** | Vincular o campo **responsável do encaminhamento** à lista de pessoas cadastradas. Atualmente, o nome informado aparentemente não fica associado ao cadastro. | Solicitação direta de integração entre cadastros. |
+| **2 — 07.49.56 (2)** | Avaliar uma **aba de encaminhamentos ao lado do plano de trabalho e do orçamento**, mantendo um atalho na tela inicial. A navegação atual exige voltar ao menu repetidamente. | O problema está claro; a organização em abas é uma sugestão a validar. |
+| **3 — 07.49.56 (1)** | **Retirar o campo e a coluna “responsável”** das atividades e etapas do plano de trabalho. O plano deve representar as ações da comunidade; as ações da equipe ficam nos encaminhamentos, que continuam com responsável. **Mostrar observações** na visualização do plano. | Mudança funcional e definição de regra de negócio. |
+| **4 — 07.49.56** | Reforçar a retirada do responsável e a inclusão de observações. **Exibir também os encaminhamentos vinculados a cada atividade**, caso haja espaço. Se a tela ficar carregada, priorizar observações. | Observações são prioritárias; encaminhamentos na mesma visualização são condicionais. |
+| **5 — 07.49.57 (2)** | Se não for viável mostrar as observações diretamente, **exibir um ícone indicando que a atividade possui descrição**, permitindo abrir a atividade para ler. A preferência é pelo texto visível. | Alternativa de interface ao pedido anterior. |
+| **6 — 07.49.57 (1)** | Permitir **editar datas e status diretamente na linha da atividade**, sem abrir seu detalhe. São mencionados calendário para datas e seleção de status. | Solicitação direta de edição na tabela. |
+| **7 — 07.49.57** | Complementar o áudio anterior: restaurar a edição na tabela, que existia antes. Relata cerca de **duas horas atualizando um projeto**, com grande parte do tempo consumida por alterações de datas e pela abertura das atividades. | Reforço do requisito e evidência do impacto operacional relatado. |
+| **8 — 08.37.16** | Corrigir o **valor proposto do orçamento**, que estaria somando itens novos e antigos/excluídos após uma reimportação. Solicita também avaliar uma limpeza do histórico daquele caso e considerar a nova versão como referência para acompanhar alterações futuras. | Relato de defeito no cálculo e pedido específico de tratamento dos dados existentes. |
+
+No último áudio, o nome do projeto foi transcrito como **“Agromel”**; essa identificação deve ser conferida antes de qualquer alteração.
+
+**Requisitos consolidados e critérios de aceite propostos**
+
+| ID | Requisito | Como verificar que foi atendido |
+|---|---|---|
+| **R01** | Associar o responsável do encaminhamento a uma pessoa cadastrada. | Selecionar uma pessoa, salvar e reabrir o encaminhamento mantém o vínculo com o mesmo cadastro, sem depender apenas do nome digitado. |
+| **R02** | Retirar o responsável das atividades e etapas do plano de trabalho. | O campo deixa de aparecer nos formulários e nas visualizações correspondentes, sem impedir a criação ou edição. O responsável continua disponível nos encaminhamentos. |
+| **R03** | Dar visibilidade às observações das atividades. | A visualização mostra o conteúdo; se for adotada a alternativa compacta, o indicador aparece apenas quando há conteúdo e permite acessá-lo. |
+| **R04** | Mostrar encaminhamentos vinculados à atividade, se o layout comportar. | São exibidos apenas os encaminhamentos relacionados àquela atividade, com acesso ao detalhe. A apresentação mantém a leitura das observações. |
+| **R05** | Facilitar a navegação entre plano, orçamento e encaminhamentos. | É possível alternar entre essas áreas do mesmo projeto sem retornar repetidamente ao menu principal. A solução em abas depende de validação. |
+| **R06** | Editar datas e status diretamente na tabela. | É possível alterar ambos sem abrir o detalhe da atividade; após salvar e recarregar, os valores permanecem corretos. |
+| **R07** | Corrigir a soma do valor proposto após reimportações. | Itens excluídos e versões substituídas não aumentam indevidamente o total vigente. O cenário relatado é reproduzido e o total é conferido com o orçamento de referência. |
+| **R08** | Tratar o histórico do orçamento mencionado e estabelecer uma nova referência. | Após definir quais registros devem compor a referência, o total corresponde à versão válida e as alterações seguintes podem ser identificadas a partir dela. |
+
+**Regras de negócio que os áudios revelam**
+
+- **Plano de trabalho:** representa o que a comunidade propôs executar, inclusive para apresentação em parecer.
+- **Encaminhamentos:** representam as ações da equipe e precisam identificar seu responsável.
+- **Orçamento vigente:** itens excluídos não devem participar da soma. O tratamento de itens antigos ou substituídos depende da regra de versionamento.
+- **Observações:** o texto visível é a preferência; o ícone é uma alternativa aceita quando houver limitação de espaço.
+
+Essa separação evita uma interpretação equivocada: **retirar o responsável do plano de trabalho não significa retirar o responsável dos encaminhamentos**.
+
+**Priorização sugerida**
+
+1. **Corrigir o cálculo do orçamento — R07.** É o problema de maior impacto, pois compromete a confiabilidade do valor exibido. O defeito e sua causa ainda precisam ser confirmados no sistema.
+2. **Restaurar a edição de datas e status — R06.** Ataca diretamente o tempo gasto na atualização dos projetos.
+3. **Ajustar responsáveis e observações — R01, R02 e R03.** Alinha o sistema à forma de trabalho descrita.
+4. **Melhorar navegação e vínculos visuais — R04 e R05.** Requer avaliar a organização da tela.
+5. **Executar o tratamento do histórico — R08.** Deve ocorrer depois de definir a regra correta, para não apenas limpar o sintoma e permitir que ele reapareça.
+
+**Pontos que precisam ser esclarecidos antes da implementação**
+
+- **Datas:** quais devem ser editáveis na tabela — início, término, prazo ou todas?
+- **Observações e descrição:** são nomes diferentes para o mesmo campo ou campos distintos?
+- **Responsável antigo:** a retirada do campo significa apenas removê-lo da operação ou também eliminar dados históricos? Minha recomendação é preservar os dados até essa decisão.
+- **Pessoas:** o responsável pode ser qualquer pessoa cadastrada ou apenas integrantes da equipe/projeto?
+- **Reimportação:** deve substituir integralmente o orçamento ou atualizar itens por algum identificador?
+- **“Limpar” o orçamento:** significa ocultar versões antigas, desconsiderá-las no cálculo ou apagar registros? O áudio não define isso com precisão.
+
+Como verificação adicional, recomendo testar **a importação repetida do mesmo arquivo** para garantir que ela não duplique valores, além de conferir se relatórios e demais telas apresentam o mesmo total corrigido. Esses são cuidados derivados da análise, não pedidos explícitos dos áudios.

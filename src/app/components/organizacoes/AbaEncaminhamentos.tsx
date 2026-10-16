@@ -46,6 +46,7 @@ export function AbaEncaminhamentos({
   const doFoco = (e: Encaminhamento) => !!foco && e.origem?.tipo === 'contato' && e.origem.registroId === foco;
   const destaque = useDestaque(org.encaminhamentos.find(doFoco)?.id ?? null);
   const { user, readOnly } = useAuth();
+  const pessoas = usePeople();
   const { log: audit } = useAudit();
   const escrita = useEscritaOrganizacao();
   const [mostrarConcluidos, setMostrarConcluidos] = useState(true);
@@ -60,12 +61,12 @@ export function AbaEncaminhamentos({
     audit({ userLogin: user?.login ?? '—', area: 'organizações', action, detail: `${org.nome} · ${detail}`, kind: 'alteracao' });
 
   const novo = () => setForm({
-    organizacaoId: org.id, descricao: '', responsavel: '', dataInicio: null, dataFim: null,
+    organizacaoId: org.id, descricao: '', responsavel: '', responsavelUsuarioId: null, dataInicio: null, dataFim: null,
     status: 'A iniciar', origem: null,
   });
 
   const editar = (e: Encaminhamento) => setForm({
-    id: e.id, organizacaoId: org.id, descricao: e.descricao, responsavel: e.responsavel ?? '',
+    id: e.id, organizacaoId: org.id, descricao: e.descricao, responsavel: e.responsavel ?? '', responsavelUsuarioId: e.responsavelUsuarioId,
     dataInicio: e.dataInicio, dataFim: e.dataFim, status: e.status, origem: e.origem,
   });
 
@@ -149,7 +150,7 @@ export function AbaEncaminhamentos({
                       {e.descricao}
                     </td>
                     <td className="px-3 py-2.5" style={{ fontSize: '0.78rem', color: e.responsavel ? 'var(--ink-2)' : 'var(--ink-5)' }}>
-                      {e.responsavel || '—'}
+                      {pessoas.find(p => p.id && p.id === e.responsavelUsuarioId)?.name ?? e.responsavel ?? '—'}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>
                       {formatDateOnly(e.dataInicio)}
@@ -299,16 +300,18 @@ function FormularioEncaminhamento({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Campo rotulo="Responsável">
-            <input
-              list="responsaveis-equipe"
-              className="w-full border rounded-lg px-2.5 py-1.5"
-              style={baseInput}
-              value={form.responsavel}
-              onChange={e => alterar('responsavel', e.target.value)}
-            />
-            <datalist id="responsaveis-equipe">
-              {pessoas.map(p => <option key={p.login} value={p.name} />)}
-            </datalist>
+            <select aria-label="Responsável cadastrado"
+              className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput}
+              value={form.responsavelUsuarioId ?? (form.responsavel ? '__legado__' : '')}
+              onChange={e => {
+                const pessoa = pessoas.find(p => p.id === e.target.value);
+                aoMudar({ ...form, responsavelUsuarioId: pessoa?.id ?? null, responsavel: pessoa?.name ?? '' });
+              }}>
+              <option value="">Não informado</option>
+              {!form.responsavelUsuarioId && form.responsavel && <option value="__legado__">{form.responsavel} (registro antigo sem vínculo)</option>}
+              {form.responsavelUsuarioId && !pessoas.some(p => p.id === form.responsavelUsuarioId) && <option value={form.responsavelUsuarioId}>{form.responsavel} (cadastro indisponível)</option>}
+              {pessoas.filter(p => p.id).map(p => <option key={p.id} value={p.id}>{p.name} ({p.login})</option>)}
+            </select>
           </Campo>
           <Campo rotulo="Status" obrigatorio>
             <Selecao valor={form.status} opcoes={STATUS_ENCAMINHAMENTO} aoMudar={v => alterar('status', v)} />

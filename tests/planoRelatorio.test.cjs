@@ -60,7 +60,7 @@ test('REQ-01: exportações PDF, CSV e XML incluem campos completos, subtarefas,
     relatorio.exportReportXml(modelo);
     relatorio.exportReportPdf(modelo);
     const saidas = [...await Promise.all(blobs.map(b => b.text())), pdf.output()];
-    for (const marcador of ['RESULTADO_COMPLETO', 'RESP_META', 'RESP_ATIVIDADE', 'JUSTIFICATIVA_COMPLETA', 'OBSERVACAO_COMPLETA',
+    for (const marcador of ['RESULTADO_COMPLETO', 'RESP_META', 'JUSTIFICATIVA_COMPLETA', 'OBSERVACAO_COMPLETA',
       'ACOMPANHAMENTO_COMPLETO', 'RESP_ACAO', 'SUBTAREFA_COMPLETA', 'ARQUIVO_COMPLETO.png', 'DESCRICAO_COMPLETA', 'ESPECIFICACAO_COMPLETA',
       'ESTRATEGIA_COMPLETA', 'RESP_RISCO', 'AUTOR_COMPLETO', 'PONTOS_COMPLETOS', 'CRITICOS_COMPLETOS', 'LIMITACOES_COMPLETAS', 'RECOMENDACAO_COMPLETA']) {
       for (const saida of saidas) assert.ok(saida.includes(marcador), `Campo omitido: ${marcador}`);
