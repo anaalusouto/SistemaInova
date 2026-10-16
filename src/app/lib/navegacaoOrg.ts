@@ -14,6 +14,8 @@ export interface RotaOrg {
   secao: SecaoOrg;
   /** Só na seção 'projeto'. */
   projetoId: number | null;
+  /** Aba do projeto sincronizada com a URL e o histórico do navegador. */
+  abaProjeto?: import('./navegacaoApp').AbaProjeto;
   /**
    * Registro de contato em foco, na navegação cruzada registro ⇄
    * encaminhamento (destaca o item ao chegar).

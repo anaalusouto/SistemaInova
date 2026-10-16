@@ -1,0 +1,49 @@
+import type { RotaOrg, SecaoOrg } from './navegacaoOrg';
+
+export type AreaApp = 'overview' | 'organizations' | 'schedule' | 'diagnostics' | 'reports' | 'settings';
+export type AbaProjeto = 'descricao' | 'plano' | 'orcamento' | 'encaminhamentos';
+
+export interface BuscaApp {
+  area?: AreaApp;
+  org?: string;
+  secao?: SecaoOrg;
+  projeto?: number;
+  aba?: AbaProjeto;
+  foco?: string;
+}
+
+const areas: readonly AreaApp[] = ['overview', 'organizations', 'schedule', 'diagnostics', 'reports', 'settings'];
+const secoes: readonly SecaoOrg[] = ['dados', 'projetos', 'projeto', 'encaminhamentos', 'registros', 'mapeamento', 'parecer'];
+const abas: readonly AbaProjeto[] = ['descricao', 'plano', 'orcamento', 'encaminhamentos'];
+const texto = (v: unknown) => typeof v === 'string' && v.trim() && v.length <= 160 && !/[\u0000-\u001f]/.test(v) ? v.trim() : undefined;
+
+/** Somente o contexto de navegação entra na URL; formulário e sessão não entram. */
+export function validarBuscaApp(raw: Record<string, unknown>): BuscaApp {
+  const area = areas.includes(raw.area as AreaApp) ? raw.area as AreaApp : undefined;
+  if (area !== 'organizations') return area ? { area } : {};
+  const org = texto(raw.org);
+  const secao = secoes.includes(raw.secao as SecaoOrg) ? raw.secao as SecaoOrg : 'dados';
+  const id = typeof raw.projeto === 'number' || typeof raw.projeto === 'string' && /^\d+$/.test(raw.projeto) ? Number(raw.projeto) : NaN;
+  const projeto = Number.isSafeInteger(id) && id > 0 ? id : undefined;
+  const noProjeto = secao === 'projeto' || secao === 'projetos';
+  if (!org && !projeto) return { area };
+  return {
+    area,
+    ...(org ? { org, secao } : { secao: 'projeto' }),
+    ...(noProjeto || !org ? {
+      ...(projeto ? { projeto } : {}),
+      aba: abas.includes(raw.aba as AbaProjeto) ? raw.aba as AbaProjeto : 'plano',
+    } : {}),
+    ...(texto(raw.foco) ? { foco: texto(raw.foco) } : {}),
+  };
+}
+
+export function buscaDaOrganizacao(rota: RotaOrg): BuscaApp {
+  return validarBuscaApp({ area: 'organizations', org: rota.orgId, secao: rota.secao,
+    projeto: rota.projetoId, aba: rota.abaProjeto, foco: rota.foco });
+}
+
+export function rotaDaBusca(busca: BuscaApp): RotaOrg {
+  return { orgId: busca.org ?? null, secao: busca.secao ?? 'dados', projetoId: busca.projeto ?? null,
+    abaProjeto: busca.aba, foco: busca.foco ?? null };
+}

@@ -26,6 +26,7 @@ import { TabOrcamento } from './orcamento/TabOrcamento';
 import { TabFinanceiro } from './project-tabs/TabFinanceiro';
 import { TabMudancas } from './project-tabs/TabMudancas';
 import { riscoEmAberto, faixaRisco } from '../lib/planoTrabalho';
+import type { AbaProjeto } from '../lib/navegacaoApp';
 
 /**
  * As seções do RF-001, nesta ordem, menos Contato (ver TabId). Substituem as cinco abas antigas:
@@ -35,7 +36,7 @@ import { riscoEmAberto, faixaRisco } from '../lib/planoTrabalho';
  */
 // A aba Contato saiu (RC-03): o histórico de contatos é da organização e
 // fica na ficha dela, em Organizações.
-type TabId = 'descricao' | 'plano' | 'orcamento' | 'encaminhamentos';
+type TabId = AbaProjeto;
 
 const tabs: { id: TabId; label: string; icon: typeof FileText }[] = [
   { id: 'descricao',  label: 'Descrição',         icon: FileText },
@@ -59,14 +60,22 @@ interface ProjectViewProps {
   dentroDaOrganizacao?: boolean;
   aoEncaminhamentos?: (atividadeId?: string) => void;
   renderEncaminhamentos?: (atividadeId: string | null) => ReactNode;
+  abaAtual?: AbaProjeto;
+  focoAtual?: string | null;
+  aoMudarAba?: (aba: AbaProjeto, foco?: string | null) => void;
 }
 
-export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos, renderEncaminhamentos }: ProjectViewProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('plano');
-  const [focoEncaminhamento, setFocoEncaminhamento] = useState<string | null>(null);
+export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos, renderEncaminhamentos, abaAtual, focoAtual, aoMudarAba }: ProjectViewProps) {
+  const [abaLocal, setAbaLocal] = useState<TabId>('plano');
+  const [focoLocal, setFocoLocal] = useState<string | null>(null);
+  const activeTab = abaAtual ?? abaLocal;
+  const focoEncaminhamento = abaAtual === undefined ? focoLocal : focoAtual ?? null;
+  const mudarAba = (aba: AbaProjeto, foco?: string | null) => {
+    if (aoMudarAba) aoMudarAba(aba, foco);
+    else { setAbaLocal(aba); setFocoLocal(foco ?? null); }
+  };
   const abrirEncaminhamentos = renderEncaminhamentos ? (atividadeId?: string) => {
-    setFocoEncaminhamento(atividadeId ?? null);
-    setActiveTab('encaminhamentos');
+    mudarAba('encaminhamentos', atividadeId ?? null);
   } : aoEncaminhamentos;
   const [panel, setPanel] = useState<'mudancas' | null>(null);
   // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
@@ -246,7 +255,8 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => mudarAba(tab.id)}
+                    aria-current={activeTab === tab.id ? 'page' : undefined}
                     className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 transition-all whitespace-nowrap"
                     style={{
                       borderBottomColor: isActive ? 'var(--primary)' : 'transparent',

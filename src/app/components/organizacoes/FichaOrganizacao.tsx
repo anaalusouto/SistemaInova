@@ -21,6 +21,7 @@ import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
 import { ROTA_INICIO, SECOES_ORG, nomeCurtoOrg, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
+import type { AbaProjeto } from '../../lib/navegacaoApp';
 
 /** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
 const ICONE_POR_TIPO: Record<TipoOrganizacao, typeof Building2> = {
@@ -124,6 +125,9 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             aoVoltarProjetos={() => ir({ secao: 'dados' })}
             aoEncaminhamentos={id => ir({ secao: 'encaminhamentos', foco: id ?? null })}
             aoVerRegistro={id => ir({ secao: 'registros', foco: id })}
+            abaAtual={rota.abaProjeto ?? 'plano'}
+            focoAtual={rota.foco ?? null}
+            aoMudarAba={(abaProjeto, foco) => ir({ secao: 'projeto', projetoId: rota.projetoId, abaProjeto, foco: foco ?? null })}
           />
         </div>
       ) : (
@@ -173,8 +177,9 @@ function Voltar({ aoVoltar }: { aoVoltar: () => void }) {
 }
 
 function ProjetoDaOrganizacao({
-  org, projetoId, aoVoltarProjetos, aoEncaminhamentos, aoVerRegistro,
-}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void; aoEncaminhamentos: (atividadeId?: string) => void; aoVerRegistro: (id: string) => void }) {
+  org, projetoId, aoVoltarProjetos, aoEncaminhamentos, aoVerRegistro, abaAtual, focoAtual, aoMudarAba,
+}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void; aoEncaminhamentos: (atividadeId?: string) => void; aoVerRegistro: (id: string) => void;
+  abaAtual: AbaProjeto; focoAtual: string | null; aoMudarAba: (aba: AbaProjeto, foco?: string | null) => void }) {
   const { getProject, projectsLoading } = useStore();
   const vinculo = resolverProjetoOrg(org.projetos, projetoId);
   if (vinculo.estado !== 'unico') {
@@ -195,6 +200,7 @@ function ProjetoDaOrganizacao({
     );
   }
   return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao aoEncaminhamentos={aoEncaminhamentos}
+    abaAtual={abaAtual} focoAtual={focoAtual} aoMudarAba={aoMudarAba}
     renderEncaminhamentos={foco => <AbaEncaminhamentos org={org} foco={foco} aoVerRegistro={aoVerRegistro} />} />;
 }
 

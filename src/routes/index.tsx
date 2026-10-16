@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import App from "@/app/App";
+import { validarBuscaApp } from '@/app/lib/navegacaoApp';
 
 export const Route = createFileRoute("/")({
+  validateSearch: validarBuscaApp,
   component: RootIndex,
 });
 

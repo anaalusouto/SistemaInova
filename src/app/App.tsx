@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
@@ -9,6 +10,7 @@ import { ConfiguracoesPage } from './components/ConfiguracoesPage';
 import { DiagnosticoModule } from './components/DiagnosticoModule';
 import { OrganizacoesModule } from './components/organizacoes/OrganizacoesModule';
 import { ROTA_INICIO, type RotaOrg } from './lib/navegacaoOrg';
+import { buscaDaOrganizacao, rotaDaBusca, type BuscaApp } from './lib/navegacaoApp';
 import { CronogramaPage } from './components/CronogramaPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
@@ -37,11 +39,14 @@ function greetingFor(displayName: string): string {
 function AppShell() {
   // A Visão Geral é a entrada da plataforma; projetos abrem na organização.
   // A rota da organização fica aqui porque o menu lateral também a lê.
-  const [activeNav, setActiveNav] = useState<NavItem>('overview');
-  const [rotaOrg, setRotaOrg] = useState<RotaOrg>(ROTA_INICIO);
+  const busca = useSearch({ from: '/' });
+  const navigate = useNavigate({ from: '/' });
+  const activeNav = busca.area ?? 'overview';
+  const rotaOrg = rotaDaBusca(busca);
+  const ir = (search: BuscaApp) => { void navigate({ to: '/', search, resetScroll: false }); };
   // Projeto sem organização vinculada (em 29/09 nenhum): abre sozinho, para
   // não ficar inacessível.
-  const [projetoAvulso, setProjetoAvulso] = useState<number | null>(null);
+  const projetoAvulso = activeNav === 'organizations' && !busca.org ? busca.projeto ?? null : null;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const fecharMenu = useCallback(() => setMobileNavOpen(false), []);
   const { getProject } = useStore();
@@ -59,32 +64,26 @@ function AppShell() {
   /** Abre o projeto dentro da organização dele (notificações e agenda). */
   const handleSelectProject = (id: number) => {
     const orgId = getProject(id)?.organizacao?.id ?? null;
-    setActiveNav('organizations');
     if (orgId) {
-      setProjetoAvulso(null);
-      setRotaOrg({ orgId, secao: 'projeto', projetoId: id });
+      navegarOrg({ orgId, secao: 'projeto', projetoId: id });
     } else {
-      setProjetoAvulso(id);
+      ir({ area: 'organizations', projeto: id, secao: 'projeto', aba: 'plano' });
     }
   };
 
   const navegarOrg = (rota: RotaOrg) => {
-    setProjetoAvulso(null);
-    setActiveNav('organizations');
-    setRotaOrg(rota);
+    ir(buscaDaOrganizacao(rota));
   };
 
   const handleNavigate = (item: NavItem) => {
-    setActiveNav(item);
-    setProjetoAvulso(null);
-    // "Organizações" no menu sempre leva à lista de organizações.
-    if (item === 'organizations') setRotaOrg(ROTA_INICIO);
+    ir(item === 'overview' ? {} : { area: item });
   };
 
   const renderMain = () => {
     if (activeNav === 'organizations' && projetoAvulso != null) {
       const project = getProject(projetoAvulso);
-      if (project) return <ProjectView project={project} onBack={() => setProjetoAvulso(null)} rotuloVoltar="Organizações" />;
+      if (project) return <ProjectView key={project.id} project={project} onBack={() => navegarOrg(ROTA_INICIO)} rotuloVoltar="Organizações"
+        abaAtual={busca.aba ?? 'plano'} aoMudarAba={(aba, foco) => ir({ ...busca, aba, foco: foco ?? undefined })} />;
     }
 
     switch (activeNav) {

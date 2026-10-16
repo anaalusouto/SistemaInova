@@ -55,6 +55,8 @@ test('R07: proposta soma só ativos vigentes e cabeçalho mantém o mesmo total,
 });
 
 test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', () => {
+  for (const controlada of [false, true]) {
+  let rota = { aba: 'plano', foco: null };
   const estados = []; let indice = 0; let saidas = 0;
   const hooks = { ...React, useEffect() {}, useState(inicial) {
     const i = indice++;
@@ -75,7 +77,9 @@ test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', ()
     './project-tabs/TabFinanceiro': { TabFinanceiro: () => null },
     './project-tabs/TabMudancas': { TabMudancas: () => null },
   });
-  const render = () => { indice = 0; return ProjectView({ project: p, onBack() {}, aoEncaminhamentos() { saidas++; }, renderEncaminhamentos: foco => React.createElement('section', { 'data-foco': foco }, 'Encaminhamentos da organização') }); };
+  const render = () => { indice = 0; return ProjectView({ project: p, onBack() {}, aoEncaminhamentos() { saidas++; },
+    ...(controlada ? { abaAtual: rota.aba, focoAtual: rota.foco, aoMudarAba(aba, foco) { rota = { aba, foco }; } } : {}),
+    renderEncaminhamentos: foco => React.createElement('section', { 'data-foco': foco }, 'Encaminhamentos da organização') }); };
   function achar(node, pred) {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { for (const n of node) { const r = achar(n, pred); if (r) return r; } return; }
@@ -88,6 +92,13 @@ test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', ()
   achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos').props.onClick();
   assert.equal(achar(render(), e => e.type === 'section').props['data-foco'], null);
   assert.equal(saidas, 0, 'Troca de aba mantém a ficha do projeto aberta');
+  if (controlada) {
+    rota = { aba: 'plano', foco: null }; // Estado restaurado pela seta Voltar.
+    assert.ok(achar(render(), e => e.type === Plano));
+    rota = { aba: 'encaminhamentos', foco: 'atividade-a' }; // Avançar.
+    assert.equal(achar(render(), e => e.type === 'section').props['data-foco'], 'atividade-a');
+  }
+  }
 });
 
 test('R06: edição em linha preserva campos e recusa atraso sem justificativa e período inválido', () => {
