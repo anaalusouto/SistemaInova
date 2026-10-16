@@ -1,4 +1,5 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
+import { indiceConclusao } from '../../lib/conclusaoPlano';
 import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert, CornerDownRight, Pencil, Eye } from 'lucide-react';
 import { type Goal, type Activity, type Risk, type Deliverable } from '../../data/mockData';
 import { formatDateOnly } from '../../lib/dateOnly';
@@ -80,6 +81,7 @@ function NivelRisco({ risco }: { risco: RiscoDaLinha | null }) {
 
 export interface VisaoTabelaProps {
   metas: Goal[];
+  metasCompletas?: Goal[];
   administrativo?: boolean;
   riscos: Risk[];
   /** Ids recolhidos (metas, etapas ou atividades). Estado vive no pai para sobreviver à troca de visão (RF-013). */
@@ -96,13 +98,14 @@ export interface VisaoTabelaProps {
 }
 
 export function VisaoTabela({
-  metas, riscos, administrativo = false, recolhidos, alternarRecolhido, codigos,
+  metas, metasCompletas, riscos, administrativo = false, recolhidos, alternarRecolhido, codigos,
   aoAbrirMeta, aoAbrirEtapa, aoAbrirAtividade, aoAbrirRisco, aoAbrirAnexo, aoEncaminhamentos,
 }: VisaoTabelaProps) {
   const colunas = administrativo ? COLUNAS.map(c => c === 'Observações' ? 'Responsável' : c) : COLUNAS;
   const hoje = hojeISO();
   const { readOnly } = useAuth();
   const { updateAtividade } = useStore();
+  const conclusoes = useMemo(() => indiceConclusao(metasCompletas ?? metas), [metasCompletas, metas]);
   const [edicao, setEdicao] = useState<{ id: string; dados: AtividadeInput } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erros, setErros] = useState<string[]>([]);
@@ -174,18 +177,22 @@ export function VisaoTabela({
                       onClick={() => alternarRecolhido(meta.id)}
                       className="flex items-center gap-2 text-left"
                       aria-expanded={!metaRecolhida}
+                      aria-label={metaRecolhida ? `Expandir meta: ${meta.name}` : `Recolher meta: ${meta.name}`}
                     >
                       {metaRecolhida ? <ChevronRight size={14} color="var(--ink-4)" /> : <ChevronDown size={14} color="var(--ink-4)" />}
+                    </button>
+                    <button type="button" onClick={() => aoAbrirMeta(meta)} aria-label={`Abrir meta: ${meta.name}`} className="flex items-center gap-2 text-left hover:underline">
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--ink-4)' }}>
                         {codigos.get(meta.id)}.
                       </span>
-                      <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--ink-1)' }}>
+                      <span className={conclusoes.get(`meta:${meta.id}`)?.concluido ? 'line-through' : undefined} style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--ink-1)' }}>
                         {meta.name}
                       </span>
                       <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }}>
                         · {meta.deliverables.length} etapa{meta.deliverables.length === 1 ? '' : 's'}
                       </span>
                     </button>
+                    {!administrativo && <span className="text-xs" style={{ color: 'var(--ink-4)' }}>{conclusoes.get(`meta:${meta.id}`)?.concluidas ?? 0}/{conclusoes.get(`meta:${meta.id}`)?.total ?? 0} concluídas</span>}
                     {(prazo.inicio || prazo.fim || meta.responsible) && (
                       <span style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>
                         {(prazo.inicio || prazo.fim) && (
@@ -237,11 +244,12 @@ export function VisaoTabela({
                                 moram criar atividade, criar risco e editar período. */}
                             <button
                               onClick={() => aoAbrirEtapa(etapa, meta)}
-                              className="text-left hover:underline"
+                              className={`text-left hover:underline ${conclusoes.get(`etapa:${etapa.id}`)?.concluido ? 'line-through' : ''}`}
                               style={{ fontWeight: 600, fontSize: '0.78rem', color: 'var(--ink-2)' }}
                             >
                               {etapa.name}
                             </button>
+                            {!administrativo && <span className="text-xs" style={{ color: 'var(--ink-4)' }}>{conclusoes.get(`etapa:${etapa.id}`)?.concluidas ?? 0}/{conclusoes.get(`etapa:${etapa.id}`)?.total ?? 0} concluídas</span>}
                             <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
                               {etapa.plannedStart || etapa.plannedEnd
                                 ? `${formatDateOnly(etapa.plannedStart)} – ${formatDateOnly(etapa.plannedEnd)}`
@@ -298,7 +306,7 @@ export function VisaoTabela({
                                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-4)', marginRight: 6 }}>
                                         {codigos.get(atividade.id)}
                                       </span>
-                                      {atividade.name}
+                                      <span className={atividade.status === 'Concluído' ? 'line-through' : undefined}>{atividade.name}</span>
                                     </button>
                                     {!readOnly && !administrativo && (edicao?.id === atividade.id ? (
                                       <div className="flex gap-2 mt-2">

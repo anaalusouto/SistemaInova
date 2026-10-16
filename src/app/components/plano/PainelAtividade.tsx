@@ -6,7 +6,7 @@
  * acontece com o registro (RN-005): a linha não é apagada, é marcada como
  * excluída, para não deixar anexo órfão nem romper vínculo de risco.
  */
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Pencil, Trash2, Plus, Check, X as XIcon, CornerDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -18,6 +18,8 @@ import { Painel, Linha, Periodo, Ausente, BotaoAcao } from './PainelBase';
 import { ConfirmarExclusao } from './camposFormulario';
 import { FormularioAtividade } from './FormularioAtividade';
 import { CampoAnexo } from './CampoAnexo';
+import { ConclusaoNoDetalhe } from './ConclusaoNoDetalhe';
+import type { ItemOrcamento } from '../../lib/orcamento';
 
 /** Lista de tarefas com adicionar, renomear e excluir no lugar (RF-025). */
 function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string }) {
@@ -152,13 +154,15 @@ function Tarefas({ atividade, codigo }: { atividade: Activity; codigo: string })
 }
 
 export function PainelAtividade({
-  atividade, etapa, meta, codigo, projetoId, riscoOrigem, aoFechar, aoAbrirRisco, aoEncaminhamentos,
+  atividade, etapa, meta, codigo, projetoId, riscoOrigem, aoFechar, aoAbrirRisco, aoEncaminhamentos, lateral, bloqueado, riscosDaEtapa = [], orcamentoDaMeta = [],
 }: {
   atividade: Activity; etapa: Deliverable; meta: Goal; codigo: string; projetoId: number;
   riscoOrigem?: Risk;
   aoFechar: () => void;
   aoAbrirRisco: (r: Risk) => void;
   aoEncaminhamentos?: () => void;
+  lateral?: ReactNode; bloqueado?: boolean;
+  riscosDaEtapa?: Risk[]; orcamentoDaMeta?: ItemOrcamento[];
 }) {
   const { deleteAtividade } = useStore();
   const { readOnly } = useAuth();
@@ -180,12 +184,15 @@ export function PainelAtividade({
         caminho={`${meta.name} › ${etapa.name} › ${codigo}`}
         aoFechar={aoFechar}
         acoes={acoes}
+        lateral={!editando ? lateral : undefined}
+        bloqueado={bloqueado}
       >
         {editando ? (
           <FormularioAtividade etapa={etapa} atividade={atividade} aoFechar={() => setEditando(false)} />
         ) : (
           <>
 
+            {!lateral && <ConclusaoNoDetalhe key={atividade.id} tipo="atividade" id={atividade.id} nome={atividade.name} atividades={[atividade]} />}
             <Linha rotulo="Status e progresso">
               <span className="inline-flex items-center gap-2">
                 <span style={{ color: atrasada ? 'var(--alert)' : 'var(--ink-2)', fontWeight: atrasada ? 600 : 400 }}>
@@ -205,6 +212,13 @@ export function PainelAtividade({
               {/* RN-022: trivalente — "Não informado" não é "Não". */}
               {atividade.budgetLink === 'Não informado' ? <Ausente /> : atividade.budgetLink}
             </Linha>
+            {orcamentoDaMeta.length > 0 && <Linha rotulo={`Orçamento da meta (${orcamentoDaMeta.length} itens)`}>
+              <p className="text-xs mb-2" style={{ color: 'var(--ink-4)' }}>Itens compartilhados com as demais atividades desta meta.</p>
+              <ul className="space-y-2">{orcamentoDaMeta.map(item => <li key={item.id}>
+                <span>{item.descricao}</span>
+                <span className="block text-xs" style={{ color: 'var(--ink-4)' }}>Proposto: {item.valorProposto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              </li>)}</ul>
+            </Linha>}
 
             <Linha rotulo="Observação">{atividade.observations || <Ausente />}</Linha>
 
@@ -248,6 +262,11 @@ export function PainelAtividade({
                 </button>
               </Linha>
             )}
+            {riscosDaEtapa.length > 0 && <Linha rotulo={`Outros riscos da etapa (${riscosDaEtapa.length})`}>
+              <ul className="space-y-1">{riscosDaEtapa.map(risco => <li key={risco.id}>
+                <button type="button" onClick={() => aoAbrirRisco(risco)} className="text-left underline">{risco.title || risco.description}</button>
+              </li>)}</ul>
+            </Linha>}
           </>
         )}
       </Painel>

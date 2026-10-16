@@ -115,12 +115,13 @@ export interface PortfolioFilterValues {
   periodStart: MonthYear | null;
   periodEnd: MonthYear | null;
   status: string[];
-  org: string[];
+  /** null seleciona todas, inclusive comunidades adicionadas depois; [] seleciona nenhuma. */
+  org: string[] | null;
   classificacao: string[];
 }
 
 export function emptyPortfolioFilters(): PortfolioFilterValues {
-  return { exercicioKey: null, periodStart: null, periodEnd: null, status: [], org: [], classificacao: [] };
+  return { exercicioKey: null, periodStart: null, periodEnd: null, status: [], org: null, classificacao: [] };
 }
 
 export function applyPortfolioFilters(projects: ProjectExt[], filters: PortfolioFilterValues): ProjectExt[] {
@@ -141,7 +142,7 @@ export function applyPortfolioFilters(projects: ProjectExt[], filters: Portfolio
       if (pEnd < fStart || pStart > fEnd) return false;
     }
     if (filters.status.length > 0 && !filters.status.includes(p.status)) return false;
-    if (filters.org.length > 0 && !filters.org.includes(p.org ?? '')) return false;
+    if (filters.org !== null && !filters.org.includes(p.org ?? '')) return false;
     if (filters.classificacao.length > 0 && !filters.classificacao.includes(p.segmento ?? '')) return false;
     return true;
   });

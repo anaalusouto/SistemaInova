@@ -8,7 +8,7 @@
  * ocultação é cortesia com quem lê; quem de fato impede a escrita é o servidor
  * (RN-001) — ver sessao.server.ts.
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Plus, CalendarRange, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -19,6 +19,7 @@ import { Painel, Linha, Periodo, BotaoAcao } from './PainelBase';
 import { Campo, Data, Erros, Acoes } from './camposFormulario';
 import { FormularioAtividade } from './FormularioAtividade';
 import { FormularioRisco } from './FormularioRisco';
+import { ConclusaoNoDetalhe } from './ConclusaoNoDetalhe';
 
 type Modo = 'ver' | 'periodo' | 'novaAtividade' | 'novoRisco';
 
@@ -81,12 +82,13 @@ function FormularioPeriodo({ etapa, aoFechar }: { etapa: Deliverable; aoFechar: 
 }
 
 export function PainelEtapa({
-  etapa, meta, riscos, codigo, projetoId, aoFechar, aoAbrirRisco, aoAbrirAtividade,
+  etapa, meta, riscos, codigo, projetoId, aoFechar, aoAbrirRisco, aoAbrirAtividade, lateral, bloqueado,
 }: {
   etapa: Deliverable; meta: Goal; riscos: Risk[]; codigo: string; projetoId: number;
   aoFechar: () => void;
   aoAbrirRisco: (r: Risk) => void;
   aoAbrirAtividade: (a: Activity) => void;
+  lateral?: ReactNode; bloqueado?: boolean;
 }) {
   const { readOnly } = useAuth();
   const [modo, setModo] = useState<Modo>('ver');
@@ -110,7 +112,7 @@ export function PainelEtapa({
   ) : undefined;
 
   return (
-    <Painel titulo={titulo} caminho={`${meta.name} › Etapa ${codigo}`} aoFechar={aoFechar} acoes={acoes}>
+    <Painel titulo={titulo} caminho={`${meta.name} › Etapa ${codigo}`} aoFechar={aoFechar} acoes={acoes} lateral={modo === 'ver' ? lateral : undefined} bloqueado={bloqueado}>
       {modo === 'periodo' && <FormularioPeriodo etapa={etapa} aoFechar={() => setModo('ver')} />}
 
       {modo === 'novaAtividade' && <FormularioAtividade etapa={etapa} aoFechar={() => setModo('ver')} />}
@@ -121,6 +123,7 @@ export function PainelEtapa({
 
       {modo === 'ver' && (
         <>
+          {!lateral && <ConclusaoNoDetalhe key={etapa.id} tipo="etapa" id={etapa.id} nome={etapa.name} atividades={etapa.activities} />}
           {/* CA-07: sem período previsto a etapa não aceita atividade — dizer
               isso aqui evita que a pessoa descubra só ao tentar criar. */}
           {semPeriodo && !readOnly && (
@@ -148,7 +151,7 @@ export function PainelEtapa({
                       className="text-left hover:underline flex items-center gap-2 w-full"
                       style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}
                     >
-                      <span className="truncate">{a.name}</span>
+                      <span className={`truncate ${a.status === 'Concluído' ? 'line-through' : ''}`}>{a.name}</span>
                       <span style={{ fontSize: '0.7rem', color: estaAtrasada(a) ? 'var(--alert)' : 'var(--ink-5)', whiteSpace: 'nowrap' }}>
                         {estaAtrasada(a) ? 'Atrasada' : a.status}
                       </span>

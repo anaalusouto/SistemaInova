@@ -1,0 +1,18 @@
+{
+  "dataUTC": "2026-10-16T18:10:47.964Z",
+  "fonte": "https://docs.google.com/spreadsheets/d/1OPkP3b3aLW9S8x_pUZ7G97gr0MZkRWGHwi-geMkwiAk/edit?ouid=113107038494083270704",
+  "titulo": "Cronograma Geral Rotas - FAS e FUNBIO",
+  "versaoImportada": 1,
+  "abasPreservadas": 18,
+  "rotas": 14,
+  "visitas": 20,
+  "diasAgenda": 55,
+  "verificacao": "Releitura do banco idêntica às 18 abas consultadas; cenários ocultos preservados separadamente da agenda vigente.",
+  "testes": "99 testes automatizados aprovados; TypeScript sem erros; build de produção aprovado; PostgreSQL isolado: histórico, concorrência, RLS, permissões e rollback.",
+  "visual": "Prévia estática do componente real conferida em desktop e largura de 390 px. Sem overflow da página; tabelas e seletor de rotas têm rolagem própria.",
+  "pendencias": [
+    "Publicar frontend/servidor atualizado e testar importação/correção com sessão no navegador.",
+    "Conferir Rota 11: 01/12/2026 no cronograma e início 02/12/2026 em Instituições. Nenhuma data foi escolhida por suposição."
+  ],
+  "migracao": "20261016174704_cronograma_rotas_compartilhado.sql aplicada no banco."
+}

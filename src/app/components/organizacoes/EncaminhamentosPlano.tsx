@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { usePopupChave } from '../PopupNavegacao';
 import { useStore } from '../../store';
 import { atividadesDaOrganizacao, encaminhamentosDoPlano } from '../../lib/planoRelatorio';
 import { codigosHierarquicos } from '../../lib/planoTrabalho';
@@ -9,8 +9,10 @@ import { useDestaque } from './useDestaque';
 
 export function EncaminhamentosPlano({ orgId, foco, mostrarConcluidos }: { orgId: string; foco: string | null; mostrarConcluidos: boolean }) {
   const { projects, projectsLoading } = useStore();
-  const [selecionada, setSelecionada] = useState<string | null>(null);
-  const [riscoId, setRiscoId] = useState<string | null>(null);
+  const [popup, mudarPopup] = usePopupChave(`acomp-${orgId}`);
+  const selecionada = popup?.startsWith('atividade:') ? popup.slice(10) : null;
+  const riscoId = popup?.startsWith('risco:') ? popup.slice(6) : null;
+  const setSelecionada = (id: string | null) => mudarPopup(id ? `atividade:${id}` : null);
   const linhas = encaminhamentosDoPlano(projects, orgId);
   const visiveis = mostrarConcluidos ? linhas : linhas.filter(l => l.atividade.status !== 'Concluído');
   const alvo = selecionada ? atividadesDaOrganizacao(projects, orgId).find(l => l.atividade.id === selecionada) : undefined;
@@ -34,10 +36,10 @@ export function EncaminhamentosPlano({ orgId, foco, mostrarConcluidos }: { orgId
     {alvo && <PainelAtividade key={alvo.atividade.id} atividade={alvo.atividade} etapa={alvo.etapa} meta={alvo.meta} projetoId={alvo.projeto.id}
       codigo={codigosHierarquicos(alvo.projeto.goals).get(alvo.atividade.id) ?? ''}
       riscoOrigem={alvo.projeto.risks.find(r => r.id === alvo.atividade.riskOriginId)}
-      aoFechar={() => setSelecionada(null)} aoAbrirRisco={r => { setSelecionada(null); setRiscoId(r.id); }} />}
+      aoFechar={() => mudarPopup(null)} aoAbrirRisco={r => mudarPopup(`risco:${r.id}`)} />}
     {risco && projetoRisco && <PainelRisco key={risco.id} risco={risco} etapa={etapaRisco} meta={metaRisco} projetoId={projetoRisco.id}
       metas={projetoRisco.goals} codigos={codigosHierarquicos(projetoRisco.goals)}
       acoesDeResposta={projetoRisco.goals.flatMap(m => m.deliverables.flatMap(e => e.activities)).filter(a => a.riskOriginId === risco.id)}
-      aoFechar={() => setRiscoId(null)} aoAbrirAtividade={a => { setRiscoId(null); setSelecionada(a.id); }} />}
+      aoFechar={() => mudarPopup(null)} aoAbrirAtividade={a => mudarPopup(`atividade:${a.id}`)} />}
   </section>;
 }

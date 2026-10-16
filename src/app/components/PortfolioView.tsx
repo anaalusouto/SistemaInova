@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   AreaChart,
@@ -22,7 +22,6 @@ import {
   applyPortfolioFilters,
   emptyPortfolioFilters,
   getClassificacaoOptions,
-  getDefaultExercicio,
   getExercicios,
   getOrgOptions,
   STATUS_OPTIONS,
@@ -31,68 +30,36 @@ import {
 import { buildFinancialTimeline } from '../lib/financialTimeline';
 import { portfolioDemo, DEMO_REFERENCE_DATE } from '../data/portfolioDemo';
 import { buildDecisionCharts } from '../lib/portfolioDecisions';
+import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
-/** Filtros preservados enquanto a sessão estiver aberta. */
 type DataSource = 'demo' | 'real';
-const filterMemory: Record<DataSource, PortfolioFilterValues & { initialized: boolean }> = {
-  demo: { ...emptyPortfolioFilters(), initialized: false },
-  real: { ...emptyPortfolioFilters(), initialized: false },
-};
 
 export function PortfolioView() {
   const { projects: realProjects, projectsLoading } = useStore();
-  const [source, setSource] = useState<DataSource>('demo');
+  const [source, setSource] = useState<DataSource>('real');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
-  const portfolioFilterMemory = filterMemory[source];
-  const [filters, setFiltersState] = useState<PortfolioFilterValues>(portfolioFilterMemory);
+  const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
 
   const exercicios = useMemo(() => getExercicios(projects), [projects]);
   const orgOptions = useMemo(() => getOrgOptions(projects), [projects]);
   const classificacaoOptions = useMemo(() => getClassificacaoOptions(projects), [projects]);
 
-  // Na primeira carga (por sessão), seleciona o exercício vigente como padrão.
-  useEffect(() => {
-    if (portfolioFilterMemory.initialized || exercicios.length === 0) return;
-    const def = getDefaultExercicio(exercicios);
-    const next: PortfolioFilterValues = {
-      ...emptyPortfolioFilters(),
-      exercicioKey: def?.key ?? null,
-      periodStart: def?.minMonth ?? null,
-      periodEnd: def?.maxMonth ?? null,
-    };
-    Object.assign(portfolioFilterMemory, next, { initialized: true });
-    setFiltersState(next);
-  }, [exercicios, portfolioFilterMemory]);
-
   const changeSource = (next: DataSource) => {
     setSource(next);
-    setFiltersState(filterMemory[next]);
-  };
-
-  const setFilters = (next: PortfolioFilterValues) => {
-    Object.assign(portfolioFilterMemory, next);
-    setFiltersState(next);
+    setFilters(emptyPortfolioFilters());
   };
 
   const clearFilters = () => {
-    const next = emptyPortfolioFilters();
-    Object.assign(portfolioFilterMemory, next, { initialized: true });
-    setFiltersState(next);
+    setFilters(emptyPortfolioFilters());
   };
 
   const filteredProjects = useMemo(() => applyPortfolioFilters(projects, filters), [projects, filters]);
   const kpiData = buildKpi(filteredProjects);
-  const timeline = useMemo(
-    () =>
-      buildFinancialTimeline(
-        filteredProjects,
-        filters.periodStart && filters.periodEnd ? { start: filters.periodStart, end: filters.periodEnd } : null,
-      ),
-    [filteredProjects, filters.periodStart, filters.periodEnd],
-  );
+  const resumoPlano = useMemo(() => resumoPlanoPortfolio(filteredProjects), [filteredProjects]);
+  const timeline = useMemo(() => buildFinancialTimeline(filteredProjects, null), [filteredProjects]);
 
   const suspended = filteredProjects.filter(p => p.status === 'Suspenso').length;
   const pieData = [
@@ -152,6 +119,13 @@ export function PortfolioView() {
         <p className="py-10 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Nenhum projeto encontrado para os filtros selecionados.</p>
       ) : <>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Conclusão do plano de trabalho">
+        {resumoPlano.map(resumo => <section key={resumo.rotulo} className="rounded-xl border bg-card p-4" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-sm" style={{ color: 'var(--ink-4)' }}>{resumo.rotulo}</h2>
+          <p className="mt-1 text-2xl font-semibold" style={{ color: 'var(--success)' }}>{resumo.concluidas} <span className="text-sm font-normal" style={{ color: 'var(--ink-4)' }}>de {resumo.total}</span></p>
+        </section>)}
+      </div>
+
       {/* Gráficos do portfólio */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-7 bg-card rounded-xl p-5 border" style={{ borderColor: 'var(--border)' }}>
@@ -173,7 +147,7 @@ export function PortfolioView() {
           </div>
           {timeline.length === 0 ? (
             <div className="flex items-center justify-center" style={{ height: 180, color: 'var(--ink-5)', fontSize: '0.8rem' }}>
-              Sem itens de orçamento com data reconhecível no período selecionado.
+              Sem itens de orçamento com data reconhecível.
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={240}>

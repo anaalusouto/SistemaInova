@@ -23,6 +23,9 @@ import { useEscritaOrganizacao } from './useOrganizacoes';
 import { useDestaque } from './useDestaque';
 import { BotaoNovo } from '../BotaoNovo';
 import { EncaminhamentosPlano } from './EncaminhamentosPlano';
+import { PopupDetalhe } from '../PopupDetalhe';
+import { usePopupChave } from '../PopupNavegacao';
+import { Linha, BotaoAcao } from '../plano/PainelBase';
 
 const COR_STATUS: Record<StatusEncaminhamento, { cor: string; fundo: string }> = {
   'A iniciar': { cor: 'var(--ink-3)', fundo: 'var(--surface-2)' },
@@ -52,6 +55,9 @@ export function AbaEncaminhamentos({
   const [mostrarConcluidos, setMostrarConcluidos] = useState(true);
   const [form, setForm] = useState<Form | null>(null);
   const [excluindo, setExcluindo] = useState<Encaminhamento | null>(null);
+  const [consulta, setConsulta] = usePopupChave(`enc-${org.id}`);
+  const visto = consulta?.startsWith('enc:') ? org.encaminhamentos.find(e => e.id === consulta.slice(4)) : undefined;
+  const contatoVisto = consulta?.startsWith('contato:') ? org.registros.find(r => r.id === consulta.slice(8)) : undefined;
 
   const registros = useMemo(() => new Map(org.registros.map(r => [r.id, r])), [org.registros]);
   const linhas = mostrarConcluidos ? org.encaminhamentos : org.encaminhamentos.filter(e => e.status !== 'Concluído');
@@ -147,7 +153,7 @@ export function AbaEncaminhamentos({
                     style={{ borderBottom: '1px solid var(--border)', background: doFoco(e) ? 'var(--brand-soft)' : undefined }}
                   >
                     <td className="px-3 py-2.5" style={{ fontSize: '0.8rem', color: 'var(--ink-1)', minWidth: 260, whiteSpace: 'pre-line' }}>
-                      {e.descricao}
+                      <button type="button" className="text-left hover:underline" onClick={() => setConsulta(`enc:${e.id}`)} aria-label={`Ver encaminhamento: ${e.descricao}`}>{e.descricao}</button>
                     </td>
                     <td className="px-3 py-2.5" style={{ fontSize: '0.78rem', color: e.responsavel ? 'var(--ink-2)' : 'var(--ink-5)' }}>
                       {pessoas.find(p => p.id && p.id === e.responsavelUsuarioId)?.name ?? e.responsavel ?? '—'}
@@ -168,7 +174,7 @@ export function AbaEncaminhamentos({
                         origem.contato && e.origem?.tipo === 'contato' ? (
                           <button
                             type="button"
-                            onClick={() => aoVerRegistro((e.origem as { registroId: string }).registroId)}
+                            onClick={() => setConsulta(`contato:${(e.origem as { registroId: string }).registroId}`)}
                             className="inline-flex items-start gap-1 text-left hover:underline"
                             style={{ color: 'var(--brand-text)' }}
                             title="Abrir o registro de contato de origem"
@@ -201,6 +207,21 @@ export function AbaEncaminhamentos({
         </div>
       </div>
 
+      {visto && <PopupDetalhe titulo="Encaminhamento" descricao={org.nome} aoFechar={() => setConsulta(null)}
+        acoes={!readOnly ? <BotaoAcao aoClicar={() => { setConsulta(null); editar(visto); }}><Pencil size={12} /> Editar encaminhamento</BotaoAcao> : undefined}>
+        <Linha rotulo="Descrição">{visto.descricao}</Linha>
+        <Linha rotulo="Responsável">{pessoas.find(p => p.id === visto.responsavelUsuarioId)?.name ?? visto.responsavel ?? 'Não informado'}</Linha>
+        <Linha rotulo="Status">{visto.status}</Linha>
+        <Linha rotulo="Período">{formatDateOnly(visto.dataInicio)} — {formatDateOnly(visto.dataFim)}</Linha>
+        <Linha rotulo="Origem">{visto.origem?.tipo === 'contato' ? <button className="underline" onClick={() => { if (visto.origem?.tipo === 'contato') setConsulta(`contato:${visto.origem.registroId}`); }}>{textoOrigem(visto)?.texto ?? 'Ver registro de contato'}</button> : textoOrigem(visto)?.texto ?? 'Não informada'}</Linha>
+      </PopupDetalhe>}
+      {contatoVisto && <PopupDetalhe titulo={contatoVisto.assunto ?? 'Registro de contato'} descricao={org.nome} aoFechar={() => setConsulta(null)}>
+        <Linha rotulo="Data">{formatDateOnly(contatoVisto.data)} {contatoVisto.hora ?? ''}</Linha>
+        <Linha rotulo="Participantes">{contatoVisto.participantes.join(', ') || 'Não informados'}</Linha>
+        <Linha rotulo="Meio">{contatoVisto.meio ?? 'Não informado'}</Linha>
+        <Linha rotulo="Resumo">{contatoVisto.resumo}</Linha>
+        <button className="text-sm underline mt-4" onClick={() => aoVerRegistro(contatoVisto.id)}>Ir para registros de contato</button>
+      </PopupDetalhe>}
       {form && (
         <FormularioEncaminhamento
           form={form}

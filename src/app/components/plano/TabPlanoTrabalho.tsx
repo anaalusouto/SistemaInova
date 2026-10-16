@@ -15,6 +15,7 @@
  * rolam junto com a página do projeto, e só o topo do cabeçalho fica fixo.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { usePopupChave } from '../PopupNavegacao';
 import { Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -40,6 +41,7 @@ import { useAuth } from '../../auth/authStore';
 import { CAMPOS_RELATORIO_PLANO, ordenarPlano, registrosDoPlano, type OrdemCamposPlano } from '../../lib/planoRelatorio';
 import { VisaoCompleta } from './VisaoCompleta';
 import { VisaoOrdenacao } from './VisaoOrdenacao';
+import { NavegacaoPlano, type SelecaoPlano } from './NavegacaoPlano';
 
 type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos' | 'completa' | 'ordenar';
 
@@ -76,9 +78,22 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
   const [visao, setVisao] = useState<Visao>('tabela');
   const [ordemCampos, setOrdemCampos] = useState<OrdemCamposPlano>({});
   const [exportando, setExportando] = useState(false);
+  const [conclusaoPendente, setConclusaoPendente] = useState(false);
   // RC-06: tudo começa recolhido. Guarda-se o que foi aberto — ver recolhidosDe().
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
-  const [painel, setPainel] = useState<PainelAberto>(null);
+  const [popup, mudarPopup] = usePopupChave(`plano-${project.id}`);
+  const [tipoPopup, idPopup] = (popup ?? '').split(':');
+  const painel: PainelAberto = tipoPopup === 'novoRisco' ? { tipo: 'novoRisco' }
+    : !idPopup ? null
+    : tipoPopup === 'meta' ? { tipo: 'meta', metaId: idPopup }
+    : tipoPopup === 'etapa' ? { tipo: 'etapa', etapaId: idPopup }
+    : tipoPopup === 'atividade' ? { tipo: 'atividade', atividadeId: idPopup }
+    : tipoPopup === 'risco' ? { tipo: 'risco', riscoId: idPopup } : null;
+  const setPainel = (p: PainelAberto) => {
+    if (conclusaoPendente) return;
+    mudarPopup(!p ? null : p.tipo === 'novoRisco' ? p.tipo
+      : `${p.tipo}:${p.tipo === 'meta' ? p.metaId : p.tipo === 'etapa' ? p.etapaId : p.tipo === 'atividade' ? p.atividadeId : p.riscoId}`);
+  };
   // Busca, filtros e recolhimento vivem aqui, e não dentro de cada visão:
   // é o que faz a troca Tabela → Gantt → Kanban preservar tudo (RF-011, CA-03).
   const [criterios, setCriterios] = useState<CriteriosFiltro>(CRITERIOS_VAZIOS);
@@ -157,10 +172,17 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
 
   const abrirAnexoDaAtividade = (atividade: Activity) => {
     if (!atividade.attachment) { toast.info('Esta atividade não tem anexo.'); return; }
-    void abrirAnexo(atividade.attachment.id);
+    void abrirAnexo(atividade.attachment.id, atividade.attachment.fileName, atividade.attachment.mimeType ?? undefined);
   };
 
   const fechar = () => setPainel(null);
+  const abrirRegistro = (alvo: SelecaoPlano) => {
+    if (conclusaoPendente) return;
+    setPainel(alvo.tipo === 'meta' ? { tipo: 'meta', metaId: alvo.id }
+      : alvo.tipo === 'etapa' ? { tipo: 'etapa', etapaId: alvo.id } : { tipo: 'atividade', atividadeId: alvo.id });
+  };
+  const lateralDoPlano = (meta: Goal, selecionado: SelecaoPlano) => <NavegacaoPlano meta={meta} selecionado={selecionado}
+    codigos={codigos} aoAbrir={abrirRegistro} aoOcupar={setConclusaoPendente} />;
 
   // RN-009: mover o cartão atualiza status E progresso de forma consistente —
   // a normalização mora no servidor, então o quadro não pode produzir a
@@ -287,11 +309,12 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
       {/* Visão */}
       <div className="px-6 pb-6">
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, [...CAMPOS_RELATORIO_PLANO], ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} />}
-          {visao === 'ordenar' && <VisaoOrdenacao projetoId={p.id} metas={metas} codigos={codigos} />}
+          {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, [...CAMPOS_RELATORIO_PLANO], ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} aoAbrir={abrirRegistro} />}
+          {visao === 'ordenar' && <VisaoOrdenacao projetoId={p.id} metas={metas} codigos={codigos} aoAbrir={abrirRegistro} />}
           {visao === 'tabela' && (
             <VisaoTabela
               metas={metasVisiveis}
+              metasCompletas={metas}
               riscos={riscos}
               recolhidos={recolhidos}
               alternarRecolhido={alternarRecolhido}
@@ -308,11 +331,13 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
           {visao === 'gantt' && (
             <VisaoGantt
               metas={metasVisiveis}
+              metasCompletas={metas}
               riscos={riscos}
               escala={escala}
               recolhidos={recolhidos}
               alternarRecolhido={alternarRecolhido}
               codigos={codigos}
+              aoAbrirMeta={meta => setPainel({ tipo: 'meta', metaId: meta.id })}
               aoAbrirEtapa={etapa => setPainel({ tipo: 'etapa', etapaId: etapa.id })}
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirAnexo={abrirAnexoDaAtividade}
@@ -358,7 +383,10 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
         if (!meta) return null;
         return (
           <PainelMeta
+            key={meta.id}
             meta={meta}
+            lateral={lateralDoPlano(meta, { tipo: 'meta', id: meta.id })}
+            bloqueado={conclusaoPendente}
             riscos={riscos}
             codigo={codigos.get(meta.id) ?? ''}
             codigos={codigos}
@@ -373,7 +401,10 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
         if (!alvo) return null;
         return (
           <PainelEtapa
+            key={alvo.etapa.id}
             etapa={alvo.etapa}
+            lateral={lateralDoPlano(alvo.meta, { tipo: 'etapa', id: alvo.etapa.id })}
+            bloqueado={conclusaoPendente}
             meta={alvo.meta}
             riscos={riscos}
             codigo={codigos.get(alvo.etapa.id) ?? ''}
@@ -393,7 +424,12 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
           : undefined;
         return (
           <PainelAtividade
+            key={alvo.atividade.id}
             atividade={alvo.atividade}
+            lateral={lateralDoPlano(alvo.meta, { tipo: 'atividade', id: alvo.atividade.id })}
+            bloqueado={conclusaoPendente}
+            riscosDaEtapa={riscos.filter(r => r.stageId === alvo.etapa.id && r.id !== origem?.id)}
+            orcamentoDaMeta={(p.orcamentoItens ?? []).filter(i => i.metaId === alvo.meta.id && i.vigente !== false && i.situacao === 'Ativo')}
             etapa={alvo.etapa}
             meta={alvo.meta}
             codigo={codigos.get(alvo.atividade.id) ?? ''}
@@ -413,6 +449,8 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
         return (
           <PainelRisco
             key={risco.id}
+            lateral={alvo ? lateralDoPlano(alvo.meta, { tipo: 'etapa', id: alvo.etapa.id }) : undefined}
+            bloqueado={conclusaoPendente}
             risco={risco}
             etapa={alvo?.etapa}
             meta={alvo?.meta}

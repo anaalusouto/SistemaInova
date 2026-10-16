@@ -13,6 +13,7 @@ import {
 } from '../../diagnosticos.server';
 import { useAuth } from '../../auth/authStore';
 import { Chip } from './DiagnosticUI';
+import { visualizarDocumento } from '../../lib/visualizacaoDocumento';
 
 interface ParecerTecnicoTabProps {
   diagnosticoId: string;
@@ -92,7 +93,7 @@ export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTab
   const abrirAnexo = async (anexoId: string) => {
     try {
       const { url } = await getAnexo({ data: { anexoId } });
-      window.open(url, '_blank', 'noopener,noreferrer');
+      visualizarDocumento({ url, titulo: 'Anexo do parecer técnico' });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Não foi possível abrir o anexo.');
     }

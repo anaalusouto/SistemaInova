@@ -16,23 +16,17 @@ import { type Attachment } from '../../data/mockData';
 import { useStore } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { urlDoAnexo, LIMITE_BYTES, TIPOS_ACEITOS, EXTENSOES_ACEITAS } from '../../anexos.server';
+import { visualizarDocumento } from '../../lib/visualizacaoDocumento';
 
 /**
- * Abre o anexo numa aba nova.
- *
- * Exportado porque a Tabela e o Gantt também abrem anexo, sem montar o campo
- * inteiro. O `window.open` acontece ANTES do await: navegador bloqueia popup
- * aberto depois de uma espera assíncrona, por não ser mais atribuível ao
- * clique da pessoa.
+ * Abre o anexo no visualizador interno, após obter a URL assinada.
+ * Usado também pela Tabela e pelo Gantt.
  */
-export async function abrirAnexo(anexoId: string): Promise<void> {
-  const aba = window.open('', '_blank');
+export async function abrirAnexo(anexoId: string, titulo = 'Anexo', mimeType?: string): Promise<void> {
   try {
     const { url } = await urlDoAnexo({ data: { anexoId } });
-    if (aba) aba.location.href = url;
-    else window.location.href = url;
+    visualizarDocumento({ url, titulo, mimeType });
   } catch (e) {
-    aba?.close();
     toast.error(e instanceof Error ? e.message : 'Não foi possível abrir o anexo.');
   }
 }
@@ -133,7 +127,7 @@ export function CampoAnexo({
           </span>
           <button
             type="button"
-            onClick={() => abrirAnexo(anexo.id)}
+            onClick={() => abrirAnexo(anexo.id, anexo.fileName, anexo.mimeType ?? undefined)}
             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
             style={{ color: 'var(--brand-text)', fontSize: '0.72rem' }}
           >

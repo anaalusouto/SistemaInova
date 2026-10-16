@@ -18,7 +18,8 @@
  * fim não é desenhada "até hoje": fica sem barra, que é a informação
  * verdadeira.
  */
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
+import { indiceConclusao } from '../../lib/conclusaoPlano';
 import { ChevronDown, ChevronRight, Paperclip, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { type Goal, type Activity, type Risk, type Deliverable } from '../../data/mockData';
 import { formatDateOnly } from '../../lib/dateOnly';
@@ -99,21 +100,24 @@ function rotuloPeriodo(previstoI: string | null, previstoF: string | null, realI
 
 export interface VisaoGanttProps {
   metas: Goal[];
+  metasCompletas?: Goal[];
   riscos: Risk[];
   escala: EscalaGantt;
   recolhidos: Set<string>;
   alternarRecolhido: (id: string) => void;
   codigos: Map<string, string>;
+  aoAbrirMeta?: (meta: Goal) => void;
   aoAbrirEtapa: (etapa: Deliverable, meta: Goal) => void;
   aoAbrirAtividade: (atividade: Activity, etapa: Deliverable, meta: Goal) => void;
   aoAbrirAnexo: (atividade: Activity) => void;
 }
 
 export function VisaoGantt({
-  metas, riscos, escala, recolhidos, alternarRecolhido, codigos,
-  aoAbrirEtapa, aoAbrirAtividade, aoAbrirAnexo,
+  metas, metasCompletas, riscos, escala, recolhidos, alternarRecolhido, codigos,
+  aoAbrirMeta, aoAbrirEtapa, aoAbrirAtividade, aoAbrirAnexo,
 }: VisaoGanttProps) {
   const hoje = hojeISO();
+  const conclusoes = useMemo(() => indiceConclusao(metasCompletas ?? metas), [metasCompletas, metas]);
   const limites: LimitesLinhaTempo | null = limitesDaLinhaDoTempo(metas);
 
   if (metas.length === 0) {
@@ -227,19 +231,24 @@ export function VisaoGantt({
                   realizado: posicaoNaLinha(per.realizado.inicio, per.realizado.fim, limites),
                 }}
                 conteudo={
+                  <>
                   <button
                     onClick={() => alternarRecolhido(meta.id)}
                     className="flex items-center gap-1.5 text-left min-w-0"
                     aria-expanded={!metaRecolhida}
+                    aria-label={metaRecolhida ? `Expandir meta: ${meta.name}` : `Recolher meta: ${meta.name}`}
                   >
                     {metaRecolhida ? <ChevronRight size={13} color="var(--ink-4)" /> : <ChevronDown size={13} color="var(--ink-4)" />}
+                  </button>
+                  <button type="button" onClick={() => aoAbrirMeta?.(meta)} className="flex min-w-0 items-center gap-1.5 text-left hover:underline" aria-label={`Abrir meta: ${meta.name}`}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-4)' }}>
                       {codigos.get(meta.id)}.
                     </span>
-                    <span className="truncate" style={{ fontWeight: 700, fontSize: '0.76rem', color: 'var(--ink-1)' }}>
+                    <span className={`truncate ${conclusoes.get(`meta:${meta.id}`)?.concluido ? 'line-through' : ''}`} style={{ fontWeight: 700, fontSize: '0.76rem', color: 'var(--ink-1)' }}>
                       {meta.name}
                     </span>
                   </button>
+                  </>
                 }
               />
 
@@ -273,7 +282,7 @@ export function VisaoGantt({
                             className="truncate text-left hover:underline min-w-0"
                             style={{ fontWeight: 600, fontSize: '0.74rem', color: 'var(--ink-2)' }}
                           >
-                            {etapa.name}
+                            <span className={conclusoes.get(`etapa:${etapa.id}`)?.concluido ? 'line-through' : undefined}>{etapa.name}</span>
                           </button>
                           {risco && (
                             <ShieldAlert
@@ -310,7 +319,7 @@ export function VisaoGantt({
                                 className="truncate text-left hover:underline min-w-0 flex-1"
                                 style={{ fontSize: '0.74rem', color: 'var(--ink-2)' }}
                               >
-                                {atividade.name}
+                                <span className={atividade.status === 'Concluído' ? 'line-through' : undefined}>{atividade.name}</span>
                               </button>
                               {/* RN-010: sinal textual além da cor da barra. */}
                               {atrasada ? (

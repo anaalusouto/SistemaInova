@@ -19,6 +19,8 @@ import { AuthProvider, useAuth } from './auth/authStore';
 import { AuditProvider, useAudit } from './audit/auditStore';
 import { ThemeProvider, useTheme, FONT_SCALE_LABEL } from './theme/themeStore';
 import { LoginScreen } from './auth/LoginScreen';
+import { PopupNavegacao } from './components/PopupNavegacao';
+import { VisualizadorDocumentos } from './components/VisualizadorDocumentos';
 
 const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
   manha: 'Bom dia',
@@ -43,7 +45,7 @@ function AppShell() {
   const navigate = useNavigate({ from: '/' });
   const activeNav = busca.area ?? 'overview';
   const rotaOrg = rotaDaBusca(busca);
-  const ir = (search: BuscaApp) => { void navigate({ to: '/', search, resetScroll: false }); };
+  const ir = (search: BuscaApp) => { void navigate({ to: '/', search: { ...search, popup: undefined }, resetScroll: false }); };
   // Projeto sem organização vinculada (em 29/09 nenhum): abre sozinho, para
   // não ficar inacessível.
   const projetoAvulso = activeNav === 'organizations' && !busca.org ? busca.projeto ?? null : null;
@@ -92,7 +94,7 @@ function AppShell() {
       case 'organizations':
         return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} />;
       case 'schedule':
-        return <CronogramaPage onOpenProject={handleSelectProject} onOpenOrg={(orgId, foco) => navegarOrg({ orgId, secao: 'encaminhamentos', projetoId: null, foco })} />;
+        return <CronogramaPage abaAtual={busca.gestao ?? 'plano'} aoMudarAba={gestao => ir({ area: 'schedule', gestao })} onOpenProject={handleSelectProject} onOpenOrg={(orgId, foco) => navegarOrg({ orgId, secao: 'encaminhamentos', projetoId: null, foco })} />;
       case 'diagnostics':
         return <DiagnosticoModule />;
       case 'reports':
@@ -106,7 +108,7 @@ function AppShell() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--background)' }}>
+    <PopupNavegacao><VisualizadorDocumentos><div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--background)' }}>
       <Sidebar
         activeItem={activeNav}
         onNavigate={handleNavigate}
@@ -139,7 +141,7 @@ function AppShell() {
         <main className="flex-1 min-h-0 min-w-0 overflow-y-auto">{renderMain()}</main>
       </div>
       <Toaster position="top-right" richColors closeButton />
-    </div>
+    </div></VisualizadorDocumentos></PopupNavegacao>
   );
 }
 

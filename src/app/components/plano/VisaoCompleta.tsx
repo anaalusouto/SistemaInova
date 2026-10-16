@@ -1,8 +1,10 @@
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import type { OrdemCamposPlano, RegistroPlano } from '../../lib/planoRelatorio';
+import type { SelecaoPlano } from './NavegacaoPlano';
 
-export function VisaoCompleta({ registros, ordem, aoOrdenar }: {
+export function VisaoCompleta({ registros, ordem, aoOrdenar, aoAbrir }: {
   registros: RegistroPlano[]; ordem?: OrdemCamposPlano; aoOrdenar?: (ordem: OrdemCamposPlano) => void;
+  aoAbrir?: (alvo: SelecaoPlano) => void;
 }) {
   const mover = (r: RegistroPlano, indice: number, delta: number) => {
     const chaves = r.campos.map(c => c.chave);
@@ -13,7 +15,9 @@ export function VisaoCompleta({ registros, ordem, aoOrdenar }: {
     {aoOrdenar && <p className="text-sm print:hidden">Todos os campos estão visíveis. Use as setas para mudar a ordem dos campos do mesmo tipo de registro; a exportação acompanha essa ordem.</p>}
     {registros.length === 0 && <p className="text-sm">Nenhum registro cadastrado nas seções selecionadas.</p>}
     {registros.map(r => <section key={`${r.tipo}-${r.id}`} className="border rounded-lg p-3" style={{ borderColor: 'var(--border)', breakInside: 'avoid' }}>
-      <h3 className="font-semibold text-sm mb-2">{r.titulo}</h3>
+      <h3 className="font-semibold text-sm mb-2">{aoAbrir && (r.tipo === 'meta' || r.tipo === 'etapa' || r.tipo === 'atividade')
+        ? <button type="button" className="text-left hover:underline" onClick={() => aoAbrir({ tipo: r.tipo as SelecaoPlano['tipo'], id: r.id })}>{r.titulo}</button>
+        : r.titulo}</h3>
       <p className="text-xs mb-2" style={{ color: 'var(--ink-4)' }}>{r.campos.filter(c => c.preenchido).length} de {r.campos.length} campos preenchidos</p>
       <dl className="space-y-2">{r.campos.map((c, i) => <div key={c.chave} className="flex gap-3 items-start">
         {aoOrdenar && <div className="flex shrink-0 print:hidden">

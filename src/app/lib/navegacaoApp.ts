@@ -2,6 +2,7 @@ import type { RotaOrg, SecaoOrg } from './navegacaoOrg';
 
 export type AreaApp = 'overview' | 'organizations' | 'schedule' | 'diagnostics' | 'reports' | 'settings';
 export type AbaProjeto = 'descricao' | 'plano' | 'orcamento' | 'encaminhamentos';
+export type AbaGestao = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 
 export interface BuscaApp {
   area?: AreaApp;
@@ -10,6 +11,8 @@ export interface BuscaApp {
   projeto?: number;
   aba?: AbaProjeto;
   foco?: string;
+  gestao?: AbaGestao;
+  popup?: string;
 }
 
 const areas: readonly AreaApp[] = ['overview', 'organizations', 'schedule', 'diagnostics', 'reports', 'settings'];
@@ -20,6 +23,8 @@ const texto = (v: unknown) => typeof v === 'string' && v.trim() && v.length <= 1
 /** Somente o contexto de navegação entra na URL; formulário e sessão não entram. */
 export function validarBuscaApp(raw: Record<string, unknown>): BuscaApp {
   const area = areas.includes(raw.area as AreaApp) ? raw.area as AreaApp : undefined;
+  const popup = typeof raw.popup === 'string' && /^[a-zA-Z0-9:_-]{1,220}$/.test(raw.popup) ? { popup: raw.popup } : {};
+  if (area === 'schedule') return { area, gestao: (['plano', 'rotas', 'calendario', 'executivo', 'kanban', 'mensagens'] as unknown[]).includes(raw.gestao) ? raw.gestao as AbaGestao : 'plano', ...popup };
   if (area !== 'organizations') return area ? { area } : {};
   const org = texto(raw.org);
   const secao = secoes.includes(raw.secao as SecaoOrg) ? raw.secao as SecaoOrg : 'dados';
@@ -29,6 +34,7 @@ export function validarBuscaApp(raw: Record<string, unknown>): BuscaApp {
   if (!org && !projeto) return { area };
   return {
     area,
+    ...popup,
     ...(org ? { org, secao } : { secao: 'projeto' }),
     ...(noProjeto || !org ? {
       ...(projeto ? { projeto } : {}),

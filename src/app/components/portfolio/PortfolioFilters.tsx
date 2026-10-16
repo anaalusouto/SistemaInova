@@ -1,10 +1,6 @@
 import { Check, X } from 'lucide-react';
 import {
-  enumerateMonths,
-  formatMonthYear,
-  monthKey,
   type Exercicio,
-  type MonthYear,
   type PortfolioFilterValues,
 } from '../../lib/portfolioFilters';
 
@@ -22,6 +18,7 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all"
       style={{
@@ -31,7 +28,8 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
       }}
     >
       <span
-        className="inline-flex items-center justify-center rounded-sm"
+        aria-hidden="true"
+        className="inline-flex items-center justify-center rounded-full"
         style={{ width: 12, height: 12, border: `1px solid ${active ? 'var(--surface-0)' : 'var(--line-2)'}`, background: active ? 'var(--surface-0)' : 'transparent' }}
       >
         {active && <Check size={9} color="var(--brand)" />}
@@ -61,9 +59,6 @@ export function PortfolioFilters({
   onChange,
   onClear,
 }: PortfolioFiltersProps) {
-  const selectedExercicio = exercicios.find(e => e.key === filters.exercicioKey) ?? null;
-  const monthOptions: MonthYear[] = selectedExercicio ? enumerateMonths(selectedExercicio.minMonth, selectedExercicio.maxMonth) : [];
-
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter(v => v !== value) : [...list, value];
 
@@ -72,25 +67,13 @@ export function PortfolioFilters({
     onChange({
       ...filters,
       exercicioKey: ex?.key ?? null,
-      periodStart: ex?.minMonth ?? null,
-      periodEnd: ex?.maxMonth ?? null,
+      periodStart: null,
+      periodEnd: null,
     });
   };
 
-  const handlePeriodStart = (key: string) => {
-    const m = monthOptions.find(mo => monthKey(mo) === Number(key));
-    if (!m) return;
-    onChange({ ...filters, periodStart: m });
-  };
-
-  const handlePeriodEnd = (key: string) => {
-    const m = monthOptions.find(mo => monthKey(mo) === Number(key));
-    if (!m) return;
-    onChange({ ...filters, periodEnd: m });
-  };
-
   const hasActiveFilters =
-    !!filters.exercicioKey || filters.status.length > 0 || filters.org.length > 0 || filters.classificacao.length > 0;
+    !!filters.exercicioKey || filters.status.length > 0 || filters.org !== null || filters.classificacao.length > 0;
 
   return (
     <div className="p-4 rounded-lg border bg-card flex flex-col gap-3" style={{ borderColor: 'var(--border)' }}>
@@ -109,32 +92,6 @@ export function PortfolioFilters({
           </select>
         </FilterGroup>
 
-        {selectedExercicio && (
-          <FilterGroup label="Período">
-            <select
-              value={filters.periodStart ? String(monthKey(filters.periodStart)) : ''}
-              onChange={e => handlePeriodStart(e.target.value)}
-              className="px-2.5 py-1.5 rounded-md border text-[12px] bg-transparent"
-              style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-            >
-              {monthOptions.map(m => (
-                <option key={monthKey(m)} value={monthKey(m)}>{formatMonthYear(m)}</option>
-              ))}
-            </select>
-            <span style={{ color: 'var(--ink-5)', fontSize: '0.75rem' }}>até</span>
-            <select
-              value={filters.periodEnd ? String(monthKey(filters.periodEnd)) : ''}
-              onChange={e => handlePeriodEnd(e.target.value)}
-              className="px-2.5 py-1.5 rounded-md border text-[12px] bg-transparent"
-              style={{ borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-            >
-              {monthOptions.map(m => (
-                <option key={monthKey(m)} value={monthKey(m)}>{formatMonthYear(m)}</option>
-              ))}
-            </select>
-          </FilterGroup>
-        )}
-
         <FilterGroup label="Status">
           {statusOptions.map(s => (
             <Chip key={s} active={filters.status.includes(s)} onClick={() => onChange({ ...filters, status: toggle(filters.status, s) })}>
@@ -143,10 +100,14 @@ export function PortfolioFilters({
           ))}
         </FilterGroup>
 
-        <FilterGroup label="Organização">
+        <FilterGroup label="Comunidades / organizações">
+          {orgOptions.length > 0 && <>
+            <button type="button" onClick={() => onChange({ ...filters, org: null })} className="text-xs underline px-1">Selecionar todas</button>
+            <button type="button" onClick={() => onChange({ ...filters, org: [] })} className="text-xs underline px-1">Desmarcar todas</button>
+          </>}
           {orgOptions.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>—</span>}
           {orgOptions.map(o => (
-            <Chip key={o} active={filters.org.includes(o)} onClick={() => onChange({ ...filters, org: toggle(filters.org, o) })}>
+            <Chip key={o} active={filters.org === null || filters.org.includes(o)} onClick={() => onChange({ ...filters, org: toggle(filters.org ?? orgOptions, o) })}>
               {o}
             </Chip>
           ))}

@@ -1,0 +1,23 @@
+{
+  "data": "2026-10-16",
+  "escopo": "Pop-up central do plano restaurado, com navegação lateral interna entre meta, etapas e atividades e conclusão pelos checks circulares.",
+  "verificacoes": {
+    "suiteExistente": "116 testes aprovados",
+    "navegacaoDetalhes": "4 testes adicionais aprovados: hierarquia, navegação, conclusão, consulta e vínculos exibidos",
+    "build": "Aprovado",
+    "tipos": "Aprovados",
+    "apresentacao": "Pop-up modal restaurado no plano por orientação do usuário; hierarquia e conclusão permanecem dentro dele. O modo lateral opcional do componente genérico foi verificado anteriormente.",
+    "navegador": [
+      "Componentes reais PopupDetalhe e NavegacaoPlano em cenário isolado com dados fictícios",
+      "Conclusão de atividade refletida na etapa e na meta",
+      "Conclusão de meta refletida em todas as atividades",
+      "Navegação interna para etapa relacionada",
+      "Reabertura da etapa e releitura dos dados fictícios",
+      "Layout conferido em desktop e em 390 x 844; viewport restaurado",
+      "Painel de detalhes à direita sem bloquear a lista",
+      "Clique em outra atividade na tela de origem troca o detalhe sem fechar o painel",
+      "Escape fecha após a troca e devolve foco à origem"
+    ]
+  },
+  "limites": "No navegador, a gravação foi simulada em armazenamento local exclusivo do teste. Nenhum status operacional foi alterado durante a verificação. Não houve commit nem publicação."
+}

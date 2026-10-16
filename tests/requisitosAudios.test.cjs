@@ -168,7 +168,7 @@ test('R01: pessoa removida e perfil de consulta são recusados antes de escrever
 
 test('R06: controles da linha salvam datas/status juntos e mantêm o rascunho em falha', async () => {
   const estados = []; let indice = 0; const gravados = []; let falhar = false;
-  const hooks = { ...React, useState(inicial) {
+  const hooks = { ...React, useMemo: fn => fn(), useRef: value => ({ current: value }), useState(inicial) {
     const i = indice++;
     if (!(i in estados)) estados[i] = typeof inicial === 'function' ? inicial() : inicial;
     return [estados[i], v => { estados[i] = typeof v === 'function' ? v(estados[i]) : v; }];

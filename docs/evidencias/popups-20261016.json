@@ -1,0 +1,29 @@
+{
+  "dataUTC": "2026-10-16T18:28:42.052Z",
+  "escopo": [
+    "Visualizador interno para links externos e documentos vinculados.",
+    "Anexos de atividades, registros de contato, comprovantes e parecer técnico sem window.open nem redirecionamento da aplicação.",
+    "Pop-ups centrais para detalhes do plano de trabalho.",
+    "Consulta de encaminhamentos e origem do contato em pop-ups.",
+    "Importação, visitas, agenda diária, roteiro, hospedagem e checklist de rotas em pop-ups."
+  ],
+  "navegacao": [
+    "Abertura adiciona somente identificadores ao histórico; URLs assinadas ficam em memória.",
+    "Voltar fecha o detalhe e Avançar o reabre.",
+    "X e Esc fecham e restauram o foco.",
+    "Fechar um link direto substitui o estado atual, sem voltar para fora da aplicação."
+  ],
+  "validacoes": {
+    "testesAutomatizados": 104,
+    "typeScript": "sem erros",
+    "build": "aprovado",
+    "navegador": "Componentes reais de PopupDetalhe, PopupNavegacao e VisualizadorDocumentos conferidos em uma página isolada de teste. Abertura, X, Esc, Voltar, Avançar, foco, link direto e imagem local verificados.",
+    "celular": "Pop-up conferido em largura de 390 px.",
+    "banco": "Nenhum dado operacional alterado nesta rodada de pop-ups."
+  },
+  "limites": [
+    "A alteração ainda não foi publicada.",
+    "Alguns provedores impedem incorporação. O visualizador mantém a ação explícita Abrir no site de origem.",
+    "Fluxo autenticado completo da plataforma publicada não verificado nesta rodada."
+  ]
+}

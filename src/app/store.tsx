@@ -21,7 +21,7 @@ import {
   addContato, updateContato, deleteContato,
 } from './projetos.server';
 import {
-  salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade,
+  salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade, alterarConclusaoPlano,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco, excluirRisco,
   criarParecer, atualizarParecer, excluirParecer, definirResponsavel, reordenarPlano,
   salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa,
@@ -33,6 +33,7 @@ import {
   type ExecucaoInput, type ExclusaoInput,
 } from './orcamento.server';
 import type { ItemOrcamento, NotaOrcamento, NotaInput } from './lib/orcamento';
+import type { ConclusaoPlanoInput } from './lib/conclusaoPlano';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -163,6 +164,7 @@ type Ctx = {
   deleteEtapa: (etapaId: string) => Promise<void>;
   createAtividade: (input: AtividadeInput) => Promise<string>;
   updateAtividade: (atividadeId: string, input: AtividadeInput) => Promise<void>;
+  setConclusaoPlano: (input: ConclusaoPlanoInput) => Promise<void>;
   deleteAtividade: (atividadeId: string) => Promise<void>;
   createTarefa: (atividadeId: string, titulo: string) => Promise<void>;
   renameTarefa: (tarefaId: string, titulo: string) => Promise<void>;
@@ -384,6 +386,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     deleteEtapa: etapaId => run(() => excluirEtapa({ data: { etapaId } })),
     createAtividade: input => run(() => criarAtividade({ data: input })),
     updateAtividade: (atividadeId, input) => run(() => atualizarAtividade({ data: { atividadeId, dados: input } })),
+    setConclusaoPlano: input => run(() => alterarConclusaoPlano({ data: input })),
     deleteAtividade: atividadeId => run(() => excluirAtividade({ data: { atividadeId } })),
     createTarefa: (atividadeId, titulo) => run(() => criarTarefa({ data: { atividadeId, titulo } })),
     renameTarefa: (tarefaId, titulo) => run(() => renomearTarefa({ data: { tarefaId, titulo } })),

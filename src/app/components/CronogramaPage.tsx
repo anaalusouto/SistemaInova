@@ -11,6 +11,9 @@ import { GestaoPage } from './GestaoPage';
 import { MensagensPage } from './MensagensPage';
 import 'leaflet/dist/leaflet.css';
 import { BotaoNovo, LinkNovo } from './BotaoNovo';
+import { CronogramaRotas } from './rotas/CronogramaRotas';
+import { chaveRotas, type VisitaRota } from '../lib/cronogramaRotas';
+import type { AbaGestao } from '../lib/navegacaoApp';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
@@ -30,10 +33,12 @@ const DEFAULT_TIPO_COLOR = 'var(--ink-4)';
 const colorForTipo = (t: string) => tipoComunidadeColors[t] ?? DEFAULT_TIPO_COLOR;
 
 
-type GestaoInternaTab = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
+type GestaoInternaTab = AbaGestao;
 
-export function CronogramaPage({ onOpenProject, onOpenOrg }: { onOpenProject: (projectId: number) => void; onOpenOrg?: (id: string, foco: string) => void }) {
-  const [tab, setTab] = useState<GestaoInternaTab>('plano');
+export function CronogramaPage({ onOpenProject, onOpenOrg, abaAtual, aoMudarAba }: { onOpenProject: (projectId: number) => void; onOpenOrg?: (id: string, foco: string) => void; abaAtual?: AbaGestao; aoMudarAba?: (aba: AbaGestao) => void }) {
+  const [abaLocal, setAbaLocal] = useState<GestaoInternaTab>('plano');
+  const tab = abaAtual ?? abaLocal;
+  const setTab = (aba: AbaGestao) => aoMudarAba ? aoMudarAba(aba) : setAbaLocal(aba);
   const nestedPage = tab === 'kanban' || tab === 'mensagens';
 
   return (
@@ -71,7 +76,7 @@ export function CronogramaPage({ onOpenProject, onOpenOrg }: { onOpenProject: (p
         {tab === 'executivo' && (
           <div className="flex-1 min-h-0"><CronogramaExecutivoTab /></div>
         )}
-        {tab === 'rotas' && <RotasTab />}
+        {tab === 'rotas' && <CronogramaRotas renderMapa={visitas => <MapaCronogramaRotas visitas={visitas} />} />}
         {tab === 'calendario' && <CalendarioTab />}
         {tab === 'kanban' && (
           <div className="flex-1 min-h-0"><GestaoPage onOpenProject={onOpenProject} onOpenOrg={onOpenOrg} onOpenAdmin={() => setTab('plano')} /></div>
@@ -90,140 +95,23 @@ export function CronogramaPage({ onOpenProject, onOpenOrg }: { onOpenProject: (p
 /* ============================================================
    ROTAS TAB — Interactive map + filterable table
    ============================================================ */
-function RotasTab() {
-  const { routes, updateRoute, addRoute, deleteRoute } = useStore();
-  const { user } = useAuth();
-  const { log } = useAudit();
-  const [selectedRota, setSelectedRota] = useState<string>('all');
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  const record = (action: string, detail: string) =>
-    log({ userLogin: user?.login ?? '—', area: 'rotas', action, detail, kind: 'alteracao' });
-
-  const rotasUnicas = useMemo(() => Array.from(new Set(routes.map(r => r.rota))).sort(), [routes]);
-  const filtered = useMemo(
-    () => (selectedRota === 'all' ? routes : routes.filter(r => r.rota === selectedRota)),
-    [routes, selectedRota]
-  );
-
-  const kpis = useMemo(() => {
-    const total = filtered.length;
-    const dias = filtered.reduce((a, r) => a + (r.diasAtuacao ?? 0), 0);
-    const atencao = filtered.filter(r => r.status === 'Atenção' || r.status === 'Crítico').length;
-    const tipos = new Set(filtered.map(r => r.tipoComunidade)).size;
-    return { total, dias, atencao, tipos };
-  }, [filtered]);
-
-  return (
-    <div className="space-y-4">
-      {/* Filter bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-          <Filter size={14} className="text-muted-foreground" />
-          <select value={selectedRota} onChange={e => setSelectedRota(e.target.value)}
-            className="text-sm bg-transparent outline-none">
-            <option value="all">Todas as rotas</option>
-            {rotasUnicas.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
-        </div>
-        <BotaoNovo onClick={() => { addRoute({ rota: 'ROTA NOVA', organizacao: '', municipio: '', uf: 'PA', diasAtuacao: 2, modalAcesso: '', tipoComunidade: '', notasLogisticas: '', status: 'Operacional' }); record('adicionar rota', 'ROTA NOVA'); }} className="ml-auto">Nova rota</BotaoNovo>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi label="Organizações" value={kpis.total} color="var(--success-strong-text)" />
-        <Kpi label="Dias de campo" value={kpis.dias} color="var(--info)" />
-        <Kpi label="Pontos de atenção" value={kpis.atencao} color="var(--warning)" />
-        <Kpi label="Tipos de comunidade" value={kpis.tipos} color="var(--info)" />
-      </div>
-
-      {/* Map + Legend */}
-      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>
-            <MapPin size={14} className="inline mr-1.5" />Mapa das Rotas — Pará
-          </h3>
-          <div className="flex gap-3 text-xs flex-wrap">
-            {Object.entries(tipoComunidadeColors).map(([s, c]) => (
-              <span key={s} className="flex items-center gap-1">
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: c }} />
-                {s}
-              </span>
-            ))}
-            <span className="flex items-center gap-1 pl-2 ml-1 border-l" style={{ borderColor: 'var(--border)' }}>
-              {Object.entries(statusColors).map(([s, c]) => (
-                <span key={s} className="flex items-center gap-1 ml-2">
-                  <span className="inline-block w-2 h-2 rounded-full border-2" style={{ borderColor: c, background: 'transparent' }} />
-                  <span className="text-[11px] text-muted-foreground">{s}</span>
-                </span>
-              ))}
-            </span>
-          </div>
-        </div>
-        <RotasMap routes={filtered} selectedId={selectedId} onSelect={setSelectedId} />
-      </div>
-
-      {/* Table */}
-      <div className="rounded-lg overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-5 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem' }}>Organizações & logística</h3>
-        </div>
-        <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
-          <table className="w-full text-sm">
-            <thead style={{ background: 'var(--muted)', position: 'sticky', top: 0, zIndex: 1 }}>
-              <tr className="text-left text-xs">
-                <th className="px-3 py-2">Rota</th>
-                <th className="px-3 py-2">Organização</th>
-                <th className="px-3 py-2">Município/UF</th>
-                <th className="px-3 py-2">Dias</th>
-                <th className="px-3 py-2">Modal</th>
-                <th className="px-3 py-2">Tipo</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Notas</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(r => (
-                <tr key={r.id}
-                  onClick={() => setSelectedId(r.id)}
-                  className="border-t cursor-pointer"
-                  style={{ borderColor: 'var(--border)', background: selectedId === r.id ? 'var(--brand-soft)' : undefined }}>
-                  <Td><input className="cell" value={r.rota} onChange={e => updateRoute(r.id, { rota: e.target.value })} onBlur={() => record('editar rota', `rota: ${r.rota}`)} /></Td>
-                  <Td><input className="cell" value={r.organizacao} onChange={e => updateRoute(r.id, { organizacao: e.target.value })} onBlur={() => record('editar rota', `organização: ${r.organizacao}`)} /></Td>
-                  <Td>
-                    <div className="flex gap-1">
-                      <input className="cell" style={{ flex: 1 }} value={r.municipio} onChange={e => updateRoute(r.id, { municipio: e.target.value })} onBlur={() => record('editar rota', `município: ${r.municipio} · ${r.organizacao}`)} />
-                      <input className="cell" style={{ width: 48 }} value={r.uf} onChange={e => updateRoute(r.id, { uf: e.target.value })} onBlur={() => record('editar rota', `UF: ${r.uf} · ${r.organizacao}`)} />
-                    </div>
-                  </Td>
-                  <Td><input type="number" className="cell" style={{ width: 60 }} value={r.diasAtuacao} onChange={e => updateRoute(r.id, { diasAtuacao: Number(e.target.value) })} onBlur={() => record('editar rota', `dias de atuação: ${r.diasAtuacao} · ${r.organizacao}`)} /></Td>
-                  <Td><input className="cell" value={r.modalAcesso} onChange={e => updateRoute(r.id, { modalAcesso: e.target.value })} onBlur={() => record('editar rota', `modal de acesso: ${r.modalAcesso} · ${r.organizacao}`)} /></Td>
-                  <Td><input className="cell" value={r.tipoComunidade} onChange={e => updateRoute(r.id, { tipoComunidade: e.target.value })} onBlur={() => record('editar rota', `tipo de comunidade: ${r.tipoComunidade} · ${r.organizacao}`)} /></Td>
-                  <Td>
-                    <select className="cell" value={r.status ?? 'Operacional'} onChange={e => { updateRoute(r.id, { status: e.target.value as RotaItem['status'] }); record('editar rota', `status: ${e.target.value} · ${r.organizacao}`); }}>
-                      <option value="Operacional">Operacional</option>
-                      <option value="Atenção">Atenção</option>
-                      <option value="Crítico">Crítico</option>
-                    </select>
-                  </Td>
-                  <Td><input className="cell" value={r.notasLogisticas} onChange={e => updateRoute(r.id, { notasLogisticas: e.target.value })} onBlur={() => record('editar rota', `notas logísticas: ${r.organizacao}`)} /></Td>
-                  <Td>
-                    <button onClick={(ev) => { ev.stopPropagation(); if (confirm(`Excluir ${r.rota} — ${r.organizacao}?`)) { deleteRoute(r.id); record('excluir rota', `${r.rota} — ${r.organizacao}`); toast.success('Rota excluída'); } }} className="p-1.5 rounded hover:bg-red-50">
-                      <Trash2 size={13} className="text-red-500" />
-                    </button>
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <style>{`.cell{border:1px solid transparent;border-radius:6px;padding:4px 8px;font-size:12.5px;background:transparent;width:100%;color:var(--ink-1)}
-          .cell:focus{border-color:var(--primary);background:var(--surface-0);outline:none}
-          .cell:hover{background:var(--surface-0)}`}</style>
-      </div>
-    </div>
-  );
+function MapaCronogramaRotas({ visitas }: { visitas: VisitaRota[] }) {
+  const { routes } = useStore();
+  const [selecionado, setSelecionado] = useState<number | null>(null);
+  const normalizar = (nome: string) => chaveRotas(nome).replace(/[^a-z0-9]/g, '').replace('copasmig', 'coopasmig');
+  const pontos = visitas.map((v, i): RotaItem => {
+    const candidatos = routes.filter(r => normalizar(r.organizacao) === normalizar(v.organizacao));
+    const base = candidatos.length === 1 ? candidatos[0] : undefined;
+    return { id: i + 1, rota: v.rota, organizacao: v.organizacao, municipio: v.municipio, uf: v.uf,
+      diasAtuacao: Number(v.valores[10]) || 0, modalAcesso: v.valores[11] ?? '', tipoComunidade: v.valores[12] ?? '', notasLogisticas: v.valores[13] ?? '',
+      lat: base?.lat, lng: base?.lng, status: v.status === 'Realizada' ? 'Operacional' : 'Atenção' };
+  });
+  const semCoordenadas = pontos.filter(p => p.lat == null || p.lng == null);
+  return <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <p className="text-sm text-muted-foreground">Rotas da planilha atual com coordenadas já cadastradas. As linhas ligam instituições e não representam o trajeto rodoviário ou fluvial.</p>
+    {semCoordenadas.length > 0 && <p className="text-xs text-muted-foreground">Sem coordenadas conferidas: {semCoordenadas.map(p => p.organizacao).join(', ')}. As visitas continuam disponíveis no cronograma.</p>}
+    <RotasMap routes={pontos} selectedId={selecionado} onSelect={setSelecionado} />
+  </div>;
 }
 
 function Kpi({ label, value, color }: { label: string; value: number | string; color: string }) {
@@ -237,6 +125,7 @@ function Kpi({ label, value, color }: { label: string; value: number | string; c
 
 /* Leaflet map with route grouping — loaded only on the client */
 function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; selectedId: number | null; onSelect: (id: number) => void }) {
+  const esc = (v: string) => v.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const layerRef = useRef<any>(null);
@@ -310,17 +199,17 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
         }).addTo(layer);
         marker.bindPopup(`
           <div style="font-family:Inter,sans-serif;min-width:220px">
-            <div style="font-weight:700;color:${color};font-size:12px">${rotaName}</div>
-            <div style="font-weight:600;font-size:13px;margin-top:2px">${r.organizacao}</div>
-            <div style="font-size:11px;color:var(--ink-4);margin-top:2px">${r.municipio}/${r.uf}</div>
+            <div style="font-weight:700;color:${color};font-size:12px">${esc(rotaName)}</div>
+            <div style="font-weight:600;font-size:13px;margin-top:2px">${esc(r.organizacao)}</div>
+            <div style="font-size:11px;color:var(--ink-4);margin-top:2px">${esc(r.municipio)}/${esc(r.uf)}</div>
             <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
-              <span style="background:${tipoCor};color:var(--primary-foreground);padding:2px 6px;border-radius:4px;font-size:10px">${r.tipoComunidade}</span>
+              <span style="background:${tipoCor};color:var(--primary-foreground);padding:2px 6px;border-radius:4px;font-size:10px">${esc(r.tipoComunidade)}</span>
               <span style="background:${st};color:var(--primary-foreground);padding:2px 6px;border-radius:4px;font-size:10px">${r.status ?? 'Operacional'}</span>
             </div>
-            <div style="font-size:11px;margin-top:6px"><b>Modal:</b> ${r.modalAcesso}</div>
+            <div style="font-size:11px;margin-top:6px"><b>Modal:</b> ${esc(r.modalAcesso)}</div>
             <div style="font-size:11px"><b>Dias:</b> ${r.diasAtuacao}</div>
             <div style="font-size:11px"><b>Coord.:</b> ${r.lat!.toFixed(4)}, ${r.lng!.toFixed(4)}</div>
-            ${r.notasLogisticas ? `<div style="font-size:10.5px;color:var(--warning-strong-text);background:var(--warning-soft);padding:4px 6px;border-radius:4px;margin-top:6px">${r.notasLogisticas}</div>` : ''}
+            ${r.notasLogisticas ? `<div style="font-size:10.5px;color:var(--warning-strong-text);background:var(--warning-soft);padding:4px 6px;border-radius:4px;margin-top:6px">${esc(r.notasLogisticas)}</div>` : ''}
           </div>
         `);
         marker.on('click', () => onSelect(r.id));

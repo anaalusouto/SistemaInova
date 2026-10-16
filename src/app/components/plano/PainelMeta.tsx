@@ -11,7 +11,7 @@
  * Perfil de consulta (SEMAS) vê tudo e não recebe botão de escrita; quem de
  * fato impede a escrita é o servidor (RN-001).
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AlertTriangle, Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Risk } from '../../data/mockData';
@@ -20,6 +20,8 @@ import { useAuth } from '../../auth/authStore';
 import { divergenciaDaMeta, motivoParaNaoRemoverEtapa, prazoDaMeta, validarMeta } from '../../lib/planoTrabalho';
 import { Painel, Linha, Periodo, BotaoAcao, Ausente } from './PainelBase';
 import { Campo, Texto, Data, Erros, Acoes, ConfirmarExclusao } from './camposFormulario';
+import { ConclusaoNoDetalhe } from './ConclusaoNoDetalhe';
+import { resumirConclusao } from '../../lib/conclusaoPlano';
 
 const mensagem = (e: unknown) => (e instanceof Error ? e.message : 'Não foi possível salvar.');
 
@@ -125,7 +127,7 @@ function LinhaEtapa({
     <li className="flex items-center gap-1.5 group">
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-5)' }}>{codigo}</span>
       <button onClick={aoAbrir} className="flex-1 min-w-0 text-left hover:underline" style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>
-        <span className="truncate block">{etapa.name}</span>
+        <span className={`truncate block ${resumirConclusao(etapa.activities).concluido ? 'line-through' : ''}`}>{etapa.name}</span>
       </button>
       <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', whiteSpace: 'nowrap' }}>
         {etapa.activities.length} ativ.
@@ -145,11 +147,12 @@ function LinhaEtapa({
 }
 
 export function PainelMeta({
-  meta, riscos, codigo, codigos, aoFechar, aoAbrirEtapa,
+  meta, riscos, codigo, codigos, aoFechar, aoAbrirEtapa, lateral, bloqueado,
 }: {
   meta: Goal; riscos: Risk[]; codigo: string; codigos: Map<string, string>;
   aoFechar: () => void;
   aoAbrirEtapa: (etapa: Deliverable) => void;
+  lateral?: ReactNode; bloqueado?: boolean;
 }) {
   const { readOnly } = useAuth();
   const { createEtapa, deleteEtapa } = useStore();
@@ -200,11 +203,12 @@ export function PainelMeta({
   ) : undefined;
 
   return (
-    <Painel titulo={editando ? 'Editar meta' : meta.name} caminho={`Meta ${codigo}`} aoFechar={aoFechar} acoes={acoes}>
+    <Painel titulo={editando ? 'Editar meta' : meta.name} caminho={`Meta ${codigo}`} aoFechar={aoFechar} acoes={acoes} lateral={!editando ? lateral : undefined} bloqueado={bloqueado}>
       {editando ? (
         <FormularioMeta meta={meta} aoFechar={() => setEditando(false)} />
       ) : (
         <>
+          {!lateral && <ConclusaoNoDetalhe key={meta.id} tipo="meta" id={meta.id} nome={meta.name} atividades={meta.deliverables.flatMap(e => e.activities)} />}
           {avisos.length > 0 && (
             <div
               className="flex items-start gap-2 rounded-lg border px-3 py-2 mb-3"

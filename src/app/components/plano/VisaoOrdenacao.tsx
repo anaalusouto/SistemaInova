@@ -4,8 +4,9 @@ import type { Goal } from '../../data/mockData';
 import { useStore } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { moverParaPosicao, type ItemOrdemPlano, type NivelPlano } from '../../lib/reordenacaoPlano';
+import type { SelecaoPlano } from './NavegacaoPlano';
 
-export function VisaoOrdenacao({ projetoId, metas, codigos }: { projetoId: number; metas: Goal[]; codigos: Map<string, string> }) {
+export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projetoId: number; metas: Goal[]; codigos: Map<string, string>; aoAbrir?: (alvo: SelecaoPlano) => void }) {
   const { reorderPlano } = useStore();
   const { readOnly } = useAuth();
   const [salvando, setSalvando] = useState(false);
@@ -25,7 +26,8 @@ export function VisaoOrdenacao({ projetoId, metas, codigos }: { projetoId: numbe
     const prefixo = codigo.split('.').slice(0, -1);
     const rotulo = { meta: 'Meta', etapa: 'Etapa', atividade: 'Atividade' }[nivel];
     return <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2">
-      <span className="flex-1 min-w-0 text-sm break-words"><strong>{rotulo} {codigo}</strong> · {item.name}</span>
+      {aoAbrir ? <button type="button" disabled={salvando} className="flex-1 min-w-0 text-left text-sm break-words hover:underline" onClick={() => aoAbrir({ tipo: nivel, id: item.id })}><strong>{rotulo} {codigo}</strong> · {item.name}</button>
+        : <span className="flex-1 min-w-0 text-sm break-words"><strong>{rotulo} {codigo}</strong> · {item.name}</span>}
       {!readOnly && <select aria-label={`Posição de ${rotulo.toLowerCase()} ${codigo}: ${item.name}`} value={irmaos.findIndex(i => i.id === item.id) + 1}
         disabled={salvando || irmaos.length < 2} className="border rounded-lg p-2 text-xs disabled:opacity-50"
         style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}

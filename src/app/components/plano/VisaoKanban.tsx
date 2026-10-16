@@ -92,7 +92,7 @@ function Cartao({
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-5)', marginRight: 5 }}>
               {codigo}
             </span>
-            {atividade.name}
+            <span className={atividade.status === 'Concluído' ? 'line-through' : undefined}>{atividade.name}</span>
           </button>
         </div>
       </div>

@@ -145,7 +145,7 @@ export function AbaRegistrosContato({
                   <div className="mt-3 flex items-center gap-3 flex-wrap" style={{ fontSize: '0.72rem' }}>
                     {r.anexo && (
                       <button
-                        onClick={() => abrirAnexo(r.anexo!.id)}
+                        onClick={() => abrirAnexo(r.anexo!.id, r.anexo!.fileName, r.anexo!.mimeType ?? undefined)}
                         className="inline-flex items-center gap-1 hover:underline"
                         style={{ color: 'var(--brand-text)' }}
                         title={r.anexo.fileName}

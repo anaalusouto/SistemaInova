@@ -6,7 +6,7 @@
  * etapa vinculada (a migration 0011 só vinculou o que casava sem ambiguidade)
  * pode manter o vínculo atual ou ganhar a etapa que a pessoa escolher.
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -18,7 +18,7 @@ import { ConfirmarExclusao } from './camposFormulario';
 import { useStore } from '../../store';
 
 export function PainelRisco({
-  risco, etapa, meta, codigoEtapa, projetoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade,
+  risco, etapa, meta, codigoEtapa, projetoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade, lateral, bloqueado,
 }: {
   risco: Risk; etapa?: Deliverable; meta?: Goal; codigoEtapa?: string; projetoId: number;
   /** Metas do projeto, para escolher (ou trocar) a etapa ao editar. */
@@ -27,6 +27,7 @@ export function PainelRisco({
   acoesDeResposta: Activity[];
   aoFechar: () => void;
   aoAbrirAtividade: (a: Activity) => void;
+  lateral?: ReactNode; bloqueado?: boolean;
 }) {
   const { readOnly } = useAuth();
   const { deleteRisco } = useStore();
@@ -58,6 +59,8 @@ export function PainelRisco({
       caminho={caminho}
       aoFechar={aoFechar}
       acoes={acoes}
+      lateral={!editando ? lateral : undefined}
+      bloqueado={bloqueado}
       largo
     >
       {editando ? (
