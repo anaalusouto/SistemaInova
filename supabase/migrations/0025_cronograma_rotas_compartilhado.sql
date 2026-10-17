@@ -1,12 +1,14 @@
 -- Uma referência compartilhada; cada importação/correção cria snapshot imutável.
-CREATE TABLE public.cronograma_rotas (
+-- Aceita reexecução no SQL Editor, inclusive se a estrutura já foi aplicada.
+-- Não reinicializa a referência nem altera snapshots existentes.
+CREATE TABLE IF NOT EXISTS public.cronograma_rotas (
   id text PRIMARY KEY CHECK (id = 'principal'),
   versao bigint NOT NULL CHECK (versao > 0),
   dados jsonb NOT NULL CHECK (jsonb_typeof(dados) = 'object'),
   autor text NOT NULL,
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
-CREATE TABLE public.cronograma_rotas_historico (
+CREATE TABLE IF NOT EXISTS public.cronograma_rotas_historico (
   versao bigint PRIMARY KEY,
   dados jsonb NOT NULL,
   autor text NOT NULL,
@@ -19,7 +21,7 @@ REVOKE ALL ON public.cronograma_rotas, public.cronograma_rotas_historico FROM PU
 GRANT SELECT, INSERT, UPDATE ON public.cronograma_rotas TO service_role;
 GRANT SELECT, INSERT ON public.cronograma_rotas_historico TO service_role;
 
-CREATE FUNCTION public.salvar_cronograma_rotas(p_versao bigint, p_dados jsonb, p_autor text, p_motivo text)
+CREATE OR REPLACE FUNCTION public.salvar_cronograma_rotas(p_versao bigint, p_dados jsonb, p_autor text, p_motivo text)
 RETURNS bigint LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp AS $$
 DECLARE atual bigint; nova bigint;
 BEGIN
