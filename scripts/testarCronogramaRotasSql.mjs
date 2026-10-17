@@ -7,7 +7,7 @@ const { PGlite } = require(require.resolve('@electric-sql/pglite', { paths: [pat
 const db = new PGlite();
 try {
   await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;');
-  const migracao = await readFile('supabase/migrations/0025_cronograma_rotas_compartilhado.sql', 'utf8');
+  const migracao = await readFile('supabase/migrations/20261016175603_cronograma_rotas_compartilhado.sql', 'utf8');
   await db.exec(migracao);
   await db.exec(migracao); // Reexecução ainda sem dados.
   const dados = { schema: 1, arquivo: 'Teste.xlsx', abas: [] };

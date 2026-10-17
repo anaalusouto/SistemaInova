@@ -1,4 +1,5 @@
 -- Uma referência compartilhada; cada importação/correção cria snapshot imutável.
+-- Versão alinhada ao histórico remoto já aplicado: 20261016175603.
 -- Aceita reexecução no SQL Editor, inclusive se a estrutura já foi aplicada.
 -- Não reinicializa a referência nem altera snapshots existentes.
 CREATE TABLE IF NOT EXISTS public.cronograma_rotas (
