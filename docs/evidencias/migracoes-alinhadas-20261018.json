@@ -1,0 +1,146 @@
+{
+  "projeto": "tgkfysmwllbocwxlpyai",
+  "verificadoEmUTC": "2026-10-18T21:05:57.464Z",
+  "fonte": "Supabase MCP e PostgreSQL/PGlite isolado",
+  "resultado": "Historico remoto e arquivos locais alinhados",
+  "alteracoesRemotas": [
+    "0024: normalização do nome sem extensão .sql",
+    "20261016175603: identificador alinhado para 0025",
+    "9998: marcador removido após preservação integral; reparo manual arquivado",
+    "0026: registrado como aplicado após confirmar igualdade do corpo da função e permissões"
+  ],
+  "escopoRemoto": "Somente DML no histórico supabase_migrations.schema_migrations, em transação. Nenhuma tabela ou dado da aplicação alterado.",
+  "historico": [
+    {
+      "version": "0000",
+      "name": "drop_legacy_schema"
+    },
+    {
+      "version": "0001",
+      "name": "init_schema"
+    },
+    {
+      "version": "0002",
+      "name": "realtime_broadcast"
+    },
+    {
+      "version": "0003",
+      "name": "usuarios"
+    },
+    {
+      "version": "0004",
+      "name": "usuarios_ultimo_acesso"
+    },
+    {
+      "version": "0005",
+      "name": "mensagens"
+    },
+    {
+      "version": "0006",
+      "name": "usuarios_avatar"
+    },
+    {
+      "version": "0007",
+      "name": "atribuicoes"
+    },
+    {
+      "version": "0008",
+      "name": "tarefas_gestao"
+    },
+    {
+      "version": "0009",
+      "name": "diagnostico_v2"
+    },
+    {
+      "version": "0010",
+      "name": "metas_ordem_e_exclusao"
+    },
+    {
+      "version": "0011",
+      "name": "plano_trabalho"
+    },
+    {
+      "version": "0012",
+      "name": "orcamento"
+    },
+    {
+      "version": "0013",
+      "name": "organizacoes"
+    },
+    {
+      "version": "0014",
+      "name": "riscos_titulo_e_notas"
+    },
+    {
+      "version": "0015",
+      "name": "metas_prazo_responsavel"
+    },
+    {
+      "version": "0016",
+      "name": "orcamento_notas"
+    },
+    {
+      "version": "0017",
+      "name": "organizacao_varias_notas"
+    },
+    {
+      "version": "0018",
+      "name": "organizacao_projeto_unico"
+    },
+    {
+      "version": "0019",
+      "name": "vinculo_projeto_imutavel"
+    },
+    {
+      "version": "0020",
+      "name": "orcamento_meta"
+    },
+    {
+      "version": "0021",
+      "name": "reordenacao_plano"
+    },
+    {
+      "version": "0022",
+      "name": "orcamento_vigente"
+    },
+    {
+      "version": "0023",
+      "name": "autoria_tarefas"
+    },
+    {
+      "version": "0024",
+      "name": "encaminhamento_responsavel_cadastrado"
+    },
+    {
+      "version": "0025",
+      "name": "cronograma_rotas_compartilhado"
+    },
+    {
+      "version": "0026",
+      "name": "orcamento_edicao_duplicidades_legadas"
+    }
+  ],
+  "estrutura": {
+    "tabelas": 51,
+    "colunas": 571,
+    "comparacao": "Nomes de tabelas/colunas, tipos e NOT NULL idênticos entre instalação nova e banco operacional",
+    "semRls": 0
+  },
+  "validacoes": [
+    "27 migrações executadas em sequência em PostgreSQL isolado",
+    "Criação de diagnóstico e produto com campos reais da aplicação",
+    "Vínculo de responsável, homônimos, referência inválida, remoção e preservação do histórico",
+    "Orçamento: duplicidades legadas, novas duplicações, notas, concorrência, permissões e rollback",
+    "Cronograma: instalação, reexecução com dados, snapshots, concorrência, permissões e rollback"
+  ],
+  "alteracoesLocais": [
+    "Protótipo de diagnóstico removido do bootstrap 0001; criação canônica feita pela 0009",
+    "0024: extensão duplicada e texto solto vo corrigidos",
+    "Caminho do teste de responsável atualizado"
+  ],
+  "limites": [
+    "Sem teste da interface autenticada nesta rodada",
+    "Comparação de colunas não equivale a diff integral de índices, triggers e funções",
+    "Advisors de segurança consultados: avisos de search_path em 4 funções e EXECUTE em 6 funções de trigger SECURITY DEFINER permanecem fora do reparo de migrações; RLS sem políticas é o padrão desta aplicação com acesso pelo servidor"
+  ]
+}

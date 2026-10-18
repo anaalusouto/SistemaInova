@@ -9,7 +9,7 @@ const db = new PGlite();
 const uid = n => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
 try {
   await db.exec('CREATE TABLE usuarios(id uuid PRIMARY KEY, nome_exibicao text); CREATE TABLE encaminhamentos(id uuid PRIMARY KEY, responsavel text);');
-  const sql = await readFile('supabase/migrations/0024_encaminhamento_responsavel_cadastrado.sql.sql', 'utf8');
+  const sql = await readFile('supabase/migrations/0024_encaminhamento_responsavel_cadastrado.sql', 'utf8');
   await db.exec(sql);
   await db.exec(sql); // Seguro ao reexecutar.
   await db.query('INSERT INTO usuarios VALUES ($1,$2),($3,$4)', [uid(1), 'Maria', uid(2), 'Maria']);

@@ -427,23 +427,10 @@ CREATE TABLE IF NOT EXISTS public.cronograma_tracking (
   PRIMARY KEY (atividade_id, projeto_id)
 );
 
--- Onda 4: Diagnóstico
-CREATE TABLE IF NOT EXISTS public.diagnosticos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  projeto_id BIGINT REFERENCES public.projetos(id) ON DELETE SET NULL,
-  comunidade_id UUID REFERENCES public.comunidades(id) ON DELETE SET NULL,
-  status TEXT, rodada INTEGER,
-  respostas JSONB NOT NULL DEFAULT '{}'::jsonb,
-  maturidade JSONB NOT NULL DEFAULT '{}'::jsonb,
-  criado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  atualizado_em TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-CREATE TABLE IF NOT EXISTS public.diagnostico_produtos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  diagnostico_id UUID NOT NULL REFERENCES public.diagnosticos(id) ON DELETE CASCADE,
-  nome TEXT NOT NULL,
-  detalhes JSONB
-);
+-- Onda 4: Diagnóstico é criado pela 0009_diagnostico_v2.sql.
+-- Não criar o protótipo legado aqui: o IF NOT EXISTS da 0009 preservaria
+-- aquelas tabelas incompletas em instalações novas. Ajuste só do bootstrap;
+-- esta migration já aplicada não deve ser reexecutada no banco operacional.
 
 -- Onda 5: Auditoria
 CREATE TABLE IF NOT EXISTS public.log_auditoria (
@@ -479,7 +466,6 @@ CREATE INDEX IF NOT EXISTS idx_eventos_rota ON public.eventos_calendario(rota_id
 CREATE INDEX IF NOT EXISTS idx_eventos_comunidade ON public.eventos_calendario(comunidade_id);
 CREATE INDEX IF NOT EXISTS idx_cronograma_entregas_bloco ON public.cronograma_entregas(bloco_id);
 CREATE INDEX IF NOT EXISTS idx_cronograma_atividades_entrega ON public.cronograma_atividades(entrega_id);
-CREATE INDEX IF NOT EXISTS idx_diagnosticos_projeto ON public.diagnosticos(projeto_id);
 CREATE INDEX IF NOT EXISTS idx_log_auditoria_projeto ON public.log_auditoria(projeto_id);
 
 -- ==============================================================================

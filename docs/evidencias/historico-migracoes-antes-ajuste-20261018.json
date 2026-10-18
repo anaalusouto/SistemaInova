@@ -1,0 +1,43 @@
+{
+  "projeto": "tgkfysmwllbocwxlpyai",
+  "motivo": "Preservação do histórico antes de alinhar nomes sequenciais e arquivar reparo manual 9998",
+  "registros": [
+    {
+      "version": "0024",
+      "name": "encaminhamento_responsavel_cadastrado.sql",
+      "statements": [
+        "-- Vínculo explícito com a conta cadastrada; o nome legado permanece como histórico.\n-- Não associa registros antigos automaticamente: há nomes iguais e abreviações.\nALTER TABLE public.encaminhamentos\n  ADD COLUMN IF NOT EXISTS responsavel_usuario_id uuid\n  REFERENCES public.usuarios(id) ON DELETE SET NULL",
+        "CREATE INDEX IF NOT EXISTS idx_encaminhamentos_responsavel_usuario\n  ON public.encaminhamentos(responsavel_usuario_id)"
+      ]
+    },
+    {
+      "version": "20261016175603",
+      "name": "cronograma_rotas_compartilhado",
+      "statements": [
+        "-- Uma referência compartilhada; cada importação/correção cria snapshot imutável.\nCREATE TABLE public.cronograma_rotas (\n  id text PRIMARY KEY CHECK (id = 'principal'),\n  versao bigint NOT NULL CHECK (versao > 0),\n  dados jsonb NOT NULL CHECK (jsonb_typeof(dados) = 'object'),\n  autor text NOT NULL,\n  atualizado_em timestamptz NOT NULL DEFAULT now()\n);\nCREATE TABLE public.cronograma_rotas_historico (\n  versao bigint PRIMARY KEY,\n  dados jsonb NOT NULL,\n  autor text NOT NULL,\n  motivo text NOT NULL,\n  criado_em timestamptz NOT NULL DEFAULT now()\n);\nALTER TABLE public.cronograma_rotas ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.cronograma_rotas_historico ENABLE ROW LEVEL SECURITY;\nREVOKE ALL ON public.cronograma_rotas, public.cronograma_rotas_historico FROM PUBLIC, anon, authenticated;\nGRANT SELECT, INSERT, UPDATE ON public.cronograma_rotas TO service_role;\nGRANT SELECT, INSERT ON public.cronograma_rotas_historico TO service_role;\n\nCREATE FUNCTION public.salvar_cronograma_rotas(p_versao bigint, p_dados jsonb, p_autor text, p_motivo text)\nRETURNS bigint LANGUAGE plpgsql SECURITY INVOKER SET search_path = public, pg_temp AS $$\nDECLARE atual bigint; nova bigint;\nBEGIN\n  IF p_versao IS NULL OR p_versao < 0 OR p_dados IS NULL OR\n     jsonb_typeof(p_dados) IS DISTINCT FROM 'object' OR\n     p_dados->>'schema' IS DISTINCT FROM '1' OR\n     jsonb_typeof(p_dados->'abas') IS DISTINCT FROM 'array' OR\n     octet_length(p_dados::text) > 3000000 OR\n     nullif(trim(p_autor),'') IS NULL OR nullif(trim(p_motivo),'') IS NULL THEN\n    RAISE EXCEPTION 'Dados do cronograma inválidos.';\n  END IF;\n  -- Serializa inclusive a primeira importação, quando a linha ainda não existe.\n  PERFORM pg_advisory_xact_lock(hashtext('inova:cronograma_rotas:principal'));\n  SELECT versao INTO atual FROM public.cronograma_rotas WHERE id='principal' FOR UPDATE;\n  IF coalesce(atual,0) <> p_versao THEN\n    RAISE EXCEPTION 'O cronograma foi alterado por outra pessoa. Recarregue antes de salvar.';\n  END IF;\n  nova := p_versao + 1;\n  INSERT INTO public.cronograma_rotas(id,versao,dados,autor) VALUES('principal',nova,p_dados,p_autor)\n    ON CONFLICT(id) DO UPDATE SET versao=EXCLUDED.versao,dados=EXCLUDED.dados,autor=EXCLUDED.autor,atualizado_em=clock_timestamp();\n  INSERT INTO public.cronograma_rotas_historico(versao,dados,autor,motivo) VALUES(nova,p_dados,p_autor,p_motivo);\n  RETURN nova;\nEND $$;\nREVOKE ALL ON FUNCTION public.salvar_cronograma_rotas(bigint,jsonb,text,text) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.salvar_cronograma_rotas(bigint,jsonb,text,text) TO service_role;\n\r\n"
+      ]
+    },
+    {
+      "version": "9998",
+      "name": "fix_orphaned_child_tables",
+      "statements": [
+        "-- Corrige TODAS as tabelas \"filhas\" que sobreviveram ao 0000 rodado 2x sem\n-- terem sido recriadas (perderam a foreign key com projetos/metas/comunidades\n-- quando essas tabelas-pai foram derrubadas e recriadas). Todas estão vazias\n-- (nenhuma tem dado real de uso ainda) — sem risco. Depois disso, rode\n-- 0001_init_schema.sql de novo pra recriar todas com a FK correta.\nDROP TABLE IF EXISTS public.projeto_equipe CASCADE",
+        "DROP TABLE IF EXISTS public.mudancas CASCADE",
+        "DROP TABLE IF EXISTS public.evidencias CASCADE",
+        "DROP TABLE IF EXISTS public.aportes CASCADE",
+        "DROP TABLE IF EXISTS public.contatos CASCADE",
+        "DROP TABLE IF EXISTS public.logs_comunicacao CASCADE",
+        "DROP TABLE IF EXISTS public.log_alteracoes_meta CASCADE",
+        "DROP TABLE IF EXISTS public.aprovacoes_pendentes CASCADE",
+        "DROP TABLE IF EXISTS public.comunidade_pessoas CASCADE",
+        "DROP TABLE IF EXISTS public.comunidade_produtos CASCADE",
+        "DROP TABLE IF EXISTS public.comunidade_fornecedores CASCADE",
+        "DROP TABLE IF EXISTS public.comunidade_capacitacoes CASCADE",
+        "DROP TABLE IF EXISTS public.eventos_calendario CASCADE",
+        "DROP TABLE IF EXISTS public.cronograma_atividade_projetos CASCADE",
+        "DROP TABLE IF EXISTS public.cronograma_tracking CASCADE",
+        "DROP TABLE IF EXISTS public.diagnosticos CASCADE"
+      ]
+    }
+  ]
+}

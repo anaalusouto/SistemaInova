@@ -14,5 +14,5 @@
     "Publicar frontend/servidor atualizado e testar importação/correção com sessão no navegador.",
     "Conferir Rota 11: 01/12/2026 no cronograma e início 02/12/2026 em Instituições. Nenhuma data foi escolhida por suposição."
   ],
-  "migracao": "20261016175603_cronograma_rotas_compartilhado.sql — versão confirmada no histórico remoto; nome local alinhado em 17/10/2026."
+  "migracao": "0025_cronograma_rotas_compartilhado.sql — padrão sequencial definido pelo usuário; substitui o identificador 20261016175603 no histórico, sem reaplicar SQL."
 }
