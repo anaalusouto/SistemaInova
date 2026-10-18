@@ -34,6 +34,8 @@ import {
 } from './orcamento.server';
 import type { ItemOrcamento, NotaOrcamento, NotaInput } from './lib/orcamento';
 import type { ConclusaoPlanoInput } from './lib/conclusaoPlano';
+import { reclassificarRegistro } from './reclassificacaoPlano.server';
+import type { ReclassificarPlanoInput } from './lib/reclassificacaoPlano';
 
 const STORAGE_KEY = 'pp-portfolio-v13';
 
@@ -179,6 +181,7 @@ type Ctx = {
   deleteParecer: (parecerId: string) => Promise<void>;
   setResponsavel: (atividadeId: string, responsavel: string) => Promise<void>;
   reorderPlano: (input: import('./lib/reordenacaoPlano').ReordenarPlanoInput) => Promise<void>;
+  reclassificarPlano: (input: ReclassificarPlanoInput) => Promise<string>;
 
   // Orçamento (RF-030, RF-039, RF-040, RF-041)
   saveExecucao: (input: ExecucaoInput) => Promise<void>;
@@ -404,6 +407,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
       try { await run(() => reordenarPlano({ data: input })); }
       catch (e) { await invalidate(); throw e; }
     },
+    reclassificarPlano: input => run(() => reclassificarRegistro({ data: input })),
     saveExecucao: input => run(() => registrarExecucao({ data: input })),
     excluirItemOrcamento: input => run(() => excluirItemDoPlano({ data: input })),
     reverterItemOrcamento: (itemId, motivo) => run(() => reverterExclusao({ data: { itemId, motivo } })),

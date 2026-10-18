@@ -63,6 +63,8 @@ export interface Activity {
 
   tasks: Task[];
   attachment?: Attachment | null;
+  /** Todos os arquivos preservados ao redistribuir vínculos do plano. */
+  attachments?: Attachment[];
 
   /** Colunas TEXT legadas do schema de 3 níveis. Mantidas até que a leitura
    *  nova esteja validada em produção (ver migration 0011); não usar em código

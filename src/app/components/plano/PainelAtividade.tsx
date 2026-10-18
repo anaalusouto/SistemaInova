@@ -17,7 +17,7 @@ import { estaAtrasada, NAO_INFORMADO } from '../../lib/planoTrabalho';
 import { Painel, Linha, Periodo, Ausente, BotaoAcao } from './PainelBase';
 import { ConfirmarExclusao } from './camposFormulario';
 import { FormularioAtividade } from './FormularioAtividade';
-import { CampoAnexo } from './CampoAnexo';
+import { CampoAnexo, abrirAnexo } from './CampoAnexo';
 import { ConclusaoNoDetalhe } from './ConclusaoNoDetalhe';
 import type { ItemOrcamento } from '../../lib/orcamento';
 
@@ -242,6 +242,10 @@ export function PainelAtividade({
             </Linha>
 
             <Linha rotulo="Anexo">
+              {(atividade.attachments ?? []).filter(a => a.id !== atividade.attachment?.id).map(a => <button
+                key={a.id} type="button" className="block text-left underline mb-2" onClick={() => void abrirAnexo(a.id, a.fileName, a.mimeType ?? undefined)}>
+                {a.fileName}
+              </button>)}
               {/* RF-026: anexar, abrir, substituir e remover no painel. */}
               <CampoAnexo
                 projetoId={projetoId}

@@ -109,7 +109,8 @@ test('detalhe da atividade recebe lateral e mantém observações, encaminhament
   const meta = fixture(); const etapa = meta.deliverables[0];
   const atividade = { ...etapa.activities[0], progress: 0, budgetLink: 'Sim', observations: 'Observação importante',
     nextStep: 'Encaminhamento específico', nextStepOwner: 'Equipe', tasks: [{ id: 't1', title: 'Subtarefa ligada' }],
-    attachment: { fileName: 'Anexo ligado.pdf' } };
+    attachment: { id: 'arquivo-principal', fileName: 'Anexo ligado.pdf' },
+    attachments: [{ id: 'arquivo-principal', fileName: 'Anexo ligado.pdf' }, { id: 'arquivo-preservado', fileName: 'Anexo preservado na conversão.pdf' }] };
   const html = renderToStaticMarkup(React.createElement(PainelAtividade, {
     atividade, etapa, meta, projetoId: 1, codigo: '1.1.1', aoFechar() {}, aoAbrirRisco() {},
     lateral: React.createElement('nav', null, 'Árvore da meta'),
@@ -118,4 +119,5 @@ test('detalhe da atividade recebe lateral e mantém observações, encaminhament
   }));
   for (const texto of ['Árvore da meta', 'Observação importante', 'Encaminhamento específico', 'Subtarefa ligada', 'Anexo ligado.pdf', 'Risco de origem', 'Outro risco da etapa', 'Item vigente da meta', 'Itens compartilhados']) assert.ok(html.includes(texto), texto);
   assert.doesNotMatch(html, /Marcar como concluída/, 'Conclusão fica na lateral, sem controle duplicado no conteúdo');
+  assert.ok(html.includes('Anexo preservado na conversão.pdf'), 'Anexo recebido de outro registro permanece acessível');
 });

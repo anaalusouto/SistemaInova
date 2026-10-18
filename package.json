@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "db:check": "node scripts/verificarMigracoes.mjs",
     "db:test": "node scripts/testarMigracoesSql.mjs",
+    "db:test:reclassificacao": "node scripts/testarReclassificacaoSql.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

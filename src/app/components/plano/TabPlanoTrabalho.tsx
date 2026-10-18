@@ -42,6 +42,7 @@ import { CAMPOS_RELATORIO_PLANO, ordenarPlano, registrosDoPlano, type OrdemCampo
 import { VisaoCompleta } from './VisaoCompleta';
 import { VisaoOrdenacao } from './VisaoOrdenacao';
 import { NavegacaoPlano, type SelecaoPlano } from './NavegacaoPlano';
+import { ReclassificarRegistro } from './ReclassificarRegistro';
 
 type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos' | 'completa' | 'ordenar';
 
@@ -181,8 +182,15 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
     setPainel(alvo.tipo === 'meta' ? { tipo: 'meta', metaId: alvo.id }
       : alvo.tipo === 'etapa' ? { tipo: 'etapa', etapaId: alvo.id } : { tipo: 'atividade', atividadeId: alvo.id });
   };
-  const lateralDoPlano = (meta: Goal, selecionado: SelecaoPlano) => <NavegacaoPlano meta={meta} selecionado={selecionado}
-    codigos={codigos} aoAbrir={abrirRegistro} aoOcupar={setConclusaoPendente} />;
+  const lateralDoPlano = (meta: Goal, selecionado: SelecaoPlano) => <fieldset disabled={conclusaoPendente} className="contents">
+    {painel?.tipo !== 'risco' && <ReclassificarRegistro key={`${selecionado.tipo}:${selecionado.id}`} tipo={selecionado.tipo} id={selecionado.id}
+      aoOcupar={setConclusaoPendente} aoConverter={(tipo, id) => {
+        // A store já recarregou o projeto antes de abrir o registro convertido.
+        mudarPopup(`${tipo}:${id}`);
+      }} />}
+    <NavegacaoPlano meta={meta} selecionado={selecionado}
+      codigos={codigos} aoAbrir={abrirRegistro} aoOcupar={setConclusaoPendente} />
+  </fieldset>;
 
   // RN-009: mover o cartão atualiza status E progresso de forma consistente —
   // a normalização mora no servidor, então o quadro não pode produzir a

@@ -63,8 +63,8 @@ function mapAnexo(x: any): Attachment {
   };
 }
 function mapAtividade(a: any): Activity {
-  // O anexo vem como lista pelo join, mas a atividade exibe um arquivo por vez
-  // (RF-026) — o mais recente é o que vale.
+  // O arquivo principal mantém compatibilidade com Tabela/Gantt. O detalhe
+  // também recebe os demais anexos preservados pela redistribuição do plano.
   const anexos = (a.projeto_anexos ?? []) as any[];
   const anexo = anexos.length ? mapAnexo(anexos[anexos.length - 1]) : null;
   return {
@@ -80,6 +80,7 @@ function mapAtividade(a: any): Activity {
     riskOriginId: a.risco_origem_id ?? undefined,
     tasks: ((a.tarefas ?? []) as any[]).map(mapTarefa).sort((x, y) => x.order - y.order || x.id.localeCompare(y.id)),
     attachment: anexo,
+    attachments: anexos.map(mapAnexo),
     // Legado (ver mockData.ts): mantido só para as telas ainda não migradas.
     plannedDate: a.data_planejada ?? '', startDate: a.data_inicio ?? null, conclusionDate: a.data_conclusao ?? null,
   };
