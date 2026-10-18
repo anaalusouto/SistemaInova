@@ -264,6 +264,9 @@ export const aplicarImportacao = createServerFn({ method: 'POST' })
           acaoAusentes: 'substituir', vinculosMetas: vinculos },
       },
     });
-    if (error) throw new Error(`Não foi possível atualizar o orçamento. Verifique a migração 0022. ${error.message}`);
+    if (error) {
+      const esquemaAusente = ['PGRST202', 'PGRST204', 'PGRST205', '42883', '42703', '42P01'].includes(error.code ?? '');
+      throw new Error(`Não foi possível atualizar o orçamento. ${esquemaAusente ? 'A estrutura do banco precisa ser atualizada com as migrações do orçamento. ' : ''}${error.message}`);
+    }
     return resultado as { incluidos: number; alterados: number; ausentes: number; versao: number };
   });

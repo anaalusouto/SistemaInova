@@ -5,7 +5,7 @@ const path = require('node:path');
 const ts = require('typescript');
 const XLSX = require('xlsx');
 
-function ambiente({ metas = [], itens = [], consulta = false, semMigracao = false } = {}) {
+function ambiente({ metas = [], itens = [], consulta = false, semMigracao = false, falhaRpc = null } = {}) {
   const tabelas = { metas: structuredClone(metas), orcamento_itens: structuredClone(itens).map(i => ({ vigente: true, ...i })), orcamento_importacoes: [], orcamento_item_historico: [] };
   const escritas = [];
   const cache = new Map(); let sequencia = 0;
@@ -32,6 +32,7 @@ function ambiente({ metas = [], itens = [], consulta = false, semMigracao = fals
     }; return builder;
   }, async rpc(nome, args) {
     assert.equal(nome, 'salvar_versao_orcamento');
+    if (falhaRpc) return { data:null, error:falhaRpc };
     // O SQL real é exercitado em scripts/testarOrcamentoSql.mjs. Aqui
     // verificamos parsing XLSX, resolução de metas e payload da transação.
     escritas.push({ rpc: nome, payload: structuredClone(args) });
@@ -128,6 +129,38 @@ test('edição manual altera o item existente e preserva execução; inclusão r
   await assert.rejects(api.salvarPlanejado({data:{projetoId:7,itemId:null,item,anterior:null}}),/Já existe/);
   await api.salvarPlanejado({data:{projetoId:7,itemId:null,item:{...item,descricao:'Material adicional'},anterior:null}});
   assert.equal(a.tabelas.orcamento_itens.filter(i=>i.vigente).length,2);
+});
+
+test('edição mantém itens legados repetidos por ID e recusa criar novas repetições mesmo sem chave armazenada', async () => {
+  const input={metaId:'meta-a',grupo:'Grupo',categoria:'Consumo',descricao:'Item repetido',qtd:1,unidade:'un',qtdUnidades:1,valorUnitario:10,valorProposto:10};
+  const row = { projeto_id:7,meta_id:'meta-a',grupo:'Grupo',categoria:'Consumo',item:'Item repetido',qtd:1,unidade:'un',qtd_unidades:1,valor_unitario:10,valor_proposto:10,valor_executado:3,chave_origem:null };
+  const a=ambiente({itens:[{...row,id:'a'},{...row,id:'b'}]});
+  const salvar=a.carregar('src/app/orcamentoRevisao.server').salvarPlanejado;
+  await salvar({data:{projetoId:7,itemId:'a',item:{...input,valorProposto:25},anterior:input}});
+  assert.equal(a.tabelas.orcamento_itens.find(i=>i.id==='a').valor_proposto,25);
+  assert.equal(a.tabelas.orcamento_itens.find(i=>i.id==='b').valor_proposto,10);
+  assert.equal(a.tabelas.orcamento_itens.find(i=>i.id==='a').valor_executado,3);
+  await salvar({data:{projetoId:7,itemId:null,item:{...input,descricao:'Outro item'},anterior:null}});
+  await assert.rejects(salvar({data:{projetoId:7,itemId:null,item:input,anterior:null}}),/Já existe/);
+  const outro=a.tabelas.orcamento_itens.find(i=>i.item==='Outro item');
+  await assert.rejects(salvar({data:{projetoId:7,itemId:outro.id,item:input,anterior:{...input,descricao:'Outro item'}}}),/Já existe/);
+});
+
+test('erro de duplicidade não orienta reinstalar migração; falta de estrutura recebe orientação específica', async () => {
+  for (const code of ['P0001','PGRST202']) {
+    const a = ambiente({metas:[{id:'meta-a',projeto_id:7,nome:'Meta 1',ordem:1}],falhaRpc:{code,message:code==='P0001'?'Há itens repetidos.':'Função ausente.'}});
+    const input={metaId:'meta-a',grupo:'Grupo',categoria:'Consumo',descricao:'Item',qtd:1,unidade:'un',qtdUnidades:1,valorUnitario:10,valorProposto:10};
+    for (const salvar of [
+      () => a.carregar('src/app/orcamentoRevisao.server').salvarPlanejado({data:{projetoId:7,itemId:null,item:input,anterior:null}}),
+      () => importar(a,arquivo([linha('Meta 1','Item')])),
+    ]) {
+      await assert.rejects(salvar(), e => {
+        assert.doesNotMatch(e.message,/0022/);
+        assert.equal(e.message.includes('estrutura do banco'),code==='PGRST202');
+        return true;
+      });
+    }
+  }
 });
 
 test('edição manual recusa números inválidos, IDs fora do projeto e perfil de consulta antes de gravar', async () => {

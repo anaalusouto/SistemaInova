@@ -67,5 +67,37 @@ try {
   for (const papel of ['anon','authenticated','service_role']) {
     assert.equal((await db.query("SELECT has_function_privilege($1,'public.salvar_versao_orcamento(bigint,jsonb,jsonb,text,jsonb)','EXECUTE') AS p",[papel])).rows[0].p,papel==='service_role');
   }
-  console.log('SQL aprovado: substituição, reimportação, edição, notas/anexos preservados, concorrência, isolamento, rollback e permissões.');
+  await db.exec('DROP TRIGGER recusar_historico ON orcamento_item_historico');
+  await db.query(`INSERT INTO orcamento_itens(id, projeto_id, meta_id, grupo, categoria, item, chave_origem, valor_proposto, valor_executado)
+    VALUES($1,1,$3,'Grupo','Material','Legado','legado',100,40),($2,1,$3,'Grupo','Material','Legado','legado',120,30)`,[id(70),id(71),id(1)]);
+  const repetidos = (await ler()).map(planejado);
+  await assert.rejects(gravar(repetidos),/itens repetidos/, 'Reproduz o bloqueio da migração 0022 em dados legados');
+  const correcao = await readFile('supabase/migrations/0026_orcamento_edicao_duplicidades_legadas.sql','utf8');
+  const snapshotLegado = await snapshot();
+  await db.exec(correcao); await db.exec(correcao);
+  assert.deepEqual(await snapshot(),snapshotLegado,'Instalação e reexecução não alteram itens ou totais');
+  repetidos.find(i=>i.id===id(70)).valor_proposto=150;
+  await gravar(repetidos);
+  assert.equal(Number((await ler()).find(i=>i.id===id(70)).valor_proposto),150,'Corrige um membro pelo ID');
+  assert.equal(Number((await ler()).find(i=>i.id===id(71)).valor_proposto),120,'Preserva o outro membro');
+  assert.equal(Number((await ler()).find(i=>i.id===id(70)).valor_executado),40);
+  const independentes = (await ler()).map(planejado);
+  independentes.find(i=>i.id!==id(70)&&i.id!==id(71)).valor_proposto=80;
+  await gravar(independentes); // outros itens também ficam editáveis
+  const antesRejeicao = await snapshot();
+  for (const itens of [
+    [...independentes,novo('Legado',90,{chave_origem:'legado'})],
+    independentes.map(i=>i.id===id(70)?{...i,id:id(72)}:i),
+    independentes.map(i=>i.id===id(70)?{...i,id:id(71)}:i),
+  ]) { await assert.rejects(gravar(itens)); assert.deepEqual(await snapshot(),antesRejeicao); }
+  await assert.rejects(gravar(independentes,undefined,imp),/itens repetidos/,'Importação repetida continua recusada');
+  await db.query('UPDATE orcamento_itens SET chave_origem=NULL WHERE id IN ($1,$2)',[id(70),id(71)]);
+  const semChave = (await ler()).map(i=>({...planejado(i),chave_origem:i.chave_origem||'legado'}));
+  await gravar(semChave);
+  assert.equal((await ler()).filter(i=>i.chave_origem==='legado').length,2,'Legado sem chave é corrigido sem duplicar');
+  await assert.rejects(gravar(semChave, snapshotLegado),/outra pessoa/);
+  for (const papel of ['anon','authenticated','service_role']) {
+    assert.equal((await db.query("SELECT has_function_privilege($1,'public.salvar_versao_orcamento(bigint,jsonb,jsonb,text,jsonb)','EXECUTE') AS p",[papel])).rows[0].p,papel==='service_role');
+  }
+  console.log('SQL aprovado: substituição, reimportação, edição com repetições legadas, bloqueio de novas duplicações, notas/anexos preservados, concorrência, isolamento, rollback e permissões.');
 } finally { await db.close(); }

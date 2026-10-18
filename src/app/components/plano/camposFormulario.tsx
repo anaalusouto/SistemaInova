@@ -5,8 +5,9 @@
  * mensagem de erro apareçam sempre do mesmo jeito, em todos os formulários da
  * aba. Campo obrigatório é marcado no rótulo, não descoberto só ao salvar.
  */
-import { type ReactNode, type Ref } from 'react';
+import { useRef, type ReactNode, type Ref } from 'react';
 import { AlertCircle } from 'lucide-react';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 const baseInput: React.CSSProperties = {
   borderColor: 'var(--border)',
@@ -159,42 +160,45 @@ export function Acoes({
  * excluído e o que acontece com o histórico, e `confirm()` não permite isso.
  */
 export function ConfirmarExclusao({
-  titulo, descricao, aoCancelar, aoConfirmar,
-}: { titulo: string; descricao: string; aoCancelar: () => void; aoConfirmar: () => void }) {
+  titulo, descricao, aoCancelar, aoConfirmar, ocupado = false, erro,
+}: { titulo: string; descricao: string; aoCancelar: () => void; aoConfirmar: () => void; ocupado?: boolean; erro?: string | null }) {
+  const origem = useRef<HTMLElement | null>(null);
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,.5)' }}
-      onClick={aoCancelar}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        className="bg-card rounded-2xl border p-5 w-full max-w-md"
-        style={{ borderColor: 'var(--border)' }}
-        role="alertdialog"
-        aria-label={titulo}
-      >
-        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>
+    <AlertDialog.Root open onOpenChange={open => { if (!open && !ocupado) aoCancelar(); }}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="fixed inset-0 z-[60] bg-black/50" />
+        <AlertDialog.Content
+          className="fixed left-1/2 top-1/2 z-[70] w-[calc(100%_-_2rem)] max-w-md max-h-[calc(100dvh_-_2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border bg-card p-5 shadow-xl outline-none"
+          style={{ borderColor: 'var(--border)' }} aria-busy={ocupado || undefined}
+          onOpenAutoFocus={() => { origem.current = document.activeElement as HTMLElement | null; }}
+          onCloseAutoFocus={e => { e.preventDefault(); if (origem.current?.isConnected) origem.current.focus(); }}
+          onEscapeKeyDown={e => { if (ocupado) e.preventDefault(); }}
+        >
+        <AlertDialog.Title style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>
           {titulo}
-        </h3>
-        <p style={{ fontSize: '0.8rem', color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.5 }}>{descricao}</p>
+        </AlertDialog.Title>
+        <AlertDialog.Description style={{ fontSize: '0.8rem', color: 'var(--ink-3)', marginTop: 6, lineHeight: 1.5 }}>{descricao}</AlertDialog.Description>
+        {erro && <p role="alert" className="mt-3 text-sm" style={{ color: 'var(--danger)' }}>{erro}</p>}
         <div className="flex items-center justify-end gap-2 mt-4">
+          <AlertDialog.Cancel asChild>
           <button
-            onClick={aoCancelar}
-            className="px-3 py-1.5 rounded-md border text-[12.5px]"
+            type="button" disabled={ocupado}
+            className="px-3 py-1.5 rounded-md border text-[12.5px] disabled:opacity-50"
             style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
           >
             Cancelar
           </button>
+          </AlertDialog.Cancel>
           <button
-            onClick={aoConfirmar}
-            className="px-4 py-1.5 rounded-md text-[12.5px] font-medium text-white"
+            type="button" disabled={ocupado} onClick={() => { if (!ocupado) aoConfirmar(); }}
+            className="px-4 py-1.5 rounded-md text-[12.5px] font-medium text-white disabled:opacity-50"
             style={{ background: 'var(--danger)' }}
           >
-            Excluir
+            {ocupado ? 'Excluindo…' : 'Excluir'}
           </button>
         </div>
-      </div>
-    </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }

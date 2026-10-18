@@ -22,6 +22,64 @@ function achar(node, pred) {
   return pred(node) ? node : achar(node.props?.children, pred);
 }
 
+test('confirmação de exclusão usa portal modal, devolve foco e bloqueia ações enquanto exclui', () => {
+  let cancelou = 0, confirmou = 0, focou = 0;
+  const anterior = global.document;
+  global.document = { activeElement:{ isConnected:true, focus() { focou++; } } };
+  try {
+    const { ConfirmarExclusao } = carregar('src/app/components/plano/camposFormulario.tsx', {
+      react:{ ...React, useRef:() => ({ current:null }) },
+      '@radix-ui/react-alert-dialog':Object.fromEntries(['Root','Portal','Overlay','Content','Title','Description','Cancel'].map(n => [n,`Alert.${n}`])),
+    });
+    const props = { titulo:'Excluir risco', descricao:'Preserva as atividades.', aoCancelar() { cancelou++; }, aoConfirmar() { confirmou++; } };
+    const livre = ConfirmarExclusao(props);
+    assert.ok(achar(livre, n => n.type === 'Alert.Portal'));
+    assert.ok(achar(livre, n => n.type === 'Alert.Cancel').props.asChild);
+    const content = achar(livre, n => n.type === 'Alert.Content');
+    content.props.onOpenAutoFocus();
+    content.props.onCloseAutoFocus({ preventDefault() {} });
+    assert.equal(focou, 1);
+    achar(livre, n => n.type === 'button' && n.props.children === 'Excluir').props.onClick();
+    assert.equal(confirmou, 1);
+    livre.props.onOpenChange(false); assert.equal(cancelou, 1);
+    const ocupado = ConfirmarExclusao({ ...props, ocupado:true, erro:'Sem conexão' });
+    ocupado.props.onOpenChange(false);
+    let preveniu = false;
+    achar(ocupado, n => n.type === 'Alert.Content').props.onEscapeKeyDown({ preventDefault() { preveniu = true; } });
+    const excluir = achar(ocupado, n => n.type === 'button' && n.props.children === 'Excluindo…');
+    assert.equal(excluir.props.disabled, true); excluir.props.onClick();
+    assert.equal(confirmou, 1); assert.equal(cancelou, 1); assert.equal(preveniu, true);
+    assert.equal(achar(ocupado, n => n.props.role === 'alert').props.children, 'Sem conexão');
+  } finally { global.document = anterior; }
+});
+
+test('excluir risco aguarda resposta, evita duplicidade e mantém confirmação após falha', async () => {
+  const estados = [], refs = []; let indice = 0, refIndice = 0, fechou = 0, concluir, rejeitar;
+  const chamadas = [];
+  const Confirmacao = () => null, Painel = () => null, Acao = () => null;
+  const { PainelRisco } = carregar('src/app/components/plano/PainelRisco.tsx', {
+    react:{ ...React, useState(v) { const i = indice++; if (!(i in estados)) estados[i] = v; return [estados[i], valor => { estados[i] = valor; }]; }, useRef(v) { return refs[refIndice++] ??= { current:v }; } },
+    '../../auth/authStore':{ useAuth:() => ({ readOnly:false }) },
+    '../../store':{ useStore:() => ({ deleteRisco(id) { chamadas.push(id); return new Promise((resolve,reject) => { concluir = resolve; rejeitar = reject; }); } }) },
+    './PainelBase':{ Painel, BotaoAcao:Acao, Linha:() => null, Ausente:() => null },
+    './FormularioRisco':{ FormularioRisco:() => null },
+    './camposFormulario':{ ConfirmarExclusao:Confirmacao },
+    sonner:{ toast:{ success() {} } },
+  });
+  const render = () => { indice = 0; refIndice = 0; return PainelRisco({ risco:{ id:'r-teste',title:'Teste',severity:6 }, projetoId:1, metas:[], codigos:new Map(), acoesDeResposta:[], aoFechar() { fechou++; } }); };
+  achar(achar(render(), n => n.type === Painel).props.acoes, n => n.type === Acao && n.props.perigo).props.aoClicar();
+  const confirmar = () => achar(render(), n => n.type === Confirmacao);
+  const pendente = confirmar().props.aoConfirmar();
+  await confirmar().props.aoConfirmar();
+  assert.deepEqual(chamadas, ['r-teste']); assert.equal(fechou, 0);
+  assert.equal(confirmar().props.ocupado, true);
+  assert.equal(achar(render(), n => n.type === Painel).props.bloqueado, true);
+  rejeitar(new Error('Falha de teste')); await pendente;
+  assert.equal(confirmar().props.erro, 'Falha de teste'); assert.equal(confirmar().props.ocupado, false); assert.equal(fechou, 0);
+  const repetir = confirmar().props.aoConfirmar(); concluir(); await repetir;
+  assert.equal(fechou, 1); assert.equal(confirmar(), undefined); assert.equal(chamadas.length, 2);
+});
+
 test('pop-up fecha com retorno ao histórico; link direto fecha na própria aplicação', () => {
   let busca = { area:'organizations', org:'org-a', secao:'projeto', projeto:12, aba:'plano' };
   let estado = {}; let voltas = 0; const navegacoes = [];

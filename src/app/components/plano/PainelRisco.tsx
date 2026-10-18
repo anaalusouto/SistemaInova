@@ -6,7 +6,7 @@
  * etapa vinculada (a migration 0011 só vinculou o que casava sem ambiguidade)
  * pode manter o vínculo atual ou ganhar a etapa que a pessoa escolher.
  */
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
@@ -34,6 +34,8 @@ export function PainelRisco({
   const [editando, setEditando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [removendo, setRemovendo] = useState(false);
+  const emRemocao = useRef(false);
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
   const faixa = faixaRisco(risco.severity);
 
   const caminho = etapa && meta
@@ -46,7 +48,7 @@ export function PainelRisco({
   const acoes = podeEditar && !editando ? (
     <>
       <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar risco</BotaoAcao>
-      <BotaoAcao aoClicar={() => { if (!removendo) setExcluindo(true); }} perigo>
+      <BotaoAcao aoClicar={() => { if (!emRemocao.current) { setErroExclusao(null); setExcluindo(true); } }} perigo>
         <Trash2 size={12} /> {removendo ? 'Excluindo…' : 'Excluir risco'}
       </BotaoAcao>
     </>
@@ -60,7 +62,7 @@ export function PainelRisco({
       aoFechar={aoFechar}
       acoes={acoes}
       lateral={!editando ? lateral : undefined}
-      bloqueado={bloqueado}
+      bloqueado={bloqueado || removendo}
       largo
     >
       {editando ? (
@@ -138,17 +140,22 @@ export function PainelRisco({
         titulo="Excluir risco"
         descricao={`O risco "${risco.title || risco.description}" será removido do projeto e da matriz. As atividades de resposta e os itens de orçamento serão preservados, apenas sem o vínculo com este risco.`}
         aoCancelar={() => setExcluindo(false)}
+        ocupado={removendo}
+        erro={erroExclusao}
         aoConfirmar={async () => {
-          if (removendo) return;
-          setExcluindo(false);
+          if (readOnly || emRemocao.current) return;
+          emRemocao.current = true;
+          setErroExclusao(null);
           setRemovendo(true);
           try {
             await deleteRisco(risco.id);
             toast.success('Risco excluído.');
+            setExcluindo(false);
             aoFechar();
           } catch (e) {
-            toast.error(e instanceof Error ? e.message : 'Não foi possível excluir o risco.');
+            setErroExclusao(e instanceof Error ? e.message : 'Não foi possível excluir o risco.');
           } finally {
+            emRemocao.current = false;
             setRemovendo(false);
           }
         }}
