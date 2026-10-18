@@ -1,7 +1,8 @@
 {
   "projeto": "tgkfysmwllbocwxlpyai",
   "verificadoEmUTC": "2026-10-18T22:56:58.497Z",
-  "migração": "20261018225413_reclassificar_plano.sql",
+  "migração": "0027_reclassificar_plano.sql",
+  "alinhamentoPosterior": "Registro remoto 20261018225413 renomeado para 0027 após confirmar SQL idêntico ao arquivo do repositório. Sem reaplicar SQL.",
   "resultado": "Implementação local concluída e funções instaladas no Supabase",
   "historicoLocalRemoto": "28 registros correspondentes",
   "fluxo": [
