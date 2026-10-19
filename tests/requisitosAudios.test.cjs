@@ -76,6 +76,7 @@ test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', ()
     './orcamento/TabOrcamento': { TabOrcamento: () => null },
     './project-tabs/TabFinanceiro': { TabFinanceiro: () => null },
     './project-tabs/TabMudancas': { TabMudancas: () => null },
+    './DocumentosRegistro': { DocumentosRegistro: () => null },
   });
   const render = () => { indice = 0; return ProjectView({ project: p, onBack() {}, aoEncaminhamentos() { saidas++; },
     ...(controlada ? { abaAtual: rota.aba, focoAtual: rota.foco, aoMudarAba(aba, foco) { rota = { aba, foco }; } } : {}),

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, ClipboardList, Gauge, ShoppingBasket, FileCheck2, Lock, CopyPlus } from 'lucide-react';
-import { getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
+import { Download, ArrowLeft, ClipboardList, Gauge, ShoppingBasket, FileCheck2, Lock, CopyPlus } from 'lucide-react';
+import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
 import { IeoTab } from './diagnostic/IeoTab';
 import { CestaProdutosTab } from './diagnostic/CestaProdutosTab';
 import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
+import { useAuth } from '../auth/authStore';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -23,12 +24,16 @@ interface DiagnosticoEditorProps {
   diagnosticoId: string;
   onBack: () => void;
   onNovaVersao: (novoDiagnosticoId: string) => void;
+  incorporado?: boolean;
+  instrumentoInicial?: TabId;
 }
 
-export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: DiagnosticoEditorProps) {
-  const [tab, setTab] = useState<TabId>('matriz');
+export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'matriz' }: DiagnosticoEditorProps) {
+  const [tab, setTab] = useState<TabId>(instrumentoInicial);
+  const { readOnly } = useAuth();
+  const [baixando,setBaixando] = useState(false);
   const queryClient = useQueryClient();
-  const { data: diagnostico } = useQuery({
+  const { data: diagnostico, isLoading, error, refetch } = useQuery({
     queryKey: ['diagnostico', diagnosticoId],
     queryFn: () => getDiagnostico({ data: { id: diagnosticoId } }),
   });
@@ -56,22 +61,31 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
   });
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+    <div className={incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}>
       <div className="flex flex-col gap-3 px-7 pt-5 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
           <ArrowLeft size={12} /> Organização
         </button>
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
           <div>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
               Diagnóstico {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : ''}
-            </h1>
+            </h2>
             <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
               Versão {diagnostico?.versao ?? '—'}
             </p>
           </div>
           {diagnostico && (
             <div className="flex items-center gap-2">
+              <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
+                setBaixando(true);
+                try {
+                  const dados=await getDadosCompletosDiagnostico({data:{diagnosticoId}});
+                  const {buildDiagnosticoReportModel,exportDiagnosticoReportPdf}=await import('../lib/diagnosticReportExport');
+                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Diagnóstico Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta','parecer']));
+                } catch(e){toast.error(e instanceof Error ? e.message : 'Não foi possível baixar o PDF.');}
+                finally{setBaixando(false);}
+              }}><Download size={18} className={baixando ? 'animate-pulse' : undefined} aria-hidden /></button>
               <span
                 className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium"
                 style={{
@@ -81,7 +95,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
               >
                 {STATUS_LABEL[diagnostico.status]}
               </span>
-              {diagnostico.status === 'em_edicao' ? (
+              {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
                   onClick={() => { if (window.confirm('Concluir este diagnóstico? Os 4 instrumentos passam a ser somente leitura — para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
                   disabled={concluir.isPending}
@@ -99,11 +113,11 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
                 >
                   <CopyPlus size={12} /> Criar nova versão
                 </button>
-              )}
+              ))}
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
           {TABS.map(t => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -111,7 +125,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium transition-colors"
+                className="flex shrink-0 items-center gap-2 px-4 py-2.5 text-[13px] font-medium transition-colors"
                 style={{ color: active ? 'var(--primary)' : 'var(--ink-4)', borderBottom: active ? '2px solid var(--primary)' : '2px solid transparent' }}
               >
                 <Icon size={14} />
@@ -121,18 +135,20 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao }: Diagn
           })}
         </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto p-7">
+      <div className={incorporado ? 'p-4 sm:p-7 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-7'}>
+        {isLoading && <p role="status">Carregando diagnóstico…</p>}
+        {error && <p role="alert">Não foi possível abrir o diagnóstico. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
         {tab === 'matriz' && diagnostico && (
-          <MatrizFuncionalTab diagnosticoId={diagnosticoId} readOnly={diagnostico.status === 'concluido'} />
+          <MatrizFuncionalTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'ieo' && diagnostico && (
-          <IeoTab diagnosticoId={diagnosticoId} readOnly={diagnostico.status === 'concluido'} />
+          <IeoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'cesta' && diagnostico && (
-          <CestaProdutosTab diagnosticoId={diagnosticoId} readOnly={diagnostico.status === 'concluido'} />
+          <CestaProdutosTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'parecer' && diagnostico && (
-          <ParecerTecnicoTab diagnosticoId={diagnosticoId} readOnly={diagnostico.status === 'concluido'} />
+          <ParecerTecnicoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
       </div>
     </div>

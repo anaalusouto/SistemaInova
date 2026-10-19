@@ -21,6 +21,8 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     AbaRegistrosContato: { AbaRegistrosContato: vazio },
     AbaEncaminhamentos: { AbaEncaminhamentos: vazio },
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
+    DocumentosRegistro: { DocumentosRegistro: ({area,organizacaoId}) => React.createElement('section',{'data-documentos-area':area,'data-documentos-org':organizacaoId},'Documentos anexados') },
+    DiagnosticoModule: { DiagnosticoModule: ({comunidadeId,instrumentoInicial}) => React.createElement('section',{'data-diagnostico-org':comunidadeId,'data-instrumento':instrumentoInicial},'Instrumentos de diagnóstico') },
     ProjectSummaryHeader: { ProjectSummaryHeader: vazio },
     TabDescricao: { TabDescricao: vazio },
     TabPlanoTrabalho: { TabPlanoTrabalho: ({ project }) => React.createElement('section', { 'data-plano-projeto': project.id }, 'Plano do projeto') },
@@ -121,7 +123,7 @@ test('orçamento exibe a meta real de cada item e diferencia legado sem vínculo
 });
 
 test('AT-017/020: desktop e celular apresentam seis seções na ordem e organização corretas', () => {
-  const nomes = ['Cadastro', 'Projeto', 'Mapeamento (Em construção)', 'Parecer (Em construção)', 'Encaminhamento', 'Registro de Contato'];
+  const nomes = ['Cadastro', 'Projeto', 'Diagnóstico / Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato'];
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pessoas: [], pendentes: 0 };
     for (const secao of ['dados', 'projeto', 'encaminhamentos', 'registros']) {
@@ -199,15 +201,17 @@ test('página informativa abre relatório externo e não oferece escrita ao perf
   }
 });
 
-test('ficha mantém um único H1 por organização e isola o relatório de cada contexto', () => {
+test('ficha mantém um único H1 e isola diagnóstico e documentos por organização', () => {
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pendentes: 0, parecerRelatorioUrl: `https://example.org/${id}.pdf` };
     const { FichaOrganizacao } = carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx', { org, readOnly: true });
     const html = renderToStaticMarkup(React.createElement(FichaOrganizacao, { rota: { orgId: id, secao: 'parecer', projetoId: null }, aoNavegar: () => {} }));
     assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
     assert.ok(html.includes(`>${id}</h1>`));
-    assert.ok(html.includes(`https://example.org/${id}.pdf`));
-    assert.ok(!html.includes(`https://example.org/${id === 'org-a' ? 'org-b' : 'org-a'}.pdf`));
+    assert.ok(html.includes(`data-diagnostico-org="${id}"`));
+    assert.ok(html.includes(`data-documentos-org="${id}"`));
+    assert.ok(html.includes('data-instrumento="parecer"'));
+    assert.ok(!html.includes('Em construção'));
   }
 });
 
@@ -216,10 +220,24 @@ test('projeto mostra organização e abas sem acesso antigo ao parecer técnico'
   const { ProjectView } = carregarInterface('src/app/components/ProjectView.tsx', { readOnly: true });
   const html = renderToStaticMarkup(React.createElement(ProjectView, { project, onBack: () => {} }));
   assert.ok(html.includes('Org A</h1>'));
-  assert.ok(html.includes('Projeto A</h2>'));
+  assert.ok(!html.includes('Projeto A</h2>'));
+  assert.ok(html.includes('Resumo e documentos do projeto'));
   for (const aba of ['Descrição', 'Plano de Trabalho', 'Orçamento']) assert.ok(html.includes(aba));
   assert.ok(!html.includes('Parecer técnico'));
   assert.ok(!html.includes('Link do Plano de Trabalho'));
   const dentro = renderToStaticMarkup(React.createElement(ProjectView, { project, onBack: () => {}, dentroDaOrganizacao: true }));
   assert.ok(!dentro.includes('<h1'));
+  assert.ok(!html.includes('Mudanças'));
+  assert.ok(!html.includes('Ordenar'));
+  const nav=html.match(/<nav[^>]*aria-label="Abas do projeto"[^>]*>(.*?)<\/nav>/s)?.[1] ?? '';
+  assert.equal((nav.match(/<button\b/g)??[]).length,3);
+});
+
+test('cadastro segue identificação, pessoas, localização e projetos sem perder classificação',()=>{
+  const org={id:'org-a',nome:'Organização de teste',codigo:'ORG-1',tipo:'Cooperativa',categoria:'Agricultura Familiar',eixo:'Produção',municipio:'Belém',uf:'PA',localizacao:'Área de teste',territorio:'Território',responsavelTecnico:'Equipe',pessoas:[],projetos:[]};
+  const {DadosCadastrais}=carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx');
+  const html=renderToStaticMarkup(React.createElement(DadosCadastrais,{org,aoAbrirProjeto(){}}));
+  const pos=['Identificação da organização','Pessoas de referência','Localização','Projetos vinculados'].map(s=>html.indexOf(s));
+  assert.ok(pos.every(p=>p>=0));assert.deepEqual(pos,[...pos].sort((a,b)=>a-b));
+  for(const valor of ['Agricultura Familiar','Produção','Belém/PA','ORG-1','Território'])assert.ok(html.includes(valor));
 });

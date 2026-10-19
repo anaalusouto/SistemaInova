@@ -1,5 +1,5 @@
 {
-  "versao": "2026-10-19.2",
+  "versao": "2026-10-19.3",
   "guias": [
     {
       "id": "exclusao",
@@ -360,7 +360,7 @@
       "titulo": "Diagnóstico, IEO, matriz e cesta de produtos",
       "termos": "diagnostico ieo indice estruturacao organizacional matriz funcional cesta produto parecer tecnico checklist documental",
       "passos": [
-        "Abra o diagnóstico da organização e selecione o instrumento desejado.",
+        "Na ficha da organização, entre em Diagnóstico / Mapeamento ou Parecer, abra uma aplicação do histórico e selecione o instrumento. Conforme seu perfil, crie uma nova aplicação quando necessário.",
         "Na Matriz Funcional, leia função, descrição e exemplo; registre a atuação observada e os demais campos.",
         "No IEO, abra a pergunta e compare a situação real com as descrições dos níveis 1 a 4, registrando a observação quando pertinente.",
         "Na Cesta de Produtos, avalie um produto/subproduto por vez e percorra os blocos. No Parecer Técnico, preencha os campos abertos e o checklist conforme a evidência disponível."
@@ -387,13 +387,13 @@
       "titulo": "Anexos e documentos",
       "termos": "anexo documento arquivo pdf foto imagem enviar substituir tamanho formato",
       "passos": [
-        "Salve primeiro a atividade, contato ou nota que receberá o arquivo.",
+        "Abra o projeto e use Documentos anexados na lateral; na organização, use os documentos de Mapeamento ou Parecer. Para anexos de atividade, contato ou nota, salve primeiro o registro.",
         "Use o campo de anexo do registro e escolha um arquivo aceito.",
         "Aguarde a confirmação do envio antes de fechar; confira o documento associado."
       ],
       "regras": [
         "O anexo pertence a um único registro, que deve existir.",
-        "O servidor recusa arquivo vazio e tamanho acima de 20 MB.",
+        "O anexo de atividade, contato ou nota admite até 20 MB no fluxo existente. Documentos gerais de Projeto, Mapeamento e Parecer, e o checklist do diagnóstico, admitem até 3 MB por arquivo. Arquivos vazios são recusados.",
         "O fluxo aceita imagens e tipos documentais cadastrados, incluindo PDF, DOC, DOCX, ODT, XLS, XLSX e TXT.",
         "No fluxo de substituição, o arquivo anterior só é removido depois de o novo estar gravado.",
         "O chatbot orienta, mas não recebe, abre nem interpreta os arquivos anexados."
@@ -407,7 +407,7 @@
       "passos": [
         "Entre em Organizações e selecione a ficha desejada.",
         "Use as seções Dados, Projetos, Encaminhamentos e Registros conforme o assunto.",
-        "Consulte Mapeamento e Parecer da organização sem confundir esses relatórios com o diagnóstico ou a execução do projeto.",
+        "Consulte Diagnóstico / Mapeamento e Parecer na ficha da organização; as aplicações e os quatro instrumentos compartilham o mesmo histórico. Não confunda a avaliação diagnóstica com a execução do projeto.",
         "Nas notas da organização, registre informação pertinente e confira o salvamento."
       ],
       "regras": [

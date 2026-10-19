@@ -5,12 +5,31 @@
 // de Matriz/IEO/Cesta/Parecer/Anexos entram nas fases seguintes.
 import { createServerFn } from '@tanstack/react-start';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
+import { validarDocumento, LIMITE_DOCUMENTO } from './lib/documentosRegistro';
 
 async function getAdmin() {
+  await (await import('./sessao.server')).exigirSessao();
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
   return supabaseAdmin;
 }
 
+
+async function exigirEscritaDiagnostico() { return (await import('./sessao.server')).exigirEscrita(); }
+async function exigirDiagnosticoEditavel(id: string) {
+  const usuario = await exigirEscritaDiagnostico();
+  const db = await getAdmin();
+  const {data, error} = await db.from('diagnosticos').select('status').eq('id',id).maybeSingle();
+  if(error || !data) throw new Error('Diagnóstico não encontrado.');
+  if(data.status !== 'em_edicao') throw new Error('Diagnóstico concluído é somente leitura. Crie uma nova versão para alterar.');
+  return usuario;
+}
+async function exigirProdutoEditavel(id: string) {
+  await exigirEscritaDiagnostico();
+  const db = await getAdmin();
+  const {data,error} = await db.from('diagnostico_produtos').select('diagnostico_id').eq('id',id).maybeSingle();
+  if(error || !data) throw new Error('Produto não encontrado.');
+  await exigirDiagnosticoEditavel(data.diagnostico_id);
+}
 export type DiagnosticoStatus = 'em_edicao' | 'concluido';
 
 export interface DiagnosticoResumo {
@@ -95,6 +114,7 @@ export const getDiagnostico = createServerFn({ method: 'GET' })
 export const criarDiagnostico = createServerFn({ method: 'POST' })
   .validator((d: { comunidadeId: string; dataAplicacao: string }) => d)
   .handler(async ({ data: { comunidadeId, dataAplicacao } }): Promise<DiagnosticoResumo> => {
+    await exigirEscritaDiagnostico();
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnosticos')
@@ -108,6 +128,7 @@ export const criarDiagnostico = createServerFn({ method: 'POST' })
 export const concluirDiagnostico = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data: { id } }): Promise<void> => {
+    await exigirDiagnosticoEditavel(id);
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin
       .from('diagnosticos')
@@ -153,6 +174,7 @@ export const salvarRespostaMatriz = createServerFn({ method: 'POST' })
     interesse: string | null; criticidade: string | null; abrangencia: string | null; observacoes: string | null;
   }) => d)
   .handler(async ({ data }): Promise<MatrizResposta> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_matriz')
@@ -196,6 +218,8 @@ export const listarRespostasIeo = createServerFn({ method: 'GET' })
 export const salvarRespostaIeo = createServerFn({ method: 'POST' })
   .validator((d: { diagnosticoId: string; perguntaId: string; nivel: number; observacao: string | null }) => d)
   .handler(async ({ data }): Promise<IeoResposta> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    if (!Number.isInteger(data.nivel) || data.nivel < 1 || data.nivel > 4) throw new Error('Nível do IEO deve ser inteiro de 1 a 4.');
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_ieo')
@@ -248,6 +272,7 @@ export const listarProdutos = createServerFn({ method: 'GET' })
 export const criarProduto = createServerFn({ method: 'POST' })
   .validator((d: { diagnosticoId: string; nome: string; cadeia: string | null }) => d)
   .handler(async ({ data }): Promise<Produto> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_produtos')
@@ -264,6 +289,7 @@ export const salvarRespostasProduto = createServerFn({ method: 'POST' })
     respostas: Record<string, string | string[] | number | null>; statusPreenchimento: ProdutoStatusPreenchimento;
   }) => d)
   .handler(async ({ data }): Promise<Produto> => {
+    await exigirProdutoEditavel(data.produtoId);
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_produtos')
@@ -281,6 +307,7 @@ export const salvarRespostasProduto = createServerFn({ method: 'POST' })
 export const excluirProduto = createServerFn({ method: 'POST' })
   .validator((d: { produtoId: string }) => d)
   .handler(async ({ data: { produtoId } }): Promise<void> => {
+    await exigirProdutoEditavel(produtoId);
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('diagnostico_produtos').delete().eq('id', produtoId);
     if (error) throw new Error(error.message);
@@ -334,6 +361,7 @@ export const salvarParecer = createServerFn({ method: 'POST' })
     pontosPrioritarios: string | null; consideracoesTecnicas: string | null; evidenciasVinculadas: EvidenciaVinculada[];
   }) => d)
   .handler(async ({ data }): Promise<Parecer> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_parecer')
@@ -395,6 +423,7 @@ export const listarChecklist = createServerFn({ method: 'GET' })
 export const salvarChecklistItem = createServerFn({ method: 'POST' })
   .validator((d: { diagnosticoId: string; itemId: number; disponivel: 'Sim' | 'Não' | 'N/A' | null; observacoes: string | null }) => d)
   .handler(async ({ data }): Promise<ChecklistItemResposta> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin
       .from('diagnostico_checklist_itens')
@@ -420,10 +449,14 @@ export const uploadAnexoChecklist = createServerFn({ method: 'POST' })
     conteudoBase64: string; enviadoPor: string;
   }) => d)
   .handler(async ({ data }): Promise<ChecklistItemResposta> => {
+    const usuario = await exigirDiagnosticoEditavel(data.diagnosticoId);
     const supabaseAdmin = await getAdmin();
+    if(typeof data.conteudoBase64 !== 'string' || data.conteudoBase64.length > Math.ceil(LIMITE_DOCUMENTO * 4 / 3) + 256) throw new Error('O documento deve ter no máximo 3 MB.');
     const base64 = data.conteudoBase64.includes(',') ? data.conteudoBase64.split(',')[1] : data.conteudoBase64;
     const buffer = Buffer.from(base64, 'base64');
-    const storagePath = `${data.diagnosticoId}/${data.itemId}/${Date.now()}-${data.nomeArquivo}`;
+    validarDocumento(data.nomeArquivo,data.tipoMime,buffer.byteLength);
+    const {randomUUID} = await import('node:crypto');
+    const storagePath = `${data.diagnosticoId}/${data.itemId}/${randomUUID()}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from('diagnostico-anexos')
@@ -434,11 +467,14 @@ export const uploadAnexoChecklist = createServerFn({ method: 'POST' })
       .from('diagnostico_anexos')
       .insert({
         diagnostico_id: data.diagnosticoId, checklist_item_id: data.itemId, storage_path: storagePath,
-        nome_arquivo: data.nomeArquivo, tipo_mime: data.tipoMime || null, tamanho_bytes: buffer.length, enviado_por: data.enviadoPor,
+        nome_arquivo: data.nomeArquivo, tipo_mime: data.tipoMime || null, tamanho_bytes: buffer.length, enviado_por: usuario.displayName,
       })
       .select('*')
       .single();
-    if (anexoError) throw new Error(anexoError.message);
+    if (anexoError) {
+      await supabaseAdmin.storage.from('diagnostico-anexos').remove([storagePath]);
+      throw new Error(anexoError.message);
+    }
 
     const { data: itemRow, error: itemError } = await supabaseAdmin
       .from('diagnostico_checklist_itens')
@@ -448,7 +484,11 @@ export const uploadAnexoChecklist = createServerFn({ method: 'POST' })
       )
       .select('*')
       .single();
-    if (itemError) throw new Error(itemError.message);
+    if (itemError) {
+      await supabaseAdmin.from('diagnostico_anexos').delete().eq('id',anexoRow.id);
+      await supabaseAdmin.storage.from('diagnostico-anexos').remove([storagePath]);
+      throw new Error(itemError.message);
+    }
     return mapChecklistItem(itemRow);
   });
 
@@ -544,6 +584,7 @@ async function copiarFilhaComposta(supabaseAdmin: any, tabela: string, deId: str
 export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
   .validator((d: { diagnosticoAnteriorId: string }) => d)
   .handler(async ({ data: { diagnosticoAnteriorId } }): Promise<DiagnosticoResumo> => {
+    await exigirEscritaDiagnostico();
     const supabaseAdmin = await getAdmin();
     const { data: anterior, error: getError } = await supabaseAdmin
       .from('diagnosticos')
@@ -551,6 +592,7 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
       .eq('id', diagnosticoAnteriorId)
       .single();
     if (getError) throw new Error(getError.message);
+    if (anterior.status !== 'concluido') throw new Error('Conclua a versão atual antes de criar outra.');
 
     const { data: nova, error: insError } = await supabaseAdmin
       .from('diagnosticos')

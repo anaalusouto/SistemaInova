@@ -56,7 +56,7 @@ function Ausente() {
   return <span style={{ color: 'var(--ink-5)', fontWeight: 400, fontStyle: 'italic' }}>{NAO_INFORMADO}</span>;
 }
 
-export function ProjectSummaryHeader({ project }: { project: Project }) {
+export function ProjectSummaryHeader({ project, lateral = false }: { project: Project; lateral?: boolean }) {
   const p = project as ProjectExt;
 
   const atividades = p.goals.flatMap(g => g.deliverables.flatMap(d => d.activities));
@@ -74,15 +74,15 @@ export function ProjectSummaryHeader({ project }: { project: Project }) {
 
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-3 px-1 py-3"
+      className={lateral ? 'grid grid-cols-2 gap-3 py-3' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-3 px-1 py-3'}
       style={{ borderTop: '1px solid var(--line-1)' }}
     >
-      <Campo rotulo="Organização">
+      {!lateral && <Campo rotulo="Organização">
         {p.org || p.name}
         {p.segmento && (
           <span style={{ color: 'var(--ink-4)', fontWeight: 400 }}> · {p.segmento}</span>
         )}
-      </Campo>
+      </Campo>}
 
       <Campo rotulo="Valor proposto" destaque>
         {/* RF-029: o proposto já é o aprovado — não existe cartão de "valor aprovado". */}
@@ -124,7 +124,7 @@ export function ProjectSummaryHeader({ project }: { project: Project }) {
         </span>
       </Campo>
 
-      <div className="min-w-0 col-span-2 sm:col-span-3 lg:col-span-1">
+      <div className={lateral ? 'min-w-0 col-span-2' : 'min-w-0 col-span-2 sm:col-span-3 lg:col-span-1'}>
         <div
           style={{
             fontSize: '0.65rem', fontWeight: 600, color: 'var(--ink-5)',

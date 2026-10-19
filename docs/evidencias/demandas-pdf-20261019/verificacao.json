@@ -1,0 +1,32 @@
+{
+  "data": "2026-10-19",
+  "fonte": "DOCUMENTOS/apresentacao_demandas_simplificada_inova_2026-10-13.pptx.pdf",
+  "sha256Fonte": "EB2120CBC96C4C4CE291779C89E71322E5CC50418E7379D0FEBD460725AAAE08",
+  "paginasLidas": 7,
+  "escopo": "Cinco demandas principais do PDF, implementadas no código local",
+  "verificacoes": {
+    "testesNode": { "total": 175, "aprovados": 175, "falhas": 0 },
+    "postgresqlIsolado": "scripts/testarDocumentosSql.cjs aprovado: destino, tamanho, RLS, privilégios e bloqueio de alterações em diagnóstico concluído",
+    "sequenciaMigracoes": "29 migrações, 52 tabelas, estrutura final e RLS aprovados em PGlite",
+    "typescriptNoEmit": "aprovado",
+    "buildProducao": "aprovado; avisos de chunks grandes e importações compartilhadas preservados",
+    "lint": "arquivos novos e ProjectView; revisão estrutural de componentes alterados sem regra de formatação legada",
+    "navegador": [
+      "Fixture com componentes reais e dados sintéticos, sem comunicação com banco remoto",
+      "Cadastro na sequência identificação, pessoas, localização e projetos",
+      "Projeto com um H1 da organização, três abas, riscos e ações na lateral",
+      "Todos os campos e Riscos abertos pelas ações laterais",
+      "Histórico e quatro instrumentos diagnósticos acessíveis pela ficha",
+      "Parecer Técnico aberto diretamente pela seção Parecer",
+      "Visualizador sem opções de salvar, anexar ou concluir diagnóstico",
+      "Layout em viewport 390x844 sem transbordamento horizontal da página",
+      "Parecer em PDF gerado e baixado pelo navegador; arquivo de uma página lido e renderizado para conferência"
+    ]
+  },
+  "artefatos": ["parecer-tecnico-sintetico.pdf", "parecer-tecnico-sintetico.png"],
+  "pendencias": [
+    "Autorizar e aplicar a migração 20261019154005 no ambiente de destino antes da publicação",
+    "Validar persistência de anexos após recarregamento em sessão real no ambiente aprovado"
+  ],
+  "naoExecutado": ["push", "deploy", "migração remota", "alteração ou exclusão de registros reais"]
+}

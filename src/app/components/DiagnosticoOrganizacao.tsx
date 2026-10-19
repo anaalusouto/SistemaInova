@@ -22,10 +22,11 @@ interface DiagnosticoOrganizacaoProps {
   comunidadeId: string;
   onBack: () => void;
   onSelectDiagnostico: (diagnosticoId: string) => void;
+  incorporado?: boolean;
 }
 
-export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnostico }: DiagnosticoOrganizacaoProps) {
-  const { user } = useAuth();
+export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnostico, incorporado = false }: DiagnosticoOrganizacaoProps) {
+  const { user, readOnly } = useAuth();
   const { log: audit } = useAudit();
   const queryClient = useQueryClient();
   const [showNew, setShowNew] = useState(false);
@@ -34,7 +35,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const comunidade = comunidades.find(c => c.id === comunidadeId);
 
-  const { data: diagnosticos = [], isLoading } = useQuery({
+  const { data: diagnosticos = [], isLoading, error, refetch } = useQuery({
     queryKey: ['diagnosticos', comunidadeId],
     queryFn: () => listarDiagnosticosPorComunidade({ data: { comunidadeId } }),
   });
@@ -57,30 +58,28 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const ultimaEdicao = diagnosticos.slice().sort((a, b) => (a.atualizadoEm < b.atualizadoEm ? 1 : -1))[0]?.atualizadoEm ?? null;
 
   return (
-    <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full min-h-0 [&>*]:shrink-0">
+    <div className="flex flex-col gap-6 p-4 sm:p-7 min-w-0">
       <div className="flex flex-col gap-3">
-        <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
+        {!incorporado && <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
           <ArrowLeft size={12} /> Diagnóstico
-        </button>
-        <div className="flex items-center justify-between">
+        </button>}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
               <Building2 size={18} color="var(--brand)" />
             </div>
             <div>
-              <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.2rem', color: 'var(--ink-1)' }}>
-                {comunidade?.nome ?? 'Organização'}
-              </h1>
+              {incorporado ? <h2 className="text-lg font-semibold">Diagnóstico / Mapeamento</h2> : <h1 className="text-xl font-bold">{comunidade?.nome ?? 'Organização'}</h1>}
               <p style={{ color: 'var(--ink-4)', fontSize: '0.8rem', marginTop: 2 }}>
                 {comunidade?.code} · {comunidade?.classificacao} · {diagnosticos.length} diagnóstico(s) · aplicação mais recente {formatDateOnly(dataAplicacaoMaisRecente)} · última edição {fmtDate(ultimaEdicao)}
               </p>
             </div>
           </div>
-          <BotaoNovo onClick={() => setShowNew(true)}>Novo diagnóstico</BotaoNovo>
+          {!readOnly && <BotaoNovo onClick={() => setShowNew(true)}>Novo diagnóstico</BotaoNovo>}
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+      {error ? <p role="alert" className="text-sm text-destructive">Não foi possível carregar os diagnósticos. <button type="button" className="underline" onClick={() => void refetch()}>Tentar novamente</button></p> : isLoading ? <p role="status">Carregando diagnósticos…</p> : <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
             Histórico de Diagnósticos
@@ -135,7 +134,8 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
         </div>
       </div>
 
-      {showNew && (
+      }
+      {showNew && !readOnly && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15, 23, 42, 0.5)' }} onClick={() => setShowNew(false)}>
           <form
             onSubmit={e => { e.preventDefault(); if (novaData) criar.mutate(); }}

@@ -16,11 +16,12 @@ import { useFichaOrganizacao } from './useOrganizacoes';
 import { AbaRegistrosContato } from './AbaRegistrosContato';
 import { AbaEncaminhamentos } from './AbaEncaminhamentos';
 import { NotasDaOrganizacao } from './NotasDaOrganizacao';
-import { OrganizacaoEmConstrucao } from './OrganizacaoEmConstrucao';
+import { DiagnosticoModule } from '../DiagnosticoModule';
+import { DocumentosRegistro } from '../DocumentosRegistro';
 import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
-import { ROTA_INICIO, SECOES_ORG, nomeCurtoOrg, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
+import { ROTA_INICIO, SECOES_ORG, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
 import type { AbaProjeto } from '../../lib/navegacaoApp';
 
 /** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
@@ -57,7 +58,6 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   }
 
   const IconeTipo = org.tipo ? ICONE_POR_TIPO[org.tipo] : Building2;
-  const vinculo = resolverProjetoOrg(org.projetos);
   const secaoMenu = rota.secao === 'projeto' ? 'projetos' : rota.secao;
   const contagem: Partial<Record<typeof secaoMenu, number>> = {
     encaminhamentos: org.pendentes,
@@ -68,12 +68,12 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
     <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
       <h1 className="px-4 sm:px-7 py-3 border-b flex-shrink-0"
         style={{ background: 'var(--surface-0)', borderColor: 'var(--border)', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25, overflowWrap: 'anywhere' }}>
-        {nomeCurtoOrg(org.nome)}
+        {org.nome}
       </h1>
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
       <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
         <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} />
-        <div className="flex items-center gap-3 min-w-0">
+        {rota.secao !== 'projeto' && rota.secao !== 'projetos' && <div className="flex items-center gap-3 min-w-0">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: 'var(--brand-soft)' }}
@@ -82,16 +82,11 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             <IconeTipo size={20} color="var(--brand)" aria-hidden />
           </div>
           <div className="min-w-0">
-            {vinculo.estado === 'unico' && (
-              <p className="text-sm mt-1" style={{ color: 'var(--ink-2)', overflowWrap: 'anywhere' }}>
-                {vinculo.projeto.nome}
-              </p>
-            )}
             <p style={{ color: 'var(--ink-4)', fontSize: '0.82rem', marginTop: 2 }}>
               {[org.categoria ?? 'Categoria não informada', org.tipo ?? 'Tipo não informado'].join(' · ')}
             </p>
           </div>
-        </div>
+        </div>}
 
         {/* No desktop a troca de seção é o menu lateral; aqui, só no celular. */}
         <div className="flex gap-1 overflow-x-auto lg:hidden -mb-1" role="tablist" aria-label="Seções da organização">
@@ -133,8 +128,10 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
       ) : (
         <div className="min-w-0">
           {(rota.secao === 'mapeamento' || rota.secao === 'parecer') && (
-            <OrganizacaoEmConstrucao key={`${org.id}-${rota.secao}`} titulo={rota.secao === 'mapeamento' ? 'Mapeamento' : 'Parecer'}
-              organizacaoId={org.id} relatorioUrl={rota.secao === 'mapeamento' ? org.mapeamentoRelatorioUrl : org.parecerRelatorioUrl} />
+            <section key={`${org.id}-${rota.secao}`}>
+              <DiagnosticoModule comunidadeId={org.id} instrumentoInicial={rota.secao === 'parecer' ? 'parecer' : 'matriz'} />
+              <div className="px-4 sm:px-7 pb-7"><DocumentosRegistro area={rota.secao} organizacaoId={org.id} relatorioUrl={rota.secao === 'parecer' ? org.parecerRelatorioUrl : org.mapeamentoRelatorioUrl} /></div>
+            </section>
           )}
           {rota.secao === 'dados' && (
             <DadosCadastrais org={org} aoAbrirProjeto={id => ir({ secao: 'projeto', projetoId: id })} />
@@ -209,57 +206,37 @@ function ProjetoDaOrganizacao({
 // pessoas de referência. Vazio aparece como "Não informado", nunca em branco.
 // ---------------------------------------------------------------------------
 
-function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha; aoAbrirProjeto: (id: number) => void }) {
+export function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha; aoAbrirProjeto: (id: number) => void }) {
   const municipio = org.municipio ? `${org.municipio}${org.uf ? `/${org.uf}` : ''}` : null;
   const vinculo = resolverProjetoOrg(org.projetos);
   const projeto = vinculo.estado === 'unico' ? vinculo.projeto : null;
-  return (
-    <div className="p-4 sm:p-7 grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Secao titulo="Identificação">
-        <Item rotulo="Nome">{ouNaoInformado(org.nome)}</Item>
-        <Item rotulo="Código interno">{ouNaoInformado(org.codigo)}</Item>
-        <Item rotulo="Tipo">{ouNaoInformado(org.tipo)}</Item>
-        <Item rotulo="Situação">{ouNaoInformado(org.status)}</Item>
-        <Item rotulo="Projeto">
-          {projeto ? (
-                  <button
-                    type="button"
-                    onClick={() => aoAbrirProjeto(projeto.id)}
-                    className="inline-flex items-start gap-1 text-left hover:underline"
-                    style={{ color: 'var(--brand)', fontWeight: 500 }}
-                  >
-                    <span>{projeto.codigo} — {projeto.nome}</span>
-                    <ExternalLink size={11} className="flex-shrink-0" style={{ marginTop: 3 }} aria-hidden />
-                  </button>
-          ) : vinculo.estado === 'conflito' ? `Conflito de vínculos. IDs dos projetos: ${vinculo.ids.join(', ')}. Solicite correção.` : 'Sem projeto vinculado'}
-        </Item>
-      </Secao>
-
-      <Secao titulo="Classificação">
-        <Item rotulo="Categoria">{ouNaoInformado(org.categoria)}</Item>
-        <Item rotulo="Eixo principal">{ouNaoInformado(org.eixo)}</Item>
-      </Secao>
-
-      <Secao titulo="Localização">
-        <Item rotulo="Município">{ouNaoInformado(municipio)}</Item>
-        <Item rotulo="Localidade">{ouNaoInformado(org.localizacao)}</Item>
-        <Item rotulo="Território">{ouNaoInformado(org.territorio)}</Item>
-      </Secao>
-
-      <Secao titulo="Pessoas de referência">
-        <Item rotulo="Responsável técnico (equipe)">{ouNaoInformado(org.responsavelTecnico)}</Item>
-        {org.pessoas.length === 0 ? (
-          <Item rotulo="Na organização">{NAO_INFORMADO}</Item>
-        ) : org.pessoas.map(p => (
-          <Item key={p.id} rotulo={p.funcao || 'Função não informada'}>
-            {p.nome}{p.contato ? ` · ${p.contato}` : ''}
-          </Item>
-        ))}
-      </Secao>
-    </div>
-  );
+  return <div className="p-4 sm:p-7 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <Secao titulo="Identificação da organização">
+      <Item rotulo="Nome">{ouNaoInformado(org.nome)}</Item>
+      <Item rotulo="Código interno">{ouNaoInformado(org.codigo)}</Item>
+      <Item rotulo="Tipo">{ouNaoInformado(org.tipo)}</Item>
+      <Item rotulo="Situação">{ouNaoInformado(org.status)}</Item>
+      <Item rotulo="Categoria">{ouNaoInformado(org.categoria)}</Item>
+      <Item rotulo="Eixo principal">{ouNaoInformado(org.eixo)}</Item>
+    </Secao>
+    <Secao titulo="Pessoas de referência">
+      <Item rotulo="Responsável técnico (equipe)">{ouNaoInformado(org.responsavelTecnico)}</Item>
+      {org.pessoas.length === 0 ? <Item rotulo="Na organização">{NAO_INFORMADO}</Item> : org.pessoas.map(p =>
+        <Item key={p.id} rotulo={p.funcao || 'Função não informada'}>{p.nome}{p.contato ? ` · ${p.contato}` : ''}</Item>)}
+    </Secao>
+    <Secao titulo="Localização">
+      <Item rotulo="Município">{ouNaoInformado(municipio)}</Item>
+      <Item rotulo="Localidade">{ouNaoInformado(org.localizacao)}</Item>
+      <Item rotulo="Território">{ouNaoInformado(org.territorio)}</Item>
+    </Secao>
+    <Secao titulo="Projetos vinculados">
+      <Item rotulo="Projeto">{projeto ?
+        <button type="button" onClick={() => aoAbrirProjeto(projeto.id)} className="inline-flex items-start gap-1 text-left hover:underline" style={{color:'var(--brand)',fontWeight:500}}>
+          <span>{projeto.codigo} — {projeto.nome}</span><ExternalLink size={11} className="shrink-0 mt-1" aria-hidden />
+        </button> : vinculo.estado === 'conflito' ? `Conflito de vínculos. IDs dos projetos: ${vinculo.ids.join(', ')}. Solicite correção.` : 'Sem projeto vinculado'}</Item>
+    </Secao>
+  </div>;
 }
-
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <section className="bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>

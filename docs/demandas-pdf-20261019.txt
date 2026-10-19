@@ -1,0 +1,110 @@
+DEMANDAS DO PDF — IMPLEMENTAÇÃO LOCAL / 19-10-2026
+
+Fonte: DOCUMENTOS/apresentacao_demandas_simplificada_inova_2026-10-13.pptx.pdf
+Leitura: texto das sete páginas e conferência visual dos prints.
+A árvore de trabalho estava limpa ao iniciar esta rodada. Nenhum deploy, push,
+alteração de dados reais ou aplicação de migração remota foi realizada.
+
+CONFERÊNCIA DAS CINCO DEMANDAS
+
+1. Cadastro (p.3)
+Identificação da organização → pessoas de referência → localização → projetos
+vinculados, nessa ordem no DOM e nas grades desktop/celular. Categoria e eixo
+permanecem na identificação. Pessoas, responsável técnico, município, UF,
+localidade, território e acesso ao projeto foram preservados. Nenhum campo
+institucional foi excluído ou remapeado para resolver a antiga DEC 10.
+Fonte de implementação: components/organizacoes/FichaOrganizacao.tsx.
+
+2. Cabeçalhos e navegação do Projeto (p.4)
+Uma única H1 com o nome da organização. Retirados o título repetido do projeto,
+breadcrumb com o mesmo nome e cabeçalho secundário. O projeto aparece como dado
+rotulado na lateral. As três abas principais são Descrição, Plano de Trabalho
+e Orçamento. Encaminhamentos continuam acessíveis por ação contextual e pelo
+menu da organização, preservando os vínculos das atividades e o histórico URL.
+Fontes: FichaOrganizacao.tsx; ProjectView.tsx.
+
+3. Ações e informações à direita (p.5)
+Retirados todos os chips/botões de links do cabeçalho e o botão Mudanças.
+Os valores de links e registros antigos de mudanças NÃO foram apagados.
+Riscos, Todos os campos, Ordenar e indicadores ficam na lateral direita.
+No celular, o bloco se adapta à largura disponível. Ordenar permanece exclusivo
+de quem pode escrever. Os botões mudam para a visão real do plano, preservando
+busca, seleção, ordenação e exportação existentes.
+O download do plano é um ícone azul com nome acessível. O editor de diagnóstico
+também oferece o ícone de download; na aba Parecer ele exporta o Parecer Técnico.
+Fontes: ProjectView.tsx; plano/TabPlanoTrabalho.tsx; DiagnosticoEditor.tsx.
+
+4. Anexos de documentos (p.6)
+Projeto, Mapeamento e Parecer possuem Documentos anexados, com vários arquivos
+por registro: anexar, consultar e remover com confirmação. Lista, carregamento,
+falha, envio e ausência de configuração do banco têm mensagens próprias.
+Aceita PDF, DOC/DOCX/ODT, XLS/XLSX, TXT e PNG/JPEG/WebP. Limite de 3 MB por arquivo
+nestas áreas e no checklist diagnóstico, para manter o transporte base64 dentro
+do limite da hospedagem. O fluxo antigo de anexos de atividades/contatos/notas
+continua com sua configuração anterior. Não é enviado formulário junto do arquivo.
+O servidor valida sessão, escrita, destino existente, MIME e tamanho; autoria
+vem da sessão. Compensa upload se não conseguir gravar os metadados. Arquivos
+ficam no bucket privado projeto-anexos; acesso assinado por dez minutos.
+Os links externos anteriores de Mapeamento/Parecer continuam consultáveis quando
+válidos, complementados pelos arquivos próprios. O chatbot não lê os anexos.
+Fontes: DocumentosRegistro.tsx; documentosRegistro.server.ts; lib/documentosRegistro.ts.
+
+5. Diagnóstico/Mapeamento na organização (p.7)
+Mapeamento e Parecer deixam de abrir páginas Em construção. Ambos acessam o
+histórico de aplicações da organização por seu ID permanente. Os quatro
+instrumentos existentes são Matriz Funcional, IEO, Cesta de Produtos e Parecer
+Técnico, com checklist e evidências. Parecer abre seu instrumento ao selecionar
+uma aplicação. As telas existentes não foram duplicadas nem seus dados migrados.
+A navegação global de diagnóstico permanece disponível e usa os mesmos dados.
+Este pedido substitui a decisão antiga de manter essas duas páginas em construção.
+Fontes: DiagnosticoModule.tsx; DiagnosticoOrganizacao.tsx; DiagnosticoEditor.tsx.
+
+PERMISSÕES E INTEGRIDADE
+
+Foi necessário proteger as funções de diagnóstico no servidor: antes faltavam
+guardas em operações deste módulo. Toda consulta exige sessão; toda escrita
+exige perfil de escrita. Instrumentos concluídos ficam somente leitura; nova
+versão exige conclusão da anterior. O perfil visualizador também não vê ações
+de criação, edição, conclusão, versionamento ou anexação. Níveis do IEO são
+inteiros entre 1 e 4. A migração acrescenta proteção no banco contra alteração
+de instrumentos concluídos, coordenando a gravação com o status do diagnóstico.
+As cascatas de exclusão do modelo anterior foram preservadas.
+
+BANCO E PUBLICAÇÃO — PENDENTE DE AUTORIZAÇÃO
+
+Migração preparada e testada, ainda NÃO aplicada ao banco remoto:
+supabase/migrations/0028_documentos_organizacao_projeto.sql
+
+Ela cria documentos_registro, índices, validações de destino/tamanho, RLS e
+acesso exclusivo à service_role através das funções autenticadas do Inova.
+Reutiliza o bucket privado existente e não adiciona acesso público. Acrescenta
+triggers de integridade aos seis tipos de registros dos instrumentos diagnósticos.
+Aplicar a migração no ambiente aprovado antes de publicar o código. Até lá,
+a interface informa que os novos anexos aguardam atualização do banco.
+Não requer chave de OpenAI, serviço novo ou alteração de credenciais.
+
+COMO TESTAR
+
+1. Testes do servidor: node --test tests/demandasPdf.test.cjs
+2. PostgreSQL isolado: npm run db:test:documentos
+   Usa a mesma instalação PGlite dos demais scripts SQL:
+   node_modules/.cache/reordenacao-test/node_modules/@electric-sql/pglite (0.5.9).
+3. Sequência completa de migrações: node scripts/testarMigracoesSql.mjs
+4. Fixture das telas reais, sem banco e com dados sintéticos:
+   node node_modules/vite/bin/vite.js --config tests/demandas-ui/vite.config.ts
+   Abrir http://127.0.0.1:8093; alternar Cadastro/Projeto/Mapeamento/Parecer.
+   Abrir Todos os campos, Ordenar e Riscos pela lateral; navegar nas três abas.
+   Abrir aplicação de diagnóstico e seus quatro instrumentos; baixar parecer.
+   ?consulta=1 ativa o perfil de consulta da fixture.
+5. No ambiente aprovado, depois da migração: anexar um documento sintético,
+   recarregar a página e reabrir; confirmar que ele não aparece em outro projeto
+   nem nas outras áreas. Testar também com visualizador e diagnóstico concluído.
+
+O navegador da fixture não grava em Supabase. A gravação real em ambiente remoto
+permanece fora desta verificação; seu aceite exige migração e teste autenticado.
+O PDF sintético baixado pelo navegador e sua imagem estão em
+docs/evidencias/demandas-pdf-20261019/.
+
+Documentação oficial consultada para o armazenamento:
+https://supabase.com/docs/reference/javascript/storage-from-upload
+https://supabase.com/docs/reference/javascript/storage-from-createsignedurl

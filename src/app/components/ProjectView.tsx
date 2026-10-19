@@ -1,62 +1,26 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import {
-  FileText,
-  ClipboardList,
-  DollarSign,
-  ShieldAlert,
-  GitBranch,
-  ArrowLeft,
-  ChevronRight,
-  ExternalLink,
-  Link2,
-  Info,
-  ListChecks,
-  X,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { type Project } from '../data/mockData';
-import { type ProjectExt } from '../store';
-import { useStore } from '../store';
-import { useAuth } from '../auth/authStore';
-import { useAudit } from '../audit/auditStore';
-import { ProjectSummaryHeader } from './project-tabs/ProjectSummaryHeader';
-import { TabDescricao } from './project-tabs/TabDescricao';
-import { TabPlanoTrabalho } from './plano/TabPlanoTrabalho';
-import { TabOrcamento } from './orcamento/TabOrcamento';
-import { TabFinanceiro } from './project-tabs/TabFinanceiro';
-import { TabMudancas } from './project-tabs/TabMudancas';
-import { riscoEmAberto, faixaRisco } from '../lib/planoTrabalho';
-import type { AbaProjeto } from '../lib/navegacaoApp';
+import { useState, type ReactNode } from "react";
+import { ArrowLeft, FileText, ClipboardList, DollarSign, Info, ShieldAlert } from "lucide-react";
+import type { Project } from "../data/mockData";
+import { useStore, type ProjectExt } from "../store";
+import { ProjectSummaryHeader } from "./project-tabs/ProjectSummaryHeader";
+import { TabDescricao } from "./project-tabs/TabDescricao";
+import { TabPlanoTrabalho, type PedidoVisaoPlano } from "./plano/TabPlanoTrabalho";
+import { useAuth } from "../auth/authStore";
+import { TabOrcamento } from "./orcamento/TabOrcamento";
+import { TabFinanceiro } from "./project-tabs/TabFinanceiro";
+import { riscoEmAberto, faixaRisco } from "../lib/planoTrabalho";
+import type { AbaProjeto } from "../lib/navegacaoApp";
+import { DocumentosRegistro } from "./DocumentosRegistro";
 
-/**
- * As seções do RF-001, nesta ordem, menos Contato (ver TabId). Substituem as cinco abas antigas:
- * o Dashboard virou o resumo compacto do cabeçalho (RF-004), Monitoramento de
- * Metas e Cronograma passam a ser as visões Tabela e Gantt dentro do Plano de
- * Trabalho, e Financeiro passa a se chamar Orçamento.
- */
-// A aba Contato saiu (RC-03): o histórico de contatos é da organização e
-// fica na ficha dela, em Organizações.
-type TabId = AbaProjeto;
-
-const tabs: { id: TabId; label: string; icon: typeof FileText }[] = [
-  { id: 'descricao',  label: 'Descrição',         icon: FileText },
-  { id: 'plano',      label: 'Plano de Trabalho', icon: ClipboardList },
-  { id: 'orcamento',  label: 'Orçamento',         icon: DollarSign },
-];
-
-const statusConfig: Record<string, { color: string; bg: string; dot: string }> = {
-  'Em andamento': { color: 'var(--brand)', bg: 'var(--brand-soft)', dot: 'var(--brand)' },
-  'Concluído':    { color: 'var(--success)', bg: 'var(--success-soft)', dot: 'var(--success)' },
-  'Atrasado':     { color: 'var(--alert)', bg: 'var(--alert-soft)', dot: 'var(--alert)' },
-  'Não iniciado': { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' },
-};
-
+const tabs = [
+  { id: "descricao", label: "Descrição", icon: FileText },
+  { id: "plano", label: "Plano de Trabalho", icon: ClipboardList },
+  { id: "orcamento", label: "Orçamento", icon: DollarSign },
+] as const;
 interface ProjectViewProps {
   project: Project;
   onBack: () => void;
-  /** Rótulo do "voltar" no caminho. Dentro da organização, volta aos projetos dela. */
   rotuloVoltar?: string;
-  /** A ficha já apresenta o único H1 fixo com o nome da organização. */
   dentroDaOrganizacao?: boolean;
   aoEncaminhamentos?: (atividadeId?: string) => void;
   renderEncaminhamentos?: (atividadeId: string | null) => ReactNode;
@@ -64,290 +28,166 @@ interface ProjectViewProps {
   focoAtual?: string | null;
   aoMudarAba?: (aba: AbaProjeto, foco?: string | null) => void;
 }
-
-export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos', dentroDaOrganizacao = false, aoEncaminhamentos, renderEncaminhamentos, abaAtual, focoAtual, aoMudarAba }: ProjectViewProps) {
-  const [abaLocal, setAbaLocal] = useState<TabId>('plano');
+export function ProjectView({
+  project: initial,
+  onBack,
+  rotuloVoltar = "Organizações",
+  dentroDaOrganizacao = false,
+  aoEncaminhamentos,
+  renderEncaminhamentos,
+  abaAtual,
+  focoAtual,
+  aoMudarAba,
+}: ProjectViewProps) {
+  const { getProject } = useStore();
+  const { readOnly } = useAuth();
+  const project = getProject(initial.id) ?? initial;
+  const [abaLocal, setAbaLocal] = useState<AbaProjeto>("plano");
   const [focoLocal, setFocoLocal] = useState<string | null>(null);
+  const [pedidoVisao, setPedidoVisao] = useState<PedidoVisaoPlano | null>(null);
   const activeTab = abaAtual ?? abaLocal;
-  const focoEncaminhamento = abaAtual === undefined ? focoLocal : focoAtual ?? null;
   const mudarAba = (aba: AbaProjeto, foco?: string | null) => {
     if (aoMudarAba) aoMudarAba(aba, foco);
-    else { setAbaLocal(aba); setFocoLocal(foco ?? null); }
-  };
-  const abrirEncaminhamentos = renderEncaminhamentos ? (atividadeId?: string) => {
-    mudarAba('encaminhamentos', atividadeId ?? null);
-  } : aoEncaminhamentos;
-  const [panel, setPanel] = useState<'mudancas' | null>(null);
-  // RF01: o botão Riscos do cabeçalho leva à visão Riscos do Plano de Trabalho,
-  // no lugar da gaveta antiga. Um contador, e não um booleano, para que clicar
-  // de novo funcione mesmo se a pessoa já tiver trocado de visão depois.
-  const [pedidoRiscos, setPedidoRiscos] = useState(0);
-  const [editLink, setEditLink] = useState<{ kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; value: string } | null>(null);
-  const [salvandoLink, setSalvandoLink] = useState(false);
-  const { getProject, updateProject } = useStore();
-  const { user, readOnly } = useAuth();
-  const { log: audit } = useAudit();
-  const project = getProject(initial.id) ?? initial;
-  const driveLink = (project as ProjectExt).driveLink ?? '';
-  const budgetLink = (project as ProjectExt).budgetLink ?? '';
-  const termoFomentoLink = (project as ProjectExt).termoFomentoLink ?? '';
-  const cfg = statusConfig[project.status] ?? { color: 'var(--ink-4)', bg: 'var(--surface-2)', dot: 'var(--ink-5)' };
-
-  // RF-006: o painel lateral fecha por botão E por Escape. Sem isso, quem abre
-  // um detalhe sem querer fica preso ao mouse para sair.
-  useEffect(() => {
-    if (!panel && editLink === null) return;
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (editLink !== null) setEditLink(null);
-      else setPanel(null);
-    };
-    window.addEventListener('keydown', aoTeclar);
-    return () => window.removeEventListener('keydown', aoTeclar);
-  }, [panel, editLink]);
-
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'descricao': return <TabDescricao project={project} />;
-      case 'plano':     return <TabPlanoTrabalho project={project} pedidoRiscos={pedidoRiscos} acoesDaVisao={acoesDaVisao} aoEncaminhamentos={abrirEncaminhamentos} />;
-      case 'orcamento': return <TabOrcamentoInterino project={project} />;
-      case 'encaminhamentos': return renderEncaminhamentos?.(focoEncaminhamento);
-      default:          return null;
+    else {
+      setAbaLocal(aba);
+      setFocoLocal(foco ?? null);
     }
   };
-
-  const linkChips: { kind: 'driveLink' | 'budgetLink' | 'termoFomentoLink'; valor: string; rotulo: string; rotuloVazio: string; cor: string; fundo: string }[] = [
-    { kind: 'driveLink', valor: driveLink, rotulo: 'Plano de Trabalho (Drive)', rotuloVazio: 'Link do Plano de Trabalho', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
-    { kind: 'budgetLink', valor: budgetLink, rotulo: 'Orçamento Realizado', rotuloVazio: 'Link do Orçamento Realizado', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
-    { kind: 'termoFomentoLink', valor: termoFomentoLink, rotulo: 'Termo de Fomento', rotuloVazio: 'Link do Termo de Fomento', cor: 'var(--brand-text)', fundo: 'var(--brand-soft)' },
-  ];
-
+  const abrirEncaminhamentos = renderEncaminhamentos
+    ? (atividadeId?: string) => mudarAba("encaminhamentos", atividadeId ?? null)
+    : aoEncaminhamentos;
   const riscosAbertos = project.risks.filter(riscoEmAberto);
-  const criticosAbertos = riscosAbertos.filter(r => faixaRisco(r.severity) === 'Crítico').length;
-  const temCritico = criticosAbertos > 0;
-
-  // Slide 4: Riscos (N) e Mudanças (N) na linha do seletor de visões do Plano.
-  const acoesDaVisao = (
-    <>
-      <button
-        onClick={() => setPedidoRiscos(n => n + 1)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-        // Vermelho só com risco CRÍTICO em aberto (UI/UX, 29/09/2026); sem ele,
-        // o botão é neutro como os vizinhos.
-        style={temCritico
-          ? { borderColor: 'var(--danger-soft-border)', color: 'var(--danger)', background: 'var(--danger-soft)' }
-          : { borderColor: 'var(--border)', color: 'var(--ink-2)' }}
-        title={temCritico ? `${criticosAbertos} crítico${criticosAbertos === 1 ? '' : 's'} em aberto` : undefined}
-      >
-        {/* Só os em aberto: encerrado não pede ação (mesma regra do cabeçalho). */}
-        <ShieldAlert size={13} /> Riscos ({riscosAbertos.length})
-      </button>
-      <button
-        onClick={() => setPanel('mudancas')}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border"
-        style={{ borderColor: 'var(--brand-soft-border)', color: 'var(--brand)', background: 'var(--brand-soft)' }}
-      >
-        <GitBranch size={13} /> Mudanças ({project.changes.length})
-      </button>
-    </>
-  );
-
+  const criticos = riscosAbertos.filter((r) => faixaRisco(r.severity) === "Crítico").length;
   return (
-    <div className="flex flex-col min-w-0">
+    <div className="min-w-0">
       {!dentroDaOrganizacao && (
-        <h1 className="sticky top-0 z-10 px-4 sm:px-6 py-3 border-b text-xl font-bold"
-          style={{ background: 'var(--surface-0)', borderColor: 'var(--border)', overflowWrap: 'anywhere' }}>
-          {(project as ProjectExt).organizacao?.nome ?? (project as ProjectExt).org ?? project.name}
-        </h1>
-      )}
-      {/* Apenas o H1 da organização fica fixo; todo o contexto do projeto rola. */}
-      <div
-        className="border-b px-4 sm:px-6 pt-5 pb-3"
-        style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}
-      >
-        {/* Caminho */}
-        <div className="flex items-center gap-1.5 mb-3">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1 text-[12px] transition-colors hover:text-blue-600"
-            style={{ color: 'var(--ink-4)' }}
-          >
-            <ArrowLeft size={12} /> {rotuloVoltar}
+        <div className="px-4 sm:px-6 py-3 border-b">
+          <button type="button" onClick={onBack} className="mb-2 flex items-center gap-1 text-xs">
+            <ArrowLeft size={13} />
+            {rotuloVoltar}
           </button>
-          <ChevronRight size={11} color="var(--line-2)" />
-          <span style={{ fontSize: '0.75rem', color: 'var(--ink-1)', fontWeight: 500 }}>
-            {project.name}
-          </span>
+          <h1 className="text-xl font-bold break-words">
+            {(project as ProjectExt).organizacao?.nome ??
+              (project as ProjectExt).org ??
+              project.name}
+          </h1>
         </div>
-
-        {/* Título e ações */}
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3 lg:gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2
-                style={{
-                  fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem',
-                  color: 'var(--ink-1)', lineHeight: 1.3,
-                }}
-              >
-                {project.name}
-              </h2>
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                style={{ color: cfg.color, background: cfg.bg }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
-                {project.status}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-x-3 gap-y-1 mt-1 flex-wrap">
-              <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
-                {project.code}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>·</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>{project.financier}</span>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-
-      <div className="min-w-0" style={{ background: 'var(--background)' }}>
-        <div className="border-b px-6 pt-3 pb-0" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
-
-          {/* Links do Drive */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {linkChips.map(chip => (
-              <span key={chip.kind} className="inline-flex items-center gap-1">
-                {chip.valor && (
-                  <a
-                    href={chip.valor}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                    style={{ color: chip.cor, background: chip.fundo }}
-                  >
-                    <ExternalLink size={11} /> {chip.rotulo}
-                  </a>
-                )}
-                {!readOnly && <button
-                  onClick={() => setEditLink({ kind: chip.kind, value: chip.valor })}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
-                  style={{ borderColor: 'var(--border)', color: 'var(--ink-4)' }}
+      )}
+      <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0">
+          <nav
+            aria-label="Abas do projeto"
+            className="flex overflow-x-auto border-b px-4 sm:px-6"
+            style={{ background: "var(--surface-0)" }}
+          >
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => mudarAba(tab.id)}
+                  aria-current={activeTab === tab.id ? "page" : undefined}
+                  className="flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm whitespace-nowrap"
+                  style={{
+                    borderColor: activeTab === tab.id ? "var(--primary)" : "transparent",
+                    color: activeTab === tab.id ? "var(--primary)" : "var(--ink-4)",
+                  }}
                 >
-                  <Link2 size={11} /> {chip.valor ? 'Editar' : chip.rotuloVazio}
-                </button>}
-              </span>
-            ))}
-          </div>
-
-          {/* Resumo compacto (RF-004) */}
-          <ProjectSummaryHeader project={project} />
-
-          {/* Abas */}
-          <div className="overflow-x-auto -mb-px">
-            <div className="flex items-end gap-0 w-max">
-              {tabs.map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => mudarAba(tab.id)}
-                    aria-current={activeTab === tab.id ? 'page' : undefined}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 transition-all whitespace-nowrap"
-                    style={{
-                      borderBottomColor: isActive ? 'var(--primary)' : 'transparent',
-                      color: isActive ? 'var(--primary)' : 'var(--ink-4)',
-                      fontWeight: isActive ? 600 : 400,
-                      background: 'transparent',
-                    }}
-                  >
-                    <Icon size={13} />
-                    {tab.label}
-                  </button>
-                );
-              })}
-              {abrirEncaminhamentos && <button onClick={() => abrirEncaminhamentos()}
-                aria-label="Encaminhamentos"
-                aria-current={activeTab === 'encaminhamentos' ? 'page' : undefined}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 text-[12.5px] border-b-2 whitespace-nowrap"
-                style={{ color: activeTab === 'encaminhamentos' ? 'var(--primary)' : 'var(--ink-4)', borderBottomColor: activeTab === 'encaminhamentos' ? 'var(--primary)' : 'transparent' }}>
-                <ListChecks size={13} /> Encaminhamentos
-              </button>}
-            </div>
-          </div>
-        </div>
-
-        {/* Conteúdo da aba */}
-        <div>
-          {renderTab()}
-        </div>
-      </div>
-
-      {/* Painel de Riscos / Mudanças */}
-      {panel && (
-        <div className="fixed inset-0 z-50 flex justify-end" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setPanel(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-card h-full w-full max-w-4xl flex flex-col">
-            <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-              <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem' }}>
-                Registro de Mudanças
-              </span>
-              <button onClick={() => setPanel(null)} aria-label="Fechar painel"><X size={16} /></button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <TabMudancas project={project} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de links do Drive */}
-      {editLink !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }} onClick={() => setEditLink(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-card rounded-2xl border p-6 w-full max-w-lg" style={{ borderColor: 'var(--border)' }}>
-            <h3 className="mb-3" style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
-              {editLink.kind === 'driveLink'
-                ? 'Plano de Trabalho no Drive'
-                : editLink.kind === 'budgetLink'
-                  ? 'Orçamento Realizado no Drive'
-                  : 'Termo de Fomento no Drive'}
-            </h3>
-            <input
-              autoFocus
-              className="w-full border rounded-lg px-3 py-2 text-[13px]"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
-              placeholder="https://drive.google.com/..."
-              value={editLink.value}
-              onChange={e => setEditLink({ ...editLink, value: e.target.value })}
+                  <Icon size={14} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+          {activeTab === "descricao" && <TabDescricao project={project} />}
+          {activeTab === "plano" && (
+            <TabPlanoTrabalho
+              project={project}
+              pedidoVisao={pedidoVisao}
+              acoesExternas
+              aoEncaminhamentos={abrirEncaminhamentos}
             />
-            <div className="flex items-center justify-end gap-2 mt-4">
-              <button onClick={() => setEditLink(null)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>Cancelar</button>
-              <button
-                disabled={salvandoLink}
-                onClick={async () => {
-                  setSalvandoLink(true);
-                  try {
-                    await updateProject(project.id, { [editLink.kind]: editLink.value.trim() } as Partial<ProjectExt>);
-                    audit({
-                      userLogin: user?.login ?? '—', area: 'projeto', action: `editar link (${editLink.kind})`,
-                      detail: editLink.value.trim(), projectId: project.id, projectName: project.name, kind: 'alteracao',
-                    });
-                    toast.success('Link atualizado.');
-                    setEditLink(null);
-                  } catch (erro) {
-                    toast.error(erro instanceof Error ? erro.message : 'Não foi possível salvar o link.');
-                  } finally { setSalvandoLink(false); }
-                }}
-                className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white"
-                style={{ background: 'var(--primary)' }}
-              >{salvandoLink ? 'Salvando…' : 'Salvar'}</button>
-            </div>
-          </div>
+          )}
+          {activeTab === "orcamento" && <TabOrcamentoInterino project={project} />}
+          {activeTab === "encaminhamentos" &&
+            renderEncaminhamentos?.(abaAtual === undefined ? focoLocal : (focoAtual ?? null))}
         </div>
-      )}
+        <aside
+          aria-label="Resumo e documentos do projeto"
+          className="min-w-0 space-y-4 border-t xl:border-l xl:border-t-0 p-4"
+          style={{ background: "var(--surface-0)" }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              mudarAba("plano");
+              setPedidoVisao((p) => ({ visao: "riscos", contador: (p?.contador ?? 0) + 1 }));
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold"
+            style={{
+              borderColor: criticos ? "var(--danger-soft-border)" : "var(--border)",
+              background: criticos ? "var(--danger-soft)" : "var(--surface-1)",
+              color: criticos ? "var(--danger)" : "var(--ink-2)",
+            }}
+          >
+            <ShieldAlert size={17} />
+            Riscos ({riscosAbertos.length}){criticos > 0 ? " · " + criticos + " crítico(s)" : ""}
+          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                mudarAba("plano");
+                setPedidoVisao((p) => ({ visao: "completa", contador: (p?.contador ?? 0) + 1 }));
+              }}
+              className="flex-1 rounded-lg border px-3 py-2 text-xs"
+            >
+              Todos os campos
+            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => {
+                  mudarAba("plano");
+                  setPedidoVisao((p) => ({ visao: "ordenar", contador: (p?.contador ?? 0) + 1 }));
+                }}
+                className="flex-1 rounded-lg border px-3 py-2 text-xs"
+              >
+                Ordenar
+              </button>
+            )}
+          </div>
+          <ProjectSummaryHeader project={project} lateral />
+          {abrirEncaminhamentos && (
+            <button
+              type="button"
+              aria-label="Encaminhamentos"
+              onClick={() => abrirEncaminhamentos()}
+              className="w-full rounded-lg border px-3 py-2 text-xs"
+            >
+              Encaminhamentos
+            </button>
+          )}
+          <dl className="space-y-2 text-xs break-words">
+            <div>
+              <dt className="text-muted-foreground">Projeto</dt>
+              <dd>
+                {project.code} · {project.name}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Financiador</dt>
+              <dd>{project.financier || "Não informado"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Situação</dt>
+              <dd>{project.status}</dd>
+            </div>
+          </dl>
+          <DocumentosRegistro area="projeto" projetoId={project.id} />
+        </aside>
+      </div>
     </div>
   );
 }
@@ -364,22 +204,30 @@ export function ProjectView({ project: initial, onBack, rotuloVoltar = 'Projetos
  * tirar. Ficam acessíveis e rotulados até haver decisão sobre eles.
  */
 function TabOrcamentoInterino({ project }: { project: Project }) {
-  const [sub, setSub] = useState<'execucao' | 'legado'>('execucao');
+  const [sub, setSub] = useState<"execucao" | "legado">("execucao");
 
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="px-6 pt-4 flex-shrink-0">
-        <div className="inline-flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {([['execucao', 'Execução'], ['legado', 'Contrapartidas e aportes']] as const).map(([valor, rotulo], i) => (
+        <div
+          className="inline-flex rounded-lg border overflow-hidden"
+          style={{ borderColor: "var(--border)" }}
+        >
+          {(
+            [
+              ["execucao", "Execução"],
+              ["legado", "Contrapartidas e aportes"],
+            ] as const
+          ).map(([valor, rotulo], i) => (
             <button
               key={valor}
               onClick={() => setSub(valor)}
               className="px-3 py-1.5 text-[12px]"
               style={{
-                background: sub === valor ? 'var(--brand-soft)' : 'transparent',
-                color: sub === valor ? 'var(--brand)' : 'var(--ink-3)',
+                background: sub === valor ? "var(--brand-soft)" : "transparent",
+                color: sub === valor ? "var(--brand)" : "var(--ink-3)",
                 fontWeight: sub === valor ? 600 : 400,
-                borderRight: i === 0 ? '1px solid var(--border)' : undefined,
+                borderRight: i === 0 ? "1px solid var(--border)" : undefined,
               }}
             >
               {rotulo}
@@ -389,21 +237,21 @@ function TabOrcamentoInterino({ project }: { project: Project }) {
       </div>
 
       <div className="flex-1 min-h-0">
-        {sub === 'execucao' ? (
+        {sub === "execucao" ? (
           <TabOrcamento project={project} />
         ) : (
           <div className="flex flex-col h-full min-h-0">
             <div className="px-6 pt-3 flex-shrink-0">
               <div
                 className="flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5"
-                style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
+                style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
                 role="note"
               >
                 <Info size={15} color="var(--ink-4)" style={{ flexShrink: 0, marginTop: 1 }} />
-                <div style={{ fontSize: '0.78rem', color: 'var(--ink-3)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: "0.78rem", color: "var(--ink-3)", lineHeight: 1.5 }}>
                   Visão financeira anterior. Contrapartidas e aportes não fazem parte da
-                  especificação do Orçamento — continuam aqui até haver decisão sobre eles. A
-                  tabela de itens desta tela foi substituída pela aba Execução.
+                  especificação do Orçamento — continuam aqui até haver decisão sobre eles. A tabela
+                  de itens desta tela foi substituída pela aba Execução.
                 </div>
               </div>
             </div>

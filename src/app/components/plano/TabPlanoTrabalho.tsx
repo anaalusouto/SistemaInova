@@ -16,7 +16,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePopupChave } from '../PopupNavegacao';
-import { Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { Download, Table2, GanttChartSquare, Columns3, ShieldAlert, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { type Project, type Goal, type Deliverable, type Activity, type Risk } from '../../data/mockData';
 import { useStore, type ProjectExt } from '../../store';
@@ -45,6 +45,7 @@ import { NavegacaoPlano, type SelecaoPlano } from './NavegacaoPlano';
 import { ReclassificarRegistro } from './ReclassificarRegistro';
 
 type Visao = 'tabela' | 'gantt' | 'kanban' | 'riscos' | 'completa' | 'ordenar';
+export type PedidoVisaoPlano = {visao:'riscos' | 'completa' | 'ordenar';contador:number};
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: 'tabela', rotulo: 'Tabela', icone: Table2, disponivel: true },
@@ -65,11 +66,13 @@ type PainelAberto =
   | { tipo: 'novoRisco' }
   | null;
 
-export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEncaminhamentos }: {
+export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoesExternas = false, acoesDaVisao, aoEncaminhamentos }: {
   project: Project;
   /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
   pedidoRiscos?: number;
-  /** Botões à direita do seletor de visões — Riscos (N) e Mudanças (N), como no slide 4. */
+  pedidoVisao?: PedidoVisaoPlano | null;
+  acoesExternas?: boolean;
+  /** Ações adicionais à direita do seletor de visões. */
   acoesDaVisao?: ReactNode;
   aoEncaminhamentos?: (atividadeId?: string) => void;
 }) {
@@ -108,6 +111,11 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
     setVisao('riscos');
     seletorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [pedidoRiscos]);
+  useEffect(() => {
+    if(!pedidoVisao || (pedidoVisao.visao === 'ordenar' && readOnly))return;
+    setVisao(pedidoVisao.visao);
+    seletorRef.current?.scrollIntoView({behavior:'smooth',block:'start'});
+  },[pedidoVisao,readOnly]);
 
   const metas = useMemo(() => ordenarPlano(p.goals), [p.goals]);
   const riscos = p.risks;
@@ -245,8 +253,8 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
 
       {/* Seletor de visão (RF-011) */}
       <div ref={seletorRef} className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
-        <div className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-          {VISOES.filter(v => v.id !== 'ordenar' || !readOnly).map((v, i) => {
+        <div className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden ml-auto" style={{ borderColor: 'var(--border)' }}>
+          {VISOES.filter(v => (!acoesExternas || ['tabela','gantt','kanban'].includes(v.id)) && (v.id !== 'ordenar' || !readOnly)).map((v, i) => {
             const Icone = v.icone;
             const ativa = visao === v.id;
             return (
@@ -301,7 +309,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
 
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           {aoEncaminhamentos && <button type="button" onClick={() => aoEncaminhamentos()} className="border rounded-lg px-3 py-1.5 text-xs">Encaminhamentos</button>}
-          <button type="button" disabled={exportando} className="border rounded-lg px-3 py-1.5 text-xs" onClick={async () => {
+          <button type="button" disabled={exportando} aria-label={exportando ? 'Baixando plano de trabalho e riscos' : 'Baixar plano de trabalho e riscos'} title="Baixar plano de trabalho e riscos em PDF" className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async () => {
             setExportando(true);
             try {
               const { buildReportModel, exportReportPdf } = await import('../../lib/reportExport');
@@ -309,7 +317,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, acoesDaVisao, aoEn
               toast.success('Plano de trabalho e riscos exportados.');
             } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível exportar.'); }
             finally { setExportando(false); }
-          }}>{exportando ? 'Exportando…' : 'Exportar plano'}</button>
+          }}><Download size={19} className={exportando ? 'animate-pulse' : undefined} aria-hidden /></button>
           {acoesDaVisao}
         </div>
       </div>

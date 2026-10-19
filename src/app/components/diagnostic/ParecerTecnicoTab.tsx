@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../auth/authStore';
 import { Chip } from './DiagnosticUI';
 import { visualizarDocumento } from '../../lib/visualizacaoDocumento';
+import { validarDocumento } from '../../lib/documentosRegistro';
 
 interface ParecerTecnicoTabProps {
   diagnosticoId: string;
@@ -100,6 +101,8 @@ export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTab
   };
 
   const handleFile = (itemId: number, file: File) => {
+    try { validarDocumento(file.name,file.type,file.size); }
+    catch(e) { toast.error(e instanceof Error ? e.message : 'Documento inválido.'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       upload.mutate({ itemId, nomeArquivo: file.name, tipoMime: file.type, conteudoBase64: String(reader.result) });

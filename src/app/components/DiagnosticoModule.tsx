@@ -8,8 +8,8 @@ type View =
   | { name: 'organizacao'; comunidadeId: string }
   | { name: 'editor'; comunidadeId: string; diagnosticoId: string };
 
-export function DiagnosticoModule() {
-  const [view, setView] = useState<View>({ name: 'geral' });
+export function DiagnosticoModule({ comunidadeId, instrumentoInicial = 'matriz' }: { comunidadeId?: string; instrumentoInicial?: 'matriz' | 'parecer' }) {
+  const [view, setView] = useState<View>(comunidadeId ? {name:'organizacao',comunidadeId} : { name: 'geral' });
 
   if (view.name === 'geral') {
     return <DiagnosticoVisaoGeral onSelectOrganizacao={comunidadeId => setView({ name: 'organizacao', comunidadeId })} />;
@@ -18,6 +18,7 @@ export function DiagnosticoModule() {
     return (
       <DiagnosticoOrganizacao
         comunidadeId={view.comunidadeId}
+        incorporado={!!comunidadeId}
         onBack={() => setView({ name: 'geral' })}
         onSelectDiagnostico={diagnosticoId => setView({ name: 'editor', comunidadeId: view.comunidadeId, diagnosticoId })}
       />
@@ -25,7 +26,10 @@ export function DiagnosticoModule() {
   }
   return (
     <DiagnosticoEditor
+      key={view.diagnosticoId}
       diagnosticoId={view.diagnosticoId}
+      incorporado={!!comunidadeId}
+      instrumentoInicial={instrumentoInicial}
       onBack={() => setView({ name: 'organizacao', comunidadeId: view.comunidadeId })}
       onNovaVersao={novoId => setView({ name: 'editor', comunidadeId: view.comunidadeId, diagnosticoId: novoId })}
     />
