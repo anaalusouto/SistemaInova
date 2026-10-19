@@ -1,5 +1,7 @@
 import type { Project } from "../data/mockData";
 import { conhecimento, contextoSeguro, type ContextoAssistente } from "./context";
+import { responderManual } from "./manualHelp";
+import { responderProjetos, type DetalheProjetoLocal } from "./projectHelp";
 
 export type ResumoProjetoLocal = {
   metas: number;
@@ -14,8 +16,10 @@ export type DadosAssistenteLocal = {
   carregando?: boolean;
   projetosCarregados: number;
   projeto?: ResumoProjetoLocal;
+  projetoDetalhado?: DetalheProjetoLocal;
+  projetos?: DetalheProjetoLocal[];
 };
-export type RespostaLocal = { texto: string; fontes: string[] };
+export type RespostaLocal = { texto: string; fontes: string[]; assunto?: string };
 export type PerfilLocal = "admin" | "estagiario" | "visualizador";
 
 /** Só deriva contagens do estado que o usuário já recebeu na plataforma. */
@@ -95,7 +99,7 @@ const entradas = Object.entries(conhecimento.formularios).flatMap(([id, form]) =
     campo,
     texto,
     fontes: form.fontes,
-    busca: termos(campo),
+    busca: termos(`${campo} ${/^\d|_/.test(campo) ? texto : ""}`),
   })),
 ]);
 const resultado = (texto: string, fontes: string[] = []): RespostaLocal => ({ texto, fontes });
@@ -112,7 +116,7 @@ export function responderLocal(
   if (!q) return resultado("Digite uma pergunta sobre o Inova.");
   if (pergunta.length > 1000) return resultado("Use até 1.000 caracteres por pergunta.");
   if (
-    /\b(senha|token|chave de api|cpf|dados pessoais)\b/.test(q) ||
+    /\b(token|chave de api|cpf|dados pessoais|qual (e )?(a |minha )?senha)\b/.test(q) ||
     /sk-[a-z0-9_-]{12,}/i.test(pergunta)
   )
     return resultado(
@@ -124,7 +128,7 @@ export function responderLocal(
     return resultado(
       "Este assistente apenas consulta e orienta. Nenhum registro foi alterado. Posso explicar como usar o formulário e suas permissões.",
     );
-  if (/\b(permissao|permissoes|perfil|visualizador|administrador|estagiario)\b/.test(q))
+  if (/\b(permissao|permissoes|visualizador|administrador|estagiario|meu perfil)\b/.test(q))
     return resultado(
       `${conhecimento.perfis[perfil]}\n\nO chatbot apenas orienta e consulta os dados já carregados.`,
       [conhecimento.perfis.fonte],
@@ -133,10 +137,14 @@ export function responderLocal(
     return resultado(
       "Olá! Sou o assistente local do Inova. Posso explicar campos e telas ou resumir os dados do projeto aberto. Minhas respostas vêm de regras e da base do sistema.",
     );
+  const manual = responderManual(pergunta, atual);
+  if (manual) return manual;
+  const consulta = responderProjetos(pergunta, dados);
+  if (consulta) return consulta;
   const querDados =
     /\b(quantos|quantas|quantidade|resuma|resumo|situacao|dados do projeto|status do projeto)\b/.test(
       q,
-    );
+    ) && !/\b(como|preencher|preencho|regras?|campo|valor unitario)\b/.test(q);
   if (querDados) {
     if (dados.carregando)
       return resultado(
@@ -208,11 +216,12 @@ export function responderLocal(
       const campoCitado = entry.campo && normalizar(pergunta).includes(normalizar(entry.campo));
       return {
         ...entry,
-        score: matches
-          ? matches * (entry.campo ? 10 : 5) +
-            (entry.id === atual.formulario ? 2 : 0) +
-            (campoCitado ? 3 : 0)
-          : 0,
+        score:
+          matches >= Math.ceil(palavras.length * 0.6) && matches > 0
+            ? matches * (entry.campo ? 10 : 5) +
+              (entry.id === atual.formulario ? 2 : 0) +
+              (campoCitado ? 3 : 0)
+            : 0,
       };
     })
     .filter((entry) => entry.score > 0)

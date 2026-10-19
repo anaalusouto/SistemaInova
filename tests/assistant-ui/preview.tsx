@@ -4,6 +4,42 @@ import { AssistenteInova } from "../../src/app/assistant/AssistenteInova";
 import { ThemeProvider } from "../../src/app/theme/themeStore";
 import { Campo, Texto } from "../../src/app/components/plano/camposFormulario";
 import "../../src/styles.css";
+import type { DetalheProjetoLocal } from "../../src/app/assistant/projectHelp";
+
+const projeto: DetalheProjetoLocal = {
+  nome: "Projeto de demonstração",
+  codigo: "DEMO-01",
+  organizacao: "Organização de teste",
+  objetivo: "Preparar oficinas de comercialização",
+  status: "Em andamento",
+  andamento: 40,
+  inicio: "2026-01-01",
+  fim: "2026-12-31",
+  metas: [
+    {
+      nome: "Fortalecer comercialização",
+      etapas: [
+        {
+          nome: "Preparar oficina",
+          atividades: [
+            {
+              nome: "Executar oficina",
+              status: "Em andamento",
+              progresso: 40,
+              inicio: "2026-01-01",
+              fim: "2026-09-30",
+              inicioReal: null,
+              fimReal: null,
+              atrasada: true,
+              tarefas: 2,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  riscos: [],
+};
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider>
@@ -20,14 +56,16 @@ createRoot(document.getElementById("root")!).render(
       <AssistenteInova
         contexto={{ tela: "plano" }}
         dados={{
-          projetosCarregados: 3,
+          projetosCarregados: 1,
+          projetos: [projeto],
+          projetoDetalhado: projeto,
           projeto: {
-            metas: 2,
-            etapas: 4,
-            atividades: 8,
-            concluidas: 3,
-            riscos: 2,
-            riscosAbertos: 1,
+            metas: 1,
+            etapas: 1,
+            atividades: 1,
+            concluidas: 0,
+            riscos: 0,
+            riscosAbertos: 0,
             status: "Em andamento",
           },
         }}

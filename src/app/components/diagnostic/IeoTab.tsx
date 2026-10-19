@@ -97,7 +97,7 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
               const nivelSelecionado = pergunta.niveis.find(n => n.valor === resposta?.nivel?.toString());
 
               return (
-                <div key={pergunta.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                <div key={pergunta.id} data-inova-form="ieo" data-inova-field={pergunta.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
                   <button onClick={() => toggleOpen(pergunta, resposta)} className="w-full flex items-center justify-between px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       {open ? <ChevronDown size={14} color="var(--ink-5)" /> : <ChevronRight size={14} color="var(--ink-5)" />}

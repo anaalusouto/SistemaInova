@@ -245,7 +245,7 @@ function FormularioRegistro({
         onClick={e => e.stopPropagation()}
         className="bg-card rounded-2xl border p-5 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col gap-3"
         style={{ borderColor: 'var(--border)' }}
-        role="dialog"
+        role="dialog" data-inova-form="registro"
         aria-label={form.id ? 'Editar registro de contato' : 'Novo registro de contato'}
       >
         <div className="flex items-center justify-between">

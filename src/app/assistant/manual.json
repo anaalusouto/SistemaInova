@@ -1,0 +1,577 @@
+{
+  "versao": "2026-10-19.2",
+  "guias": [
+    {
+      "id": "exclusao",
+      "titulo": "Exclusão e dependências",
+      "termos": "excluir exclusao apagar remover dependencia dependencias",
+      "passos": [
+        "Abra o detalhe do registro correto e verifique se o controle de exclusão está disponível para seu perfil.",
+        "Leia o diálogo de confirmação e os vínculos que serão afetados.",
+        "Resolva dependências que impedem a operação e confirme somente após revisar o impacto."
+      ],
+      "regras": [
+        "Etapa com atividades ou riscos não pode ser removida; trate os vínculos antes.",
+        "A exclusão de itens de orçamento preserva o histórico e os retira da proposta ativa conforme o modelo de exclusão lógica.",
+        "O impacto depende do tipo de registro. Não assuma que excluir um pai preservará automaticamente os filhos ou anexos.",
+        "Perfil de consulta não recebe permissão para excluir; o chatbot nunca executa exclusões."
+      ],
+      "fontes": [
+        "src/app/lib/planoTrabalho.ts: motivoParaNaoRemoverEtapa",
+        "src/app/components/orcamento/DialogoExclusaoItem.tsx",
+        "src/app/lib/orcamento.ts",
+        "src/app/sessao.server.ts"
+      ]
+    },
+    {
+      "id": "aprovacao",
+      "titulo": "Solicitações e validação administrativa",
+      "termos": "aprovar aprovacao rejeitar validacao solicitacao pendente alteracao administrador",
+      "passos": [
+        "Quando o fluxo apresentar uma solicitação pendente, consulte a alteração proposta e a entidade afetada.",
+        "Quem possui poderes administrativos deve revisar o conteúdo antes de aprovar ou rejeitar.",
+        "Após a decisão, confira o estado do registro e o histórico no próprio sistema."
+      ],
+      "regras": [
+        "Aprovar e rejeitar solicitações exige administrador ou adminOverride no servidor.",
+        "A existência de um fluxo de aprovação não significa que toda edição do sistema passe por ele; metas e outros fluxos podem ter edição direta registrada em histórico.",
+        "Solicitação pendente não deve ser descrita como alteração já aprovada ou executada.",
+        "O chatbot não aprova solicitações nem substitui a decisão da pessoa responsável."
+      ],
+      "fontes": [
+        "src/app/components/project-tabs/ApprovalsBanner.tsx",
+        "src/app/projetos.server.ts",
+        "src/app/components/plano/PainelMeta.tsx",
+        "src/app/sessao.server.ts"
+      ]
+    },
+    {
+      "id": "projeto",
+      "titulo": "Projetos e proposta",
+      "termos": "projeto cadastro criar novo proposta descricao objetivo beneficiarios financiamento",
+      "passos": [
+        "Abra Organizações e selecione a organização executora.",
+        "Abra a seção de projetos e use Novo projeto quando seu perfil permitir.",
+        "Informe os dados da proposta, confira o vínculo com a organização e salve.",
+        "Cadastre metas, etapas e atividades no Plano de Trabalho; acompanhe a execução no Orçamento."
+      ],
+      "regras": [
+        "O projeto é criado dentro de uma organização. A criação no servidor recusa organização inexistente ou que já tenha projeto vinculado.",
+        "Nome e coordenador são exigidos pelo formulário de novo projeto.",
+        "Resultados, impactos e beneficiários descritos na aba Descrição pertencem à proposta; não comprovam execução ou resultado alcançado.",
+        "Ausência de informação deve ser apresentada como Não informado. Valores padrão técnicos do cadastro não constituem prazos institucionais."
+      ],
+      "fontes": [
+        "src/app/components/organizacoes/NovoProjeto.tsx",
+        "src/app/projetos.server.ts: criarProjeto",
+        "src/app/components/project-tabs/TabDescricao.tsx",
+        "src/app/lib/vinculoProjeto.ts"
+      ]
+    },
+    {
+      "id": "plano",
+      "titulo": "Plano de Trabalho e hierarquia",
+      "termos": "plano trabalho meta etapa atividade tarefa subtarefa hierarquia estrutura derivados",
+      "passos": [
+        "Abra o projeto e entre em Plano de Trabalho.",
+        "Organize o resultado em metas; dentro delas, cadastre as etapas ou entregas.",
+        "Defina o período previsto da etapa antes de cadastrar suas atividades.",
+        "Abra o detalhe para editar os dados e incluir tarefas, anexos e encaminhamentos relacionados. Use Tabela, Kanban ou Gantt conforme o acompanhamento desejado."
+      ],
+      "regras": [
+        "A hierarquia é projeto → meta → etapa → atividade → tarefa. Tarefas não entram no cálculo do andamento do projeto.",
+        "Uma atividade depende da etapa; risco novo também exige etapa do mesmo projeto.",
+        "O andamento do projeto é a média simples dos percentuais das atividades ativas, arredondada para inteiro. Sem atividades, é Não calculado, não 0%.",
+        "A leitura do plano filtra registros excluídos; filtros visuais não devem mudar a conclusão real dos grupos."
+      ],
+      "fontes": [
+        "src/app/components/plano/TabPlanoTrabalho.tsx",
+        "src/app/lib/planoTrabalho.ts: andamentoDoProjeto",
+        "src/app/lib/conclusaoPlano.ts"
+      ]
+    },
+    {
+      "id": "meta",
+      "titulo": "Metas e seus prazos",
+      "termos": "meta titulo prazo periodo proprio divergencia etapas",
+      "passos": [
+        "No Plano de Trabalho, abra a meta e sua edição.",
+        "Informe um título que identifique o resultado e o responsável, quando definido.",
+        "Preencha o prazo próprio se houver; confira as datas das etapas.",
+        "Salve e consulte os avisos de divergência."
+      ],
+      "regras": [
+        "Título da meta é obrigatório. O início próprio não pode ser posterior ao fim.",
+        "Sem prazo próprio, o previsto da meta é calculado pelo menor início e maior fim das etapas.",
+        "Com prazo próprio, uma etapa fora do intervalo produz aviso de divergência, não bloqueio automático.",
+        "O período realizado é derivado das datas realizadas das etapas, sem inventar datas ausentes."
+      ],
+      "fontes": [
+        "src/app/lib/planoTrabalho.ts: validarMeta, periodoDaMeta, prazoDaMeta, divergenciaDaMeta",
+        "src/app/components/plano/PainelMeta.tsx"
+      ]
+    },
+    {
+      "id": "etapa",
+      "titulo": "Etapas, entregas e limites de datas",
+      "termos": "etapa entrega periodo reduzir excluir remover inicio fim realizado previsto",
+      "passos": [
+        "Abra a etapa dentro da meta.",
+        "Defina início e fim previstos antes de cadastrar atividades.",
+        "Registre datas realizadas quando os fatos ocorrerem; estenda o realizado se a execução passar do previsto.",
+        "Antes de reduzir um período, confira todas as atividades que dependem dele."
+      ],
+      "regras": [
+        "O início da etapa não pode ser posterior ao fim.",
+        "Reduzir o previsto da etapa não pode deixar atividades existentes fora dos novos limites.",
+        "Para registrar fim realizado de atividade além do previsto da etapa, ajuste primeiro o fim realizado da etapa.",
+        "Etapa com atividades ou riscos não pode ser removida; as dependências precisam ser tratadas antes."
+      ],
+      "fontes": [
+        "src/app/components/plano/PainelEtapa.tsx",
+        "src/app/lib/planoTrabalho.ts: validarPeriodoDaEtapa, validarDatasDaAtividade, motivoParaNaoRemoverEtapa"
+      ]
+    },
+    {
+      "id": "atividade",
+      "titulo": "Atividades, status, progresso e atraso",
+      "termos": "atividade cadastro preencher status progresso percentual atraso justificativa datas inicio fim proximo passo",
+      "passos": [
+        "Abra a etapa e crie ou edite a atividade.",
+        "Informe título, status e as datas previstas dentro do intervalo da etapa.",
+        "Preencha as datas reais somente quando ocorrerem. Se houver atraso em relação à respectiva data prevista, explique a causa na justificativa.",
+        "Confira vínculo orçamentário, observação e próximo passo; salve e acompanhe o registro no plano."
+      ],
+      "regras": [
+        "Título, início e fim previstos são exigidos; etapa sem período previsto não aceita nova atividade.",
+        "Status válidos: A iniciar, Em andamento e Concluído. A iniciar corresponde a 0%; Concluído a 100%; Em andamento usa 1 a 99%.",
+        "Atividade não concluída com fim previsto anterior à data de referência é atrasada. Concluída não permanece com atraso corrente, mesmo que tenha terminado depois do previsto.",
+        "Justificativa é obrigatória se início real ou fim real for posterior à respectiva data prevista. Antecipação ou igualdade não exigem justificativa.",
+        "Início não pode ser posterior ao fim. O previsto deve caber no previsto da etapa; o fim real tem como teto o fim realizado da etapa, ou o previsto quando não houver realizado.",
+        "Vínculo orçamentário admite Sim, Não e Não informado; ausência de informação não equivale a Não.",
+        "Próximo passo é uma ação de acompanhamento, distinta da observação; aparece nos encaminhamentos da organização vinculada."
+      ],
+      "fontes": [
+        "src/app/components/plano/FormularioAtividade.tsx",
+        "src/app/lib/planoTrabalho.ts: estaAtrasada, validarJustificativaAtraso, progressoParaStatus, validarDatasDaAtividade"
+      ]
+    },
+    {
+      "id": "conclusao",
+      "titulo": "Concluir e reabrir registros",
+      "termos": "concluir conclusao checkbox marcar reabrir meta etapa atividade parcial concluido",
+      "passos": [
+        "No Plano de Trabalho, localize o controle de conclusão do registro.",
+        "Antes de concluir uma meta ou etapa, confira todas as atividades do grupo, inclusive as ocultas por filtros.",
+        "Use o controle apenas se tiver permissão de escrita e confira o resultado no detalhe."
+      ],
+      "regras": [
+        "Concluir meta ou etapa altera as atividades ativas do grupo, não atividades de outros vínculos.",
+        "Um grupo só é concluído quando possui atividades e todas estão concluídas; grupo vazio não é considerado concluído.",
+        "Grupo parcialmente concluído tem indicação parcial. O cálculo usa a árvore completa, independentemente de filtros visuais.",
+        "O servidor exige permissão de escrita e mantém coerência entre status e progresso; o chatbot não aciona essa operação."
+      ],
+      "fontes": [
+        "src/app/lib/conclusaoPlano.ts",
+        "src/app/components/plano/CheckConclusaoPlano.tsx",
+        "src/app/planoTrabalho.server.ts"
+      ]
+    },
+    {
+      "id": "risco",
+      "titulo": "Riscos e matriz de probabilidade × impacto",
+      "termos": "risco matriz probabilidade impacto pontuacao faixa critico mitigacao encerrado",
+      "passos": [
+        "Abra a visão Riscos do Plano de Trabalho ou o detalhe da etapa.",
+        "Selecione a etapa e informe título, categoria, responsável e descrição.",
+        "Avalie probabilidade e impacto de 1 a 5; confira a pontuação e a faixa calculadas.",
+        "Descreva estratégia de resposta, resultado relacionado e status de acompanhamento; salve."
+      ],
+      "regras": [
+        "Risco novo exige etapa do mesmo projeto e os campos obrigatórios do formulário.",
+        "A pontuação é probabilidade × impacto. A faixa calculada é Baixo de 1 a 3, Médio de 4 a 8, Alto de 9 a 14 e Crítico de 15 a 25; não é escolhida diretamente.",
+        "Status: Aberto, Em mitigação, Monitorando ou Encerrado. Para a contagem em aberto, apenas Encerrado é excluído.",
+        "Registro legado que já não tinha etapa pode ser editado sem impor novo vínculo; risco que já possui etapa não pode ser simplesmente desvinculado.",
+        "Os critérios institucionais para atribuir cada nível de 1 a 5 precisam ser confirmados com a equipe; o sistema não justifica sozinho qual nota escolher."
+      ],
+      "fontes": [
+        "src/app/components/plano/FormularioRisco.tsx",
+        "src/app/planoTrabalho.server.ts: validarRisco",
+        "src/app/lib/planoTrabalho.ts: pontuacaoRisco, faixaRisco, riscoEmAberto"
+      ]
+    },
+    {
+      "id": "planejado",
+      "titulo": "Orçamento planejado e proposta vigente",
+      "termos": "orcamento planejado proposto proposta item grupo categoria unidade quantidade valor total saldo",
+      "passos": [
+        "Abra o projeto em Orçamento e localize o item planejado.",
+        "Selecione a meta do projeto; informe descrição, grupo, categoria e unidade conforme a proposta.",
+        "Preencha quantidade, quantidade de unidades e valor unitário; confira o total proposto.",
+        "Salve e confira os totais da proposta vigente e o histórico do item."
+      ],
+      "regras": [
+        "Meta e descrição são exigidas. Quantidades, valor unitário e total devem ser números finitos não negativos.",
+        "Ao alterar quantidade, quantidade de unidades ou valor unitário, a tela recalcula o produto dos três fatores. O total proposto também pode ser ajustado manualmente.",
+        "A proposta vigente considera somente itens ativos da versão atual; itens excluídos e versões substituídas ficam fora do total, preservados para histórico.",
+        "Não se permite item duplicado com mesmo grupo, categoria e descrição; deve-se editar o existente.",
+        "Se o item foi alterado por outra pessoa, reabra a edição para carregar a versão atual."
+      ],
+      "fontes": [
+        "src/app/components/orcamento/FormularioPlanejado.tsx",
+        "src/app/lib/orcamentoRevisao.ts",
+        "src/app/lib/orcamento.ts: totaisDoOrcamento",
+        "src/app/orcamentoRevisao.server.ts"
+      ]
+    },
+    {
+      "id": "execucao",
+      "titulo": "Execução e justificativa de diferença",
+      "termos": "execucao executado diferenca justificativa concluir notas soma",
+      "passos": [
+        "Abra a execução do item em Orçamento.",
+        "Confira os dados planejados e as notas vinculadas; lance os documentos faltantes na área de notas.",
+        "Marque a execução como concluída quando aplicável e preencha a justificativa exigida.",
+        "Salve e confira a soma das notas e a diferença em relação ao proposto."
+      ],
+      "regras": [
+        "O executado é a soma das notas, não um valor digitado diretamente no item.",
+        "Sem informação de execução, a ausência é distinta de zero; não invente execução para preencher um vazio.",
+        "Justifique quando o executado superar o proposto ou quando a execução concluída tiver total diferente do proposto.",
+        "O texto de limitações orçamentárias no parecer não altera valores ou rubricas do orçamento."
+      ],
+      "fontes": [
+        "src/app/components/orcamento/FormularioExecucao.tsx",
+        "src/app/lib/orcamento.ts: somaDasNotas, exigeJustificativa",
+        "src/app/projetos.server.ts"
+      ]
+    },
+    {
+      "id": "nota",
+      "titulo": "Notas fiscais e comprovantes",
+      "termos": "nota fiscal comprovante numero fornecedor emissao valor documento anexar",
+      "passos": [
+        "Abra as notas do projeto ou use Nova nota a partir do item.",
+        "Informe data da nota e valor; complete número, fornecedor e descrição conforme o documento real.",
+        "Vincule o item quando houver. Se ainda não houver item adequado, use a possibilidade de nota sem item.",
+        "Salve primeiro o registro e depois anexe o comprovante no diálogo que permanece aberto."
+      ],
+      "regras": [
+        "Data da nota é obrigatória; o valor deve ser finito e maior que zero.",
+        "O item do orçamento é opcional. Nota sem item conta no executado do projeto e pode ser vinculada posteriormente.",
+        "Comprovante depende de registro já salvo. Não envie o documento ao chatbot.",
+        "Somente itens ativos recebem novas notas; o vínculo existente de uma nota pode continuar visível para edição quando o item foi excluído depois."
+      ],
+      "fontes": [
+        "src/app/components/orcamento/FormularioNota.tsx",
+        "src/app/lib/orcamento.ts: validarNota"
+      ]
+    },
+    {
+      "id": "importacao",
+      "titulo": "Importação de orçamento",
+      "termos": "importar importacao planilha excel orcamento previa meta substituir revisao",
+      "passos": [
+        "Abra a importação na aba Orçamento e selecione a planilha.",
+        "Revise a prévia antes de confirmar: campos lidos, itens e correspondência das metas.",
+        "Resolva metas ambíguas ou não identificadas; confira qualquer criação de meta proposta pela prévia.",
+        "Confirme a importação somente após revisar o impacto sobre a proposta vigente e releia o orçamento."
+      ],
+      "regras": [
+        "A prévia não substitui a confirmação da gravação.",
+        "Meta ambígua ou não identificada precisa de seleção ou correção; a meta escolhida deve pertencer ao projeto.",
+        "Nomes diferentes para o mesmo número de meta são tratados como conflito e precisam ser corrigidos ou associados a meta existente.",
+        "Uma nova planilha substitui a proposta conforme o fluxo de revisão; confira a preservação dos vínculos e históricos na prévia."
+      ],
+      "fontes": [
+        "src/app/components/orcamento/DialogoImportacao.tsx",
+        "src/app/lib/orcamentoMetas.ts",
+        "src/app/orcamentoImportacao.server.ts"
+      ]
+    },
+    {
+      "id": "registro",
+      "titulo": "Registros de contato da organização",
+      "termos": "registro contato reuniao visita ligacao participantes assunto resumo hora meio",
+      "passos": [
+        "Abra a organização e entre em Registros de contato.",
+        "Use Novo registro e informe data, participantes, assunto e resumo do que foi tratado.",
+        "Informe hora e meio de contato quando disponíveis; confira o texto antes de salvar.",
+        "Depois de salvar, acrescente o anexo quando necessário e acompanhe os encaminhamentos relacionados."
+      ],
+      "regras": [
+        "O contato pertence à organização, não a uma aba isolada do projeto.",
+        "São exigidos data, pelo menos um participante, assunto e resumo.",
+        "Hora, quando preenchida, deve usar HH:MM.",
+        "A exclusão de um contato pode afetar referências de encaminhamentos; revise os vínculos exibidos pelo diálogo."
+      ],
+      "fontes": [
+        "src/app/components/organizacoes/AbaRegistrosContato.tsx",
+        "src/app/lib/organizacoes.ts: validarRegistro",
+        "src/app/organizacoes.server.ts"
+      ]
+    },
+    {
+      "id": "encaminhamento",
+      "titulo": "Encaminhamentos e próximo passo",
+      "termos": "encaminhamento acao tarefa origem responsavel prazo data inicial final proximo passo",
+      "passos": [
+        "Abra Encaminhamentos na organização ou no contexto do projeto.",
+        "Informe uma descrição objetiva da ação e selecione o responsável cadastrado quando aplicável.",
+        "Defina status e datas; escolha Sem origem, texto ou registro de contato conforme o caso.",
+        "Confira o vínculo da origem e salve; acompanhe o andamento na organização."
+      ],
+      "regras": [
+        "Descrição e status válido são exigidos. Status: A iniciar, Em andamento e Concluído.",
+        "Data final não pode ser anterior à inicial.",
+        "Origem em texto exige descrição; origem de contato deve pertencer à mesma organização.",
+        "Responsável selecionado deve continuar cadastrado; o servidor valida a pessoa, não apenas o nome enviado.",
+        "Próximos passos das atividades e subtarefas podem aparecer vinculados ao plano; confira a origem antes de editar."
+      ],
+      "fontes": [
+        "src/app/components/organizacoes/AbaEncaminhamentos.tsx",
+        "src/app/lib/organizacoes.ts: validarEncaminhamento",
+        "src/app/organizacoes.server.ts"
+      ]
+    },
+    {
+      "id": "parecer",
+      "titulo": "Parecer de acompanhamento do projeto",
+      "termos": "parecer tecnico acompanhamento visita reuniao pontos observados itens criticos recomendacao limitacoes",
+      "passos": [
+        "Abra o parecer no contexto de acompanhamento do projeto.",
+        "Informe data da visita/reunião, origem, responsável pelo registro e pontos observados.",
+        "Registre itens críticos, limitações orçamentárias e recomendação técnica quando houver informação.",
+        "Vincule um registro de contato relacionado se necessário e salve."
+      ],
+      "regras": [
+        "Data, origem válida, responsável e pontos observados são exigidos.",
+        "Itens críticos vazios significam ausência de anotação, não a confirmação de inexistência de problemas.",
+        "O campo de limitações orçamentárias é informativo e não altera valores do orçamento.",
+        "Parecer de acompanhamento do projeto e Parecer Técnico do diagnóstico são instrumentos distintos."
+      ],
+      "fontes": [
+        "src/app/components/plano/PainelParecer.tsx",
+        "src/app/planoTrabalho.server.ts: validarParecer"
+      ]
+    },
+    {
+      "id": "diagnostico",
+      "titulo": "Diagnóstico, IEO, matriz e cesta de produtos",
+      "termos": "diagnostico ieo indice estruturacao organizacional matriz funcional cesta produto parecer tecnico checklist documental",
+      "passos": [
+        "Abra o diagnóstico da organização e selecione o instrumento desejado.",
+        "Na Matriz Funcional, leia função, descrição e exemplo; registre a atuação observada e os demais campos.",
+        "No IEO, abra a pergunta e compare a situação real com as descrições dos níveis 1 a 4, registrando a observação quando pertinente.",
+        "Na Cesta de Produtos, avalie um produto/subproduto por vez e percorra os blocos. No Parecer Técnico, preencha os campos abertos e o checklist conforme a evidência disponível."
+      ],
+      "regras": [
+        "Perguntas, níveis, opções e exemplos vêm dos catálogos do próprio sistema; não é necessário inventar critérios.",
+        "O cálculo atual do IEO usa a média dos níveis respondidos em cada dimensão e a média das dimensões com resposta. Perguntas vazias não contam como zero.",
+        "A metodologia oficial de ponderação do IEO ainda precisa de validação; a fórmula atual é uma implementação, não certificação institucional.",
+        "Na Matriz, Quem executa se aplica quando marcada a atuação Não realiza; função, descrição e exemplo são fixos.",
+        "Na Cesta, características desejadas não equivalem ao grau de processamento. Respostas de biodiversidade/conhecimento tradicional apoiam triagem técnica e não substituem enquadramento jurídico."
+      ],
+      "fontes": [
+        "src/app/diagnostic/ieoCalculation.ts",
+        "src/app/components/diagnostic/MatrizFuncionalTab.tsx",
+        "src/app/diagnostic/catalog/ieo.ts",
+        "src/app/diagnostic/catalog/matrizFuncional.ts",
+        "src/app/diagnostic/catalog/cestaProdutos.ts",
+        "src/app/diagnostic/catalog/parecerComplementar.ts",
+        "src/app/diagnostic/catalog/checklistDocumental.ts"
+      ]
+    },
+    {
+      "id": "anexo",
+      "titulo": "Anexos e documentos",
+      "termos": "anexo documento arquivo pdf foto imagem enviar substituir tamanho formato",
+      "passos": [
+        "Salve primeiro a atividade, contato ou nota que receberá o arquivo.",
+        "Use o campo de anexo do registro e escolha um arquivo aceito.",
+        "Aguarde a confirmação do envio antes de fechar; confira o documento associado."
+      ],
+      "regras": [
+        "O anexo pertence a um único registro, que deve existir.",
+        "O servidor recusa arquivo vazio e tamanho acima de 20 MB.",
+        "O fluxo aceita imagens e tipos documentais cadastrados, incluindo PDF, DOC, DOCX, ODT, XLS, XLSX e TXT.",
+        "No fluxo de substituição, o arquivo anterior só é removido depois de o novo estar gravado.",
+        "O chatbot orienta, mas não recebe, abre nem interpreta os arquivos anexados."
+      ],
+      "fontes": ["src/app/anexos.server.ts", "src/app/components/plano/CampoAnexo.tsx"]
+    },
+    {
+      "id": "organizacao",
+      "titulo": "Organização, ficha e notas",
+      "termos": "organizacao ficha dados cadastro mapeamento notas parecer territorio municipio",
+      "passos": [
+        "Entre em Organizações e selecione a ficha desejada.",
+        "Use as seções Dados, Projetos, Encaminhamentos e Registros conforme o assunto.",
+        "Consulte Mapeamento e Parecer da organização sem confundir esses relatórios com o diagnóstico ou a execução do projeto.",
+        "Nas notas da organização, registre informação pertinente e confira o salvamento."
+      ],
+      "regras": [
+        "Ficha, contatos, notas e encaminhamentos pertencem à organização; o projeto mantém o vínculo com ela.",
+        "Campos sem informação são indicados como Não informado; o bot não completa cadastros com suposições.",
+        "Nota vazia é recusada e existe limite de tamanho validado pelo servidor.",
+        "Critérios institucionais de aprovação do mapeamento e do parecer que não estejam expressos no código precisam de confirmação da equipe."
+      ],
+      "fontes": [
+        "src/app/components/organizacoes/FichaOrganizacao.tsx",
+        "src/app/components/organizacoes/NotasDaOrganizacao.tsx",
+        "src/app/organizacoes.server.ts"
+      ]
+    },
+    {
+      "id": "ordenacao",
+      "titulo": "Ordenação e reclassificação do plano",
+      "termos": "ordenar ordem posicao mover reordenar reclassificar converter tipo destino vinculos",
+      "passos": [
+        "Para mudar apenas a posição, abra a visão de ordenação e escolha uma posição válida no grupo.",
+        "Para mudar o tipo de registro, abra Reclassificar e gere a prévia.",
+        "Escolha o novo tipo e pai de destino, informe o motivo e revise o destino de cada dependência.",
+        "Confirme somente com a prévia atual; se houver conflito, recarregue e revise novamente."
+      ],
+      "regras": [
+        "Reordenação exige a lista completa do grupo e IDs sem duplicação; posição deve ser válida.",
+        "Reclassificação exige um tipo diferente, destino compatível e motivo preenchido.",
+        "Cada dependência precisa de um único destino; não pode haver correspondências duplicadas.",
+        "A prévia identifica o estado usado na revisão. Conflitos não devem ser tratados como gravação bem-sucedida."
+      ],
+      "fontes": [
+        "src/app/lib/reordenacaoPlano.ts",
+        "src/app/lib/reclassificacaoPlano.ts",
+        "src/app/components/plano/ReclassificarRegistro.tsx",
+        "src/app/reclassificacaoPlano.server.ts"
+      ]
+    },
+    {
+      "id": "gestao",
+      "titulo": "Gestão Interna, tarefas e cronograma de rotas",
+      "termos": "gestao interna tarefas kanban mensagens mencao calendario cronograma rotas importar excel",
+      "passos": [
+        "Abra Gestão Interna e escolha Plano, Rotas, Calendário, Executivo, Kanban ou Mensagens.",
+        "Consulte a origem da tarefa para entender se veio de atividade, subtarefa ou encaminhamento.",
+        "No cronograma de rotas, revise a prévia da planilha antes de confirmar importação ou correção.",
+        "Se o cronograma mudou durante a edição, recarregue os dados antes de salvar."
+      ],
+      "regras": [
+        "Criador e responsável são conceitos distintos; menção não deve inventar autoria.",
+        "Tarefas vinculadas devem preservar a origem e os demais responsáveis ao serem movimentadas.",
+        "Importação de rotas aceita Excel .xlsx/.xls até 10 MB, com limites de 50 abas e 2.000 linhas por aba.",
+        "A gravação de rotas verifica versão para recusar sobreposição de uma edição desatualizada.",
+        "O bot não lê o conteúdo das mensagens nem se comunica com outras pessoas."
+      ],
+      "fontes": [
+        "src/app/components/CronogramaPage.tsx",
+        "src/app/lib/tarefasKanban.ts",
+        "src/app/tarefasGestao.server.ts",
+        "src/app/cronogramaRotas.server.ts"
+      ]
+    },
+    {
+      "id": "acesso",
+      "titulo": "Acesso, perfis, configurações e relatórios",
+      "termos": "permissao perfil admin administrador estagiario visualizador consulta escrita configuracao relatorio exportar senha",
+      "passos": [
+        "Confira o perfil com que está conectado.",
+        "Use as configurações para preferências e seus próprios dados; credenciais são preenchidas diretamente no sistema, nunca no chat.",
+        "Para exportar, abra o relatório adequado e confira o escopo, os filtros e a presença de informações não preenchidas.",
+        "Se não houver permissão de edição, peça apoio à equipe responsável pelo cadastro; o chatbot não concede acesso."
+      ],
+      "regras": [
+        "A sessão é validada por cookie httpOnly no servidor; o papel informado manualmente pelo navegador não autoriza escrita.",
+        "No fluxo protegido pelas guardas do Inova, visualizador é consulta; administrador e estagiário têm escrita, e operações administrativas exigem admin ou adminOverride.",
+        "Alterações de credenciais e preferências protegidas exigem a verificação prevista na própria tela.",
+        "Relatório e exportação apresentam os dados do sistema; não constituem aprovação institucional automática.",
+        "O chatbot é local e somente consulta em todos os perfis; não cria, salva, exclui ou aprova registros."
+      ],
+      "fontes": [
+        "src/app/sessao.server.ts",
+        "src/app/auth/authStore.tsx",
+        "src/app/usuarios.server.ts",
+        "src/app/components/ConfiguracoesPage.tsx",
+        "src/app/components/ReportsModule.tsx"
+      ]
+    }
+  ],
+  "formularios": {
+    "registro": {
+      "titulo": "Registro de contato",
+      "fontes": [
+        "src/app/components/organizacoes/AbaRegistrosContato.tsx",
+        "src/app/lib/organizacoes.ts: validarRegistro"
+      ],
+      "orientacao": "Registre o que foi tratado com a organização. Data, pelo menos um participante, assunto e resumo são exigidos. Hora é opcional em HH:MM.",
+      "campos": {
+        "Data": "Informe a data real do contato.",
+        "Hora": "Se souber o horário, use HH:MM.",
+        "Participantes": "Inclua ao menos um participante do contato; preencha nomes diretamente na tela.",
+        "Assunto": "Use um título curto que identifique o motivo da conversa.",
+        "Resumo": "Descreva objetivamente o que foi tratado, decisões e pendências; não confunda relato com encaminhamento já executado.",
+        "Meio de contato": "Indique o canal efetivamente utilizado."
+      }
+    },
+    "encaminhamento": {
+      "titulo": "Encaminhamento",
+      "fontes": [
+        "src/app/components/organizacoes/AbaEncaminhamentos.tsx",
+        "src/app/lib/organizacoes.ts: validarEncaminhamento"
+      ],
+      "orientacao": "Descreva uma ação de acompanhamento da organização. Informe status válido, datas coerentes e origem quando houver.",
+      "campos": {
+        "Descrição": "Escreva a ação que precisa ser realizada e o resultado esperado. Exemplo fictício: Confirmar a data da oficina.",
+        "Responsável": "Selecione a pessoa cadastrada que acompanha a ação.",
+        "Status": "A iniciar, Em andamento ou Concluído, conforme a situação real.",
+        "Data inicial": "Início previsto da ação, quando conhecido.",
+        "Data final": "Prazo final, sem anteceder a data inicial.",
+        "Origem": "Escolha Sem origem, texto ou registro de contato conforme a procedência da ação.",
+        "Registro de contato": "Selecione um contato pertencente à mesma organização.",
+        "Descreva a origem": "Explique a procedência quando escolher origem em texto."
+      }
+    },
+    "parecer": {
+      "titulo": "Parecer de acompanhamento",
+      "fontes": [
+        "src/app/components/plano/PainelParecer.tsx",
+        "src/app/planoTrabalho.server.ts: validarParecer"
+      ],
+      "orientacao": "Registre a observação técnica do acompanhamento. Data, origem, responsável e pontos observados são exigidos.",
+      "campos": {
+        "Data da visita / reunião": "Data real do acompanhamento.",
+        "Origem": "Selecione a origem disponível que corresponde ao acompanhamento.",
+        "Responsável pelo registro": "Identifique quem registra o parecer na tela.",
+        "Pontos observados": "Descreva os fatos observados e o contexto que sustenta o parecer.",
+        "Itens críticos": "Anote os problemas críticos identificados. Vazio indica ausência de anotação.",
+        "Limitações relacionadas ao orçamento": "Descreva limitações observadas; este texto não altera os valores do orçamento.",
+        "Recomendação técnica": "Registre a orientação técnica baseada no que foi observado.",
+        "Registro de contato relacionado": "Vínculo opcional com um contato da organização."
+      }
+    }
+  },
+  "complementos": {
+    "projeto": {
+      "campos": {
+        "Código": "Use o identificador do projeto adotado pela equipe. Confira eventual código sugerido automaticamente antes de salvar.",
+        "Financiador": "Informe a instituição financiadora conforme a proposta.",
+        "Objetivo": "Descreva a finalidade prevista do projeto; não afirme que o resultado já foi alcançado.",
+        "Início": "Período inicial previsto na proposta, conforme o formato solicitado na tela.",
+        "Término": "Período final previsto na proposta.",
+        "Valor total (R$)": "Valor aprovado na proposta, em reais. Execução é acompanhada pelas notas no orçamento."
+      }
+    },
+    "meta": {
+      "campos": {
+        "Título da meta": "Identifique o resultado que agrupa as etapas. Exemplo fictício: Estruturar a comercialização. O título é obrigatório.",
+        "Início previsto": "Defina o início próprio se necessário; sem prazo próprio, a meta usa o intervalo das etapas.",
+        "Fim previsto": "Fim do prazo próprio. Se divergir das etapas, o sistema mostra um aviso, sem bloqueio automático."
+      }
+    },
+    "atividade": {
+      "campos": {
+        "Progresso (%)": "Informe 1 a 99 em Em andamento. A iniciar usa 0 e Concluído usa 100. Esse percentual integra a média de andamento do projeto.",
+        "Justificativa de atraso": "Obrigatória se o início real ou o fim real ultrapassar sua respectiva data prevista. Explique causa e contexto reais. Datas iguais ou antecipadas não exigem justificativa."
+      }
+    }
+  }
+}

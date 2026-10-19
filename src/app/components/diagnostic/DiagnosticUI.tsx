@@ -12,7 +12,7 @@ export function Campo({ label, valor }: { label: string; valor: string }) {
 
 export function OpcaoGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" data-inova-field={label.startsWith('Atuação') ? 'Atuação' : label.startsWith('Caso não execute') ? 'Quem executa' : label.startsWith('Interesse') ? 'Interesse' : label.startsWith('Criticidade') ? 'Criticidade' : label.startsWith('Abrangência') ? 'Abrangência' : label}>
       <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-4)' }}>{label}</span>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>

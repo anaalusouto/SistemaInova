@@ -315,7 +315,7 @@ function ParecerCampoField({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" data-inova-form="parecerDiagnostico" data-inova-field={campo.id}>
       <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-1)' }}>{campo.label}</span>
       {campo.tipo === 'texto' && (
         <textarea

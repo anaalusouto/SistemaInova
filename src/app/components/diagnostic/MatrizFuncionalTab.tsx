@@ -100,7 +100,7 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
         const answered = hasResposta(resposta);
 
         return (
-          <div key={funcao.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+          <div key={funcao.id} data-inova-form="matriz" data-inova-field={funcao.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
             <button
               onClick={() => toggleOpen(funcao, resposta)}
               className="w-full flex items-center justify-between px-4 py-3 text-left"

@@ -1,0 +1,24 @@
+{
+  "data": "2026-10-19",
+  "modo": "local, determinístico, sem consumo OpenAI",
+  "versaoBase": "2026-10-19.2",
+  "cobertura": {
+    "guias": 22,
+    "regrasVerificadas": 98,
+    "campos": "mais de 200, incluindo catálogos canônicos de diagnóstico"
+  },
+  "verificacoes": {
+    "nodeTests": { "total": 164, "aprovados": 164, "falhas": 0 },
+    "typescriptNoEmit": "aprovado",
+    "eslintModulosAssistenteEFixture": "aprovado",
+    "viteBuild": "aprovado, com avisos de tamanho de chunks, importação mista de reportExport e plugin tsconfig",
+    "gitDiffCheck": "aprovado",
+    "navegador": "fixture local sem banco: resumo, guia completo de atividade, contexto Título e IEO 1.1.1; console sem erros; largura 390px sem rolagem horizontal"
+  },
+  "limites": [
+    "Não foi realizado teste autenticado em produção; nada foi publicado nesta rodada.",
+    "Resumos consultam somente dados já carregados e disponíveis à sessão no Inova.",
+    "As regras cobrem o que foi verificado no repositório; normas institucionais ausentes continuam como lacunas.",
+    "O chatbot é somente de consulta, sem chamadas de escrita nem persistência de conversa."
+  ]
+}

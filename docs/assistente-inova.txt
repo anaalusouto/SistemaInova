@@ -4,16 +4,20 @@ MODO ATUAL: CHATBOT LOCAL — OPENAI PAUSADA POR SOLICITAÇÃO DO USUÁRIO
 
 A interface ativa é um chatbot determinístico de consulta. Não carrega ChatKit,
 não chama /api/assistente, não chama OpenAI e não depende de chave, domínio ou Python.
-src/app/assistant/localBot.ts busca orientações na base verificada knowledge.json,
-com normalização de acentos/plurais e prioridade ao campo/formulário indicado.
+src/app/assistant/localBot.ts consulta knowledge.json, manual.json e os catálogos
+canônicos de diagnóstico, com prioridade ao campo/formulário indicado.
 Perguntas sem correspondência recebem uma mensagem explícita de limitação.
 Não é um modelo generativo e não interpreta livremente qualquer pergunta.
 
-App.tsx fornece somente contagens derivadas dos projetos já carregados no store:
-quantidade de projetos da sessão e, quando houver projeto aberto, situação e
-contagens de metas, etapas, atividades/concluídas e riscos/em aberto. Não são novas
-consultas ao banco. Os dados são os mesmos recebidos pela plataforma e podem ser
-atualizados pelo fluxo existente. Não se copiam nomes, responsáveis ou formulários.
+App.tsx fornece uma projeção explícita dos projetos já carregados no store:
+nome/código, organização, objetivo previsto, situação, datas e andamento; nomes de
+metas, etapas e atividades, situação/progresso/datas destas, contagem de tarefas e
+título/situação/faixa dos riscos. Quando o orçamento estruturado está carregado,
+inclui totais vigentes e execução pelas notas. Não são novas consultas ao banco.
+São excluídos campos de responsáveis, contatos, equipe, documentos e observações
+livres. Não há leitura automática dos valores de formulários em preenchimento.
+Nomes e objetivos são textos cadastrados; não é feita anonimização do conteúdo
+escrito pelo usuário nesses campos. Todo processamento ocorre no navegador.
 A contagem de projetos carregados não representa os filtros visuais nem uma nova
 consulta global ao banco. Se os dados estão carregando ou nenhum projeto está
 aberto, o chatbot orienta o usuário sem apresentar uma contagem inventada.
@@ -34,8 +38,35 @@ Para testar: iniciar o Inova localmente ou a fixture sem banco:
   node node_modules/vite/bin/vite.js --config tests/assistant-ui/vite.config.ts
   Abrir http://127.0.0.1:8092 e clicar em “Como preencher?” ou “Assistente Inova”.
   Perguntar “Como preencho este campo?”, “Resumo do projeto aberto”,
-  “Quantos projetos estão carregados?” ou “Probabilidade do risco”.
-  A fixture usa contagens sintéticas; o Inova usa as contagens reais do store.
+  “Liste os projetos”, “Liste atividades atrasadas”, “Detalhe a meta [nome]”,
+  “Como preencher uma atividade?”, “Como importar orçamento?”, “IEO 1.1.1”,
+  “Regras de negócio” ou “Índice de ajuda”.
+  A fixture usa um projeto sintético; o Inova usa os dados reais do store.
+
+BASE EXPLICATIVA — VERSÃO 2026-10-19.2
+
+manual.json organiza 22 guias e 98 regras verificadas, com passos e fontes de código:
+projetos, plano, metas, etapas, atividades, conclusão, riscos, orçamento planejado
+e executado, notas, importação, contatos, encaminhamentos, pareceres, diagnósticos,
+anexos, organizações, ordenação/reclassificação, gestão, acesso e aprovações/exclusões.
+manualHelp.ts faz a seleção de assunto e apresenta campos, passos e regras.
+diagnosticHelp.ts reaproveita diretamente as perguntas, opções e níveis oficiais
+dos catálogos do IEO, cesta, parecer diagnóstico e matriz funcional. Não duplica
+suas escalas. O catálogo combinado contém mais de 200 campos explicados.
+projectHelp.ts usa os cálculos reais de andamento, atraso, faixa de risco e totais
+financeiros; não deduz resultado alcançado a partir do objetivo da proposta.
+Referências ausentes ou ambíguas pedem esclarecimento e listas longas mostram o
+limite aplicado. O orçamento sem notas permanece “Não informado”.
+O projeto aberto é resolvido também pelo vínculo da organização, sem depender de
+ID explícito na URL, reutilizando resolverProjetoOrg e recusando vínculos ambíguos.
+
+Atualização: editar o guia correspondente em manual.json; reutilizar a fonte
+canônica quando houver catálogo, atualizar fontes e versão, acrescentar teste de
+pergunta/resposta relevante. catalogoCobertura() informa guias/regras/campos.
+“Todas as regras” significa o catálogo verificável, não a garantia de conhecer
+normas institucionais ausentes do repositório. Permanecem lacunas, por exemplo,
+critérios institucionais da escala de riscos, ponderação oficial do IEO e normas
+externas/jurídicas. O chatbot deve avisar dessas lacunas e nunca inventá-las.
 
 Testes específicos do modo local:
   node --test tests/assistenteLocal.test.cjs tests/assistente.test.cjs

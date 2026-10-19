@@ -314,7 +314,7 @@ function CampoEditor({ campo, respostas, onChange }: { campo: CestaCampo; respos
     campo.permiteOutro && (campo.tipo === 'unica' ? typeof valor === 'string' && ehOutro(valor) : Array.isArray(valor) && (valor as string[]).some(ehOutro));
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" data-inova-form="cesta" data-inova-field={campo.id}>
       <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-1)' }}>{campo.label}</span>
       {campo.orientacao && <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{campo.orientacao}</span>}
 

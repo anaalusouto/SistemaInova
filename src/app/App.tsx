@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
@@ -24,6 +24,8 @@ import { VisualizadorDocumentos } from './components/VisualizadorDocumentos';
 import { AssistenteInova } from './assistant/AssistenteInova';
 import { contextoDaNavegacao } from './assistant/context';
 import { resumirProjetoLocal } from './assistant/localBot';
+import { detalharProjetoLocal, projetoDaNavegacao } from './assistant/projectHelp';
+import { hojeISO } from './lib/planoTrabalho';
 
 const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
   manha: 'Bom dia',
@@ -55,6 +57,9 @@ function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const fecharMenu = useCallback(() => setMobileNavOpen(false), []);
   const { getProject, projects, projectsLoading } = useStore();
+  const projetoAssistente = projetoDaNavegacao(projects, busca);
+  const hojeAssistente = hojeISO();
+  const detalhesAssistente = useMemo(() => projects.map(p => ({ id: p.id, detalhe: detalharProjetoLocal(p, hojeAssistente) })), [projects, hojeAssistente]);
   const { user } = useAuth();
   const { log } = useAudit();
   const [greeting] = useState(() => greetingFor(user?.displayName ?? ''));
@@ -147,7 +152,9 @@ function AppShell() {
       <AssistenteInova key={user?.login} contexto={contextoDaNavegacao(busca)} dados={{
         carregando: projectsLoading,
         projetosCarregados: projects.length,
-        projeto: busca.projeto && getProject(busca.projeto) ? resumirProjetoLocal(getProject(busca.projeto)!) : undefined,
+        projetos: detalhesAssistente.map(p => p.detalhe),
+        projetoDetalhado: detalhesAssistente.find(p => p.id === projetoAssistente?.id)?.detalhe,
+        projeto: projetoAssistente ? resumirProjetoLocal(projetoAssistente) : undefined,
       }} />
     </div></VisualizadorDocumentos></PopupNavegacao>
   );

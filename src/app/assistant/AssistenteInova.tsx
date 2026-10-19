@@ -98,8 +98,8 @@ export function AssistenteInova({
               </strong>
             </p>
             <p className="mt-1">
-              Respostas por regras e pela base do Inova. Consulta dados já carregados do projeto
-              aberto. A conversa fica só nesta janela; nada é enviado à OpenAI.
+              Guias, regras verificadas e resumos dos projetos já carregados. A conversa fica só
+              nesta janela; nada é enviado à OpenAI.
             </p>
           </div>
           {open && (
@@ -127,6 +127,7 @@ function ConversaLocal({
   perfil: PerfilLocal;
 }) {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [assunto, setAssunto] = useState<string | undefined>();
   const [texto, setTexto] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -146,7 +147,12 @@ function ConversaLocal({
     setOcupado(true);
     setErro(null);
     try {
-      const resposta = await Promise.resolve(responderLocal(pergunta, contexto, dados, perfil));
+      const consulta =
+        assunto && /^(e\b|explique melhor|mais detalhes)/i.test(pergunta.trim())
+          ? `${pergunta} ${assunto}`
+          : pergunta;
+      const resposta = await Promise.resolve(responderLocal(consulta, contexto, dados, perfil));
+      setAssunto(resposta.assunto);
       setMensagens((prev) => [
         ...prev.slice(-38),
         { papel: "user", texto: pergunta.trim() } as Mensagem,
@@ -167,7 +173,9 @@ function ConversaLocal({
     "Como preencho este campo?",
     "Explique esta tela",
     "Resumo do projeto aberto",
-    "Quantos projetos estão carregados?",
+    "Liste os projetos",
+    "Regras de negócio",
+    "Índice de ajuda",
   ];
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -178,6 +186,7 @@ function ConversaLocal({
           className="flex min-h-9 items-center gap-1 rounded px-2 text-xs hover:bg-accent disabled:opacity-40"
           onClick={() => {
             setMensagens([]);
+            setAssunto(undefined);
             setTexto("");
             setErro(null);
             entrada.current?.focus();
