@@ -6,6 +6,7 @@ import fs from "node:fs";
 
 export default defineConfig({
   root: path.resolve("tests/demandas-ui"),
+  publicDir: path.resolve("public"),
   resolve: { alias: { "@": path.resolve("src") } },
   server: { host: "127.0.0.1", port: 8093, strictPort: true, fs: { allow: [path.resolve(".")] } },
   plugins: [
@@ -19,6 +20,7 @@ export default defineConfig({
           "auditStore",
           "store",
           "useOrganizacoes",
+          "useAgenda",
           "PopupNavegacao",
         ])
           if (source.endsWith("/" + part)) return "\0fixture:" + part;
@@ -26,6 +28,7 @@ export default defineConfig({
           return "\0fixture-server:" + path.resolve(path.dirname(importer), source + ".ts");
       },
       load(id) {
+        if (id === "\0fixture:useAgenda") return `export const useAgenda=()=>({paraMim:[]});`;
         if (id === "\0fixture:authStore")
           return `const consulta=new URLSearchParams(location.search).has('consulta');export const useAuth=()=>({user:{login:'teste',displayName:'Teste',role:consulta?'visualizador':'admin'},readOnly:consulta,isAdmin:!consulta});export const usePeople=()=>[];export const hasAdminPowers=()=>!consulta;`;
         if (id === "\0fixture:auditStore") return `export const useAudit=()=>({log(){}});`;

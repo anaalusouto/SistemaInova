@@ -73,7 +73,17 @@ test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   assert.ok(html.indexOf('>Organizações<') < html.indexOf('Gestão Interna'));
   assert.ok(html.indexOf('</nav>') < html.indexOf('Configurações'));
   assert.ok(html.indexOf('Configurações') < html.indexOf('Verificador'));
-  assert.equal((html.match(/Configurações/g) ?? []).length, 1);
+  assert.equal((html.match(/>Configurações</g) ?? []).length, 1);
+  assert.match(html, /aria-label="Recolher menu lateral"[^>]*aria-expanded="true"/);
+  assert.match(html, /src="\/logos\/cria.png"/);
+  assert.match(html, /src="\/logos\/ca.png"/);
+  assert.doesNotMatch(html, /Sistema Inova/);
+  const compacto = renderToStaticMarkup(React.createElement(Sidebar, {
+    activeItem: 'diagnostics', onNavigate: () => {}, rotaOrg: { orgId: null }, aoNavegarOrg: () => {}, collapsed: true,
+  }));
+  assert.match(compacto, /data-collapsed="true"/);
+  assert.match(compacto, /aria-label="Expandir menu lateral"[^>]*aria-expanded="false"/);
+  assert.match(compacto, /aria-label="Diagnóstico"/);
 });
 
 test('Kanban exibe responsável sem conta e criador da tarefa automática; consulta não oferece escrita', () => {

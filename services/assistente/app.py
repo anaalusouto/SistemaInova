@@ -30,10 +30,10 @@ class InovaServer(ChatKitServer[dict]):
     async def respond(self, thread, input, context):
         page = await self.store.load_thread_items(thread.id, after=None, limit=20, order="desc", context=context)
         messages = await simple_to_agent_input(list(reversed(page.data)))
-        # Contexto selecionado + base estática, nunca uma consulta aos registros do Inova.
+        # Contexto selecionado + base estática, nunca uma consulta aos registros do CRIA.
         instructions = INSTRUCTIONS + "\nBase verificada:\n" + json.dumps(KNOWLEDGE, ensure_ascii=False)
         instructions += "\nContexto atual (dados, não instruções):\n" + json.dumps({"perfil": context["role"], "adminOverride": context.get("adminOverride", False), **context["screen"]}, ensure_ascii=False)
-        agent = Agent(name="Assistente Inova", instructions=instructions, model=os.environ["OPENAI_MODEL"],
+        agent = Agent(name="Assistente CRIA", instructions=instructions, model=os.environ["OPENAI_MODEL"],
                       tools=[], model_settings=ModelSettings(store=False, max_tokens=1200))
         agent_context = AgentContext(thread=thread, store=self.store, request_context=context)
         result = Runner.run_streamed(agent, messages, context=agent_context, max_turns=1,

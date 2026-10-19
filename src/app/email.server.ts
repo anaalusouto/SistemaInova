@@ -2,7 +2,7 @@
 // Chamado só a partir de server functions (usuarios.server.ts). Falha de envio
 // nunca deve travar a operação principal (aprovação/solicitação) — os callers
 // tratam isso como "melhor esforço" e só logam o erro.
-const FROM = 'Sistema Inova <onboarding@resend.dev>';
+const FROM = 'CRIA <onboarding@resend.dev>';
 
 async function sendEmail(to: string | string[], subject: string, html: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -24,7 +24,7 @@ const wrap = (title: string, body: string) => `
   <div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto">
     <h2 style="color:#0F172A;font-size:18px">${title}</h2>
     <div style="color:#334155;font-size:14px;line-height:1.6">${body}</div>
-    <p style="color:#94A3B8;font-size:12px;margin-top:24px">Sistema Inova · Gestão de Projetos</p>
+    <p style="color:#94A3B8;font-size:12px;margin-top:24px">CRIA · Gestão de Projetos</p>
   </div>`;
 
 export async function notificarNovaSolicitacao(adminEmails: string[], autorNome: string, projetoNome: string, resumo: string): Promise<void> {
@@ -35,7 +35,7 @@ export async function notificarNovaSolicitacao(adminEmails: string[], autorNome:
       'Nova solicitação para aprovar',
       `<p><strong>${autorNome}</strong> enviou uma solicitação no projeto <strong>${projetoNome}</strong>:</p>
        <p style="background:#F8FAFC;border-radius:8px;padding:10px 14px">${resumo}</p>
-       <p>Entre no Sistema Inova para aprovar ou recusar.</p>`,
+       <p>Entre no CRIA para aprovar ou recusar.</p>`,
     ),
   );
 }

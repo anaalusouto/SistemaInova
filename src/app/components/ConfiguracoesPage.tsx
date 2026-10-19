@@ -85,7 +85,7 @@ export function ConfiguracoesPage() {
                 className="flex-shrink-0 whitespace-nowrap lg:w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all"
                 style={{
                   background: isActive ? 'var(--brand-soft)' : 'transparent',
-                  color: isActive ? 'var(--brand)' : 'var(--ink-3)',
+                  color: isActive ? 'var(--brand-text)' : 'var(--ink-3)',
                   fontWeight: isActive ? 600 : 400,
                 }}
               >
@@ -116,7 +116,7 @@ export function ConfiguracoesPage() {
               </h2>
               <span
                 className="px-2.5 py-1 rounded-full text-[11px] font-medium"
-                style={user?.role === 'admin' ? { background: 'var(--warning-soft)', color: 'var(--warning-strong-text)' } : { background: 'var(--brand-soft)', color: 'var(--brand)' }}
+                style={user?.role === 'admin' ? { background: 'var(--warning-soft)', color: 'var(--warning-strong-text)' } : { background: 'var(--brand-soft)', color: 'var(--brand-text)' }}
               >
                 {ROLE_LABEL[(user?.role ?? 'estagiario') as UserRole]}
               </span>
@@ -169,7 +169,7 @@ export function ConfiguracoesPage() {
                       <tr key={m.login} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold overflow-hidden" style={{ background: 'var(--brand-soft)', color: 'var(--brand)' }}>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold overflow-hidden" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
                               {m.avatarUrl
                                 ? <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
                                 : m.name.split(' ').map(x => x[0]).slice(0, 2).join('')}
@@ -244,7 +244,7 @@ export function ConfiguracoesPage() {
   );
 }
 
-const ACCENT_OPTIONS: AccentColor[] = ['azul', 'rosa', 'verde', 'amarelo'];
+const ACCENT_OPTIONS: AccentColor[] = ['azul', 'terracota'];
 
 function AparenciaSection() {
   const { mode, accent, fontScale, setMode, setAccent, setFontScale } = useTheme();

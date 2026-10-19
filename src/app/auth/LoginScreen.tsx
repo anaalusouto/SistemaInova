@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { LogIn } from 'lucide-react';
+import { MarcaCria } from '../components/MarcaCria';
 import { useAuth } from './authStore';
 
 export function LoginScreen() {
@@ -26,8 +27,8 @@ export function LoginScreen() {
 
   return (
     <div
-      className="relative flex items-center justify-center h-screen w-screen p-6 overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)' }}
+      className="relative flex min-h-dvh w-full items-center justify-center p-4 sm:p-6"
+      style={{ background: 'linear-gradient(135deg, #344980 0%, #182749 65%, #B95C4A 160%)' }}
     >
       <div
         className="absolute inset-0"
@@ -38,15 +39,11 @@ export function LoginScreen() {
         }}
       />
       <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.72)' }} />
-      <div className="relative w-full max-w-sm bg-card rounded-2xl border p-7 flex flex-col gap-5" style={{ borderColor: 'var(--border)' }}>
+      <div className="relative w-full max-w-sm bg-card rounded-2xl border p-7 flex flex-col gap-5" style={{ borderColor: 'var(--border)', borderTop: '3px solid var(--brand-secondary)' }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary)' }}>
-            <ShieldCheck size={22} color="var(--primary-foreground)" />
-          </div>
+          <MarcaCria className="cria-brand--login" />
           <div className="text-center">
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: 'var(--ink-1)' }}>
-              Sistema Inova
-            </h1>
+            <h1 className="sr-only">CRIA</h1>
             <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)', marginTop: 3 }}>
               Acesse o portfólio de projetos institucionais
             </p>

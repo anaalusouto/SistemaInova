@@ -96,7 +96,7 @@ export function AssistenteInovaChatKit({ contexto }: { contexto: ContextoAssiste
           }}
         >
           <MessageCircle size={18} aria-hidden />
-          Assistente Inova
+          Assistente CRIA
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -117,14 +117,14 @@ export function AssistenteInovaChatKit({ contexto }: { contexto: ContextoAssiste
           <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
             <MessageCircle size={20} style={{ color: "var(--primary)" }} aria-hidden />
             <div className="min-w-0 flex-1">
-              <Dialog.Title className="font-semibold">Assistente Inova</Dialog.Title>
+              <Dialog.Title className="font-semibold">Assistente CRIA</Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 Ajuda com telas e formulários. Somente orientação.
               </Dialog.Description>
             </div>
             <Dialog.Close
               className="rounded-md p-2 hover:bg-accent"
-              aria-label="Fechar Assistente Inova"
+              aria-label="Fechar Assistente CRIA"
             >
               <X size={20} />
             </Dialog.Close>
@@ -256,11 +256,11 @@ function Conversa({
     },
     history: { enabled: true, showDelete: false, showRename: false },
     composer: {
-      placeholder: "Pergunte sobre o Inova ou um campo…",
+      placeholder: "Pergunte sobre o CRIA ou um campo…",
       attachments: { enabled: false },
     },
     startScreen: {
-      greeting: "Como posso ajudar com o Inova?",
+      greeting: "Como posso ajudar com o CRIA?",
       prompts: [
         { label: "Como preencho este campo?", prompt: "Como preencho este campo?" },
         { label: "Entender esta tela", prompt: "Explique esta tela e por onde começar." },

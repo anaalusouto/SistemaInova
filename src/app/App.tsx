@@ -3,6 +3,8 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
+import { MarcaCria } from './components/MarcaCria';
+import { useMenuLateral } from './theme/useMenuLateral';
 import { ProjectView } from './components/ProjectView';
 import { PortfolioView } from './components/PortfolioView';
 import { ReportsModule } from './components/ReportsModule';
@@ -55,6 +57,7 @@ function AppShell() {
   // não ficar inacessível.
   const projetoAvulso = activeNav === 'organizations' && !busca.org ? busca.projeto ?? null : null;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { recolhido: menuRecolhido, alternar: alternarMenu } = useMenuLateral();
   const fecharMenu = useCallback(() => setMobileNavOpen(false), []);
   const { getProject, projects, projectsLoading } = useStore();
   const projetoAssistente = projetoDaNavegacao(projects, busca);
@@ -124,6 +127,8 @@ function AppShell() {
         aoNavegarOrg={navegarOrg}
         isOpen={mobileNavOpen}
         onClose={fecharMenu}
+        collapsed={menuRecolhido}
+        onToggleCollapsed={alternarMenu}
       />
       <div className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
         <header
@@ -139,7 +144,7 @@ function AppShell() {
           >
             <Menu size={20} />
           </button>
-          <span className="text-sm font-semibold text-foreground lg:hidden">Sistema Inova</span>
+          <MarcaCria compacta className="lg:!hidden" />
           <span className="hidden lg:inline text-sm font-medium" style={{ color: 'var(--ink-1)' }}>{greeting}</span>
           <div className="flex-1" />
           <FontSizeControl />

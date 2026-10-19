@@ -120,11 +120,13 @@
   --surface-2: #F1F5F9;
 
   /* Cor de destaque (marca) — controlada pelo usuário em Configurações › Aparência. */
-  --brand: #2563EB;
+  --brand: #344980;
   --brand-foreground: #FFFFFF;
-  --brand-text: #1D4ED8;
-  --brand-soft: #EFF6FF;
-  --brand-soft-border: #BFDBFE;
+  --brand-text: #344980;
+  --brand-soft: #EEF1F8;
+  --brand-soft-border: #CBD3E6;
+  --brand-secondary: #B95C4A;
+  --brand-secondary-soft: #FAEEE9;
 
   /* Cores de status — fixas independente da cor de destaque escolhida. */
   --success: #059669;
@@ -153,9 +155,7 @@
   --info-soft-border: #DDD6FE;
 }
 
-[data-accent="rosa"] { --brand: #DB2777; --brand-text: #BE185D; --brand-soft: #FCE7F3; --brand-soft-border: #F9A8D4; }
-[data-accent="verde"] { --brand: #16A34A; --brand-text: #15803D; --brand-soft: #F0FDF4; --brand-soft-border: #BBF7D0; }
-[data-accent="amarelo"] { --brand: #CA8A04; --brand-text: #A16207; --brand-soft: #FEFCE8; --brand-soft-border: #FDE68A; }
+[data-accent="terracota"] { --brand: #B95C4A; --brand-text: #A34E3E; --brand-soft: #FAEEE9; --brand-soft-border: #EACAC1; --brand-secondary: #344980; --brand-secondary-soft: #EEF1F8; }
 
 .dark {
   --ink-1: #F1F5F9;
@@ -170,11 +170,13 @@
   --surface-1: #111A2E;
   --surface-2: #16233D;
 
-  --brand: #3B82F6;
+  --brand: #344980;
   --brand-foreground: #FFFFFF;
-  --brand-text: #93C5FD;
-  --brand-soft: rgba(59,130,246,0.16);
-  --brand-soft-border: rgba(59,130,246,0.4);
+  --brand-text: #BECAEB;
+  --brand-soft: rgba(100,124,188,0.18);
+  --brand-soft-border: rgba(142,162,213,0.45);
+  --brand-secondary: #B95C4A;
+  --brand-secondary-soft: rgba(185,92,74,0.18);
 
   --success: #34D399;
   --success-soft: rgba(5,150,105,0.16);
@@ -198,9 +200,7 @@
   --info-soft-border: rgba(124,58,237,0.4);
 }
 
-.dark[data-accent="rosa"] { --brand: #F472B6; --brand-text: #F9A8D4; --brand-soft: rgba(244,114,182,0.16); --brand-soft-border: rgba(244,114,182,0.4); }
-.dark[data-accent="verde"] { --brand: #4ADE80; --brand-text: #86EFAC; --brand-soft: rgba(74,222,128,0.16); --brand-soft-border: rgba(74,222,128,0.4); }
-.dark[data-accent="amarelo"] { --brand: #FACC15; --brand-text: #FDE047; --brand-soft: rgba(250,204,21,0.16); --brand-soft-border: rgba(250,204,21,0.4); }
+.dark[data-accent="terracota"] { --brand: #B95C4A; --brand-text: #F1B5A8; --brand-soft: rgba(185,92,74,0.18); --brand-soft-border: rgba(216,149,134,0.45); --brand-secondary: #344980; --brand-secondary-soft: rgba(100,124,188,0.18); }
 
 .dark {
   --background: oklch(0.129 0.042 264.695);
@@ -245,7 +245,59 @@
   --primary-foreground: var(--brand-foreground);
   --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: var(--brand-foreground);
+  --secondary: var(--brand-secondary-soft);
+  --secondary-foreground: var(--brand-secondary);
   --ring: var(--brand);
+}
+
+/* CRIA: logos originais sobre suporte branco, inclusive no tema escuro. */
+.cria-brand {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: 148px;
+  height: 86px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  transition: width 260ms ease, height 260ms ease;
+}
+.cria-brand img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 220ms ease, transform 260ms ease;
+}
+.cria-brand-full { opacity: 1; transform: scale(1); }
+.cria-brand-short { opacity: 0; transform: scale(.8); }
+.cria-brand--compact { width: 44px; height: 44px; }
+.cria-brand--compact .cria-brand-full { opacity: 0; transform: scale(.85); }
+.cria-brand--compact .cria-brand-short { opacity: 1; transform: scale(1); }
+.cria-brand--login { width: 212px; height: 139px; }
+.cria-sidebar {
+  width: 240px;
+  transition: width 260ms ease, transform 260ms ease;
+  border-right: 1px solid var(--sidebar-border);
+}
+.cria-sidebar-brand { min-height: 104px; border-bottom: 3px solid var(--brand-secondary); }
+.cria-sidebar nav button > svg { flex-shrink: 0; }
+.cria-sidebar nav button { min-height: 40px; }
+@media (min-width: 64rem) {
+  .cria-sidebar[data-collapsed="true"] { width: 80px; }
+  .cria-sidebar[data-collapsed="true"] .cria-sidebar-brand { flex-direction: column; justify-content: center; padding: 8px; gap: 2px; }
+  .cria-brand--compact-desktop { width: 54px; height: 54px; }
+  .cria-brand--compact-desktop .cria-brand-full { opacity: 0; transform: scale(.85); }
+  .cria-brand--compact-desktop .cria-brand-short { opacity: 1; transform: scale(1); }
+  .cria-sidebar[data-collapsed="true"] :is(.sidebar-label, .sidebar-search, .sidebar-tree, .sidebar-user-info, .sidebar-active-arrow) { display: none; }
+  .cria-sidebar[data-collapsed="true"] nav button,
+  .cria-sidebar[data-collapsed="true"] > div:last-child > button { justify-content: center; padding: 10px !important; position: relative; }
+  .cria-sidebar[data-collapsed="true"] nav button > span:not(.sidebar-label) { position: absolute; right: 0; top: 0; }
+  .cria-sidebar[data-collapsed="true"] .sidebar-user { flex-direction: column; padding: 0; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cria-sidebar, .cria-brand, .cria-brand img { transition: none; }
 }
 
 @layer base {

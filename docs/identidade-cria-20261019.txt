@@ -1,0 +1,40 @@
+Identidade CRIA — 19/10/2026
+
+As logos oficiais em LOGOS/cria.png e LOGOS/ca.png foram preservadas e copiadas
+sem alteração para public/logos/. MarcaCria centraliza a exibição das duas.
+Paleta extraída dos pixels predominantes: azul #344980 e terracota #B95C4A.
+Configurações > Aparência permite escolher o destaque entre as duas cores.
+Preferências antigas de outras cores passam para o azul, preservando tema e fonte.
+
+Aplicação: login, menu, cabeçalho móvel, favicon, título e metadados da página,
+assistente local/ChatKit preparado, instruções do agente e templates de e-mail.
+O botão do assistente e os detalhes da marca usam a segunda cor da paleta.
+Nomes históricos de projetos, editais e financiadores foram preservados.
+Identificadores técnicos antigos (cookies, atributos, eventos, variáveis de
+ambiente e protocolo do serviço) foram mantidos para preservar compatibilidade.
+
+Menu desktop: 240 px aberto com CRIA; 80 px recolhido com CA. Ícones continuam
+acessíveis por nome e título. A expansão revela a árvore da organização.
+A preferência fica em cria:menu-recolhido:v1, somente neste navegador.
+Transições de largura, escala e opacidade respeitam prefers-reduced-motion.
+No celular o menu continua sendo uma gaveta com CRIA, botão Fechar, fechamento
+por Escape e retorno do foco ao acionador; o cabeçalho compacto usa CA.
+
+Verificação local com componentes reais e dados sintéticos:
+- Menu aberto/recolhido em desktop de 1536 px, logos carregadas e cores verificadas.
+- Recarregar preserva menu recolhido.
+- Cores azul/terracota, tema claro/escuro e login de 390 px conferidos no navegador.
+- Gaveta móvel de 240 px cabe em 390 px sem rolagem horizontal da página.
+- Escape fecha a gaveta e retorna o foco para Abrir menu.
+- Evidências: evidencias/cria-menu-aberto.jpg e cria-menu-recolhido.jpg.
+- 175 testes Node e 9 testes Python passaram, sem chamadas reais à OpenAI.
+- TypeScript e build passaram. ESLint sem erros, com os 6 avisos anteriores de
+  Fast Refresh em themeStore.tsx; formatação histórica excluída dessa checagem.
+
+Como conferir: iniciar o aplicativo local, entrar e clicar em Recolher menu lateral;
+recarregar; expandir novamente; testar em celular; abrir Aparência e alternar
+tema e destaque; abrir Assistente CRIA. Para o ensaio isolado sem banco:
+node node_modules/vite/bin/vite.js --config tests/demandas-ui/vite.config.ts
+Abrir http://127.0.0.1:8093/ e /?login=1.
+
+Sem alterações de banco, migrações, publicação, push ou serviços externos.

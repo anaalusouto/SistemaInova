@@ -81,7 +81,7 @@ export function ProjectView({
               className="flex min-h-12 min-w-0 items-center justify-center gap-1.5 border-b-2 px-1 sm:px-3 py-2 text-xs sm:text-sm"
               style={{
                 borderColor: activeTab === tab.id ? "var(--primary)" : "transparent",
-                color: activeTab === tab.id ? "var(--primary)" : "var(--ink-4)",
+                color: activeTab === tab.id ? "var(--brand-text)" : "var(--ink-4)",
               }}
             >
               <Icon size={14} />
@@ -219,7 +219,7 @@ function TabOrcamentoInterino({ project }: { project: Project }) {
               className="px-3 py-1.5 text-[12px]"
               style={{
                 background: sub === valor ? "var(--brand-soft)" : "transparent",
-                color: sub === valor ? "var(--brand)" : "var(--ink-3)",
+                color: sub === valor ? "var(--brand-text)" : "var(--ink-3)",
                 fontWeight: sub === valor ? 600 : 400,
                 borderRight: i === 0 ? "1px solid var(--border)" : undefined,
               }}

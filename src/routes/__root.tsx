@@ -74,10 +74,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sistema Inova" },
-      { name: "description", content: "Sistema Inova — Gestão de Projetos" },
-      { property: "og:title", content: "Sistema Inova" },
-      { property: "og:description", content: "Sistema Inova — Gestão de Projetos" },
+      { title: "CRIA" },
+      { name: "description", content: "CRIA — Gestão de Projetos" },
+      { property: "og:title", content: "CRIA" },
+      { property: "og:description", content: "CRIA — Gestão de Projetos" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -86,7 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/logos/ca.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/logos/ca.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -97,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>

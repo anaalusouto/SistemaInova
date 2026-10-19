@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { MessageCircle, Send, Trash2, X } from "lucide-react";
 import { useAuth } from "../auth/authStore";
+import { MarcaCria } from "../components/MarcaCria";
 import { conhecimento, contextoSeguro, type ContextoAssistente } from "./context";
 import { responderLocal, type DadosAssistenteLocal, type PerfilLocal } from "./localBot";
 
@@ -50,7 +51,7 @@ export function AssistenteInova({
         <button
           type="button"
           className="fixed bottom-4 right-4 z-[80] flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4"
-          style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+          style={{ background: "var(--brand-secondary)", color: "#FFFFFF" }}
           onClick={() => {
             if (
               atual.formulario &&
@@ -60,7 +61,7 @@ export function AssistenteInova({
           }}
         >
           <MessageCircle size={18} aria-hidden />
-          Assistente Inova
+          Assistente CRIA
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -76,15 +77,15 @@ export function AssistenteInova({
           onKeyDown={(e) => e.stopPropagation()}
         >
           <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
-            <MessageCircle size={20} style={{ color: "var(--primary)" }} aria-hidden />
+            <MarcaCria compacta />
             <div className="min-w-0 flex-1">
-              <Dialog.Title className="font-semibold">Assistente Inova</Dialog.Title>
+              <Dialog.Title className="font-semibold">Assistente CRIA</Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 Chatbot local · sem consumo de OpenAI
               </Dialog.Description>
             </div>
             <Dialog.Close
-              aria-label="Fechar Assistente Inova"
+              aria-label="Fechar Assistente CRIA"
               className="rounded-md p-2 hover:bg-accent"
             >
               <X size={20} />
@@ -199,7 +200,7 @@ function ConversaLocal({
       <div
         ref={lista}
         role="log"
-        aria-label="Conversa com Assistente Inova"
+        aria-label="Conversa com Assistente CRIA"
         aria-live="polite"
         aria-relevant="additions"
         className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
@@ -256,7 +257,7 @@ function ConversaLocal({
           }}
         >
           <label className="sr-only" htmlFor="pergunta-assistente-local">
-            Sua pergunta sobre o Inova
+            Sua pergunta sobre o CRIA
           </label>
           <textarea
             ref={entrada}
@@ -265,7 +266,7 @@ function ConversaLocal({
             maxLength={1000}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Pergunte sobre o Inova…"
+            placeholder="Pergunte sobre o CRIA…"
             className="w-full resize-none rounded-lg border bg-background p-2 text-sm"
           />
           <div className="mt-1 flex items-center justify-between gap-2">

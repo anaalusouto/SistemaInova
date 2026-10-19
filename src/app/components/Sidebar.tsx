@@ -10,7 +10,11 @@ import {
   Kanban,
   Building2,
   ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
 } from 'lucide-react';
+import { MarcaCria } from './MarcaCria';
 import { useAuth } from '../auth/authStore';
 import { useAgenda } from '../agenda/useAgenda';
 import { SUBAREAS_GESTAO } from '../lib/gestaoInterna';
@@ -33,6 +37,8 @@ interface SidebarProps {
   onNavigate: (item: NavItem) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
   /** Organização aberta: o menu mostra, embaixo dela, seções e projetos. */
   rotaOrg: RotaOrg;
   aoNavegarOrg: (rota: RotaOrg) => void;
@@ -47,7 +53,7 @@ const bottomItems = [
   { id: 'schedule' as NavItem, label: 'Gestão Interna', icon: Kanban },
 ];
 
-export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaOrg, aoNavegarOrg }: SidebarProps) {
+export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, collapsed = false, onToggleCollapsed, rotaOrg, aoNavegarOrg }: SidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const { paraMim } = useAgenda();
   const [gestaoAberta, setGestaoAberta] = useState(true);
@@ -78,6 +84,8 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
       <button
         key={item.id}
         type="button"
+        aria-label={item.label}
+        title={item.label}
         aria-current={isActive ? 'page' : undefined}
         onClick={() => { onNavigate(item.id); onClose?.(); }}
         className="w-full flex items-center gap-3 rounded-md mb-0.5 text-left transition-all duration-150"
@@ -91,7 +99,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.opacity = '0.78'; } }}
       >
         <Icon size={15} />
-        <span style={{ fontSize: '0.825rem', fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
+        <span className="sidebar-label" style={{ fontSize: '0.825rem', fontWeight: isActive ? 600 : 400 }}>{item.label}</span>
         {item.id === 'schedule' && pendentes > 0 && (
           <span
             className="ml-auto flex items-center justify-center rounded-full text-white font-bold flex-shrink-0"
@@ -100,7 +108,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
             {pendentes > 9 ? '9+' : pendentes}
           </span>
         )}
-        {isActive && <ChevronRight size={12} className="ml-auto flex-shrink-0" />}
+        {isActive && <ChevronRight size={12} className="sidebar-active-arrow ml-auto flex-shrink-0" />}
       </button>
     );
   };
@@ -118,26 +126,21 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         id="menu-principal"
         ref={menuRef}
         aria-label="Menu principal"
-        className={`flex flex-col h-full w-60 max-w-[calc(100vw-2rem)] flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        data-collapsed={collapsed}
+        className={`cria-sidebar flex flex-col h-full max-w-[calc(100vw-2rem)] flex-shrink-0 fixed inset-y-0 left-0 z-50 lg:static lg:translate-x-0 ${
           isOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible'
         }`}
         style={{ background: 'var(--sidebar)' }}
       >
-      <div className="flex items-center gap-3 px-5 h-16 flex-shrink-0 border-b" style={{ borderColor: 'var(--sidebar-border)', background: 'var(--surface-0)' }}>
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--sidebar-primary)' }}>
-          <LayoutDashboard size={16} color="var(--primary-foreground)" />
-        </div>
-        <div>
-          <div style={{ color: 'var(--ink-1)', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.875rem', lineHeight: 1.2 }}>
-            Sistema Inova
-          </div>
-          <div style={{ color: 'var(--ink-1)', fontSize: '0.7rem', opacity: 0.7 }}>
-            Gestão de Projetos
-          </div>
-        </div>
+      <div className="cria-sidebar-brand flex items-center justify-between gap-1 px-3 shrink-0 border-b" style={{ borderColor: 'var(--sidebar-border)', borderBottomColor: 'var(--brand-secondary)', background: 'var(--surface-0)' }}>
+        <MarcaCria compacta={collapsed} adaptavel />
+        <button type="button" onClick={onToggleCollapsed} aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'} title={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'} aria-expanded={!collapsed} aria-controls="navegacao-principal" className="hidden lg:flex shrink-0 items-center justify-center rounded-lg w-8 h-8 hover:bg-accent text-foreground">
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
+        <button type="button" onClick={onClose} aria-label="Fechar menu" className="lg:hidden flex items-center justify-center rounded-lg w-10 h-10 hover:bg-accent text-foreground"><X size={20} /></button>
       </div>
 
-      <div className="px-3 pt-4 pb-2">
+      <div className="sidebar-search px-3 pt-4 pb-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors"
           style={{ background: 'var(--sidebar-accent)', color: 'var(--sidebar-foreground)' }}>
           <Search size={13} style={{ opacity: 0.5 }} />
@@ -146,7 +149,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         </div>
       </div>
 
-      <nav className="flex-1 min-h-0 px-3 py-2 overflow-y-auto">
+      <nav id="navegacao-principal" className="flex-1 min-h-0 px-3 py-2 overflow-y-auto">
         {topItems.map(i => renderBtn(i))}
 
         <div className="mt-1">
@@ -154,11 +157,11 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
             <div key={i.id}>
               {i.id === 'schedule' ? (
                 <>
-                  <button type="button" onClick={() => setGestaoAberta(aberta => !aberta)} aria-expanded={gestaoAberta} aria-controls="subareas-gestao"
+                  <button type="button" onClick={() => { if (collapsed) onToggleCollapsed?.(); setGestaoAberta(aberta => collapsed ? true : !aberta); }} aria-label="Gestão Interna" title="Gestão Interna" aria-expanded={gestaoAberta} aria-controls="subareas-gestao"
                     className="w-full flex items-center gap-3 rounded-md mb-0.5 px-3 py-2 text-left hover:bg-[var(--sidebar-accent)]"
                     style={{ color: 'var(--sidebar-foreground)', fontSize: '0.825rem', fontWeight: naGestao ? 600 : 400 }}>
-                    <Kanban size={15} /> Gestão Interna
-                    {gestaoAberta ? <ChevronDown size={12} className="ml-auto" /> : <ChevronRight size={12} className="ml-auto" />}
+                    <Kanban size={15} /><span className="sidebar-label">Gestão Interna</span>
+                    {gestaoAberta ? <ChevronDown size={12} className="sidebar-active-arrow ml-auto" /> : <ChevronRight size={12} className="sidebar-active-arrow ml-auto" />}
                   </button>
                   <div id="subareas-gestao" role="group" aria-label="Subáreas de Gestão Interna" hidden={!gestaoAberta}>
                     {SUBAREAS_GESTAO.map(s => renderBtn({ ...s, icon: s.id === 'schedule' ? Kanban : s.id === 'diagnostics' ? ClipboardList : BarChart3 }, true))}
@@ -166,7 +169,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
                 </>
               ) : renderBtn(i)}
               {i.id === 'organizations' && activeItem === 'organizations' && rotaOrg.orgId && (
-                <ArvoreOrganizacao key={rotaOrg.orgId} rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} />
+                <div className="sidebar-tree"><ArvoreOrganizacao key={rotaOrg.orgId} rota={rotaOrg} aoNavegar={r => { aoNavegarOrg(r); onClose?.(); }} /></div>
               )}
             </div>
           ))}
@@ -176,17 +179,17 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
 
       <div className="shrink-0 px-3 py-3 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
         {renderBtn({ id: 'settings', label: 'Configurações', icon: Settings })}
-        <div className="flex items-center gap-3 px-2">
+        <div className="sidebar-user flex items-center gap-3 px-2">
           <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 overflow-hidden" style={{ background: 'var(--sidebar-primary)', color: 'var(--primary-foreground)' }}>
             {user?.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="sidebar-user-info flex-1 min-w-0">
             <div className="truncate" style={{ color: 'var(--sidebar-foreground)', fontSize: '0.78rem', fontWeight: 500 }}>{user?.displayName ?? '—'}</div>
             <div style={{ color: 'var(--sidebar-foreground)', opacity: 0.6, fontSize: '0.68rem' }}>
               {isAdmin ? 'Administrador' : 'Estagiário'}
             </div>
           </div>
-          <button onClick={signOut} title="Sair" className="flex-shrink-0">
+          <button onClick={signOut} title="Sair" aria-label="Sair" className="flex-shrink-0 p-2 rounded-md hover:bg-accent">
             <LogOut size={14} style={{ color: 'var(--sidebar-foreground)', opacity: 0.6 }} />
           </button>
         </div>

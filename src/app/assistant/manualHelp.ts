@@ -107,7 +107,7 @@ export function responderManual(
   ) {
     const c = catalogoCobertura();
     return paragrafo(
-      `Catálogo de regras do Inova\n${c.regras} regras documentadas em ${c.guias} assuntos, versão ${c.versao}. São as regras verificadas no projeto; normas institucionais não expressas no código continuam como lacunas.\n\n${conhecimento.guias.map((g) => `${g.titulo}\n${g.regras.map((r) => `• ${r}`).join("\n")}`).join("\n\n")}\n\nPara os passos de uma operação, pergunte “Como faço…” com o nome do assunto.`,
+      `Catálogo de regras do CRIA\n${c.regras} regras documentadas em ${c.guias} assuntos, versão ${c.versao}. São as regras verificadas no projeto; normas institucionais não expressas no código continuam como lacunas.\n\n${conhecimento.guias.map((g) => `${g.titulo}\n${g.regras.map((r) => `• ${r}`).join("\n")}`).join("\n\n")}\n\nPara os passos de uma operação, pergunte “Como faço…” com o nome do assunto.`,
       [...new Set(conhecimento.guias.flatMap((g) => g.fontes))],
     );
   }

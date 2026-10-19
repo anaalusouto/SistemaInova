@@ -265,7 +265,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px]"
                 style={{
                   background: ativa ? 'var(--brand-soft)' : 'transparent',
-                  color: !v.disponivel ? 'var(--ink-5)' : ativa ? 'var(--brand)' : 'var(--ink-3)',
+                  color: !v.disponivel ? 'var(--ink-5)' : ativa ? 'var(--brand-text)' : 'var(--ink-3)',
                   fontWeight: ativa ? 600 : 400,
                   cursor: v.disponivel ? 'pointer' : 'not-allowed',
                   borderRight: i < VISOES.length - 1 ? '1px solid var(--border)' : undefined,
@@ -287,7 +287,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
                 className="px-2.5 py-1.5 text-[12px]"
                 style={{
                   background: escala === valor ? 'var(--brand-soft)' : 'transparent',
-                  color: escala === valor ? 'var(--brand)' : 'var(--ink-3)',
+                  color: escala === valor ? 'var(--brand-text)' : 'var(--ink-3)',
                   fontWeight: escala === valor ? 600 : 400,
                   borderRight: i === 0 ? '1px solid var(--border)' : undefined,
                 }}

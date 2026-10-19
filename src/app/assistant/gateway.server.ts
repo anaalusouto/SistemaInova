@@ -27,7 +27,7 @@ export async function atenderAssistente(
   }
   const env = deps.env ?? process.env;
   if (env.INOVA_OPENAI_ENABLED !== "true")
-    return json(503, "Conexão OpenAI pausada. Use o chatbot local do Inova.", {
+    return json(503, "Conexão OpenAI pausada. Use o chatbot local do CRIA.", {
       configured: false,
     });
   const enviar = deps.enviar ?? fetch;
@@ -37,7 +37,7 @@ export async function atenderAssistente(
   if (!url || !secret || secret.length < 32 || !domainKey)
     return json(
       503,
-      "Conexão real ainda não configurada. Solicite a configuração do Assistente Inova ao administrador.",
+      "Conexão real ainda não configurada. Solicite a configuração do Assistente CRIA ao administrador.",
       { configured: false },
     );
   let base: URL;

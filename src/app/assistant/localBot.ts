@@ -113,7 +113,7 @@ export function responderLocal(
 ): RespostaLocal {
   const q = normalizar(pergunta);
   const atual = contextoSeguro(contexto);
-  if (!q) return resultado("Digite uma pergunta sobre o Inova.");
+  if (!q) return resultado("Digite uma pergunta sobre o CRIA.");
   if (pergunta.length > 1000) return resultado("Use até 1.000 caracteres por pergunta.");
   if (
     /\b(token|chave de api|cpf|dados pessoais|qual (e )?(a |minha )?senha)\b/.test(q) ||
@@ -135,7 +135,7 @@ export function responderLocal(
     );
   if (/^(oi|ola|bom dia|boa tarde|boa noite|obrigad[oa])$/.test(q))
     return resultado(
-      "Olá! Sou o assistente local do Inova. Posso explicar campos e telas ou resumir os dados do projeto aberto. Minhas respostas vêm de regras e da base do sistema.",
+      "Olá! Sou o assistente local do CRIA. Posso explicar campos e telas ou resumir os dados do projeto aberto. Minhas respostas vêm de regras e da base do sistema.",
     );
   const manual = responderManual(pergunta, atual);
   if (manual) return manual;
@@ -183,11 +183,11 @@ export function responderLocal(
         .filter((l) => !l.startsWith("Prazo de retenção"))
         .map((l) => `• ${l}`)
         .join("\n")}`,
-      ["Base de conhecimento do Inova · lacunas."],
+      ["Base de conhecimento do CRIA · lacunas."],
     );
   if (/\b(esta tela|essa tela|tela aberta|por onde comecar|onde estou)\b/.test(q))
     return resultado(conhecimento.telas[atual.tela as keyof typeof conhecimento.telas], [
-      "Base de conhecimento do Inova · telas.",
+      "Base de conhecimento do CRIA · telas.",
     ]);
   const form = atual.formulario
     ? conhecimento.formularios[atual.formulario as keyof typeof conhecimento.formularios]

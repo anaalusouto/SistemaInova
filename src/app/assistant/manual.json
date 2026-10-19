@@ -481,7 +481,7 @@
       ],
       "regras": [
         "A sessão é validada por cookie httpOnly no servidor; o papel informado manualmente pelo navegador não autoriza escrita.",
-        "No fluxo protegido pelas guardas do Inova, visualizador é consulta; administrador e estagiário têm escrita, e operações administrativas exigem admin ou adminOverride.",
+        "No fluxo protegido pelas guardas do CRIA, visualizador é consulta; administrador e estagiário têm escrita, e operações administrativas exigem admin ou adminOverride.",
         "Alterações de credenciais e preferências protegidas exigem a verificação prevista na própria tela.",
         "Relatório e exportação apresentam os dados do sistema; não constituem aprovação institucional automática.",
         "O chatbot é local e somente consulta em todos os perfis; não cria, salva, exclui ou aprova registros."
