@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+**/.env
+**/.env.*
+node_modules
+.output
+.vercel
+services/assistente/.venv
+services/assistente/data
+**/__pycache__
+DOCUMENTOS

@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAssistenteRouteImport } from './routes/api/assistente'
 import { Route as ApiAdminSeedRouteImport } from './routes/api/admin/seed'
 import { Route as ApiAdminSeedUsuariosRouteImport } from './routes/api/admin/seed-usuarios'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAssistenteRoute = ApiAssistenteRouteImport.update({
+  id: '/api/assistente',
+  path: '/api/assistente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminSeedRoute = ApiAdminSeedRouteImport.update({
@@ -31,30 +37,40 @@ const ApiAdminSeedUsuariosRoute = ApiAdminSeedUsuariosRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/assistente': typeof ApiAssistenteRoute
   '/api/admin/seed': typeof ApiAdminSeedRoute
   '/api/admin/seed-usuarios': typeof ApiAdminSeedUsuariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/assistente': typeof ApiAssistenteRoute
   '/api/admin/seed': typeof ApiAdminSeedRoute
   '/api/admin/seed-usuarios': typeof ApiAdminSeedUsuariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/assistente': typeof ApiAssistenteRoute
   '/api/admin/seed': typeof ApiAdminSeedRoute
   '/api/admin/seed-usuarios': typeof ApiAdminSeedUsuariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/admin/seed' | '/api/admin/seed-usuarios'
+  fullPaths:
+    '/' | '/api/assistente' | '/api/admin/seed' | '/api/admin/seed-usuarios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/admin/seed' | '/api/admin/seed-usuarios'
-  id: '__root__' | '/' | '/api/admin/seed' | '/api/admin/seed-usuarios'
+  to: '/' | '/api/assistente' | '/api/admin/seed' | '/api/admin/seed-usuarios'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/assistente'
+    | '/api/admin/seed'
+    | '/api/admin/seed-usuarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiAssistenteRoute: typeof ApiAssistenteRoute
   ApiAdminSeedRoute: typeof ApiAdminSeedRoute
   ApiAdminSeedUsuariosRoute: typeof ApiAdminSeedUsuariosRoute
 }
@@ -66,6 +82,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/assistente': {
+      id: '/api/assistente'
+      path: '/api/assistente'
+      fullPath: '/api/assistente'
+      preLoaderRoute: typeof ApiAssistenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/seed': {
@@ -87,6 +110,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiAssistenteRoute: ApiAssistenteRoute,
   ApiAdminSeedRoute: ApiAdminSeedRoute,
   ApiAdminSeedUsuariosRoute: ApiAdminSeedUsuariosRoute,
 }

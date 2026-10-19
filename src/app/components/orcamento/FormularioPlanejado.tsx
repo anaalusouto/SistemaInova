@@ -45,21 +45,21 @@ export function FormularioPlanejado({ projetoId, metas, item, aoFechar }: {
     finally { bloqueio.current = false; setSalvando(false); }
   };
   return <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,.5)' }}>
-    <form ref={dialogo} onSubmit={salvar} role="dialog" aria-modal="true" aria-label={item ? 'Editar item do orçamento' : 'Novo item do orçamento'}
+    <form ref={dialogo} onSubmit={salvar} role="dialog" data-inova-form="planejado" aria-modal="true" aria-label={item ? 'Editar item do orçamento' : 'Novo item do orçamento'}
       className="bg-card rounded-xl border p-5 w-full max-w-xl max-h-[90dvh] overflow-y-auto flex flex-col gap-3">
       <h2 className="font-semibold">{item ? 'Editar item do orçamento' : 'Novo item do orçamento'}</h2>
       <p className="text-sm">Atualize os valores planejados. Notas, comprovantes e execução são preservados. Uma nova planilha substituirá esta proposta.</p>
       <fieldset disabled={salvando} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1 text-sm">Meta
+        <label className="flex flex-col gap-1 text-sm" data-inova-field="Meta">Meta
           <select required value={dados.metaId ?? ''} onChange={e => alterar('metaId', e.target.value)} className="border rounded p-2 bg-card">
             <option value="">Selecione</option>{metas.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
         </label>
-        {(['grupo', 'categoria', 'descricao', 'unidade'] as const).map((campo, i) => <label key={campo} className="flex flex-col gap-1 text-sm">
+        {(['grupo', 'categoria', 'descricao', 'unidade'] as const).map((campo, i) => <label key={campo} className="flex flex-col gap-1 text-sm" data-inova-field={['Grupo', 'Categoria', 'Descrição', 'Unidade'][i]}>
           {['Grupo', 'Categoria', 'Descrição', 'Unidade'][i]}
           <input required={campo === 'descricao'} value={dados[campo]} onChange={e => alterar(campo, e.target.value)} className="border rounded p-2 bg-card" />
         </label>)}
-        {(['qtd', 'qtdUnidades', 'valorUnitario', 'valorProposto'] as const).map((campo, i) => <label key={campo} className="flex flex-col gap-1 text-sm">
+        {(['qtd', 'qtdUnidades', 'valorUnitario', 'valorProposto'] as const).map((campo, i) => <label key={campo} className="flex flex-col gap-1 text-sm" data-inova-field={['Quantidade', 'Quantidade de unidades', 'Valor unitário (R$)', 'Total proposto (R$)'][i]}>
           {['Quantidade', 'Quantidade de unidades', 'Valor unitário (R$)', 'Total proposto (R$)'][i]}
           <input required type="number" min="0" step="any" value={Number.isNaN(dados[campo]) ? '' : dados[campo]}
             onChange={e => alterar(campo, e.target.value === '' ? NaN : Number(e.target.value))} className="border rounded p-2 bg-card" />

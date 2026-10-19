@@ -1,0 +1,237 @@
+ASSISTENTE INOVA — INTEGRAÇÃO V1 / 19-10-2026
+
+MODO ATUAL: CHATBOT LOCAL — OPENAI PAUSADA POR SOLICITAÇÃO DO USUÁRIO
+
+A interface ativa é um chatbot determinístico de consulta. Não carrega ChatKit,
+não chama /api/assistente, não chama OpenAI e não depende de chave, domínio ou Python.
+src/app/assistant/localBot.ts busca orientações na base verificada knowledge.json,
+com normalização de acentos/plurais e prioridade ao campo/formulário indicado.
+Perguntas sem correspondência recebem uma mensagem explícita de limitação.
+Não é um modelo generativo e não interpreta livremente qualquer pergunta.
+
+App.tsx fornece somente contagens derivadas dos projetos já carregados no store:
+quantidade de projetos da sessão e, quando houver projeto aberto, situação e
+contagens de metas, etapas, atividades/concluídas e riscos/em aberto. Não são novas
+consultas ao banco. Os dados são os mesmos recebidos pela plataforma e podem ser
+atualizados pelo fluxo existente. Não se copiam nomes, responsáveis ou formulários.
+A contagem de projetos carregados não representa os filtros visuais nem uma nova
+consulta global ao banco. Se os dados estão carregando ou nenhum projeto está
+aberto, o chatbot orienta o usuário sem apresentar uma contagem inventada.
+
+Conversas ficam apenas na memória do painel. Fechar o painel, sair da conta ou
+limpar a conversa descarta as mensagens; não há localStorage, banco ou transmissão.
+O histórico em memória é limitado às últimas 40 mensagens e a pergunta a 1.000
+caracteres. Todo perfil usa o bot somente para consulta; nenhuma função de escrita
+do Inova é disponibilizada ao motor local.
+
+ChatKitPreparado.tsx preserva o código anterior para possível uso futuro e não é
+importado pela aplicação ativa. O gateway exige INOVA_OPENAI_ENABLED=true para
+qualquer encaminhamento ao serviço externo; por padrão responde 503 com conexão
+pausada mesmo que haja outras credenciais. Nenhum ambiente remoto foi habilitado.
+Não executar smoke_real.py ou ativar serviços OpenAI durante este modo local.
+
+Para testar: iniciar o Inova localmente ou a fixture sem banco:
+  node node_modules/vite/bin/vite.js --config tests/assistant-ui/vite.config.ts
+  Abrir http://127.0.0.1:8092 e clicar em “Como preencher?” ou “Assistente Inova”.
+  Perguntar “Como preencho este campo?”, “Resumo do projeto aberto”,
+  “Quantos projetos estão carregados?” ou “Probabilidade do risco”.
+  A fixture usa contagens sintéticas; o Inova usa as contagens reais do store.
+
+Testes específicos do modo local:
+  node --test tests/assistenteLocal.test.cjs tests/assistente.test.cjs
+
+HISTÓRICO DA PREPARAÇÃO OPENAI — INATIVA
+
+Estado: código local implementado; nenhuma publicação, chave ou serviço externo criado.
+A UI não simula respostas: informa quando a conexão real não está configurada.
+
+DIAGNÓSTICO E DECISÃO
+
+Frontend React 19 + Tailwind 4; TanStack Start/Router sobre Vite 8 e Nitro.
+App.tsx concentra navegação; parâmetros area/secao/aba/gestao descrevem a tela.
+Dados do Inova usam Supabase no servidor. A autenticação ativa NÃO é o middleware
+Supabase Auth: sessao.server.ts valida o cookie httpOnly inova_sessao contra a tabela
+sessoes, com token opaco de 256 bits armazenado por hash e janela de 12 horas.
+exigirSessao aceita todos os perfis. exigirEscrita recusa visualizador. exigirAdmin
+aceita admin ou adminOverride. Não há mudança nessas guardas.
+
+Não foi encontrado AGENTS.md. A árvore de trabalho estava limpa antes desta rodada.
+
+ChatKit avançado com servidor próprio foi escolhido a partir da documentação oficial:
+https://developers.openai.com/api/docs/guides/chatkit
+https://developers.openai.com/api/docs/guides/custom-chatkit
+https://developers.openai.com/api/docs/guides/chatkit-themes
+Consultadas em 19-10-2026. A documentação recomenda servidor próprio para aplicações
+novas e informa transição do Agent Builder. Não é necessário criar workflow/agente
+no painel: a definição do agente vive em services/assistente/app.py e instructions.txt.
+O protocolo usa o SDK oficial openai-chatkit 1.6.5, com openai-agents e Responses API;
+a interface usa @openai/chatkit-react e o script oficial, carregado sob demanda.
+
+FLUXO
+
+Botão flutuante ou “Como preencher?” -> painel lateral -> /api/assistente (TanStack)
+-> sessão vigente e validação de origem/protocolo -> serviço Python /chatkit
+-> ChatKitServer + Agents SDK -> OpenAI -> streaming SSE até o painel.
+
+O proxy só encaminha operações explicitamente permitidas. Identidade pseudônima
+HMAC do ID imutável do usuário, perfil e override vêm da sessão no servidor.
+Corpo, identidade, caminho e timestamp são assinados. Assinatura expira em 30s.
+O serviço Python não recebe cookie, login, nome, e-mail nem credenciais do Supabase.
+Toda leitura/escrita de conversas/itens/cursor é restrita ao proprietário; nem admin
+tem leitura das conversas de outra pessoa. Reconectar/logout não persiste IDs no
+navegador; o histórico próprio pode ser retomado pelo ChatKit.
+
+O contexto automático é somente {tela, formulario?, campo?}, em lista permitida.
+Não se coleta DOM textual, valor de input, formulário, anexos, URL completa,
+identificadores de projeto/organização, dados pessoais ou mensagens do Inova.
+O texto que a pessoa digita voluntariamente no chat será enviado à OpenAI.
+A interface avisa isso. Traces do Agents SDK estão desabilitados; store=False
+nas chamadas de modelo. Isso não substitui as políticas de retenção do provedor.
+
+V1 sem ferramentas, ações, uploads, voz, troca de modelo pelo cliente ou mutações
+de registros de negócio. Uma conversa, naturalmente, grava mensagens no armazenamento
+do assistente. security.authorize_tool recusa tudo; futura ferramenta precisa voltar
+ao servidor Inova, revalidar sessão e permissão sobre o registro em cada execução.
+Não basta confiar no perfil assinado de uma requisição antiga.
+
+Limites: 4.000 caracteres por mensagem, corpo até 16 KiB, 20 itens de histórico por
+inferência, saída até 1.200 tokens, 10 gerações/minuto por usuário, uma geração ativa
+por usuário, timeout de geração 85s/proxy 90s. O serviço deve rodar com UM worker.
+
+BASE DE CONHECIMENTO
+
+src/app/assistant/knowledge.json contém versão, telas, perfis, formulários, campos,
+arquivos-fonte e lacunas. Cobre navegação e orientações iniciais de projeto, meta,
+etapa, atividade, risco, proposta orçamentária, execução e nota fiscal. Diagnóstico,
+mapeamento e parecer têm cobertura apenas introdutória. Não contém dados reais.
+
+Ao atualizar: conferir implementação/validador do servidor e da tela, editar a seção,
+registrar fonte, mudar versão e executar testes. Regras institucionais não comprovadas
+devem permanecer como lacunas. As instruções proíbem inventar regras e mandam citar
+seção/arquivo da base. Exemplos devem ser declarados fictícios.
+
+Lacunas: critérios institucionais da escala de riscos; critérios de aprovação e
+evidências; detalhamento dos diagnósticos; instituições vinculadas a cada perfil
+(comentários divergem); prazo de retenção e responsável pela manutenção da base.
+
+CONFIGURAÇÃO SEGURA — SOMENTE QUANDO AUTORIZADA
+
+1. No gerenciador de segredos ou arquivo local ignorado pelo Git, preservar entradas
+   existentes e acrescentar as variáveis abaixo. Nunca enviar segredos pelo chat,
+   incluir em código/commits ou prefixar com VITE_ / NEXT_PUBLIC_.
+
+   Servidor Node do Inova:
+     INOVA_ASSISTANT_URL=http://127.0.0.1:8091
+     INOVA_ASSISTANT_SECRET=<segredo aleatório com pelo menos 32 caracteres>
+     CHATKIT_DOMAIN_KEY=<chave PÚBLICA de domínio ChatKit>
+
+   Servidor Python:
+     OPENAI_API_KEY=<chave do projeto OpenAI com acesso ao modelo escolhido>
+     OPENAI_MODEL=<ID de um modelo disponível ao projeto, compatível com Responses>
+     INOVA_ASSISTANT_SECRET=<mesmo segredo compartilhado com Node>
+     INOVA_ASSISTANT_DB=<caminho do arquivo SQLite em disco persistente>
+
+   Modelo não tem valor padrão: escolha explícita evita usar silenciosamente um
+   modelo não disponível ou de custo inesperado. Não é necessário workflow_id.
+   OPENAI_API_KEY fica SOMENTE no Python; domainKey pode ir ao navegador e não é
+   credencial de API. A assinatura entre serviços nunca é entregue ao navegador.
+
+2. Registrar os domínios exatos do app no ChatKit e obter a chave pública de domínio
+   pelo painel OpenAI correspondente à documentação oficial. Incluir o endereço
+   local escolhido para desenvolvimento. Isso altera serviço externo e NÃO foi feito.
+
+3. Instalar e iniciar Python (comandos a partir da raiz do repositório):
+     py -m venv services/assistente/.venv
+     services/assistente/.venv/Scripts/python.exe -m pip install -r services/assistente/requirements.lock.txt
+
+   Injete variáveis por gerenciador de segredos/processo. Para desenvolvimento,
+   Node pode carregar arquivo ignorado sem imprimir valores e iniciar o Python:
+     node --env-file=.env.assistente.local -e "require('node:child_process').spawn('services/assistente/.venv/Scripts/python.exe',['-m','uvicorn','app:app','--app-dir','services/assistente','--host','127.0.0.1','--port','8091','--workers','1'],{stdio:'inherit',env:process.env})"
+   O arquivo .env.assistente.local deve conter só as variáveis Python acima.
+   Em outro terminal, carregue as variáveis Node junto às já existentes do Inova:
+     node --env-file=.env --env-file=.env.local node_modules/vite/bin/vite.js
+   Ajuste os nomes de arquivo à configuração local. Eles devem existir e estar
+   ignorados pelo Git; não sobrescreva configurações atuais. --env-file precisa
+   de Node compatível (22+). Nenhum comando acima cria serviços externos.
+
+4. Em futura implantação, o Python exige serviço próprio ASGI, TLS e disco persistente;
+   não foi adicionado ao deploy Node/Nitro existente. Hospede com a árvore do repositório
+   preservada para encontrar knowledge.json. Uma instância/um worker é a configuração
+   suportada; SQLite e limitador em memória não são solução distribuída. Para múltiplas
+   réplicas, implementar store e limitador compartilhados antes. Não usar SQLite em
+   filesystem efêmero de função. Proxy aceita HTTP apenas em loopback no desenvolvimento,
+   e HTTPS em produção. Não usar URL com caminho, query ou credenciais embutidas.
+   Autorizar retenção, backups, exclusão e acesso operacional às conversas antes de
+   disponibilizar o serviço. Não habilitar logs de corpo, cabeçalhos ou credenciais.
+   /health requer assinatura e testa configuração/abertura do store, não autentica
+   na OpenAI: chave, cota, modelo e domínio ainda precisam de teste real controlado.
+
+5. Na verificação de ativação, a CLI Vercel 59.25.2 foi encontrada e o projeto vinculado
+   sistema-inova foi confirmado. A consulta de ambiente remoto não encontrou variáveis
+   OpenAI/ChatKit/assistente. Nenhuma alteração de ambiente remoto ou deploy foi feito.
+
+PREPARAÇÃO DA ATIVAÇÃO
+
+  node scripts/assistente.mjs prepare
+  node scripts/assistente.mjs check
+  node scripts/assistente.mjs start
+
+prepare preserva entradas existentes e gera o segredo compartilhado local sem exibi-lo.
+.env.assistente.local guarda configurações Python; .env.local recebe somente as do proxy.
+Os dois arquivos estão ignorados pelo Git. Preencher OPENAI_API_KEY e OPENAI_MODEL
+no primeiro e CHATKIT_DOMAIN_KEY no segundo, diretamente em editor/gerenciador seguro.
+Não colar segredos na conversa. Login na conta OpenAI e autorização do projeto são
+necessários; a chave não existe nos ambientes locais/remotos verificados.
+
+Há um Dockerfile do backend e .dockerignore que exclui segredos, banco e ambiente
+virtual. Build a partir da raiz: docker build -f services/assistente/Dockerfile -t
+inova-assistente . O Docker não está instalado neste ambiente; a imagem ainda não foi
+construída nem publicada. O host precisa fornecer TLS e volume persistente em /data.
+
+services/assistente/smoke_real.py prepara uma única geração real com pergunta sintética,
+usando o agente e contexto de Fim previsto. Só deve ser executado com credenciais
+configuradas e uso real autorizado. Não consulta o banco do Inova nem imprime chave
+ou conversa. Informa status, modelo, quantidade de eventos e tamanho da resposta.
+
+COMO TESTAR
+
+Automáticos, sem banco real ou chamadas pagas:
+  node --test tests/assistente.test.cjs
+  services/assistente/.venv/Scripts/python.exe -m unittest discover -s services/assistente -p test_assistente.py -v
+  node node_modules/typescript/bin/tsc --noEmit
+  node node_modules/vite/bin/vite.js build
+
+Todos os testes Node existentes:
+  $assistantTests = @(Get-ChildItem -LiteralPath tests -Filter *.test.cjs | ForEach-Object FullName)
+  node --test @assistantTests
+
+UI isolada sem banco/login/serviço real (fixture explícita, fora das rotas do app):
+  node node_modules/vite/bin/vite.js --config tests/assistant-ui/vite.config.ts
+  Abrir http://127.0.0.1:8092. Testar botão, ajuda de campo, falha de configuração,
+  reconexão, Escape, foco, largura 390 px. A fixture não retorna respostas artificiais.
+
+No Inova autenticado: abrir “Assistente Inova”, abrir um formulário e usar “Como
+preencher?”. Sem configuração, deve aparecer mensagem explícita. Não é necessário
+salvar um formulário para testar. Validar admin, estagiário e visualizador.
+
+Após configuração real autorizada: testar pergunta sobre datas da atividade, campo
+de justificativa e risco; confirmar fontes e resposta a lacuna. Solicitar “salve este
+registro”: o assistente deve orientar sem executar. Conferir payload de rede:
+apenas mensagem digitada e chaves de contexto, nunca valores do formulário. Dois
+usuários devem ver históricos distintos. Expirar sessão deve retornar 401; serviço
+parado deve mostrar indisponibilidade e reconexão. Revogar chave deve falhar sem
+expor detalhes do provedor. Validar streaming real e teclado virtual em celular.
+
+VERIFICAÇÃO DESTA RODADA
+
+143 testes Node (incluem 13 novos do assistente) passaram; 9 testes Python passaram.
+Python usa o ChatKitServer real para criar/listar/retomar conversas e gerar SSE,
+substituindo apenas a geração OpenAI por texto sintético. Testa isolamento até para
+admin, persistência, cursores, HMAC, expiração, ações/anexos bloqueados e agente sem
+tools com store=False/tracing desativado. TypeScript e build passaram.
+Lint dos novos módulos TypeScript/React passou. A rota no build local respondeu 401
+sem cookie, confirmando que a autenticação se aplica ao endpoint real.
+Navegador em fixture isolada confirmou ajuda contextual, estado sem configuração,
+fechamento por Escape e painel com largura de celular. Não validado: chamada real
+à OpenAI, domínio ChatKit registrado, fluxo autenticado real com os três perfis,
+teclado virtual móvel e implantação Python com armazenamento persistente.

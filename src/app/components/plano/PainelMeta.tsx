@@ -52,7 +52,7 @@ function FormularioMeta({ meta, aoFechar }: { meta: Goal; aoFechar: () => void }
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" data-inova-form="meta">
       <Erros erros={erros} />
       <Campo rotulo="Título da meta" obrigatorio><Texto valor={nome} aoMudar={setNome} /></Campo>
       <Campo rotulo="Responsável"><Texto valor={responsavel} aoMudar={setResponsavel} placeholder="Nome de quem responde pela meta" /></Campo>

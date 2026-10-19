@@ -145,7 +145,7 @@ export function FormularioAtividade({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" data-inova-form="atividade">
       <Erros erros={erros} />
 
       <Campo rotulo="Título" obrigatorio>

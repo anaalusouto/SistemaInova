@@ -42,3 +42,8 @@ supabase/.temp/
 
 # Documentos de especificação/anexos — ficam no OneDrive, não no repositório
 DOCUMENTOS/
+
+# Ambiente isolado e conversas locais do Assistente Inova
+services/assistente/.venv/
+services/assistente/data/
+__pycache__/

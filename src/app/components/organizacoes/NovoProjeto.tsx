@@ -73,6 +73,7 @@ export function NovoProjetoModal({
       onClick={onClose}
     >
       <form
+        data-inova-form="projeto"
         onSubmit={submit}
         onClick={e => e.stopPropagation()}
         className="bg-card rounded-2xl border p-6 w-full max-w-lg"
@@ -132,7 +133,7 @@ export function NovoProjetoModal({
 
 function Field({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
   return (
-    <label className={`flex flex-col gap-1 ${full ? 'sm:col-span-2' : ''}`}>
+    <label className={`flex flex-col gap-1 ${full ? 'sm:col-span-2' : ''}`} data-inova-field={label.replace(' *', '')}>
       <span className="text-[11px] font-medium" style={{ color: 'var(--ink-4)' }}>{label}</span>
       {children}
     </label>

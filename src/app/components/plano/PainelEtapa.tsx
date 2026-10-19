@@ -56,7 +56,7 @@ function FormularioPeriodo({ etapa, aoFechar }: { etapa: Deliverable; aoFechar: 
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" data-inova-form="etapa">
       <Erros erros={erros} />
 
       <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-3 border rounded-lg p-3" style={{ borderColor: 'var(--line-1)' }}>

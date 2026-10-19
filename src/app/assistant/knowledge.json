@@ -1,0 +1,166 @@
+{
+  "versao": "2026-10-19.1",
+  "escopo": "Orientação geral verificada no código. Não contém dados de organizações, pessoas ou projetos. Cite o nome da seção e a fonte ao explicar regras. Exemplos são fictícios e não substituem dados reais.",
+  "perfis": {
+    "fonte": "src/app/sessao.server.ts; src/app/auth/authStore.tsx",
+    "admin": "Administrador pode escrever e administrar. adminOverride também permite operações administrativas.",
+    "estagiario": "Pode escrever; operações administrativas exigem adminOverride ou perfil admin.",
+    "visualizador": "A guarda exigirEscrita recusa alterações para visualizador. O assistente apenas orienta em todos os perfis."
+  },
+  "telas": {
+    "overview": "Visão Geral: acompanhamento do portfólio. Fonte: src/app/components/PortfolioView.tsx.",
+    "organizations": "Organizações: entrada para fichas e projetos vinculados. Fonte: src/app/components/organizacoes/OrganizacoesModule.tsx.",
+    "dados": "Ficha da organização. Os projetos são abertos dentro da organização. Fonte: src/app/components/organizacoes/FichaOrganizacao.tsx.",
+    "projetos": "Lista de projetos da organização. Fonte: src/app/components/organizacoes/FichaOrganizacao.tsx.",
+    "descricao": "Descrição do projeto. Fonte: src/app/components/project-tabs/TabDescricao.tsx.",
+    "plano": "Plano de Trabalho: metas contêm etapas, que contêm atividades. Há visões de tabela, Kanban, Gantt e riscos. Fonte: src/app/components/plano/TabPlanoTrabalho.tsx.",
+    "orcamento": "Orçamento do projeto: proposta, execução e notas. Fonte: src/app/components/orcamento/TabOrcamento.tsx.",
+    "encaminhamentos": "Encaminhamentos da organização. Fonte: src/app/components/organizacoes/AbaEncaminhamentos.tsx.",
+    "registros": "Histórico de contatos pertence à organização. Fonte: src/app/components/organizacoes/AbaRegistrosContato.tsx.",
+    "mapeamento": "Mapeamento da organização. Fonte: src/app/components/organizacoes/FichaOrganizacao.tsx. Regras detalhadas ainda não documentadas nesta base.",
+    "parecer": "Parecer da organização. Fonte: src/app/components/organizacoes/FichaOrganizacao.tsx. Regras detalhadas ainda não documentadas nesta base.",
+    "diagnostics": "Diagnósticos incluem IEO, matriz funcional, cesta de produtos e parecer técnico. Use os enunciados e níveis exibidos; a base ainda não descreve cada pergunta. Fontes: src/app/components/DiagnosticoEditor.tsx; src/app/diagnostic/catalog/.",
+    "reports": "Relatórios. Fonte: src/app/components/ReportsModule.tsx. A base não define critérios de aprovação dos relatórios.",
+    "settings": "Configurações e preferências. Fonte: src/app/components/ConfiguracoesPage.tsx. Nunca solicite senha ou chave no chat.",
+    "gestao-plano": "Plano administrativo da Gestão Interna. Fonte: src/app/components/CronogramaPage.tsx.",
+    "gestao-rotas": "Cronograma de rotas. Fonte: src/app/components/rotas/CronogramaRotas.tsx.",
+    "gestao-calendario": "Calendário da Gestão Interna. Fonte: src/app/components/CronogramaPage.tsx.",
+    "gestao-executivo": "Cronograma executivo. Fonte: src/app/components/CronogramaExecutivoTab.tsx.",
+    "gestao-kanban": "Quadro de tarefas internas. Fonte: src/app/components/GestaoPage.tsx.",
+    "gestao-mensagens": "Mensagens da Gestão Interna. Fonte: src/app/components/MensagensPage.tsx. O assistente não lê mensagens."
+  },
+  "formularios": {
+    "atividade": {
+      "titulo": "Atividade",
+      "fontes": [
+        "src/app/components/plano/FormularioAtividade.tsx",
+        "src/app/lib/planoTrabalho.ts: validarDatasDaAtividade, validarJustificativaAtraso"
+      ],
+      "orientacao": "Atividade pertence a uma etapa. Título e início/fim previstos são exigidos. Primeiro cadastre o período previsto da etapa. Previsto da atividade deve caber no previsto da etapa. Inícios não podem vir depois dos fins. Fim realizado tem como teto o fim realizado da etapa, ou o fim previsto se não houver realizado. Se ultrapassar, atualize primeiro o realizado da etapa. Datas realizadas começam vazias. Havendo atraso nas datas, informe justificativa. O assistente não calcula atrasos sem dados nem altera datas.",
+      "campos": {
+        "Título": "Identifique o trabalho a executar, por exemplo: Realizar oficina (exemplo fictício).",
+        "Responsável": "No plano administrativo há campo de responsável; informe quem executa o trabalho.",
+        "Status": "A iniciar, Em andamento ou Concluído.",
+        "Progresso (%)": "Editável de 1 a 99 em Em andamento. Os demais status têm percentual fixo: 0 para A iniciar e 100 para Concluído.",
+        "Início previsto": "Data planejada dentro do período previsto da etapa.",
+        "Fim previsto": "Prazo planejado dentro do período previsto da etapa.",
+        "Início real": "Data em que a execução realmente começou; não invente uma data.",
+        "Fim real": "Data real de término; respeita o teto da etapa.",
+        "Justificativa de atraso": "Descreva a causa real do atraso e seu contexto, sem incluir dados pessoais desnecessários.",
+        "Observação": "Informações complementares relevantes.",
+        "Vínculo orçamentário": "Sim, Não ou Não informado; confirme a relação real com o orçamento.",
+        "Ação": "Próximo passo de acompanhamento; ao salvar aparece nos Encaminhamentos da organização vinculada.",
+        "Responsável pela ação": "Indique quem acompanha o próximo passo.",
+        "Prazo": "Prazo do próximo passo de acompanhamento."
+      }
+    },
+    "risco": {
+      "titulo": "Risco",
+      "fontes": [
+        "src/app/components/plano/FormularioRisco.tsx",
+        "src/app/lib/planoTrabalho.ts: pontuacaoRisco, faixaRisco"
+      ],
+      "orientacao": "Novos riscos exigem etapa, título, categoria, responsável e descrição. Probabilidade e impacto são de 1 a 5; pontuação é o produto e a faixa é calculada pelo sistema. Não escolha uma pontuação sem avaliar o caso. Riscos antigos sem etapa podem ser editados sem forçar vínculo novo. Status: Aberto, Em mitigação, Monitorando ou Encerrado.",
+      "campos": {
+        "Etapa": "Selecione a etapa à qual o novo risco pertence.",
+        "Título": "Resuma o evento de risco.",
+        "Categoria": "Selecione a categoria disponível que melhor descreve o risco.",
+        "Responsável": "Selecione quem acompanha o risco.",
+        "Descrição": "Descreva evento, causa e consequência esperada, com fatos confirmados.",
+        "Probabilidade": "Escala de 1 a 5. Os critérios institucionais de cada nível precisam de validação com a equipe.",
+        "Impacto": "Escala de 1 a 5. Os critérios institucionais de cada nível precisam de validação com a equipe.",
+        "Status": "Informe a situação real de acompanhamento.",
+        "Estratégia de resposta": "Explique a resposta planejada e quem a executará, sem afirmar que ela foi aprovada.",
+        "Especificação / resultado vinculado": "Detalhe o resultado relacionado quando aplicável."
+      }
+    },
+    "meta": {
+      "titulo": "Meta",
+      "fontes": ["src/app/components/plano/PainelMeta.tsx"],
+      "orientacao": "Meta agrupa etapas no Plano de Trabalho. O título é obrigatório. Confira responsável e período antes de salvar manualmente.",
+      "campos": {
+        "Título da meta": "Descreva o resultado que a meta representa.",
+        "Responsável": "Indique quem responde pela meta.",
+        "Início previsto": "Início planejado.",
+        "Fim previsto": "Fim planejado, sem anteceder o início."
+      }
+    },
+    "etapa": {
+      "titulo": "Etapa",
+      "fontes": [
+        "src/app/components/plano/PainelEtapa.tsx",
+        "src/app/lib/planoTrabalho.ts: validarPeriodoDaEtapa"
+      ],
+      "orientacao": "Etapa pertence a uma meta e agrupa atividades. Preencha início e fim previstos antes de cadastrar atividades. Reduzir o período não pode deixar atividades existentes fora dos limites.",
+      "campos": {
+        "Título da etapa": "Identifique a entrega ou etapa.",
+        "Início previsto": "Limite inicial para o previsto das atividades.",
+        "Fim previsto": "Limite final para o previsto das atividades.",
+        "Início": "Na seção Realizado, informe a data real de início.",
+        "Fim": "Na seção Realizado, informe a data real de término."
+      }
+    },
+    "planejado": {
+      "titulo": "Item do orçamento",
+      "fontes": [
+        "src/app/components/orcamento/FormularioPlanejado.tsx",
+        "src/app/lib/orcamentoRevisao.ts"
+      ],
+      "orientacao": "Selecione meta do projeto e informe descrição. Quantidade, quantidade de unidades, valor unitário e total proposto devem ser números finitos não negativos. Ao alterar quantidades ou valor unitário, a tela recalcula quantidade × quantidade de unidades × valor unitário. Total proposto também pode ser ajustado manualmente. Revisão preserva execução, notas e comprovantes; uma nova planilha substitui a proposta, conforme aviso da tela.",
+      "campos": {
+        "Meta": "Escolha uma meta existente do projeto.",
+        "Grupo": "Grupo do item conforme a proposta.",
+        "Categoria": "Categoria do item conforme a proposta.",
+        "Descrição": "Descreva o item planejado.",
+        "Unidade": "Unidade de medida da proposta.",
+        "Quantidade": "Quantidade usada no cálculo da proposta.",
+        "Quantidade de unidades": "Segundo fator do cálculo.",
+        "Valor unitário (R$)": "Preço por unidade em reais.",
+        "Total proposto (R$)": "Valor planejado para o item; confira o cálculo e eventual ajuste."
+      }
+    },
+    "execucao": {
+      "titulo": "Execução orçamentária",
+      "fontes": [
+        "src/app/components/orcamento/FormularioExecucao.tsx",
+        "src/app/lib/orcamento.ts: exigeJustificativa, somaDasNotas"
+      ],
+      "orientacao": "Executado é a soma das notas do item, não um total digitado. Justificativa é exigida quando executado supera proposto ou quando execução concluída tem soma diferente do proposto.",
+      "campos": {
+        "Justificativa da diferença": "Explique a causa real da diferença entre proposta e execução."
+      }
+    },
+    "nota": {
+      "titulo": "Nota fiscal / comprovante",
+      "fontes": [
+        "src/app/components/orcamento/FormularioNota.tsx",
+        "src/app/lib/orcamento.ts: validarNota"
+      ],
+      "orientacao": "A nota pode ser cadastrada sem item de orçamento e vinculada depois. Sem item, conta no executado do projeto. Comprovante só pode ser anexado após salvar o registro; o diálogo permanece aberto para isso. O assistente não recebe anexos nem lê comprovantes.",
+      "campos": {
+        "Item do orçamento": "Opcional. Sem item, a nota conta no executado do projeto e pode ser vinculada depois.",
+        "Número da nota": "Identificador do documento real.",
+        "Fornecedor": "Fornecedor do documento; não envie seus dados ao chat.",
+        "Data da nota": "Obrigatória. Data registrada no documento.",
+        "Valor": "Obrigatório, finito e maior que zero. Informe o valor real em reais.",
+        "Descrição": "Descrição do gasto documentado."
+      }
+    },
+    "projeto": {
+      "titulo": "Novo projeto",
+      "fontes": ["src/app/components/organizacoes/NovoProjeto.tsx"],
+      "orientacao": "Novo projeto nasce dentro de uma organização, cujo vínculo é obrigatório e imutável nesse formulário. Nome e coordenador são exigidos na tela. Confira código, financiador, objetivo, datas e orçamento antes de salvar. Não trate valores padrão do código como prazos ou regras institucionais.",
+      "campos": {
+        "Nome": "Nome do projeto.",
+        "Coordenador(a)": "Pessoa que coordena o projeto; selecione ou informe diretamente na tela, sem dados pessoais no chat."
+      }
+    }
+  },
+  "lacunas": [
+    "Critérios institucionais para atribuir cada nível de probabilidade e impacto de riscos.",
+    "Políticas institucionais de aprovação e documentação comprobatória não comprovadas pelo código.",
+    "Regras detalhadas de cada pergunta de diagnóstico, mapeamento e parecer ainda não transcritas para esta base.",
+    "Comentários do código divergem sobre as instituições associadas ao visualizador; use o papel validado pelo servidor, sem inferir vínculo institucional.",
+    "Prazo de retenção das conversas e responsáveis por revisar a base precisam de decisão antes da operação real."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "data": "2026-10-19",
+  "escopo": "Implementação local reversível do Assistente Inova com ChatKit avançado e Agents SDK. Nenhum deploy ou serviço externo alterado.",
+  "documentacaoOficial": [
+    "https://developers.openai.com/api/docs/guides/chatkit",
+    "https://developers.openai.com/api/docs/guides/custom-chatkit",
+    "https://developers.openai.com/api/docs/guides/chatkit-themes"
+  ],
+  "verificacoes": {
+    "typescript": "passou: node node_modules/typescript/bin/tsc --noEmit",
+    "build": "passou: node node_modules/vite/bin/vite.js build",
+    "lintNovosModulos": "passou: node node_modules/eslint/bin/eslint.js src/app/assistant src/routes/api/assistente.ts tests/assistant-ui",
+    "diffCheck": "passou: git diff --check",
+    "testesNode": { "total": 143, "assistente": 13, "falhas": 0 },
+    "testesPython": { "total": 9, "falhas": 0, "geracao": "substituída por dados sintéticos; ChatKitServer e persistência reais em arquivos temporários" },
+    "rotaBuildSemSessao": { "urlLocal": "http://localhost:8093/api/assistente", "status": 401 },
+    "navegador": {
+      "ambiente": "fixture isolada http://127.0.0.1:8092, sem banco ou OpenAI",
+      "contextoCampo": "Atividade · Título",
+      "semConfiguracao": "mensagem explícita de conexão real não configurada e botão Tentar novamente",
+      "escape": "fechou e devolveu foco ao acionador",
+      "mobile": { "viewport": "390x844", "bodyScrollWidth": 390, "painel": "largura total; sem transbordamento horizontal" }
+    }
+  },
+  "limites": [
+    "Não houve chamada real à API da OpenAI ou validação de chave, modelo, cota ou domínio ChatKit.",
+    "Fluxo autenticado no navegador com os três perfis reais e teclado virtual móvel permanece para homologação configurada.",
+    "É necessário hospedar o serviço Python com TLS e armazenamento persistente; uma instância e um worker.",
+    "Retenção, backups e exclusão operacional das conversas precisam ser definidos antes da operação real.",
+    "Critérios institucionais não comprovados estão registrados como lacunas na base de conhecimento."
+  ]
+}

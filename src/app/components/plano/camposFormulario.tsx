@@ -20,15 +20,23 @@ export function Campo({
   rotulo, obrigatorio, dica, children,
 }: { rotulo: string; obrigatorio?: boolean; dica?: string; children: ReactNode }) {
   return (
-    <label className="flex flex-col gap-1">
-      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-3)' }}>
-        {rotulo}
-        {obrigatorio && <span style={{ color: 'var(--danger)' }} aria-hidden> *</span>}
-        {obrigatorio && <span className="sr-only"> (obrigatório)</span>}
-      </span>
-      {children}
-      {dica && <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>{dica}</span>}
-    </label>
+    <div className="flex flex-col gap-1" data-inova-field={rotulo}>
+      <label className="flex flex-col gap-1">
+        <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-3)' }}>
+          {rotulo}
+          {obrigatorio && <span style={{ color: 'var(--danger)' }} aria-hidden> *</span>}
+          {obrigatorio && <span className="sr-only"> (obrigatório)</span>}
+        </span>
+        {children}
+        {dica && <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)' }}>{dica}</span>}
+      </label>
+      <button type="button" className="min-h-7 self-start text-[11px] underline" style={{ color: 'var(--brand-text)' }}
+        aria-label={`Ajuda sobre ${rotulo}`} onClick={e => {
+          e.preventDefault(); e.stopPropagation();
+          const formulario = e.currentTarget.closest<HTMLElement>('[data-inova-form]')?.dataset.inovaForm;
+          window.dispatchEvent(new CustomEvent('inova:assistente', { detail: { formulario, campo: rotulo } }));
+        }}>Como preencher?</button>
+    </div>
   );
 }
 

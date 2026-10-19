@@ -87,7 +87,7 @@ export function FormularioNota({
         onClick={e => e.stopPropagation()}
         className="bg-card rounded-2xl border p-5 w-full max-w-lg flex flex-col gap-3 max-h-[92vh] overflow-y-auto"
         style={{ borderColor: 'var(--border)' }}
-        role="dialog"
+        role="dialog" data-inova-form="nota"
         aria-label={notaId ? 'Editar nota' : 'Nova nota'}
       >
         <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink-1)' }}>

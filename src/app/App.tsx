@@ -21,6 +21,9 @@ import { ThemeProvider, useTheme, FONT_SCALE_LABEL } from './theme/themeStore';
 import { LoginScreen } from './auth/LoginScreen';
 import { PopupNavegacao } from './components/PopupNavegacao';
 import { VisualizadorDocumentos } from './components/VisualizadorDocumentos';
+import { AssistenteInova } from './assistant/AssistenteInova';
+import { contextoDaNavegacao } from './assistant/context';
+import { resumirProjetoLocal } from './assistant/localBot';
 
 const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
   manha: 'Bom dia',
@@ -51,7 +54,7 @@ function AppShell() {
   const projetoAvulso = activeNav === 'organizations' && !busca.org ? busca.projeto ?? null : null;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const fecharMenu = useCallback(() => setMobileNavOpen(false), []);
-  const { getProject } = useStore();
+  const { getProject, projects, projectsLoading } = useStore();
   const { user } = useAuth();
   const { log } = useAudit();
   const [greeting] = useState(() => greetingFor(user?.displayName ?? ''));
@@ -141,6 +144,11 @@ function AppShell() {
         <main className="flex-1 min-h-0 min-w-0 overflow-y-auto">{renderMain()}</main>
       </div>
       <Toaster position="top-right" richColors closeButton />
+      <AssistenteInova key={user?.login} contexto={contextoDaNavegacao(busca)} dados={{
+        carregando: projectsLoading,
+        projetosCarregados: projects.length,
+        projeto: busca.projeto && getProject(busca.projeto) ? resumirProjetoLocal(getProject(busca.projeto)!) : undefined,
+      }} />
     </div></VisualizadorDocumentos></PopupNavegacao>
   );
 }

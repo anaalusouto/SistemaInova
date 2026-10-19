@@ -1,0 +1,29 @@
+{
+  "data": "2026-10-19",
+  "modo": "chatbot local determinístico, sem consumo OpenAI",
+  "interface": "src/app/assistant/AssistenteInova.tsx",
+  "motor": "src/app/assistant/localBot.ts",
+  "base": "src/app/assistant/knowledge.json",
+  "dados": "contagens derivadas dos projetos já carregados na sessão; resumo restrito ao projeto aberto",
+  "conversa": "somente memória do painel, últimas 40 mensagens, sem persistência ou transmissão",
+  "openai": "gateway bloqueado por padrão; interface anterior preservada em módulo não importado",
+  "verificacoes": {
+    "testesNode": { "total": 152, "falhas": 0, "novosMotorLocal": 8, "bloqueioOpenai": 1 },
+    "typescript": "passou",
+    "lintModulosNovos": "passou",
+    "build": "passou",
+    "diffCheck": "passou",
+    "scriptChatKitNoBundleAtivo": "não encontrado",
+    "navegadorFixtureIsolada": [
+      "Botão Como preencher abre o painel com contexto Atividade · Título.",
+      "A sugestão de preenchimento retorna orientação verificada com fontes.",
+      "Resumo retorna as contagens sintéticas fornecidas pela fixture, incluindo atividades concluídas e riscos em aberto."
+    ]
+  },
+  "limites": [
+    "Busca por regras e palavras-chave, sem interpretação generativa livre.",
+    "As contagens refletem o estado já carregado, não uma nova consulta nem os filtros visuais.",
+    "O controle do navegador ficou indisponível durante a etapa seguinte; pergunta digitada e viewport móvel desta versão não foram confirmados nessa rodada.",
+    "Não houve publicação em produção."
+  ]
+}
