@@ -114,6 +114,9 @@ async function carregarEtapa(supabaseAdmin: Awaited<ReturnType<typeof getAdmin>>
 
 export interface PeriodoEtapaInput {
   etapaId: string;
+  /** Edição em células: opcionais para preservar os chamadores de período. */
+  nome?: string;
+  resultadoEsperado?: string;
   inicioPrevisto: string | null;
   fimPrevisto: string | null;
   inicioRealizado: string | null;
@@ -125,6 +128,14 @@ export const salvarPeriodoDaEtapa = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<void> => {
     await exigirEscrita();
     const supabaseAdmin = await getAdmin();
+
+    if (data.nome !== undefined && (typeof data.nome !== 'string' || !data.nome.trim())) {
+      throw new DadosInvalidos(['Informe o nome da etapa.']);
+    }
+    if (data.resultadoEsperado !== undefined && typeof data.resultadoEsperado !== 'string') {
+      throw new DadosInvalidos(['O resultado esperado deve ser um texto.']);
+    }
+    if (data.nome !== undefined || data.resultadoEsperado !== undefined) await carregarEtapa(supabaseAdmin, data.etapaId);
 
     const { data: atividades, error: erroAtiv } = await supabaseAdmin
       .from('atividades')
@@ -151,6 +162,8 @@ export const salvarPeriodoDaEtapa = createServerFn({ method: 'POST' })
     const { error } = await supabaseAdmin
       .from('etapas')
       .update({
+        ...(data.nome !== undefined ? { nome: data.nome.trim() } : {}),
+        ...(data.resultadoEsperado !== undefined ? { resultado_esperado: vazioParaNulo(data.resultadoEsperado) } : {}),
         inicio_previsto: data.inicioPrevisto,
         fim_previsto: data.fimPrevisto,
         inicio_realizado: data.inicioRealizado,

@@ -38,6 +38,7 @@
   .inova-table-cards td[data-label="Atividade"],
   .inova-table-cards td[data-label="Produto"],
   .inova-table-cards td[data-label="Observações"],
+  .inova-table-cards td[data-label="Observações / resultado esperado"],
   .inova-table-cards td[data-label="Justificativa de atraso"] {
     grid-column: 1 / -1;
   }

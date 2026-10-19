@@ -11,6 +11,7 @@ import { useAudit } from '../audit/auditStore';
 import { useStore } from '../store';
 import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, FONT_SCALE_LABEL, FONT_SCALE_ORDER, type AccentColor, type FontScale } from '../theme/themeStore';
 import { BotaoNovo } from './BotaoNovo';
+import { FormatoProjetoSection } from './plano/FormatoProjetoSection';
 
 const NOTIF_KEY = 'pp-notificacoes-v1';
 
@@ -59,6 +60,7 @@ export function ConfiguracoesPage() {
   const sections = [
     { id: 'profile', label: 'Perfil', icon: User },
     { id: 'appearance', label: 'Aparência', icon: Palette },
+    { id: 'formato', label: 'Formato do projeto', icon: FolderKanban },
     { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'team', label: 'Equipe', icon: Users },
     ...(isAdmin ? [{ id: 'usuarios', label: 'Usuários', icon: UserCog }] : []),
@@ -138,6 +140,7 @@ export function ConfiguracoesPage() {
         )}
 
         {activeSection === 'appearance' && <AparenciaSection />}
+        {activeSection === 'formato' && <FormatoProjetoSection />}
 
         {activeSection === 'notifications' && (
           <NotificacoesSection prefs={prefs} setPrefs={setPrefs} />

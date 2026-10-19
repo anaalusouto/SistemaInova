@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { ArrowLeft, FileText, ClipboardList, DollarSign, Info, ShieldAlert } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, DollarSign, Info } from "lucide-react";
 import type { Project } from "../data/mockData";
 import { useStore, type ProjectExt } from "../store";
-import { ProjectSummaryHeader } from "./project-tabs/ProjectSummaryHeader";
+import { ResumoProjetoTopo } from "./project-tabs/ResumoProjetoTopo";
 import { TabDescricao } from "./project-tabs/TabDescricao";
 import { TabPlanoTrabalho, type PedidoVisaoPlano } from "./plano/TabPlanoTrabalho";
-import { useAuth } from "../auth/authStore";
 import { TabOrcamento } from "./orcamento/TabOrcamento";
 import { TabFinanceiro } from "./project-tabs/TabFinanceiro";
-import { riscoEmAberto, faixaRisco } from "../lib/planoTrabalho";
 import type { AbaProjeto } from "../lib/navegacaoApp";
 import { DocumentosRegistro } from "./DocumentosRegistro";
 import "./project-responsive.css";
+import { toast } from "sonner";
 
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
@@ -36,20 +35,22 @@ export function ProjectView({
   aoMudarAba,
 }: ProjectViewProps) {
   const { getProject } = useStore();
-  const { readOnly } = useAuth();
   const project = getProject(initial.id) ?? initial;
   const [abaLocal, setAbaLocal] = useState<AbaProjeto>("plano");
   const [pedidoVisao, setPedidoVisao] = useState<PedidoVisaoPlano | null>(null);
-  const [mostrarResumo, setMostrarResumo] = useState(false);
+  const [mostrarResumo, setMostrarResumo] = useState(true);
+  const [haPendencias, setHaPendencias] = useState(false);
   const activeTab = abaAtual ?? abaLocal;
   const mudarAba = (aba: AbaProjeto, foco?: string | null) => {
+    if (haPendencias && aba !== activeTab) {
+      toast.error("Salve ou cancele as linhas alteradas antes de mudar de aba.");
+      return;
+    }
     if (aoMudarAba) aoMudarAba(aba, foco);
     else {
       setAbaLocal(aba);
     }
   };
-  const riscosAbertos = project.risks.filter(riscoEmAberto);
-  const criticos = riscosAbertos.filter((r) => faixaRisco(r.severity) === "Crítico").length;
   return (
     <div className="project-shell min-w-0">
       {!dentroDaOrganizacao && (
@@ -65,6 +66,31 @@ export function ProjectView({
           </h1>
         </div>
       )}
+      <section className="border-b" aria-label="Resumo do projeto">
+        <button
+          type="button"
+          className="px-4 sm:px-6 py-2 text-xs underline"
+          aria-expanded={mostrarResumo}
+          aria-controls={`project-context-${project.id}`}
+          onClick={() => setMostrarResumo((v) => !v)}
+        >
+          {mostrarResumo ? "Recolher resumo" : "Expandir resumo"}
+        </button>
+        <div
+          id={`project-context-${project.id}`}
+          hidden={!mostrarResumo}
+          data-expanded={mostrarResumo}
+        >
+          <ResumoProjetoTopo
+            project={project}
+            bloqueado={haPendencias}
+            aoRiscos={() => {
+              mudarAba("plano");
+              setPedidoVisao((p) => ({ visao: "riscos", contador: (p?.contador ?? 0) + 1 }));
+            }}
+          />
+        </div>
+      </section>
       <nav
         aria-label="Abas do projeto"
         className="grid min-w-0 grid-cols-3 border-b px-2 sm:px-6"
@@ -91,85 +117,6 @@ export function ProjectView({
         })}
       </nav>
       <div className="project-layout">
-        <aside
-          aria-label="Resumo e documentos do projeto"
-          className="project-context min-w-0 p-3 sm:p-4"
-          style={{ background: "var(--surface-0)" }}
-        >
-          <div className="project-actions">
-            <button
-              type="button"
-              onClick={() => {
-                mudarAba("plano");
-                setPedidoVisao((p) => ({ visao: "riscos", contador: (p?.contador ?? 0) + 1 }));
-              }}
-              className="flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-xs font-semibold"
-              style={{
-                borderColor: criticos ? "var(--danger-soft-border)" : "var(--border)",
-                background: criticos ? "var(--danger-soft)" : "var(--surface-1)",
-                color: criticos ? "var(--danger)" : "var(--ink-2)",
-              }}
-            >
-              <ShieldAlert size={17} />
-              Riscos ({riscosAbertos.length}){criticos > 0 ? " · " + criticos + " crítico(s)" : ""}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                mudarAba("plano");
-                setPedidoVisao((p) => ({ visao: "completa", contador: (p?.contador ?? 0) + 1 }));
-              }}
-              className="min-h-11 min-w-0 rounded-lg border px-2 py-2 text-xs"
-            >
-              Todos os campos
-            </button>
-            {!readOnly && (
-              <button
-                type="button"
-                onClick={() => {
-                  mudarAba("plano");
-                  setPedidoVisao((p) => ({ visao: "ordenar", contador: (p?.contador ?? 0) + 1 }));
-                }}
-                className="min-h-11 min-w-0 rounded-lg border px-2 py-2 text-xs"
-              >
-                Ordenar
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            className="project-context-toggle mt-2 flex min-h-11 w-full items-center justify-between rounded-lg border px-3 text-sm"
-            aria-expanded={mostrarResumo}
-            aria-controls={`project-context-${project.id}`}
-            onClick={() => setMostrarResumo((v) => !v)}
-          >
-            Resumo e documentos <span aria-hidden>{mostrarResumo ? "−" : "+"}</span>
-          </button>
-          <div
-            id={`project-context-${project.id}`}
-            className="project-context-body space-y-4"
-            data-expanded={mostrarResumo}
-          >
-            <ProjectSummaryHeader project={project} lateral />
-            <dl className="space-y-2 text-xs break-words">
-              <div>
-                <dt className="text-muted-foreground">Projeto</dt>
-                <dd>
-                  {project.code} · {project.name}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Financiador</dt>
-                <dd>{project.financier || "Não informado"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Situação</dt>
-                <dd>{project.status}</dd>
-              </div>
-            </dl>
-            <DocumentosRegistro area="projeto" projetoId={project.id} />
-          </div>
-        </aside>
         <div className="project-main min-w-0">
           {activeTab === "descricao" && <TabDescricao project={project} />}
           {activeTab === "plano" && (
@@ -177,11 +124,16 @@ export function ProjectView({
               project={project}
               pedidoVisao={pedidoVisao}
               acoesExternas
+              aoPendencias={setHaPendencias}
             />
           )}
           {activeTab === "orcamento" && <TabOrcamentoInterino project={project} />}
         </div>
       </div>
+      <details open className="px-4 sm:px-6 py-3 border-t">
+        <summary className="cursor-pointer text-sm font-medium">Documentos do projeto</summary>
+        <DocumentosRegistro area="projeto" projetoId={project.id} />
+      </details>
     </div>
   );
 }

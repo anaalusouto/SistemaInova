@@ -46,7 +46,7 @@ export const projeto = {
       impact: 3,
       severity: 6,
       goalId: "m1",
-      etapaId: "e1",
+      stageId: "e1",
       responseStrategy: "Acompanhar",
       responsible: "Equipe",
       budgetImpact: false,

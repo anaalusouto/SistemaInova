@@ -6,6 +6,7 @@ import { useMenuLateral } from "../../src/app/theme/useMenuLateral";
 import { Sidebar } from "../../src/app/components/Sidebar";
 import { MarcaCria } from "../../src/app/components/MarcaCria";
 import { LoginScreen } from "../../src/app/auth/LoginScreen";
+import { FormatoProjetoSection } from "../../src/app/components/plano/FormatoProjetoSection";
 import { FichaOrganizacao } from "../../src/app/components/organizacoes/FichaOrganizacao";
 import type { RotaOrg } from "../../src/app/lib/navegacaoOrg";
 import { orgId } from "./dados";
@@ -23,6 +24,7 @@ export function Preview() {
 function LayoutPreview() {
   const [rota, setRota] = useState<RotaOrg>({ orgId, secao: "projeto", projetoId: 1 });
   const [aberto, setAberto] = useState(false);
+  const [formatoAberto, setFormatoAberto] = useState(false);
   const { recolhido, alternar } = useMenuLateral();
   const { toggleMode, setAccent } = useTheme();
   if (new URLSearchParams(location.search).has("login")) return <LoginScreen />;
@@ -30,7 +32,7 @@ function LayoutPreview() {
     <div className="h-dvh flex min-w-0 overflow-hidden">
       <Sidebar
         activeItem="organizations"
-        onNavigate={() => {}}
+        onNavigate={(item) => setFormatoAberto(item === "settings")}
         rotaOrg={rota}
         aoNavegarOrg={setRota}
         isOpen={aberto}
@@ -61,7 +63,16 @@ function LayoutPreview() {
           <a href="?consulta=1">Perfil de consulta</a>
         </div>
         <div className="flex-1 min-h-0">
-          <FichaOrganizacao rota={{ ...rota, orgId }} aoNavegar={setRota} />
+          {formatoAberto ? (
+            <div className="p-4 overflow-y-auto h-full">
+              <button className="border rounded p-2" onClick={() => setFormatoAberto(false)}>
+                Voltar ao projeto
+              </button>
+              <FormatoProjetoSection />
+            </div>
+          ) : (
+            <FichaOrganizacao rota={{ ...rota, orgId }} aoNavegar={setRota} />
+          )}
         </div>
       </div>
     </div>

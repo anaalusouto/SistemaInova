@@ -30,6 +30,53 @@ const atividade = { id: 'a', name: 'Reunião comunitária', responsible: 'LEGADO
   delayJustification: '', budgetLink: 'Sim', observations: 'Observação visível sem abrir painel',
   nextStep: 'Enviar convite', nextStepOwner: 'Maria', nextStepDue: '2026-10-03', riskOriginId: null, tasks: [] };
 const etapa = { id: 'e', name: 'Etapa', plannedStart: '2026-10-01', plannedEnd: '2026-10-31', actualStart: null, actualEnd: '2026-10-31', activities: [atividade] };
+
+test('demanda 19: formato recupera dados inválidos e nunca elimina nem duplica colunas', () => {
+  const { validarFormatoPlano, COLUNAS_PLANO } = carregar('src/app/lib/formatoPlano.ts');
+  for (const raw of [null, [], {colunas:['Status','Status','Inválida'],ordemCampos:{atividade:['name','name','<script>']}}]) {
+    const formato=validarFormatoPlano(raw);
+    assert.equal(formato.colunas.length,COLUNAS_PLANO.length);
+    assert.equal(new Set(formato.colunas).size,COLUNAS_PLANO.length);
+    assert.ok(formato.colunas.every(c=>COLUNAS_PLANO.includes(c)));
+    assert.ok(!JSON.stringify(formato).includes('<script>'));
+  }
+});
+
+test('demanda 19: cada nível mantém o mesmo número de células e o risco fica apenas na etapa', () => {
+  const { VisaoTabela } = carregar('src/app/components/plano/VisaoTabela.tsx', {
+    '../../auth/authStore':{useAuth:()=>({readOnly:true})}, '../../store':{useStore:()=>({})},
+  });
+  const antes=structuredClone(atividade);
+  const html=renderToStaticMarkup(React.createElement(VisaoTabela,{metas:[{id:'m',name:'Meta',deliverables:[{...etapa,activities:[{...atividade,riskOriginId:'r1',tasks:[{id:'t',title:'Tarefa',order:1}]}]}]}], riscos:[{id:'r1',stageId:'e',status:'Aberto',severity:12}],recolhidos:new Set(),codigos:new Map(),editar:true}));
+  const linhas=[...html.matchAll(/<tr data-tipo="([^"]+)"[^>]*>(.*?)<\/tr>/g)];
+  assert.equal(linhas.length,4);
+  for(const [,tipo,conteudo] of linhas){assert.equal((conteudo.match(/<td /g)||[]).length,13);assert.equal(conteudo.includes('Abrir risco da etapa'),tipo==='etapa');}
+  assert.doesNotMatch(html, /<input|<textarea|<select|Salvar linha/);
+  assert.deepEqual(atividade,antes);
+});
+
+test('demanda 19: edição global salva campos de meta, etapa, atividade e tarefa sem perder vínculos', async () => {
+  let indice=0;const estados=[], salvos=[];
+  const hooks={...React,useMemo:f=>f(),useState(inicial){const i=indice++;if(!(i in estados))estados[i]=inicial;return[estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];}};
+  const {VisaoTabela}=carregar('src/app/components/plano/VisaoTabela.tsx',{
+    react:hooks,'../../auth/authStore':{useAuth:()=>({readOnly:false})},
+    '../../store':{useStore:()=>({updateAtividade:async(id,d)=>salvos.push({tipo:'atividade',id,d}),saveMeta:async d=>salvos.push({tipo:'meta',d}),savePeriodoEtapa:async d=>salvos.push({tipo:'etapa',d}),renameTarefa:async(id,nome)=>salvos.push({tipo:'tarefa',id,d:{nome}})})},sonner:{toast:{success(){}}},
+  });
+  const props={metas:[{id:'m',name:'Meta',deliverables:[{...etapa,activities:[{...atividade,tasks:[{id:'t',title:'Tarefa',order:1}]}]}]}],riscos:[],recolhidos:new Set(),codigos:new Map(),editar:true};
+  const render=()=>{indice=0;return VisaoTabela(props);};
+  function achar(n,p){if(!n||typeof n!=='object')return;if(Array.isArray(n)){for(const c of n){const r=achar(c,p);if(r)return r;}return;}return p(n)?n:achar(n.props?.children,p);}
+  for(const [id,titulo,tipo] of [['m','Meta','meta'],['e','Etapa','etapa'],['a',atividade.name,'atividade'],['t','Tarefa','tarefa']]){
+    achar(render(),n=>n.props?.['aria-label']===`Título: ${titulo}`).props.onChange({target:{value:`Novo ${tipo}`}});
+    const linha=achar(render(),n=>n.props?.['data-registro']===id);
+    await achar(linha,n=>n.type==='button'&&n.props.children==='Salvar linha').props.onClick();
+    await new Promise(resolve=>setImmediate(resolve));
+  }
+  assert.deepEqual(salvos.map(s=>s.tipo),['meta','etapa','atividade','tarefa']);
+  assert.equal(salvos[2].d.proximoPasso,atividade.nextStep);
+  assert.equal(salvos[2].d.proximoPassoResponsavel,atividade.nextStepOwner);
+  assert.equal(salvos[2].d.responsavel,atividade.responsible);
+  assert.equal(salvos[1].d.etapaId,etapa.id);
+});
 test('R07: proposta soma só ativos vigentes e cabeçalho mantém o mesmo total, inclusive zero', async () => {
   const { totaisDoOrcamento } = carregar('src/app/lib/orcamento.ts');
   const casos = [
@@ -71,7 +118,7 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
     '../store': { useStore: () => ({ getProject: () => p }) },
     '../auth/authStore': { useAuth: () => ({ readOnly: true }) },
     '../audit/auditStore': { useAudit: () => ({ log() {} }) },
-    './project-tabs/ProjectSummaryHeader': { ProjectSummaryHeader: () => null },
+    './project-tabs/ResumoProjetoTopo': { ResumoProjetoTopo: () => null },
     './project-tabs/TabDescricao': { TabDescricao: () => null },
     './plano/TabPlanoTrabalho': { TabPlanoTrabalho: Plano },
     './orcamento/TabOrcamento': { TabOrcamento: () => null },
@@ -88,12 +135,12 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
     return pred(node) ? node : achar(node.props?.children, pred);
   }
   assert.equal(achar(render(), e => e.type === Plano).props.aoEncaminhamentos, undefined);
-  assert.equal(achar(render(), e => e.type === 'section'), undefined);
+  assert.equal(achar(render(), e => e.type === 'section' && e.props['data-foco']), undefined);
   const resumo=()=>achar(render(),e=>e.type==='button'&&e.props['aria-controls']==='project-context-1');
-  assert.equal(resumo().props['aria-expanded'],false);
-  resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],true);
-  assert.equal(achar(render(),e=>e.props?.id==='project-context-1').props['data-expanded'],true);
+  assert.equal(resumo().props['aria-expanded'],true);
   resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],false);
+  assert.equal(achar(render(),e=>e.props?.id==='project-context-1').props['data-expanded'],false);
+  resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],true);
   achar(render(), e => e.type === 'button' && e.props.children?.includes?.('Plano de Trabalho')).props.onClick();
   assert.ok(achar(render(), e => e.type === Plano));
   assert.equal(achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos'), undefined);
@@ -126,7 +173,7 @@ test('R02/03/04/06: tabela preserva observacoes e legado sem duplicar encaminham
     assert.match(html, /Observação visível sem abrir painel/);
     assert.doesNotMatch(html, /Enviar convite/);
     assert.doesNotMatch(html, /Ver encaminhamento/);
-    assert.doesNotMatch(html, /LEGADO_PRESERVADO/);
+    assert.match(html, /LEGADO_PRESERVADO/);
     assert.equal(html.includes('Editar datas e status'), !readOnly);
     assert.deepEqual(atividade, antes);
   }

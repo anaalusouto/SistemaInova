@@ -1,50 +1,21 @@
 .project-shell {
-  container: inova-project / inline-size;
+  container: cria-project / inline-size;
 }
 .project-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: block;
   min-width: 0;
 }
-.project-context {
-  border-bottom: 1px solid var(--border);
-}
-.project-actions {
+.project-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
 }
-.project-context-body {
-  display: none;
-}
-.project-context-body[data-expanded="true"] {
-  display: block;
-  margin-top: 1rem;
-}
-/* A largura disponível ao projeto considera também o menu lateral da plataforma. */
-@container inova-project (min-width: 64rem) {
-  .project-layout {
-    grid-template-columns: minmax(0, 1fr) 18rem;
-  }
-  .project-main {
-    order: 0;
-  }
-  .project-context {
-    order: 1;
-    border-bottom: 0;
-    border-left: 1px solid var(--border);
-  }
-  .project-actions {
+@container cria-project (min-width: 35rem) {
+  .project-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .project-actions > :first-child {
-    grid-column: 1 / -1;
-  }
-  .project-context-toggle {
-    display: none;
-  }
-  .project-context-body {
-    display: block;
-    margin-top: 1rem;
+}
+@container cria-project (min-width: 64rem) {
+  .project-summary-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.6fr) minmax(0, 0.8fr) minmax(0, 1fr) auto;
   }
 }

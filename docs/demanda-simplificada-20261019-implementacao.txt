@@ -1,0 +1,99 @@
+DEMANDA SIMPLIFICADA DE 19/10 — IMPLEMENTAÇÃO LOCAL EM 20/10/2026
+
+Fonte: DOCUMENTOS/demandas_simplificada_inova_2026-10-19.pdf.
+As cinco páginas foram lidas e renderizadas. A página 1 é a capa com a data.
+Páginas 2 a 4 implementadas. A página 5 (correspondência de eixos/dimensões)
+foi explicitamente adiada pelo usuário nesta conversa; nenhum eixo foi alterado.
+A árvore estava limpa no início. Sem publicação, push, banco remoto ou migração nova.
+
+PÁGINA 2 — TOPO, FORMATO, APOIO E EXPANSÃO
+
+- Resumo horizontal antes das abas do projeto: projeto, valor executado/proposto,
+  andamento, riscos clicáveis e Baixar. A lateral de apoio foi removida.
+- Resumo aberto por padrão, com Expandir/Recolher acessível. Documentos ficam em
+  um bloco próprio recolhível, também aberto por padrão.
+- A tabela inicia com meta, etapa, atividade e subtarefas expandidas, incluindo
+  quando os dados terminam de carregar. Controles individuais e Recolher tudo
+  continuam disponíveis. Durante edição, recolhimento/troca de visão ficam bloqueados.
+- Todos os campos saiu das visões do projeto. Em Configurações > Formato do projeto
+  ficam a referência de todos os campos, a ordem dos campos por tipo e a ordem das
+  colunas. A preferência é de apresentação, para todos os projetos neste navegador;
+  não altera dados dos registros nem as permissões. Campos nunca são ocultados.
+  Há restauração do padrão e recuperação de configurações locais inválidas.
+- Editar e Ordenar ficam na barra do plano. Editar abre os campos em células,
+  com salvar/cancelar por linha. Tab percorre os campos, Enter salva a linha,
+  Ctrl+Enter permite salvar de uma área de texto e Escape cancela o rascunho da linha.
+- Riscos no resumo abre a visão consolidada já existente; risco da etapa abre o
+  detalhe do risco. Riscos de origem e demais vínculos existentes são preservados.
+- Download usa o gerador vetorial existente e a ordem dos campos configurada.
+  Enquanto há linhas pendentes, o download e a troca de aba do projeto ficam
+  bloqueados para não apresentar um relatório como se o rascunho estivesse salvo.
+
+PÁGINA 3 — GRADE ÚNICA E EDIÇÃO
+
+- Meta, etapa, atividade e tarefa usam as mesmas 13 colunas, sem colspan de
+  cabeçalhos de categoria: título, observações/resultado esperado, responsável,
+  quatro datas, status, progresso, justificativa, nível do risco, vínculo orçamentário
+  e anexo. Valores ausentes/não aplicáveis são travessões.
+- Todos os tipos de organização recebem a mesma grade. A coluna não muda conforme
+  a categoria. No celular a mesma estrutura vira fichas, sem duplicar os dados.
+- Meta: nome, responsável e datas previstas próprias. Prazos calculados continuam
+  como visualização quando a meta não tem prazo próprio, preservando a regra anterior.
+- Etapa: nome, resultado esperado e as quatro datas. A escrita foi estendida no
+  endpoint existente de período e grava esses campos em uma única atualização por ID.
+- Atividade: título, observação, responsável, quatro datas, status, progresso,
+  justificativa e vínculo orçamentário. Anexos usam o fluxo de anexação existente.
+  Os campos de acompanhamento e risco de origem são preservados no payload;
+  encaminhamentos continuam na seção própria, conforme o pedido anterior.
+- Tarefa: título. Outros campos continuam sem aplicação, conforme o modelo existente.
+- Risco e indicadores derivados não viram texto livre editável na grade.
+- Admin/estagiário são a equipe CESUPA conforme sessao.server.ts; visualizador
+  permanece consulta. A interface não oferece edição ao visualizador, mesmo que
+  a prop de edição seja forçada. O servidor continua exigindo escrita em cada ação.
+- Falhas exibem mensagem por linha e mantêm o rascunho. Datas e justificativas
+  seguem as validações existentes, incluindo limites da etapa e atividades filhas.
+
+PÁGINA 4 — RISCO SOMENTE NA ETAPA
+
+O nível de risco aparece apenas na célula de risco da etapa. As atividades não
+repetem o rótulo da etapa. A ligação original das ações de resposta a riscos não
+foi apagada nem recriada, e continua consultável no detalhe da atividade/risco.
+
+VERIFICAÇÕES
+
+- 178 testes Node passaram (incluindo grade com 13 células por linha, risco somente
+  na etapa, visualizador, gravação dos quatro níveis e preservação dos vínculos).
+- node --test scripts/testarDemanda19Sql.cjs: passou. Aplica todas as migrações
+  existentes em ordem num PostgreSQL PGlite isolado e executa o handler real com
+  adaptador SQL: gravação única da etapa, rejeição de nome/datas inválidos e de
+  período que exclua atividade filha; visualizador recusado; registros preservados.
+- TypeScript, ESLint dos arquivos alterados (regra de formatação histórica excluída),
+  build e git diff --check passaram. Build conserva os avisos anteriores de chunks.
+- Navegador local, componentes reais com dados sintéticos: expansão padrão,
+  recolher/expandir resumo, editar/salvar atividade e retorno do título salvo;
+  falha sintética mantém o título digitado; consulta sem inputs/Editar; configuração
+  reordena as células de todas as linhas igualmente.
+- Em 390 px, 21 controles editáveis ficaram dentro do viewport, sem transbordamento
+  horizontal da página. A tabela usa fichas nessa largura.
+- O botão Baixar foi clicado no navegador. O PDF baixado realmente contém o título
+  alterado na fixture, foi reaberto e tem duas páginas. A exportação sintética
+  também foi renderizada e conferida: sem texto cortado ou tabelas sobrepostas.
+
+Evidências em docs/evidencias/demandas-19-20261020/:
+download-navegador.pdf, plano-trabalho-sintetico.pdf e imagens da interface.
+scripts/verificarDemanda19Pdf.cjs reproduz a geração com dados sintéticos.
+
+COMO CONFERIR
+
+1. Abrir uma organização > Projeto > Plano de Trabalho.
+2. Conferir resumo e todas as linhas abertas; recolher e expandir o resumo.
+3. Abrir riscos pelo resumo e pelo risco da etapa.
+4. Com admin/estagiário, clicar Editar; alterar células e salvar/cancelar a linha.
+   Testar atraso sem justificativa e etapa menor que o prazo de uma atividade.
+5. Com visualizador, conferir ausência dos controles de escrita.
+6. Abrir Configurações > Formato do projeto; mudar uma coluna, voltar ao projeto;
+   baixar o plano e conferir a ordem dos campos. Restaurar o formato se desejado.
+
+As gravações remotas não foram exercitadas; a verificação usa dados sintéticos e
+banco isolado. As alterações estão prontas para revisão local e não foram publicadas.
+Documentação da API consultada: https://supabase.com/docs/reference/javascript/update

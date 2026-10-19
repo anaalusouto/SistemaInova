@@ -23,7 +23,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
     DocumentosRegistro: { DocumentosRegistro: ({area,organizacaoId}) => React.createElement('section',{'data-documentos-area':area,'data-documentos-org':organizacaoId},'Documentos anexados') },
     DiagnosticoModule: { DiagnosticoModule: ({comunidadeId,instrumentoInicial}) => React.createElement('section',{'data-diagnostico-org':comunidadeId,'data-instrumento':instrumentoInicial},'Instrumentos de diagnóstico') },
-    ProjectSummaryHeader: { ProjectSummaryHeader: vazio },
+    ResumoProjetoTopo: { ResumoProjetoTopo: vazio },
     TabDescricao: { TabDescricao: vazio },
     TabPlanoTrabalho: { TabPlanoTrabalho: ({ project }) => React.createElement('section', { 'data-plano-projeto': project.id }, 'Plano do projeto') },
     TabOrcamento: { TabOrcamento: vazio },
@@ -235,7 +235,7 @@ test('projeto mostra organização e abas sem acesso antigo ao parecer técnico'
   const html = renderToStaticMarkup(React.createElement(ProjectView, { project, onBack: () => {} }));
   assert.ok(html.includes('Org A</h1>'));
   assert.ok(!html.includes('Projeto A</h2>'));
-  assert.ok(html.includes('Resumo e documentos do projeto'));
+  assert.ok(html.includes('Resumo do projeto'));
   for (const aba of ['Descrição', 'Plano de Trabalho', 'Orçamento']) assert.ok(html.includes(aba));
   assert.ok(!html.includes('Parecer técnico'));
   assert.ok(!html.includes('Link do Plano de Trabalho'));
