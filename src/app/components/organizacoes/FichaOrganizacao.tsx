@@ -9,7 +9,7 @@
  */
 import { type ReactNode } from 'react';
 import {
-  ArrowLeft, Building2, ExternalLink, Handshake, Loader2, Users,
+  ArrowLeft, ExternalLink, Loader2,
 } from 'lucide-react';
 
 import { useFichaOrganizacao } from './useOrganizacoes';
@@ -20,15 +20,9 @@ import { DiagnosticoModule } from '../DiagnosticoModule';
 import { DocumentosRegistro } from '../DocumentosRegistro';
 import { ProjectView } from '../ProjectView';
 import { useStore } from '../../store';
-import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha, type TipoOrganizacao } from '../../lib/organizacoes';
+import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha } from '../../lib/organizacoes';
 import { ROTA_INICIO, SECOES_ORG, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
 import type { AbaProjeto } from '../../lib/navegacaoApp';
-
-/** Ícone do cabeçalho pelo tipo de entidade (RF02.1). Sem tipo, o genérico. */
-const ICONE_POR_TIPO: Record<TipoOrganizacao, typeof Building2> = {
-  'Associação': Users,
-  'Cooperativa': Handshake,
-};
 
 interface FichaOrganizacaoProps {
   rota: RotaOrg & { orgId: string };
@@ -57,7 +51,6 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
     );
   }
 
-  const IconeTipo = org.tipo ? ICONE_POR_TIPO[org.tipo] : Building2;
   const secaoMenu = rota.secao === 'projeto' ? 'projetos' : rota.secao;
   const contagem: Partial<Record<typeof secaoMenu, number>> = {
     encaminhamentos: org.pendentes,
@@ -73,43 +66,21 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
       <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
         <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} />
-        {rota.secao !== 'projeto' && rota.secao !== 'projetos' && <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--brand-soft)' }}
-            title={org.tipo ?? 'Tipo não informado'}
-          >
-            <IconeTipo size={20} color="var(--brand)" aria-hidden />
-          </div>
-          <div className="min-w-0">
-            <p style={{ color: 'var(--ink-4)', fontSize: '0.82rem', marginTop: 2 }}>
-              {[org.categoria ?? 'Categoria não informada', org.tipo ?? 'Tipo não informado'].join(' · ')}
-            </p>
-          </div>
-        </div>}
+
 
         {/* No desktop a troca de seção é o menu lateral; aqui, só no celular. */}
-        <div className="flex gap-1 overflow-x-auto lg:hidden -mb-1" role="tablist" aria-label="Seções da organização">
+        <label className="flex min-w-0 flex-col gap-1 lg:hidden text-xs text-muted-foreground">
+          Seção da organização
+          <select aria-label="Seção da organização" value={secaoMenu} onChange={e => ir({secao:e.target.value as typeof secaoMenu})} className="w-full min-w-0 min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground">
           {SECOES_ORG.map(s => {
-            const ativa = s.id === secaoMenu;
             return (
-              <button
-                key={s.id}
-                role="tab"
-                aria-selected={ativa}
-                onClick={() => ir({ secao: s.id })}
-                className="px-3 py-1.5 rounded-full whitespace-nowrap text-[12px] font-medium border"
-                style={{
-                  borderColor: ativa ? 'var(--brand-soft-border)' : 'var(--border)',
-                  background: ativa ? 'var(--brand-soft)' : 'transparent',
-                  color: ativa ? 'var(--brand)' : 'var(--ink-3)',
-                }}
-              >
+              <option key={s.id} value={s.id}>
                 {s.rotulo}{s.emConstrucao ? ' (Em construção)' : ''}{contagem[s.id] ? ` (${contagem[s.id]})` : ''}
-              </button>
+              </option>
             );
           })}
-        </div>
+          </select>
+        </label>
       </div>
 
       {rota.secao === 'projeto' || rota.secao === 'projetos' ? (
@@ -118,8 +89,6 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
             org={org}
             projetoId={rota.projetoId}
             aoVoltarProjetos={() => ir({ secao: 'dados' })}
-            aoEncaminhamentos={id => ir({ secao: 'encaminhamentos', foco: id ?? null })}
-            aoVerRegistro={id => ir({ secao: 'registros', foco: id })}
             abaAtual={rota.abaProjeto ?? 'plano'}
             focoAtual={rota.foco ?? null}
             aoMudarAba={(abaProjeto, foco) => ir({ secao: 'projeto', projetoId: rota.projetoId, abaProjeto, foco: foco ?? null })}
@@ -174,8 +143,8 @@ function Voltar({ aoVoltar }: { aoVoltar: () => void }) {
 }
 
 function ProjetoDaOrganizacao({
-  org, projetoId, aoVoltarProjetos, aoEncaminhamentos, aoVerRegistro, abaAtual, focoAtual, aoMudarAba,
-}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void; aoEncaminhamentos: (atividadeId?: string) => void; aoVerRegistro: (id: string) => void;
+  org, projetoId, aoVoltarProjetos, abaAtual, focoAtual, aoMudarAba,
+}: { org: OrganizacaoFicha; projetoId: number | null; aoVoltarProjetos: () => void;
   abaAtual: AbaProjeto; focoAtual: string | null; aoMudarAba: (aba: AbaProjeto, foco?: string | null) => void }) {
   const { getProject, projectsLoading } = useStore();
   const vinculo = resolverProjetoOrg(org.projetos, projetoId);
@@ -196,9 +165,8 @@ function ProjetoDaOrganizacao({
       </div>
     );
   }
-  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao aoEncaminhamentos={aoEncaminhamentos}
-    abaAtual={abaAtual} focoAtual={focoAtual} aoMudarAba={aoMudarAba}
-    renderEncaminhamentos={foco => <AbaEncaminhamentos org={org} foco={foco} aoVerRegistro={aoVerRegistro} />} />;
+  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao
+    abaAtual={abaAtual} focoAtual={focoAtual} aoMudarAba={aoMudarAba} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -239,7 +207,7 @@ export function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha
 }
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <section className="bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+    <section className="min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
       <h2
         className="px-4 py-3 border-b"
         style={{ borderColor: 'var(--border)', fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--ink-1)' }}
@@ -257,6 +225,7 @@ function Item({ rotulo, children }: { rotulo: string; children: string | ReactNo
     <div className="py-2 grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-1 sm:gap-3" style={{ borderBottom: '1px solid var(--line-1)' }}>
       <dt style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--ink-5)' }}>{rotulo}</dt>
       <dd
+        className="min-w-0 [overflow-wrap:anywhere]"
         style={{
           fontSize: '0.82rem', whiteSpace: 'pre-line',
           color: naoInformado ? 'var(--ink-5)' : 'var(--ink-1)',

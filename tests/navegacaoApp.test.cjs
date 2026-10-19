@@ -18,8 +18,9 @@ test('URL valida contexto, descarta campos inválidos e não carrega formulário
   assert.deepEqual(validarBuscaApp({ area: 'organizations', org: [], projeto: -1 }), { area: 'organizations' });
   assert.deepEqual(validarBuscaApp({ area: 'organizations', org: 'org-a', secao: 'projeto', projeto: '12', aba: 'invalida', observacoes: 'rascunho' }),
     { area: 'organizations', org: 'org-a', secao: 'projeto', projeto: 12, aba: 'plano' });
-  const rota = { orgId: 'org-a', secao: 'projeto', projetoId: 12, abaProjeto: 'encaminhamentos', foco: 'atividade-a' };
+  const rota = { orgId: 'org-a', secao: 'projeto', projetoId: 12, abaProjeto: 'plano', foco: 'atividade-a' };
   assert.deepEqual(rotaDaBusca(buscaDaOrganizacao(rota)), rota);
+  assert.deepEqual(validarBuscaApp({ area:'organizations', org:'org-a', secao:'projeto', projeto:12, aba:'encaminhamentos', foco:'atividade-a' }), { area:'organizations', org:'org-a', secao:'encaminhamentos', foco:'atividade-a' });
   assert.deepEqual(buscaDaOrganizacao({ ...rota, secao: 'registros' }), { area: 'organizations', org: 'org-a', secao: 'registros', foco: 'atividade-a' });
 });
 
@@ -36,7 +37,7 @@ test('histórico real do TanStack volta entre abas e organizações, avança e r
   await router.load();
   const plano = buscaDaOrganizacao({ orgId: 'org-a', secao: 'projeto', projetoId: 12 });
   const orcamento = { ...plano, aba: 'orcamento' };
-  const encaminhamentos = { ...plano, aba: 'encaminhamentos', foco: 'atividade-a' };
+  const encaminhamentos = { area: 'organizations', org: 'org-a', secao: 'encaminhamentos', foco: 'atividade-a' };
   const detalhe = { ...encaminhamentos, popup:'enc-org-a:enc:encaminhamento-a' };
   const outro = buscaDaOrganizacao({ orgId: 'org-b', secao: 'projeto', projetoId: 25 });
   // O adapter React faz a atualização no navegador. Aqui usamos o histórico

@@ -258,3 +258,14 @@
     color: var(--color-foreground);
   }
 }
+
+/* Campos nativos permanecem dentro das colunas; 16px evita zoom automático no iOS. */
+@media (max-width: 39.999rem) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+    font-size: max(1rem, 16px) !important;
+  }
+}

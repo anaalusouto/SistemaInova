@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import '../responsive-tables.css';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowLeft, ChevronDown, ChevronRight, Check, Pencil, Trash2 } from 'lucide-react';
@@ -81,8 +82,8 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
   }
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl">
-      <div className="flex items-center justify-between">
+    <div className="flex min-w-0 flex-col gap-4 max-w-4xl">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p style={{ fontSize: '0.8rem', color: 'var(--ink-4)' }}>
           {produtos.length} produtos cadastrados · {completos} preenchidos · {emPreenchimento} em preenchimento
         </p>
@@ -91,8 +92,8 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
         )}
       </div>
 
-      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <table className="w-full">
+      <div className="inova-table-frame bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+        <table className="inova-table-cards w-full" aria-label="Cesta de produtos">
           <thead>
             <tr style={{ background: 'var(--surface-1)' }}>
               {['Produto', 'Cadeia', 'Preenchimento', 'Última edição', 'Ação'].map(h => (
@@ -106,9 +107,9 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
           <tbody>
             {produtos.map(p => (
               <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td className="px-4 py-3"><span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{p.nome}</span></td>
-                <td className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{p.cadeia || '—'}</span></td>
-                <td className="px-4 py-3">
+                <td data-label="Produto" className="px-4 py-3"><span style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{p.nome}</span></td>
+                <td data-label="Cadeia" className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{p.cadeia || '—'}</span></td>
+                <td data-label="Preenchimento" className="px-4 py-3">
                   <span
                     className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
                     style={{
@@ -119,13 +120,13 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
                     {p.statusPreenchimento === 'completo' ? 'Completo' : 'Em preenchimento'}
                   </span>
                 </td>
-                <td className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{new Date(p.atualizadoEm).toLocaleDateString('pt-BR')}</span></td>
-                <td className="px-4 py-3">
+                <td data-label="Última edição" className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{new Date(p.atualizadoEm).toLocaleDateString('pt-BR')}</span></td>
+                <td data-label="Ação" className="px-4 py-3">
                   <button onClick={() => setProdutoAbertoId(p.id)} className="text-[12px] font-medium hover:underline" style={{ color: 'var(--primary)' }}>
                     {p.statusPreenchimento === 'completo' ? 'Visualizar' : 'Continuar'}
                   </button>
                 </td>
-                <td className="px-4 py-3">
+                <td data-label="Remover" className="px-4 py-3">
                   {!readOnly && (
                     <button onClick={() => { if (window.confirm(`Excluir "${p.nome}"?`)) excluir.mutate(p.id); }} className="p-1 rounded hover:bg-red-50">
                       <Trash2 size={13} color="var(--danger)" />
@@ -150,7 +151,7 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
           <form
             onSubmit={e => { e.preventDefault(); if (novoNome.trim()) criar.mutate(); }}
             onClick={e => e.stopPropagation()}
-            className="bg-card rounded-2xl border p-6 w-full max-w-sm"
+            className="bg-card rounded-2xl border p-4 sm:p-6 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto"
             style={{ borderColor: 'var(--border)' }}
           >
             <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem', color: 'var(--ink-1)', marginBottom: 16 }}>
@@ -204,11 +205,11 @@ function ProdutoEditor({ produto, readOnly, onBack }: { produto: Produto; readOn
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl">
+    <div className="flex min-w-0 flex-col gap-4 max-w-4xl">
       <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
         <ArrowLeft size={12} /> Cesta de Produtos
       </button>
-      <div className="flex items-center justify-between">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem', color: 'var(--ink-1)' }}>{produto.nome}</h3>
         {!readOnly && (
           <button
@@ -235,7 +236,7 @@ function ProdutoEditor({ produto, readOnly, onBack }: { produto: Produto; readOn
                 setOpenBlocoId(bloco.id);
                 setEditingBlocoId(!readOnly && !respondido ? bloco.id : null);
               }}
-              className="w-full flex items-center justify-between px-4 py-3 text-left"
+              className="w-full min-w-0 flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-3 text-left"
             >
               <div className="flex items-center gap-2">
                 {open ? <ChevronDown size={14} color="var(--ink-5)" /> : <ChevronRight size={14} color="var(--ink-5)" />}

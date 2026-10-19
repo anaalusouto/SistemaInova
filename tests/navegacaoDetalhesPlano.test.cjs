@@ -13,6 +13,7 @@ function carregar(file, mocks = {}, cache = new Map()) {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX,
   } }).outputText;
   new Function('require', 'module', 'exports', codigo)(r => {
+    if (r.endsWith('.css')) return {};
     if (mocks[r]) return mocks[r];
     if (!r.startsWith('.')) return require(r);
     const rel = path.resolve(path.dirname(p), r);

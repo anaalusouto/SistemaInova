@@ -3,7 +3,7 @@
 
 export function Campo({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:gap-2 [overflow-wrap:anywhere]">
       <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-4)', minWidth: 110 }}>{label}:</span>
       <span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{valor}</span>
     </div>
@@ -24,7 +24,7 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-1.5 rounded-md text-[12px] font-medium transition-all text-left"
+      className="min-h-10 max-w-full whitespace-normal break-words px-3 py-1.5 rounded-md text-[12px] font-medium transition-all text-left"
       style={{
         background: active ? 'var(--primary)' : 'var(--surface-0)',
         color: active ? 'var(--primary-foreground)' : 'var(--ink-4)',

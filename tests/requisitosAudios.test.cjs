@@ -14,6 +14,7 @@ function carregar(arquivo, mocks = {}, cache = new Map()) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   new Function('require', 'module', 'exports', codigo)(r => {
+    if (r.endsWith('.css')) return {};
     if (mocks[r]) return mocks[r];
     if (r.startsWith('.')) {
       const p = path.resolve(path.dirname(absoluto), r);
@@ -54,7 +55,7 @@ test('R07: proposta soma só ativos vigentes e cabeçalho mantém o mesmo total,
   }
 });
 
-test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', () => {
+test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
   for (const controlada of [false, true]) {
   let rota = { aba: 'plano', foco: null };
   const estados = []; let indice = 0; let saidas = 0;
@@ -86,19 +87,17 @@ test('R05: encaminhamentos abre dentro do projeto e permite voltar ao plano', ()
     if (Array.isArray(node)) { for (const n of node) { const r = achar(n, pred); if (r) return r; } return; }
     return pred(node) ? node : achar(node.props?.children, pred);
   }
-  achar(render(), e => e.type === Plano).props.aoEncaminhamentos('atividade-a');
-  assert.equal(achar(render(), e => e.type === 'section').props['data-foco'], 'atividade-a');
+  assert.equal(achar(render(), e => e.type === Plano).props.aoEncaminhamentos, undefined);
+  assert.equal(achar(render(), e => e.type === 'section'), undefined);
+  const resumo=()=>achar(render(),e=>e.type==='button'&&e.props['aria-controls']==='project-context-1');
+  assert.equal(resumo().props['aria-expanded'],false);
+  resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],true);
+  assert.equal(achar(render(),e=>e.props?.id==='project-context-1').props['data-expanded'],true);
+  resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],false);
   achar(render(), e => e.type === 'button' && e.props.children?.includes?.('Plano de Trabalho')).props.onClick();
   assert.ok(achar(render(), e => e.type === Plano));
-  achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos').props.onClick();
-  assert.equal(achar(render(), e => e.type === 'section').props['data-foco'], null);
-  assert.equal(saidas, 0, 'Troca de aba mantém a ficha do projeto aberta');
-  if (controlada) {
-    rota = { aba: 'plano', foco: null }; // Estado restaurado pela seta Voltar.
-    assert.ok(achar(render(), e => e.type === Plano));
-    rota = { aba: 'encaminhamentos', foco: 'atividade-a' }; // Avançar.
-    assert.equal(achar(render(), e => e.type === 'section').props['data-foco'], 'atividade-a');
-  }
+  assert.equal(achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos'), undefined);
+  assert.equal(saidas, 0);
   }
 });
 
@@ -113,7 +112,7 @@ test('R06: edição em linha preserva campos e recusa atraso sem justificativa e
   assert.deepEqual(errosDaEdicao({ ...dados, fimRealizado: '2026-10-15', justificativaAtraso: 'Chuva' }, etapa), []);
   assert.ok(errosDaEdicao({ ...dados, inicioPrevisto: '2026-11-01' }, etapa).length > 0);
 });
-test('R02/03/04/06: tabela mostra observação e encaminhamento, preserva legado e respeita consulta', () => {
+test('R02/03/04/06: tabela preserva observacoes e legado sem duplicar encaminhamentos', () => {
   for (const readOnly of [false, true]) {
     const { VisaoTabela } = carregar('src/app/components/plano/VisaoTabela.tsx', {
       '../../auth/authStore': { useAuth: () => ({ readOnly }) },
@@ -125,8 +124,8 @@ test('R02/03/04/06: tabela mostra observação e encaminhamento, preserva legado
       codigos: new Map(), alternarRecolhido() {}, aoEncaminhamentos() {},
     }));
     assert.match(html, /Observação visível sem abrir painel/);
-    assert.match(html, /Enviar convite/);
-    assert.match(html, /Ver encaminhamento/);
+    assert.doesNotMatch(html, /Enviar convite/);
+    assert.doesNotMatch(html, /Ver encaminhamento/);
     assert.doesNotMatch(html, /LEGADO_PRESERVADO/);
     assert.equal(html.includes('Editar datas e status'), !readOnly);
     assert.deepEqual(atividade, antes);

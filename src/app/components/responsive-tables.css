@@ -1,0 +1,83 @@
+/* A mesma tabela e os mesmos controles: no celular, cada registro vira uma ficha. */
+.inova-table-frame {
+  container: inova-table / inline-size;
+  min-width: 0;
+  max-width: 100%;
+}
+@container inova-table (max-width: 47.999rem) {
+  .inova-table-cards {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+  }
+  .inova-table-cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .inova-table-cards tbody {
+    display: block;
+    min-width: 0;
+  }
+  .inova-table-cards tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .inova-table-cards td {
+    display: block;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .inova-table-cards td[colspan],
+  .inova-table-cards td[data-label="Atividade"],
+  .inova-table-cards td[data-label="Produto"],
+  .inova-table-cards td[data-label="Observações"],
+  .inova-table-cards td[data-label="Justificativa de atraso"] {
+    grid-column: 1 / -1;
+  }
+  .inova-table-cards td:has(input),
+  .inova-table-cards td:has(select),
+  .inova-table-cards td:has(textarea) {
+    grid-column: 1 / -1;
+  }
+  .inova-table-cards td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--ink-5);
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .inova-table-cards td > span,
+  .inova-table-cards td > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .inova-table-cards td[colspan] > div {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .inova-table-cards button {
+    min-height: 2.25rem;
+    overflow-wrap: anywhere;
+  }
+  .inova-table-cards input,
+  .inova-table-cards select,
+  .inova-table-cards textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 2.5rem;
+  }
+  .inova-table-cards .truncate {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}

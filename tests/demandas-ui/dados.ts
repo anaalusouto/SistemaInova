@@ -109,6 +109,18 @@ export async function call(name: string, args?: { data?: Record<string, unknown>
   if (name === "listarComunidades") return [org];
   if (name === "listarDiagnosticosPorComunidade") return [diagnostico];
   if (name === "getDiagnostico") return diagnostico;
+  if (name === "listarProdutos")
+    return [
+      {
+        id: "produto-demo",
+        diagnosticoId: diagnostico.id,
+        nome: "Produto de demonstração com descrição extensa para verificar a quebra de linha",
+        cadeia: "Cadeia de demonstração",
+        statusPreenchimento: "em_preenchimento",
+        respostas: {},
+        atualizadoEm: "2026-10-19T12:00:00Z",
+      },
+    ];
   if (name === "getDadosCompletosDiagnostico")
     return {
       diagnostico,

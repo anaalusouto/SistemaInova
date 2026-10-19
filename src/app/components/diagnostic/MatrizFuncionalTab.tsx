@@ -103,9 +103,9 @@ export function MatrizFuncionalTab({ diagnosticoId, readOnly }: MatrizFuncionalT
           <div key={funcao.id} data-inova-form="matriz" data-inova-field={funcao.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
             <button
               onClick={() => toggleOpen(funcao, resposta)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left"
+              className="w-full min-w-0 flex flex-wrap items-start justify-between gap-2 px-3 sm:px-4 py-3 text-left"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-1 basis-full items-start gap-2 sm:basis-auto">
                 {open ? <ChevronDown size={14} color="var(--ink-5)" /> : <ChevronRight size={14} color="var(--ink-5)" />}
                 <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>{funcao.id}.</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--ink-1)' }}>{funcao.funcao}</span>

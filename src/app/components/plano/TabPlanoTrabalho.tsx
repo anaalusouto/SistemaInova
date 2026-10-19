@@ -66,7 +66,7 @@ type PainelAberto =
   | { tipo: 'novoRisco' }
   | null;
 
-export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoesExternas = false, acoesDaVisao, aoEncaminhamentos }: {
+export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoesExternas = false, acoesDaVisao }: {
   project: Project;
   /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
   pedidoRiscos?: number;
@@ -74,7 +74,6 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
   acoesExternas?: boolean;
   /** Ações adicionais à direita do seletor de visões. */
   acoesDaVisao?: ReactNode;
-  aoEncaminhamentos?: (atividadeId?: string) => void;
 }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
@@ -225,7 +224,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
     <div className="flex flex-col">
       {/* Busca e filtros (RF-012). Filtram atividades; a visão Riscos tem a
           própria busca, sobre os riscos. */}
-      <div className="px-6 pt-4" hidden={visao === 'riscos' || visao === 'completa' || visao === 'ordenar'}>
+      <div className="px-3 sm:px-6 pt-4" hidden={visao === 'riscos' || visao === 'completa' || visao === 'ordenar'}>
         <BarraFiltros
           metas={metas}
           criterios={criterios}
@@ -238,7 +237,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
       {/* RC-06: um único botão, logo abaixo da busca e antes da visão. Só nas
           visões em árvore — o Kanban não recolhe nada. */}
       {(visao === 'tabela' || visao === 'gantt') && recolhiveis.length > 0 && (
-        <div className="px-6 pt-2">
+        <div className="px-3 sm:px-6 pt-2">
           <button
             onClick={alternarTudo}
             aria-pressed={expandidoPorInteiro}
@@ -252,7 +251,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
       )}
 
       {/* Seletor de visão (RF-011) */}
-      <div ref={seletorRef} className="flex items-center gap-2 px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
+      <div ref={seletorRef} className="flex min-w-0 items-center gap-2 px-3 sm:px-6 pt-3 pb-3 flex-wrap" style={{ scrollMarginTop: 8 }}>
         <div className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden ml-auto" style={{ borderColor: 'var(--border)' }}>
           {VISOES.filter(v => (!acoesExternas || ['tabela','gantt','kanban'].includes(v.id)) && (v.id !== 'ordenar' || !readOnly)).map((v, i) => {
             const Icone = v.icone;
@@ -308,7 +307,6 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
         </span>
 
         <div className="flex items-center gap-2 ml-auto flex-wrap">
-          {aoEncaminhamentos && <button type="button" onClick={() => aoEncaminhamentos()} className="border rounded-lg px-3 py-1.5 text-xs">Encaminhamentos</button>}
           <button type="button" disabled={exportando} aria-label={exportando ? 'Baixando plano de trabalho e riscos' : 'Baixar plano de trabalho e riscos'} title="Baixar plano de trabalho e riscos em PDF" className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async () => {
             setExportando(true);
             try {
@@ -323,7 +321,7 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
       </div>
 
       {/* Visão */}
-      <div className="px-6 pb-6">
+      <div className="min-w-0 px-3 sm:px-6 pb-6">
         <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
           {visao === 'completa' && <VisaoCompleta registros={registrosDoPlano(p, [...CAMPOS_RELATORIO_PLANO], ordemCampos)} ordem={ordemCampos} aoOrdenar={setOrdemCampos} aoAbrir={abrirRegistro} />}
           {visao === 'ordenar' && <VisaoOrdenacao projetoId={p.id} metas={metas} codigos={codigos} aoAbrir={abrirRegistro} />}
@@ -340,7 +338,6 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
               aoAbrirAtividade={atividade => setPainel({ tipo: 'atividade', atividadeId: atividade.id })}
               aoAbrirRisco={risco => setPainel({ tipo: 'risco', riscoId: risco.id })}
               aoAbrirAnexo={abrirAnexoDaAtividade}
-              aoEncaminhamentos={aoEncaminhamentos}
             />
           )}
 
@@ -451,7 +448,6 @@ export function TabPlanoTrabalho({ project, pedidoRiscos = 0, pedidoVisao, acoes
             codigo={codigos.get(alvo.atividade.id) ?? ''}
             projetoId={p.id}
             riscoOrigem={origem}
-            aoEncaminhamentos={aoEncaminhamentos ? () => aoEncaminhamentos(alvo.atividade.nextStep.trim() ? alvo.atividade.id : undefined) : undefined}
             aoFechar={fechar}
             aoAbrirRisco={r => setPainel({ tipo: 'risco', riscoId: r.id })}
           />

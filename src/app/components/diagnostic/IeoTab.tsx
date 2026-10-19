@@ -58,12 +58,17 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
   };
 
   return (
-    <div className="flex gap-6 items-start max-w-6xl">
-      <div className="flex flex-col gap-1 w-72 flex-shrink-0">
-        <div className="bg-card rounded-xl border p-4 mb-2" style={{ borderColor: 'var(--border)' }}>
+    <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:gap-6 items-start max-w-6xl">
+      <div className="grid w-full min-w-0 grid-cols-1 sm:grid-cols-2 gap-2 lg:flex lg:w-64 lg:shrink-0 lg:flex-col">
+        <div className="bg-card rounded-xl border p-4 mb-2 sm:col-span-2" style={{ borderColor: 'var(--border)' }}>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>IEO Geral</p>
           <p style={{ fontSize: '1.8rem', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--ink-1)' }}>{fmtScore(resultado.geral)}</p>
         </div>
+        <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground sm:col-span-2 lg:hidden">Dimensão do IEO
+          <select aria-label="Dimensão do IEO" value={dimensaoId} onChange={e=>{setDimensaoId(e.target.value);setOpenId(null);setEditingId(null);}} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
+            {IEO_DIMENSOES.map(d=><option key={d.id} value={d.id}>{d.titulo}</option>)}
+          </select>
+        </label>
         {IEO_DIMENSOES.map(d => {
           const r = resultado.porDimensao.find(x => x.dimensaoId === d.id)!;
           const active = d.id === dimensaoId;
@@ -71,7 +76,7 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
             <button
               key={d.id}
               onClick={() => { setDimensaoId(d.id); setOpenId(null); setEditingId(null); }}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg text-left"
+              className="hidden min-w-0 items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-left lg:flex"
               style={{ background: active ? 'var(--brand-soft)' : 'transparent', border: `1px solid ${active ? 'var(--primary)' : 'transparent'}` }}
             >
               <div>
@@ -84,7 +89,7 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
         })}
       </div>
 
-      <div className="flex-1 flex flex-col gap-6">
+      <div className="w-full min-w-0 flex-1 flex flex-col gap-6">
         {dimensaoAtiva.subdimensoes.map(sub => (
           <div key={sub.id} className="flex flex-col gap-3">
             <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.85rem', color: 'var(--ink-1)' }}>
@@ -98,8 +103,8 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
 
               return (
                 <div key={pergunta.id} data-inova-form="ieo" data-inova-field={pergunta.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-                  <button onClick={() => toggleOpen(pergunta, resposta)} className="w-full flex items-center justify-between px-4 py-3 text-left">
-                    <div className="flex items-center gap-2">
+                  <button onClick={() => toggleOpen(pergunta, resposta)} className="w-full min-w-0 flex flex-wrap items-start justify-between gap-2 px-3 sm:px-4 py-3 text-left">
+                    <div className="flex min-w-0 flex-1 basis-full items-start gap-2 sm:basis-auto">
                       {open ? <ChevronDown size={14} color="var(--ink-5)" /> : <ChevronRight size={14} color="var(--ink-5)" />}
                       <span style={{ fontSize: '0.7rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>{pergunta.id}</span>
                       <span style={{ fontSize: '0.83rem', fontWeight: 500, color: 'var(--ink-1)' }}>{pergunta.texto}</span>

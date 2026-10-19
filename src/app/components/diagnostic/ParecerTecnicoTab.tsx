@@ -111,9 +111,9 @@ export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTab
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl">
+    <div className="flex min-w-0 flex-col gap-6 max-w-4xl">
       {/* Resumo de apoio */}
-      <div className="bg-card rounded-xl border p-4 grid grid-cols-3 gap-4" style={{ borderColor: 'var(--border)' }}>
+      <div className="bg-card rounded-xl border p-4 grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ borderColor: 'var(--border)' }}>
         <div>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase' }}>Matriz Funcional</p>
           <p style={{ fontSize: '0.9rem', color: 'var(--ink-1)' }}>{matrizRespostas.length} de {MATRIZ_FUNCOES.length} funções preenchidas</p>

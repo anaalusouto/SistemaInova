@@ -126,20 +126,24 @@ test('AT-017/020: desktop e celular apresentam seis seções na ordem e organiza
   const nomes = ['Cadastro', 'Projeto', 'Diagnóstico / Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato'];
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pessoas: [], pendentes: 0 };
-    for (const secao of ['dados', 'projeto', 'encaminhamentos', 'registros']) {
+    for (const secao of ['dados', 'projeto', 'mapeamento', 'parecer', 'encaminhamentos', 'registros']) {
       const componentes = carregarInterface('src/app/components/Sidebar.tsx', { org });
       const ficha = carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx', { org });
       const rota = { orgId: id, secao, projetoId: null };
       const desktop = renderToStaticMarkup(React.createElement(componentes.Sidebar, { activeItem: 'organizations', rotaOrg: rota, onNavigate: () => {}, aoNavegarOrg: () => {} }));
       const celular = renderToStaticMarkup(React.createElement(ficha.FichaOrganizacao, { rota, aoNavegar: () => {} }));
+      assert.doesNotMatch(celular.split('</select>')[0], /Categoria não informada|Tipo não informado|Indígena|Associação/);
       for (const html of [desktop, celular]) {
         const posicoes = nomes.map(nome => html.indexOf(`>${nome}<`));
         assert.ok(posicoes.every(p => p >= 0));
         assert.deepEqual(posicoes, [...posicoes].sort((a, b) => a - b));
-        const atual = { dados: 'Cadastro', projeto: 'Projeto', encaminhamentos: 'Encaminhamento', registros: 'Registro de Contato' }[secao];
+        const atual = { dados: 'Cadastro', projeto: 'Projeto', mapeamento: 'Diagnóstico / Mapeamento', parecer: 'Parecer', encaminhamentos: 'Encaminhamento', registros: 'Registro de Contato' }[secao];
         assert.ok(html.includes(id));
         if (html === desktop) assert.match(html, new RegExp(`aria-current="page"[^>]*><span[^>]*><span[^>]*>${atual}<`));
-        else assert.match(html, new RegExp(`aria-selected="true"[^>]*>${atual}<`));
+        else {
+          assert.match(html,/aria-label="Seção da organização"/);
+          assert.match(html,new RegExp(`<option[^>]*selected=""[^>]*>${atual}<`));
+        }
       }
     }
   }

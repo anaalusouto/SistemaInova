@@ -62,7 +62,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
 
   return (
     <div className={incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}>
-      <div className="flex flex-col gap-3 px-7 pt-5 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
+      <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
           <ArrowLeft size={12} /> Organização
         </button>
@@ -76,7 +76,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             </p>
           </div>
           {diagnostico && (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {
@@ -117,7 +117,12 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto">
+        <label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do diagnóstico
+          <select aria-label="Instrumento do diagnóstico" value={tab} onChange={e=>setTab(e.target.value as TabId)} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
+            {TABS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+        </label>
+        <div className="hidden min-w-0 flex-wrap items-stretch gap-1 sm:flex">
           {TABS.map(t => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -125,7 +130,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="flex shrink-0 items-center gap-2 px-4 py-2.5 text-[13px] font-medium transition-colors"
+                className="flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 text-center text-[13px] font-medium transition-colors"
                 style={{ color: active ? 'var(--primary)' : 'var(--ink-4)', borderBottom: active ? '2px solid var(--primary)' : '2px solid transparent' }}
               >
                 <Icon size={14} />

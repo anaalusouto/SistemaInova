@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './responsive-tables.css';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowLeft, Building2, X } from 'lucide-react';
@@ -54,9 +55,6 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
     onError: (e: Error) => toast.error(e.message || 'Não foi possível criar o diagnóstico.'),
   });
 
-  const dataAplicacaoMaisRecente = diagnosticos[0]?.dataAplicacao ?? null;
-  const ultimaEdicao = diagnosticos.slice().sort((a, b) => (a.atualizadoEm < b.atualizadoEm ? 1 : -1))[0]?.atualizadoEm ?? null;
-
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-7 min-w-0">
       <div className="flex flex-col gap-3">
@@ -70,9 +68,6 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
             </div>
             <div>
               {incorporado ? <h2 className="text-lg font-semibold">Diagnóstico / Mapeamento</h2> : <h1 className="text-xl font-bold">{comunidade?.nome ?? 'Organização'}</h1>}
-              <p style={{ color: 'var(--ink-4)', fontSize: '0.8rem', marginTop: 2 }}>
-                {comunidade?.code} · {comunidade?.classificacao} · {diagnosticos.length} diagnóstico(s) · aplicação mais recente {formatDateOnly(dataAplicacaoMaisRecente)} · última edição {fmtDate(ultimaEdicao)}
-              </p>
             </div>
           </div>
           {!readOnly && <BotaoNovo onClick={() => setShowNew(true)}>Novo diagnóstico</BotaoNovo>}
@@ -85,8 +80,8 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
             Histórico de Diagnósticos
           </h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="inova-table-frame overflow-x-auto">
+          <table className="inova-table-cards w-full" aria-label="Histórico de diagnósticos">
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
                 {['Data da aplicação', 'Última edição', 'Status', 'Ação'].map(h => (
@@ -99,12 +94,12 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
             <tbody>
               {diagnosticos.map(d => (
                 <tr key={d.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td className="px-4 py-3">
+                  <td data-label="Data da aplicação" className="px-4 py-3">
                     <span style={{ fontSize: '0.82rem', color: 'var(--ink-1)' }}>{formatDateOnly(d.dataAplicacao)}</span>
                     {d.versao > 1 && <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)', marginLeft: 6 }}>v{d.versao}</span>}
                   </td>
-                  <td className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{fmtDate(d.atualizadoEm)}</span></td>
-                  <td className="px-4 py-3">
+                  <td data-label="Última edição" className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{fmtDate(d.atualizadoEm)}</span></td>
+                  <td data-label="Status" className="px-4 py-3">
                     <span
                       className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
                       style={{
@@ -115,7 +110,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                       {STATUS_LABEL[d.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td data-label="Ação" className="px-4 py-3">
                     <button onClick={() => onSelectDiagnostico(d.id)} className="text-[12px] font-medium hover:underline" style={{ color: 'var(--primary)' }}>
                       Visualizar
                     </button>
@@ -140,7 +135,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
           <form
             onSubmit={e => { e.preventDefault(); if (novaData) criar.mutate(); }}
             onClick={e => e.stopPropagation()}
-            className="bg-card rounded-2xl border p-6 w-full max-w-sm"
+            className="bg-card rounded-2xl border p-4 sm:p-6 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto"
             style={{ borderColor: 'var(--border)' }}
           >
             <div className="flex items-center justify-between mb-4">

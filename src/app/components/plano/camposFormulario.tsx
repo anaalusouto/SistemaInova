@@ -20,8 +20,8 @@ export function Campo({
   rotulo, obrigatorio, dica, children,
 }: { rotulo: string; obrigatorio?: boolean; dica?: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1" data-inova-field={rotulo}>
-      <label className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1" data-inova-field={rotulo}>
+      <label className="flex min-w-0 flex-col gap-1">
         <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-3)' }}>
           {rotulo}
           {obrigatorio && <span style={{ color: 'var(--danger)' }} aria-hidden> *</span>}

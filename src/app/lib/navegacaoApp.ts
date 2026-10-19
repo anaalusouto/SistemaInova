@@ -1,7 +1,7 @@
 import type { RotaOrg, SecaoOrg } from './navegacaoOrg';
 
 export type AreaApp = 'overview' | 'organizations' | 'schedule' | 'diagnostics' | 'reports' | 'settings';
-export type AbaProjeto = 'descricao' | 'plano' | 'orcamento' | 'encaminhamentos';
+export type AbaProjeto = 'descricao' | 'plano' | 'orcamento';
 export type AbaGestao = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 
 export interface BuscaApp {
@@ -17,7 +17,7 @@ export interface BuscaApp {
 
 const areas: readonly AreaApp[] = ['overview', 'organizations', 'schedule', 'diagnostics', 'reports', 'settings'];
 const secoes: readonly SecaoOrg[] = ['dados', 'projetos', 'projeto', 'encaminhamentos', 'registros', 'mapeamento', 'parecer'];
-const abas: readonly AbaProjeto[] = ['descricao', 'plano', 'orcamento', 'encaminhamentos'];
+const abas: readonly AbaProjeto[] = ['descricao', 'plano', 'orcamento'];
 const texto = (v: unknown) => typeof v === 'string' && v.trim() && v.length <= 160 && !/[\u0000-\u001f]/.test(v) ? v.trim() : undefined;
 
 /** Somente o contexto de navegação entra na URL; formulário e sessão não entram. */
@@ -27,7 +27,10 @@ export function validarBuscaApp(raw: Record<string, unknown>): BuscaApp {
   if (area === 'schedule') return { area, gestao: (['plano', 'rotas', 'calendario', 'executivo', 'kanban', 'mensagens'] as unknown[]).includes(raw.gestao) ? raw.gestao as AbaGestao : 'plano', ...popup };
   if (area !== 'organizations') return area ? { area } : {};
   const org = texto(raw.org);
-  const secao = secoes.includes(raw.secao as SecaoOrg) ? raw.secao as SecaoOrg : 'dados';
+  // Links antigos do projeto abrem a seção exclusiva de encaminhamentos.
+  const secao = org && raw.aba === 'encaminhamentos' && (raw.secao === 'projeto' || raw.secao === 'projetos')
+    ? 'encaminhamentos'
+    : secoes.includes(raw.secao as SecaoOrg) ? raw.secao as SecaoOrg : 'dados';
   const id = typeof raw.projeto === 'number' || typeof raw.projeto === 'string' && /^\d+$/.test(raw.projeto) ? Number(raw.projeto) : NaN;
   const projeto = Number.isSafeInteger(id) && id > 0 ? id : undefined;
   const noProjeto = secao === 'projeto' || secao === 'projetos';

@@ -118,7 +118,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, rotaO
         id="menu-principal"
         ref={menuRef}
         aria-label="Menu principal"
-        className={`flex flex-col h-full w-60 flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`flex flex-col h-full w-60 max-w-[calc(100vw-2rem)] flex-shrink-0 fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
           isOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible'
         }`}
         style={{ background: 'var(--sidebar)' }}

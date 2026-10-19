@@ -1,0 +1,53 @@
+RESPONSIVIDADE — AJUSTES LOCAIS / 19-10-2026
+
+Problemas encontrados:
+- Abas de organização/projeto escondidas em rolagem horizontal no celular.
+- Ações do projeto disponíveis somente depois de toda a tabela em telas estreitas.
+- IEO com coluna lateral fixa de 288px, comprimindo ou cortando as perguntas.
+- Plano com tabela de largura mínima 1060px e cesta sem disposição própria para celular.
+- Textos longos, grupos de botões e formulários com pouca altura disponível.
+
+Alterações:
+- Shell usa a altura dinâmica da janela; menu lateral limitado à largura disponível.
+- Organização e instrumentos de diagnóstico usam seletores nativos no celular.
+  As abas principais do projeto ficam visíveis juntas e quebram o texto quando necessário.
+- Ações do projeto vêm antes do conteúdo em áreas estreitas. Resumo/documentos
+  podem ser abertos pelo botão próprio. A lateral completa depende da largura
+  efetivamente disponível ao projeto (container query), considerando o menu da plataforma.
+- Tabelas de plano, histórico de diagnóstico e cesta viram fichas em contêineres
+  estreitos. Os mesmos registros, controles e callbacks são reutilizados: a edição
+  de datas/status, validações e permissões existentes foram preservadas.
+- IEO empilha as colunas e oferece seleção de dimensão, mantendo as perguntas legíveis.
+- Matriz, cesta e parecer adaptam cabeçalhos, opções e textos longos.
+- Formulários de criação têm altura máxima dinâmica e rolagem própria.
+  Campos nativos usam fonte legível no celular e respeitam a largura da coluna.
+
+Verificação no navegador: fixture tests/demandas-ui, com componentes reais e
+dados sintéticos, sem conexão com banco remoto.
+
+Larguras verificadas: 320, 390, 768, 1024 e 1440px.
+- Projeto: nenhuma página ultrapassou sua largura; ações sempre dentro da janela.
+  Plano em fichas nas três menores larguras e tabela nas duas maiores.
+  Tabelas largas permanecem contidas em sua região de rolagem, sem alargar a página.
+- IEO: todas as perguntas couberam nas cinco larguras.
+- Edição de atividade em 320px: os seis controles de datas/status/justificativa
+  tinham 255px de largura e terminaram em x=280, sem corte.
+- Cesta em 320px: ficha de 256px, sem células cortadas; nome longo quebrou linha.
+  Editor de produto sem controles fora da largura da janela.
+- Formulário Novo produto em 480x320: topo y=30, fim y=290, com rolagem interna.
+
+Verificações técnicas:
+- 175 testes Node aprovados.
+- TypeScript --noEmit aprovado.
+- Lint estrutural dos componentes alterados aprovado, sem exigir reformatação legada.
+- Build de produção aprovado, com avisos já existentes sobre chunks/importações.
+- git diff --check aprovado.
+
+Como reproduzir:
+node node_modules/vite/bin/vite.js --config tests/demandas-ui/vite.config.ts
+Abrir http://127.0.0.1:8093 e ajustar a largura do navegador.
+Conferir projeto expandido, editar datas/status, abrir resumo/documentos,
+selecionar diagnóstico/IEO/cesta/parecer e testar uma janela de pouca altura.
+
+Nenhuma migração foi criada ou alterada. Nenhum dado real, serviço externo,
+push ou publicação foi executado. Os resultados acima são de teste local.

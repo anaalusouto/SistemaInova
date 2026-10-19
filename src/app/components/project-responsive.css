@@ -1,0 +1,50 @@
+.project-shell {
+  container: inova-project / inline-size;
+}
+.project-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.project-context {
+  border-bottom: 1px solid var(--border);
+}
+.project-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.project-context-body {
+  display: none;
+}
+.project-context-body[data-expanded="true"] {
+  display: block;
+  margin-top: 1rem;
+}
+/* A largura disponível ao projeto considera também o menu lateral da plataforma. */
+@container inova-project (min-width: 64rem) {
+  .project-layout {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+  .project-main {
+    order: 0;
+  }
+  .project-context {
+    order: 1;
+    border-bottom: 0;
+    border-left: 1px solid var(--border);
+  }
+  .project-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .project-actions > :first-child {
+    grid-column: 1 / -1;
+  }
+  .project-context-toggle {
+    display: none;
+  }
+  .project-context-body {
+    display: block;
+    margin-top: 1rem;
+  }
+}

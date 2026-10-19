@@ -116,7 +116,7 @@ function AppShell() {
   };
 
   return (
-    <PopupNavegacao><VisualizadorDocumentos><div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--background)' }}>
+    <PopupNavegacao><VisualizadorDocumentos><div className="flex h-dvh w-full min-w-0 overflow-hidden" style={{ background: 'var(--background)' }}>
       <Sidebar
         activeItem={activeNav}
         onNavigate={handleNavigate}
