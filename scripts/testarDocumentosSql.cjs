@@ -20,6 +20,17 @@ test('PostgreSQL isolado: documentos validam destino/RLS e instrumentos concluí
       INSERT INTO documentos_registro(id,area,comunidade_id,storage_path,nome_arquivo,tipo_mime,tamanho_bytes,enviado_por)
       VALUES('${id(3)}','parecer','${id(1)}','documentos/objeto-sintetico','teste.pdf','application/pdf',100,'Verificador');`);
     assert.equal((await db.query('SELECT count(*)::int AS n FROM documentos_registro')).rows[0].n,1);
+    const migracao=fs.readFileSync('supabase/migrations/0028_documentos_organizacao_projeto.sql','utf8');
+    const snapshot=async()=> (await db.query('SELECT * FROM documentos_registro ORDER BY id')).rows;
+    const antes=await snapshot();
+    await db.exec(migracao);
+    await db.exec(migracao);
+    assert.deepEqual(await snapshot(),antes,'Reexecução preserva cada campo dos documentos');
+    await db.exec('DROP INDEX documentos_registro_org_idx; DROP TRIGGER diagnostico_editavel_guard ON diagnostico_ieo');
+    await db.exec(migracao);
+    assert.deepEqual(await snapshot(),antes,'Recuperação de aplicação parcial preserva dados');
+    assert.equal((await db.query("SELECT count(*)::int AS n FROM pg_trigger WHERE tgname='diagnostico_editavel_guard' AND NOT tgisinternal")).rows[0].n,6);
+    assert.equal((await db.query("SELECT count(*)::int AS n FROM pg_indexes WHERE schemaname='public' AND indexname='documentos_registro_org_idx'")).rows[0].n,1);
     await assert.rejects(db.exec(`INSERT INTO documentos_registro(area,comunidade_id,storage_path,nome_arquivo,tipo_mime,tamanho_bytes,enviado_por) VALUES('projeto','${id(1)}','errado','teste.pdf','application/pdf',1,'Teste')`),/documento_registro_pai_ck/);
     await assert.rejects(db.exec(`INSERT INTO documentos_registro(area,comunidade_id,storage_path,nome_arquivo,tipo_mime,tamanho_bytes,enviado_por) VALUES('parecer','${id(1)}','grande','teste.pdf','application/pdf',3145729,'Teste')`),/check constraint/);
     assert.equal((await db.query("SELECT relrowsecurity FROM pg_class WHERE relname='documentos_registro'")).rows[0].relrowsecurity,true);
@@ -35,5 +46,8 @@ test('PostgreSQL isolado: documentos validam destino/RLS e instrumentos concluí
       `INSERT INTO diagnostico_checklist_itens(diagnostico_id,item_id) VALUES('${id(2)}',1)`,
     ])await assert.rejects(db.exec(sql),/somente leitura/);
     assert.equal((await db.query('SELECT nivel FROM diagnostico_ieo')).rows[0].nivel,2);
+    await db.exec('ALTER TABLE documentos_registro RENAME COLUMN tipo_mime TO tipo_mime_incompativel');
+    await assert.rejects(db.exec(migracao),/estrutura incompatível.*tipo_mime/);
+    assert.deepEqual((await db.query('SELECT nome_arquivo FROM documentos_registro')).rows,[{nome_arquivo:'teste.pdf'}]);
   } finally {await db.close();}
 });
