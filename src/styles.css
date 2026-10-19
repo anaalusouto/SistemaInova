@@ -281,13 +281,14 @@
   transition: width 260ms ease, transform 260ms ease;
   border-right: 1px solid var(--sidebar-border);
 }
-.cria-sidebar-brand { min-height: 104px; border-bottom: 3px solid var(--brand-secondary); }
+.cria-sidebar-brand { min-height: 80px; border-bottom: 3px solid var(--brand-secondary); }
+.cria-sidebar-brand .cria-brand { width: 112px; height: 68px; }
 .cria-sidebar nav button > svg { flex-shrink: 0; }
 .cria-sidebar nav button { min-height: 40px; }
 @media (min-width: 64rem) {
   .cria-sidebar[data-collapsed="true"] { width: 80px; }
-  .cria-sidebar[data-collapsed="true"] .cria-sidebar-brand { flex-direction: column; justify-content: center; padding: 8px; gap: 2px; }
-  .cria-brand--compact-desktop { width: 54px; height: 54px; }
+  .cria-sidebar[data-collapsed="true"] .cria-sidebar-brand { min-height: 92px; flex-direction: column; justify-content: center; padding: 4px; gap: 2px; }
+  .cria-sidebar-brand .cria-brand--compact-desktop { width: 44px; height: 44px; }
   .cria-brand--compact-desktop .cria-brand-full { opacity: 0; transform: scale(.85); }
   .cria-brand--compact-desktop .cria-brand-short { opacity: 1; transform: scale(1); }
   .cria-sidebar[data-collapsed="true"] :is(.sidebar-label, .sidebar-search, .sidebar-tree, .sidebar-user-info, .sidebar-active-arrow) { display: none; }
