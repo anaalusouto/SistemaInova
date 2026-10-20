@@ -53,9 +53,6 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   }
 
   const secaoMenu = rota.secao === 'projeto' ? 'projetos' : rota.secao;
-  const vinculoAtual = resolverProjetoOrg(org.projetos, rota.projetoId);
-  const tituloAtual = secaoMenu === 'projetos' && vinculoAtual.estado === 'unico'
-    ? vinculoAtual.projeto.nome : org.nome;
   const contagem: Partial<Record<typeof secaoMenu, number>> = {
     encaminhamentos: org.pendentes,
     registros: org.registros.length,
@@ -63,7 +60,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
-      <div className="shrink-0"><TituloNavegacao nome={tituloAtual} aoVoltar={() => aoNavegar(ROTA_INICIO)} /></div>
+      <div className="shrink-0"><TituloNavegacao nome={org.nome} aoVoltar={() => aoNavegar(ROTA_INICIO)} /></div>
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
       <div className="lg:hidden px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
 

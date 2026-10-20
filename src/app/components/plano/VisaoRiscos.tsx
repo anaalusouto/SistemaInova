@@ -14,17 +14,18 @@
  * muda com filtro; célula e status recortam a lista, não o projeto. A matriz
  * agrega SOMENTE riscos cadastrados — atividade nunca conta como risco (RN-020).
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, ShieldAlert, AlertTriangle, Pencil, Plus } from 'lucide-react';
 import { type Risk, type Goal, type RiskStatus, type Activity } from '../../data/mockData';
 import {
   matrizDeRiscos, resumoDeRiscos, filtrarRiscos, faixaRisco, textoDoRisco,
   CRITERIOS_RISCO_VAZIOS, temFiltroDeRiscoAtivo,
-  type CriteriosRisco,
+  type CriteriosRisco, riscoEmAberto,
 } from '../../lib/planoTrabalho';
 import { useAuth } from '../../auth/authStore';
 
 const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
+const criteriosAbertos = (): CriteriosRisco => ({ ...CRITERIOS_RISCO_VAZIOS, status: STATUS.filter(status => riscoEmAberto({ status })) });
 
 const CORES: Record<string, { cor: string; fundo: string; forte: string }> = {
   'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)', forte: 'var(--success)' },
@@ -39,7 +40,7 @@ const quebra: React.CSSProperties = { whiteSpace: 'pre-line', overflowWrap: 'any
 interface Local { etapa: string; meta: string; codigo: string }
 
 export function VisaoRiscos({
-  riscos, metas, codigos, atividades, aoAbrirRisco, aoAbrirAtividade, aoNovoRisco,
+  riscos, metas, codigos, atividades, aoAbrirRisco, aoAbrirAtividade, aoNovoRisco, pedidoAbertos = 0,
 }: {
   riscos: Risk[];
   metas: Goal[];
@@ -49,9 +50,13 @@ export function VisaoRiscos({
   aoAbrirRisco: (r: Risk) => void;
   aoAbrirAtividade: (a: Activity) => void;
   aoNovoRisco: () => void;
+  pedidoAbertos?: number;
 }) {
   const { readOnly } = useAuth();
-  const [criterios, setCriterios] = useState<CriteriosRisco>(CRITERIOS_RISCO_VAZIOS);
+  const [criterios, setCriterios] = useState<CriteriosRisco>(() => pedidoAbertos > 0 ? criteriosAbertos() : CRITERIOS_RISCO_VAZIOS);
+  useEffect(() => {
+    if (pedidoAbertos > 0) setCriterios(criteriosAbertos());
+  }, [pedidoAbertos]);
 
   // RF03: a hierarquia é Meta › Etapa, a especificação é a atividade ou
   // resultado a que o risco se refere, e o risco é o próprio registro. Cada

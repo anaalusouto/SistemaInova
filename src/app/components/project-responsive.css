@@ -17,7 +17,7 @@
 .project-summary-grid > :is(:first-child, :last-child) {
   grid-column: 1 / -1;
 }
-.project-summary-value { grid-column: 1 / -1; grid-row: 3; }
+.project-summary-value { grid-column: 1 / -1; }
 .project-summary-grid > button:last-child {
   min-height: 44px;
   align-self: center;
@@ -33,14 +33,15 @@
   flex-shrink: 0;
 }
 @container cria-project (min-width: 35rem) {
-  .project-summary-grid > :is(:first-child, .project-summary-value, :last-child) {
+  .project-summary-grid > :is(:first-child, .project-summary-value) {
     grid-column: auto;
     grid-row: auto;
   }
 }
 @container cria-project (min-width: 64rem) {
+  .project-summary-grid > :last-child { grid-column: auto; }
   .project-summary-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.15fr) minmax(0, 1.65fr) minmax(0, 1fr) 132px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.65fr) minmax(0, 1.15fr) minmax(0, 1fr) 132px;
   }
 }
 .project-plan-toolbar button { min-height: 36px; }

@@ -31,6 +31,48 @@ const atividade = { id: 'a', name: 'Reunião comunitária', responsible: 'LEGADO
   nextStep: 'Enviar convite', nextStepOwner: 'Maria', nextStepDue: '2026-10-03', riskOriginId: null, tasks: [] };
 const etapa = { id: 'e', name: 'Etapa', plannedStart: '2026-10-01', plannedEnd: '2026-10-31', actualStart: null, actualEnd: '2026-10-31', activities: [atividade] };
 
+test('resumo: ordem da referência, andamento independente do financeiro e riscos não encerrados', () => {
+  const { ResumoProjetoTopo } = carregar('src/app/components/project-tabs/ResumoProjetoTopo.tsx', {
+    '../../theme/useFormatoPlano': { useFormatoPlano: () => ({ formato: { ordemCampos: {} } }) },
+  });
+  const project = { id: 1, code: '18-2026', name: 'Projeto sintético', budgetExecuted: 80244.69, budgetApproved: 164285.71,
+    goals: [{ deliverables: [{ activities: [{ progress: 100 }, { progress: 46 }] }] }],
+    risks: ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'].map(status => ({ status })) };
+  const html = renderToStaticMarkup(React.createElement(ResumoProjetoTopo, { project }));
+  assert.ok(html.indexOf('Projeto</span>') < html.indexOf('VALOR EXECUTADO'));
+  assert.ok(html.indexOf('VALOR EXECUTADO') < html.indexOf('ANDAMENTO'));
+  assert.match(html, /width:73%/);
+  assert.match(html, />73%<\/span>/);
+  assert.match(html, /80\.244,69/);
+  assert.match(html, /164\.285,71/);
+  assert.match(html, /3 em aberto/);
+  assert.ok(!html.includes('R$'));
+});
+
+test('atalho de riscos inicia com status não encerrados sem perder o projeto', () => {
+  const { VisaoRiscos } = carregar('src/app/components/plano/VisaoRiscos.tsx', {
+    '../../auth/authStore': { useAuth: () => ({ readOnly: true }) },
+  });
+  const riscos = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'].map((status, i) => ({ id: `r${i}`, title: `Risco-${i}`, status, probability: 2, impact: 3, severity: 6 }));
+  const props = { riscos, metas: [], codigos: new Map(), atividades: [] };
+  const todos = renderToStaticMarkup(React.createElement(VisaoRiscos, props));
+  const abertos = renderToStaticMarkup(React.createElement(VisaoRiscos, { ...props, pedidoAbertos: 1 }));
+  assert.ok(todos.includes('Risco-3'));
+  for (let i = 0; i < 3; i++) assert.ok(abertos.includes(`Risco-${i}`));
+  assert.ok(!abertos.includes('Risco-3'));
+});
+
+test('PDF propaga rejeição assíncrona da gravação', async () => {
+  const { exportReportPdf } = carregar('src/app/lib/reportExport.ts', {
+    jspdf: { default: function (...args) {
+      const doc = new (require('jspdf').jsPDF)(...args);
+      doc.save = () => Promise.reject(new Error('Gravação recusada'));
+      return doc;
+    } },
+  });
+  await assert.rejects(exportReportPdf({ title: 'Teste', generatedAt: new Date(), projects: [] }), /Gravação recusada/);
+});
+
 test('colunas: arraste e teclado mudam só a coluna escolhida, com limites, cancelamento e restauração', () => {
   let indice = 0;
   const estados = [];
@@ -182,6 +224,8 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
   atalhos().aoOrcamento(); assert.equal(abaAtiva('Orçamento'), 'page');
   atalhos().aoPlano(); assert.equal(abaAtiva('Plano de Trabalho'), 'page');
   assert.equal(achar(render(), e => e.type === Plano).props.pedidoVisao.visao, 'tabela');
+  atalhos().aoRiscos();
+  assert.equal(achar(render(), e => e.type === Plano).props.pedidoVisao.somenteAbertos, true);
   achar(render(), e => e.type === Plano).props.aoPendencias(true);
   atalhos().aoDescricao(); assert.equal(abaAtiva('Plano de Trabalho'), 'page', 'Rascunhos bloqueiam a saída pelos atalhos');
   assert.equal(achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos'), undefined);

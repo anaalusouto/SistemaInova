@@ -1,0 +1,123 @@
+CRIA — página Projeto: conferência da especificação recebida em 20/10/2026
+
+Esta revisão usa os 20 itens da mensagem do usuário. A identificação pela
+organização e a ordem Projeto > Valor > Andamento > Riscos > Baixar substituem
+os ajustes anteriores que colocavam o nome do projeto no título e o andamento
+antes do valor. Não foram alterados registros nem regras no banco.
+
+ALTERAÇÕES DESTA RODADA
+- Título: seta de retorno + Organizações em cinza + divisor vertical + nome da
+  organização em negrito. O nome do projeto permanece no resumo.
+- Resumo na ordem da referência, sem símbolo de moeda; executado maior e em
+  negrito, proposto menor. Barra usa o andamento das atividades.
+- Ícone monetário na aba Orçamento, conforme a especificação mais recente.
+- Nome da organização no menu agora expande e recolhe os subitens.
+- Atalho de riscos inicia com Aberto, Em mitigação e Monitorando selecionados;
+  Encerrado fica desmarcado. Os dados continuam pertencendo ao projeto atual.
+- Exportação aguarda a Promise de gravação; falhas assíncronas chegam ao
+  tratamento de erro, e sucesso informa geração e início do download.
+- Visualizações Tabela/Gantt/Kanban passam a informar aria-pressed.
+- Contagens de atividade e etapa respeitam singular e plural.
+
+CONFERÊNCIA POR ITEM
+1. Estrutura: preservada a sequência cabeçalho, organização, resumo, abas,
+   busca, comandos e plano. Menu expandido de 240px e recolhido de 80px;
+   proporção da captura tratada como referência, sem fixar 18,5% em toda tela.
+2. Menu: logos oficiais em public/logos, recolhimento/restauração, seleção,
+   hierarquia e rolagem interna. Organização expande/recolhe. Menu não acompanha
+   a rolagem principal. Gestão Interna inicia fechada, conforme pedido anterior.
+3. Busca global: APENAS apresentação estática existente. Busca e atalho ⌘K
+   ainda não funcionam. Escopo, resultados e adaptação Ctrl+K precisam de definição.
+4. Cabeçalho global: saudação usa primeiro nome e horário na montagem, com a
+   variação de boas-vindas existente. Fonte: fatores .925/1/1.1/1.25; tema e fonte
+   persistem neste navegador. A letra A é um rótulo, não um comando de reset.
+   Sino usa o componente existente de notificações. Sem mudança de regras aqui.
+5. Identificação: nome da organização selecionada e retorno à listagem, com
+   divisor e hierarquia visual. Sem repetir breadcrumb em outra linha.
+6. Resumo: valores do projeto; andamento = média arredondada do progresso das
+   atividades, conforme andamentoDoProjeto. Sem atividades: Não calculado.
+   Financeiro não entra nessa fórmula. A camada de dados existente usa reais;
+   a referência visual não foi usada para inventar uma moeda.
+7. Recolhimento: abrange toda a faixa de resumo. Começa aberta, conserva o
+   contexto e não grava registros. Estado local da página, sem persistência.
+8. Riscos: ícone/rótulo/quantidade no mesmo botão, foco e hover. Regra existente
+   riscoEmAberto: status diferente de Encerrado. Abre a visão Riscos do plano com
+   os três status não encerrados selecionados. Limpar permite consultar os demais.
+9. PDF: mantém o relatório existente de cadastro, metas, etapas, atividades,
+   tarefas e riscos do projeto inteiro; ignora filtros de busca da visão.
+   Usa ordem de campos configurada. Nome derivado do título, extensão .pdf,
+   paginação e geração vetorial via jsPDF. Gravação agora aguardada e tratada.
+   Entrega física do arquivo no navegador: AINDA NÃO CONFIRMADA AUTOMATICAMENTE.
+10. Abas: Descrição, Plano de Trabalho, Orçamento. Plano inicial; seleção azul.
+    Atalhos anteriores compatíveis preservados: Projeto > Descrição,
+    Andamento > Plano/Tabela, Valor > Orçamento. Mantêm organização e projeto.
+11. Busca do plano: instantânea, tolerante a acentos/caixa. Pesquisa atividade,
+    responsável, tarefas, etapa e título/descrição de risco da etapa. Preserva
+    pais dos resultados; etapa/risco encontrado mantém atividades correspondentes.
+12. Filtros: combinam por interseção. Seleções têm etiquetas e limpeza; contador
+    informa visíveis de total quando há filtro. Resumo do projeto não é recortado.
+13. Expandir/recolher tudo: níveis da árvore, estado compartilhado entre Tabela
+    e Gantt na montagem atual. Kanban não tem níveis recolhíveis. Começa aberto.
+14. Visões: uma ativa por vez, mesmos dados/critério. Contratos existentes de
+    Gantt e Kanban preservados; sem inventar escalas ou regras a partir da foto.
+15. Contagens: calculadas a partir das metas/etapas carregadas. Sem copiar os
+    números da imagem para o código de produção.
+16. Edição: células editáveis de cada tipo, Tab, Enter para salvar linha,
+    Ctrl+Enter em texto multilinha, Escape para cancelar, entradas por tipo,
+    validação e erro. Salva/cancela POR LINHA; campos calculados não viram entrada.
+    Pendências bloqueiam navegação que abandonaria rascunhos. Consulta não edita.
+    Não inclui edição de indicadores financeiros pelo botão Editar do plano.
+17. Ordenar: implementação existente permite escolher posição de meta, etapa
+    ou atividade entre irmãos, com gravação e validação do servidor; filhos
+    acompanham a renumeração. Não foi acrescentada ordenação arbitrária por coluna.
+18. Identidade: tokens e logos oficiais, fonte sans centralizada, branco/azul,
+    vermelho de risco e divisória, estados de tema preservados.
+19. Anotações amarelas: não são renderizadas como componentes da plataforma.
+20. Complementos: estados existentes de carregamento/erro/vazio, nomes longos,
+    fontes ampliadas, foco/teclado, permissões e rolagem preservados/verificados.
+
+DECISÕES AINDA ABERTAS — NÃO APRESENTADAS COMO PRONTAS
+- Escopo e experiência da busca global/⌘K e eventual ação da letra A.
+- Persistência de busca, filtros, visão, expansão e largura entre remontagens,
+  recarregamentos, dispositivos ou usuários. Hoje parte do estado é local.
+- Configuração de formato é preferência de apresentação deste navegador,
+  aplicada aos projetos, e não uma configuração central de todos os usuários.
+- Copiar/colar intervalos, colagem de múltiplas linhas, desfazer/refazer,
+  inclusão/exclusão pela grade e eventual ampliação do escopo de Todos os campos.
+- Política de ausência versus zero em valores legados, caso se deseje alterar
+  os marcadores existentes; nenhum dado financeiro foi presumido ou corrigido.
+- Conteúdo/identidade específica de um novo modelo PDF, se diferente do atual.
+
+VALIDAÇÃO DESTA RODADA
+- 182 testes Node passaram; novos casos verificam ordem do resumo, 73% de
+  andamento independente de 48,85% financeiro, três status não encerrados,
+  contexto/permissões e propagação da rejeição assíncrona do PDF.
+- TypeScript, lint dos componentes alterados, build e git diff --check passaram.
+- Navegador: árvore da organização recolheu/expandiu, filtro de riscos com
+  três status ativos e Encerrado inativo, consulta sem Editar/Ordenar.
+- Fixture ?referencia=1 reproduz os números da imagem com dados sintéticos:
+  AASFLOR, 23 atividades, 3 metas, 10 etapas, 14 riscos, 73%, valores da referência.
+  São dados de teste; não consulta nem modifica a organização real.
+- Mobile 390px e 320px com fonte extragrande: documento manteve a largura da
+  viewport. Emulação e fonte foram restauradas ao final.
+- Botão Baixar apresentou PDF gerado e download iniciado no navegador.
+- node scripts/verificarPdfProjeto.cjs executou o gerador real com projeto DEMO.
+  Arquivo de 21.050 bytes abriu no PyMuPDF: 2 páginas, não criptografado,
+  com nome do projeto, metas e risco corretos. Primeira e última páginas foram
+  renderizadas e inspecionadas. Isso verifica a geração, não a entrega do navegador.
+- Limitação de automação já observada: evento de download não foi retornado e
+  acesso à tela interna de downloads foi bloqueado pela política do navegador.
+  Não foi contornada essa restrição. Resta clicar Baixar no ambiente autenticado
+  e abrir o arquivo efetivamente salvo para encerrar o teste ponta a ponta.
+
+COMO REPRODUZIR SEM DADOS REAIS
+1. node node_modules/vite/bin/vite.js --config tests/demandas-ui/vite.config.ts
+2. http://127.0.0.1:8093/?referencia=1
+3. Para consulta: acrescentar &consulta=1. Para falha sintética de gravação: &falha=1.
+4. PDF por gerador: node scripts/verificarPdfProjeto.cjs
+
+Fontes de implementação: TituloNavegacao, Sidebar, ResumoProjetoTopo,
+planoTrabalho.ts, TabPlanoTrabalho, BarraFiltros, VisaoRiscos, VisaoTabela,
+VisaoOrdenacao, themeStore e reportExport.
+Evidências: docs/evidencias/especificacao-projetos-20261020/.
+Sem migração, publicação, serviço externo, commit ou push.

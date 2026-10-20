@@ -127,7 +127,7 @@ export function BarraFiltros({
         )}
 
         <span style={{ fontSize: '0.72rem', color: 'var(--ink-5)' }} aria-live="polite">
-          {ativo ? `${visiveis} de ${total} atividades` : `${total} atividades`}
+          {ativo ? `${visiveis} de ${total}` : total} {total === 1 ? 'atividade' : 'atividades'}
         </span>
       </div>
 

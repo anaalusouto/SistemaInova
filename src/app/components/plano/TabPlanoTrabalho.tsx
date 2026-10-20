@@ -65,7 +65,7 @@ import { NavegacaoPlano, type SelecaoPlano } from "./NavegacaoPlano";
 import { ReclassificarRegistro } from "./ReclassificarRegistro";
 
 type Visao = "tabela" | "gantt" | "kanban" | "riscos" | "ordenar";
-export type PedidoVisaoPlano = { visao: "tabela" | "riscos" | "ordenar"; contador: number };
+export type PedidoVisaoPlano = { visao: "tabela" | "riscos" | "ordenar"; contador: number; somenteAbertos?: boolean };
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: "tabela", rotulo: "Tabela", icone: Table2, disponivel: true },
@@ -176,6 +176,7 @@ export function TabPlanoTrabalho({
   }, [pendentes.size]);
 
   const metas = useMemo(() => ordenarPlano(p.goals), [p.goals]);
+  const quantidadeEtapas = metas.reduce((total, meta) => total + meta.deliverables.length, 0);
   const riscos = p.risks;
 
   // RN-004: a numeração sai da lista COMPLETA do projeto. Quando busca e
@@ -360,6 +361,7 @@ export function TabPlanoTrabalho({
                 key={v.id}
                 onClick={() => v.disponivel && setVisao(v.id)}
                 disabled={!v.disponivel || edicaoAberta}
+                aria-pressed={ativa}
                 title={v.disponivel ? undefined : "Disponível na próxima entrega"}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px]"
                 style={{
@@ -413,7 +415,7 @@ export function TabPlanoTrabalho({
 
         <span style={{ fontSize: "0.72rem", color: "var(--ink-5)" }}>
           {metas.length} meta{metas.length === 1 ? "" : "s"} ·{" "}
-          {metas.flatMap((m) => m.deliverables).length} etapas
+          {quantidadeEtapas} etapa{quantidadeEtapas === 1 ? "" : "s"}
         </span>
 
         <div className="flex items-center gap-2 ml-auto flex-wrap">
@@ -460,7 +462,7 @@ export function TabPlanoTrabalho({
                 try {
                   const { buildReportModel, exportReportPdf } =
                     await import("../../lib/reportExport");
-                  exportReportPdf(
+                  await exportReportPdf(
                     buildReportModel(
                       `Plano de trabalho e riscos - ${p.name}`,
                       [p],
@@ -573,6 +575,7 @@ export function TabPlanoTrabalho({
 
           {visao === "riscos" && (
             <VisaoRiscos
+              pedidoAbertos={pedidoVisao?.visao === "riscos" && pedidoVisao.somenteAbertos ? pedidoVisao.contador : 0}
               riscos={riscos}
               metas={metas}
               codigos={codigos}

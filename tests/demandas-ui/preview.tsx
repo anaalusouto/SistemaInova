@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider, useTheme } from "../../src/app/theme/themeStore";
 import { useMenuLateral } from "../../src/app/theme/useMenuLateral";
@@ -17,6 +18,7 @@ export function Preview() {
     <QueryClientProvider client={client}>
       <ThemeProvider>
         <LayoutPreview />
+        <Toaster position="top-right" richColors closeButton />
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -33,7 +33,7 @@ export function ResumoProjetoTopo({
     setBaixando(true);
     try {
       const { buildReportModel, exportReportPdf } = await import("../../lib/reportExport");
-      exportReportPdf(
+      await exportReportPdf(
         buildReportModel(
           `Plano de trabalho e riscos - ${project.name}`,
           [project],
@@ -41,7 +41,7 @@ export function ResumoProjetoTopo({
           formato.ordemCampos,
         ),
       );
-      toast.success("Plano de trabalho e riscos exportados.");
+      toast.success("PDF gerado e download iniciado.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível baixar o PDF.");
     } finally {
@@ -56,23 +56,24 @@ export function ResumoProjetoTopo({
           {project.code} · {project.name}
         </span>
       </button>
+      <button type="button" onClick={aoOrcamento} aria-label="Valor: abrir orçamento" className="project-summary-link project-summary-value text-left">
+        <span className="project-summary-label">VALOR EXECUTADO</span>
+        <span className="block text-sm tabular-nums" title="Valor executado / proposto em reais">
+          <span className="text-base font-bold">
+          {project.budgetExecuted > 0 ||
+          (project.financialItems ?? []).some((i) => i.executedValue > 0)
+            ? moeda(project.budgetExecuted)
+            : "Não informado"}</span>{" "}
+          / {project.budgetApproved > 0 ? moeda(project.budgetApproved) : "Não informado"}
+        </span>
+      </button>
       <button type="button" onClick={aoPlano} aria-label="Andamento: abrir plano de trabalho" className="project-summary-link text-left">
-        <span className="project-summary-label">Andamento</span>
+        <span className="project-summary-label">ANDAMENTO</span>
         <span className="flex items-center gap-2 text-sm font-semibold tabular-nums">
           {andamento !== NAO_CALCULADO && <span className="project-summary-progress" aria-hidden>
             <span style={{ width: `${andamento}%` }} />
           </span>}
           <span>{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</span>
-        </span>
-      </button>
-      <button type="button" onClick={aoOrcamento} aria-label="Valor: abrir orçamento" className="project-summary-link project-summary-value text-left">
-        <span className="project-summary-label">Valor executado / proposto (reais)</span>
-        <span className="block text-sm font-semibold tabular-nums">
-          {project.budgetExecuted > 0 ||
-          (project.financialItems ?? []).some((i) => i.executedValue > 0)
-            ? moeda(project.budgetExecuted)
-            : "Não informado"}{" "}
-          / {project.budgetApproved > 0 ? moeda(project.budgetApproved) : "Não informado"}
         </span>
       </button>
         <button
@@ -82,7 +83,7 @@ export function ResumoProjetoTopo({
           style={{ color: "var(--danger)" }}
           aria-label="Ver riscos do projeto"
         >
-          <span className="project-summary-label">Riscos</span>
+          <span className="project-summary-label">RISCOS</span>
           <span className="inline-flex gap-1.5 items-center text-sm font-semibold">
             <ShieldAlert size={15} />{abertos} em aberto
           </span>

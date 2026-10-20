@@ -231,13 +231,14 @@ test('ficha mantém um único H1 e isola diagnóstico e documentos por organiza�
   }
 });
 
-test('projeto mostra Organizações e nome do projeto no título, com abas sem parecer antigo', () => {
+test('projeto identifica a organização no título, com abas sem parecer antigo', () => {
   const project = { id: 101, name: 'Projeto A', code: '01-2026', financier: 'Financiador', status: 'Não iniciado', risks: [], changes: [], organizacao: { id: 'org-a', nome: 'Org A' } };
   const { ProjectView } = carregarInterface('src/app/components/ProjectView.tsx', { readOnly: true });
   const html = renderToStaticMarkup(React.createElement(ProjectView, { project, onBack: () => {} }));
   const titulo = html.match(/<h1\b[^>]*>(.*?)<\/h1>/)?.[1] ?? '';
   assert.ok(titulo.includes('Organizações'));
-  assert.ok(titulo.includes('Projeto A</span>'));
+  assert.ok(titulo.includes('Org A</span>'));
+  assert.ok(!titulo.includes('Projeto A'));
   assert.ok(!html.includes('Caminho de navegação'), 'Sem breadcrumb duplicado abaixo do título');
   assert.ok(!html.includes('Projeto A</h2>'));
   assert.ok(html.includes('Resumo do projeto'));

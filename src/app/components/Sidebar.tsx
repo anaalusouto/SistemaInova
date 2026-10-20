@@ -206,6 +206,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, colla
  */
 function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: RotaOrg) => void }) {
   const { data: organizacoes = [] } = useListaOrganizacoes();
+  const [aberta, setAberta] = useState(true);
   const org = organizacoes.find(o => o.id === rota.orgId);
   if (!org || !rota.orgId) return null;
   const orgId = rota.orgId;
@@ -227,14 +228,20 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
 
   return (
     <div className="organizacao-submenu mb-1" role="group" aria-label={`Seções de ${org.nome}`}>
-      <div
-        className="flex items-center gap-1.5 truncate"
-        style={{ padding: '6px 10px 4px 22px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--sidebar-foreground)' }}
+      <button
+        type="button"
+        className="flex w-full items-center gap-1.5 truncate text-left rounded hover:bg-[var(--sidebar-accent)]"
+        style={{ padding: '6px 10px 4px 22px', minHeight: 32, fontSize: '0.74rem', fontWeight: 700, color: 'var(--sidebar-foreground)' }}
         title={org.nome}
+        aria-label={`Seções de ${org.nome}`}
+        aria-expanded={aberta}
+        aria-controls={`menu-secoes-${orgId}`}
+        onClick={() => setAberta(v => !v)}
       >
-        <ChevronDown size={12} style={{ opacity: 0.7, flexShrink: 0 }} />
+        {aberta ? <ChevronDown size={12} className="shrink-0 opacity-70" /> : <ChevronRight size={12} className="shrink-0 opacity-70" />}
         <span className="truncate">{nomeCurtoOrg(org.nome)}</span>
-      </div>
+      </button>
+      <div id={`menu-secoes-${orgId}`} hidden={!aberta}>
       {SECOES_ORG.map(s => {
         const ativo = rota.secao === s.id || (s.id === 'projetos' && rota.secao === 'projeto');
         return (
@@ -258,6 +265,7 @@ function ArvoreOrganizacao({ rota, aoNavegar }: { rota: RotaOrg; aoNavegar: (r: 
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

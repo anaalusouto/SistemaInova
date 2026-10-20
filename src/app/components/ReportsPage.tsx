@@ -71,10 +71,14 @@ export function ReportsPage() {
     setTimeout(() => window.print(), 200);
   };
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (included.length === 0) { toast.error('Selecione ao menos um projeto para exportar.'); return; }
-    exportReportPdf(buildReportModel(title, included, selectedFields));
-    toast.success('PDF gerado.');
+    try {
+      await exportReportPdf(buildReportModel(title, included, selectedFields));
+      toast.success('PDF gerado e download iniciado.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível gerar o PDF.');
+    }
   };
 
   const handleExportCsv = () => {

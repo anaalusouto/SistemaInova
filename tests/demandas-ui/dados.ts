@@ -94,6 +94,35 @@ export const projeto = {
   orcamentoItens: [],
   orcamentoNotas: [],
 };
+// Reprodução dos números visuais da referência; continua sem acessar dados reais.
+if (typeof window !== "undefined" && new URLSearchParams(location.search).has("referencia")) {
+  const metaBase = structuredClone(projeto.goals[0]);
+  const etapaBase = metaBase.deliverables[0];
+  const atividadeBase = etapaBase.activities[0];
+  org.nome = "AASFLOR";
+  projeto.org = org.nome;
+  projeto.organizacao.nome = org.nome;
+  projeto.code = "18-2026";
+  projeto.name = "Conservando a floresta através da produção sustentável comunitária";
+  org.projetos[0].nome = projeto.name;
+  org.projetos[0].codigo = projeto.code;
+  projeto.budgetExecuted = 80244.69;
+  projeto.budgetApproved = 164285.71;
+  let etapaNumero = 0, atividadeNumero = 0;
+  projeto.goals = Array.from({ length: 3 }, (_, m) => ({ ...structuredClone(metaBase), id: `m${m + 1}`, name: `Meta sintética ${m + 1}`, order: m + 1,
+    deliverables: Array.from({ length: m === 0 ? 4 : 3 }, () => {
+      const e = etapaNumero++;
+      return { ...structuredClone(etapaBase), id: `e${e + 1}`, name: `Etapa sintética ${e + 1}`, order: e + 1,
+        activities: Array.from({ length: e < 3 ? 3 : 2 }, () => {
+          const a = ++atividadeNumero;
+          return { ...structuredClone(atividadeBase), id: `a${a}`, name: `Atividade sintética ${a}`, order: a, progress: 73 };
+        }),
+      };
+    }),
+  }));
+  projeto.risks = Array.from({ length: 14 }, (_, i) => ({ ...projeto.risks[0], id: `r${i + 1}`, title: `Risco sintético ${i + 1}`, goalId: "m1", stageId: "e1" }));
+}
+
 export const diagnostico = {
   id: "diag-demo",
   comunidadeId: orgId,

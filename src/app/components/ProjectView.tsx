@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { FileText, ClipboardList, Wallet, Info, ChevronDown } from "lucide-react";
+import { FileText, ClipboardList, DollarSign, Info, ChevronDown } from "lucide-react";
 import type { Project } from "../data/mockData";
-import { useStore } from "../store";
+import { useStore, type ProjectExt } from "../store";
 import { TituloNavegacao } from "./TituloNavegacao";
 import { ResumoProjetoTopo } from "./project-tabs/ResumoProjetoTopo";
 import { TabDescricao } from "./project-tabs/TabDescricao";
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
   { id: "plano", label: "Plano de Trabalho", icon: ClipboardList },
-  { id: "orcamento", label: "Orçamento", icon: Wallet },
+  { id: "orcamento", label: "Orçamento", icon: DollarSign },
 ] as const;
 interface ProjectViewProps {
   project: Project;
@@ -55,7 +55,7 @@ export function ProjectView({
   return (
     <div className="project-shell min-w-0">
       {!dentroDaOrganizacao && (
-        <TituloNavegacao nome={project.name} aoVoltar={onBack} rotulo={rotuloVoltar} />
+        <TituloNavegacao nome={(project as ProjectExt).organizacao?.nome ?? (project as ProjectExt).org ?? project.name} aoVoltar={onBack} rotulo={rotuloVoltar} />
       )}
       <section className="relative min-h-8 border-b pr-6" aria-label="Resumo do projeto">
         <button
@@ -93,7 +93,7 @@ export function ProjectView({
                 return;
               }
               mudarAba("plano");
-              setPedidoVisao((p) => ({ visao: "riscos", contador: (p?.contador ?? 0) + 1 }));
+              setPedidoVisao((p) => ({ visao: "riscos", somenteAbertos: true, contador: (p?.contador ?? 0) + 1 }));
             }}
           />
         </div>

@@ -204,7 +204,7 @@ export function exportReportXml(model: ReportModel) {
 }
 
 /** Gera um PDF vetorial (não é uma captura de tela) com o conteúdo completo do relatório. */
-export function exportReportPdf(model: ReportModel) {
+export async function exportReportPdf(model: ReportModel) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const marginX = 40;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -330,5 +330,5 @@ export function exportReportPdf(model: ReportModel) {
     doc.text(`Página ${i} de ${pageCount}`, pageWidth - marginX, pageHeight - 20, { align: 'right' });
   }
 
-  doc.save(`${slugify(model.title)}.pdf`);
+  await doc.save(`${slugify(model.title)}.pdf`, { returnPromise: true });
 }
