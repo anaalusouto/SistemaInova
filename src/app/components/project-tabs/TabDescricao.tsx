@@ -37,11 +37,11 @@ function Secao({ titulo, itens }: { titulo: string; itens: Item[] }) {
       >
         <h3>{titulo}</h3><ChevronDown size={16} className="shrink-0" aria-hidden />
       </summary>
-      <div className="flex min-w-0 flex-col gap-3.5 px-4 pb-4 sm:px-5 sm:pb-5">
+      <div className="project-description-fields px-4 pb-4 sm:px-5 sm:pb-5">
         {itens.map(item => {
           const vazio = item.valor === null || item.valor === undefined || String(item.valor).trim() === '';
           return (
-            <div key={item.rotulo}>
+            <div className="min-w-0" key={item.rotulo}>
               <div
                 style={{
                   fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-5)',

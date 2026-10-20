@@ -43,6 +43,9 @@ function LayoutPreview() {
         onToggleCollapsed={alternar}
       />
       <div className="min-h-0 min-w-0 flex-1 flex flex-col overflow-hidden">
+        <header className="cria-app-header flex shrink-0 items-center border-b px-4 font-semibold">
+          Boa tarde, Administrador!
+        </header>
         <div className="shrink-0 flex flex-wrap gap-2 border-b p-2 text-xs">
           <button className="lg:hidden" aria-label="Abrir menu" onClick={() => setAberto(true)}>
             Menu

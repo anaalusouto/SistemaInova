@@ -32,6 +32,13 @@ export const projeto = {
   startDate: "2026-01-01",
   endDate: "2026-12-31",
   objective: "Estruturar a comercialização",
+  plano: {
+    problematica: "Exemplo sintético: as famílias encontram dificuldades para organizar a produção e acessar os canais de comercialização da região.",
+    justificativa: "Exemplo sintético: a proposta prevê formação e organização coletiva para melhorar o planejamento da produção e o acesso aos mercados locais, respeitando as características de cada comunidade.",
+    localizacaoAbrangencia: "Comunidades fictícias da região de demonstração.",
+    diversidade: "Participação de diferentes grupos e gerações nas ações propostas.",
+    saberesLocais: "Valorização dos conhecimentos compartilhados pelas famílias e adaptação das atividades à realidade local. Dados exclusivamente sintéticos para testar a apresentação.",
+  },
   budgetApproved: 1000,
   budgetExecuted: 250,
   financialItems: [],

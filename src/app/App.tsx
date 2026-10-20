@@ -132,7 +132,7 @@ function AppShell() {
       />
       <div className="flex flex-1 min-h-0 min-w-0 flex-col overflow-hidden">
         <header
-          className="flex items-center gap-3 border-b px-4 h-16 flex-shrink-0"
+          className="cria-app-header flex items-center gap-3 border-b px-4 flex-shrink-0"
           style={{ borderColor: 'var(--border)', background: 'var(--background)' }}
         >
           <button

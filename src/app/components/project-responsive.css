@@ -45,6 +45,16 @@
   }
 }
 .project-plan-toolbar button { min-height: 36px; }
+.project-description-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem 2rem;
+  overflow-wrap: anywhere;
+}
+@container cria-project (min-width: 48rem) {
+  .project-description-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .project-description-fields > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
 .project-disclosure > summary { list-style: none; }
 .project-disclosure > summary::-webkit-details-marker { display: none; }
 .project-disclosure > summary:hover { background: var(--surface-1); }

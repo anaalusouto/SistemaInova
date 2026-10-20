@@ -1,0 +1,20 @@
+Descrição e cabeçalhos — 20/10/2026
+
+Campos das seções da Descrição usam duas colunas a partir de 48rem de largura
+disponível no projeto. Em espaços menores, usam uma coluna. O último campo
+sem par ocupa a largura inteira, assim como as seções com um único campo.
+Textos longos quebram sem transbordar; dados e regras permanecem iguais.
+
+Cabeçalho da saudação e bloco da logo compartilham a altura de 64px e borda
+de 1px, inclusive com o menu recolhido. A logo mantém sua proporção original.
+
+Validação em fixture local com componentes reais e dados sintéticos:
+- Desktop: duas colunas; ambas as divisórias em y=64px com menu aberto/fechado.
+- Celular de 390px: uma coluna, sem transbordamento horizontal da página.
+- Celular de 320px com fonte de 20px: uma coluna, sem transbordamento horizontal.
+- 26 testes de organização/interface e requisitos dos áudios passaram.
+- TypeScript, ESLint dos arquivos TSX/TS alterados, build e git diff --check passaram.
+- Build mantém avisos existentes de tamanho de chunks/importações dinâmicas.
+
+Evidência: evidencias/descricao-cabecalho-20261020/desktop.jpg.
+Sem alteração de banco, serviços externos, commit, push ou publicação.
