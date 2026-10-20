@@ -17,56 +17,60 @@ import { type Project } from '../../data/mockData';
 import { type ProjectExt } from '../../store';
 import { divergenciaDeCronograma, NAO_INFORMADO } from '../../lib/planoTrabalho';
 import { AvisoDivergenciaCronograma } from './ProjectSummaryHeader';
+import { formatarTextoDescricao } from '../../lib/textoDescricao';
 
 interface Item {
   rotulo: string;
   valor: string | number | undefined | null;
 }
 
+function TextoProposta({ valor, rotulo }: { valor: string | number; rotulo: string }) {
+  const { orientacao, blocos } = formatarTextoDescricao(valor, rotulo);
+  return (
+    <div className="project-description-text">
+      {orientacao && (
+        <details className="project-description-guidance">
+          <summary>Orientação do formulário original</summary>
+          <p>{orientacao}</p>
+        </details>
+      )}
+      {blocos.map((bloco, indice) => {
+        if (bloco.tipo === 'paragrafo') return <p key={indice}>{bloco.texto}</p>;
+        const Lista = bloco.ordenada ? 'ol' : 'ul';
+        return <Lista key={indice}>{bloco.itens.map((item, i) => (
+          <li key={i} value={item.numero}>{item.texto}</li>
+        ))}</Lista>;
+      })}
+      {blocos.length === 0 && <p className="project-description-empty">{NAO_INFORMADO}</p>}
+    </div>
+  );
+}
+
 /** Um bloco de texto da proposta. Campo vazio aparece como ausência declarada (RF-002). */
 function Secao({ titulo, itens }: { titulo: string; itens: Item[] }) {
+  const preenchidos = itens.filter(item => item.valor !== null && item.valor !== undefined && String(item.valor).trim() !== '');
+  const ausentes = itens.filter(item => !preenchidos.includes(item));
   // Seção inteira vazia continua visível: sumir com ela esconderia do leitor
   // que a proposta não trouxe aquela informação.
   return (
-    <details open className="project-disclosure min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
-      <summary className="flex cursor-pointer items-center justify-between gap-3 p-4 sm:p-5"
-        style={{
-          fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.9rem',
-          color: 'var(--ink-1)',
-        }}
-      >
+    <details open className="project-disclosure project-description-section min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+      <summary className="flex cursor-pointer items-center justify-between gap-3 p-4 sm:p-5">
         <h3>{titulo}</h3><ChevronDown size={16} className="shrink-0" aria-hidden />
       </summary>
-      <div className="project-description-fields px-4 pb-4 sm:px-5 sm:pb-5">
-        {itens.map(item => {
-          const vazio = item.valor === null || item.valor === undefined || String(item.valor).trim() === '';
-          return (
-            <div className="min-w-0" key={item.rotulo}>
-              <div
-                style={{
-                  fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-5)',
-                  textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3,
-                }}
-              >
-                {item.rotulo}
-              </div>
-              {vazio ? (
-                <div style={{ fontSize: '0.8rem', color: 'var(--ink-5)', fontStyle: 'italic' }}>
-                  {NAO_INFORMADO}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    fontSize: '0.82rem', color: 'var(--ink-2)', lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
-                  }}
-                >
-                  {String(item.valor)}
-                </div>
-              )}
-            </div>
-          );
-        })}
+      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+        {preenchidos.length > 0 && <div className="project-description-fields">
+          {preenchidos.map(item => (
+            <section className="project-description-field" key={item.rotulo} aria-label={item.rotulo}>
+              <h4>{item.rotulo}</h4>
+              <TextoProposta valor={item.valor!} rotulo={item.rotulo} />
+            </section>
+          ))}
+        </div>}
+        {ausentes.length > 0 && <dl className="project-description-missing" aria-label="Campos não informados">
+          {ausentes.map(item => <div key={item.rotulo}>
+            <dt>{item.rotulo}</dt><dd>{NAO_INFORMADO}</dd>
+          </div>)}
+        </dl>}
       </div>
     </details>
   );

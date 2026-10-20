@@ -48,9 +48,29 @@
 .project-description-fields {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 1.25rem 2rem;
   overflow-wrap: anywhere;
 }
+.project-description-section > summary { color: var(--ink-1); font-size: 1rem; font-weight: 700; line-height: 1.5; }
+.project-description-section > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: -3px; border-radius: 12px; }
+.project-description-field { min-width: 0; }
+.project-description-field h4 { color: var(--ink-2); font-size: .875rem; font-weight: 650; line-height: 1.5; margin: 0 0 .5rem; }
+.project-description-text { color: var(--ink-3); font-size: .9rem; line-height: 1.75; text-align: start; }
+.project-description-text :is(p, ul, ol) { margin: 0 0 .85em; }
+.project-description-text > :last-child { margin-bottom: 0; }
+.project-description-text :is(ul, ol) { padding-inline-start: 1.5em; }
+.project-description-text ul { list-style: disc; }
+.project-description-text ol { list-style: decimal; }
+.project-description-text li { padding-inline-start: .2em; margin-bottom: .45em; }
+.project-description-text li::marker { color: var(--brand); font-weight: 600; }
+.project-description-guidance { background: var(--surface-2); border-radius: 6px; padding: .5rem .75rem; margin-bottom: .85rem; font-size: .8rem; }
+.project-description-guidance > summary { cursor: pointer; color: var(--ink-4); font-weight: 600; }
+.project-description-guidance > p { margin-top: .5rem; }
+.project-description-missing { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .75rem 1.5rem; padding: .85rem 1rem; margin: 0; background: var(--surface-1); border-radius: 8px; overflow-wrap: anywhere; }
+.project-description-missing dt { color: var(--ink-3); font-size: .8rem; font-weight: 600; line-height: 1.5; }
+.project-description-missing dd, .project-description-empty { color: var(--ink-4); font-size: .8rem; margin: .2rem 0 0; }
+.project-description-fields + .project-description-missing { margin-top: 1.25rem; }
 @container cria-project (min-width: 48rem) {
   .project-description-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .project-description-fields > :last-child:nth-child(odd) { grid-column: 1 / -1; }

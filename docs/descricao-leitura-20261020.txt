@@ -1,0 +1,31 @@
+Formatação de leitura da Descrição — 20/10/2026
+
+Diagnóstico: textos em src/app/data/inovaProjetos.ts conservam quebras de linha,
+espaços de alinhamento e instruções do formulário dos PDFs importados. A antiga
+renderização pre-wrap reproduzia esses espaços e quebras nas telas menores.
+
+Alterações aplicadas somente na apresentação:
+- Refluxo de linhas e redução de espaços excedentes, preservando parágrafos.
+- Listas semânticas com marcadores e números originais, incluindo continuações.
+- Título inicial idêntico ao rótulo exibido uma única vez.
+- Instrução inicial entre parênteses separada em controle expansível acessível.
+  O texto original continua disponível. Resposta ausente segue explícita.
+- Títulos legíveis, texto de .9rem com entrelinha 1.75, espaçamentos consistentes.
+- Campos ausentes em bloco compacto com cada rótulo e “Não informado”.
+- Grade responsiva de uma ou duas colunas; seções e campos mantidos.
+
+Nenhuma gravação, reescrita de conteúdo ou preenchimento de informação ausente.
+Texto é escapado pelo React; HTML fornecido no conteúdo não é executado.
+
+Validação:
+- 30 testes passaram: textoDescricao, organizacaoInterface e requisitosAudios.
+- TypeScript, lint dos TS/TSX alterados, build e git diff --check passaram.
+- Build mantém avisos preexistentes de chunks/importações dinâmicas.
+- Navegador local com componentes reais e conteúdo sintético que reproduz
+  espaços e quebras dos PDFs: desktop, listas, ausências e orientação via Enter.
+- Celular de 390px e 320px com fonte de 20px sem transbordamento da página/campos.
+- Capturas em docs/evidencias/descricao-leitura-20261020/.
+
+Como conferir: abrir organização > projeto > Descrição e verificar campos longos,
+listas e campos sem informação; expandir orientação quando disponível; repetir
+com janela estreita e texto ampliado. Nenhuma publicação foi realizada.

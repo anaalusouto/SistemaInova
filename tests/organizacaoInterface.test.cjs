@@ -59,6 +59,25 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
   return load(arquivo);
 }
 
+test('descrição apresenta texto estruturado, ausências explícitas e conteúdo escapado', () => {
+  const { TabDescricao } = carregarInterface('src/app/components/project-tabs/TabDescricao.tsx');
+  const project = { goals: [], endDate: '', objective: 'Objetivo', plano: {
+    problematica: 'Problemática\n\nTexto   com\nquebra de PDF.\n\n• Primeiro\n• Segundo',
+    justificativa: '<script>alert("texto")</script>',
+    beneficiadosDiretos: 0,
+  } };
+  const antes = JSON.stringify(project);
+  const html = renderToStaticMarkup(React.createElement(TabDescricao, { project }));
+  assert.match(html, /<p>Texto com quebra de PDF\.<\/p>/);
+  assert.match(html, /<ul><li>Primeiro<\/li><li>Segundo<\/li><\/ul>/);
+  assert.doesNotMatch(html, /<script>/);
+  assert.match(html, /&lt;script&gt;/);
+  assert.match(html, /<dt>Estratégia<\/dt><dd>Não informado<\/dd>/);
+  assert.match(html, /0 pessoas/);
+  assert.match(html, /previstos/);
+  assert.equal(JSON.stringify(project), antes);
+});
+
 test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   const { Sidebar } = carregarInterface('src/app/components/Sidebar.tsx');
   const html = renderToStaticMarkup(React.createElement(Sidebar, {
