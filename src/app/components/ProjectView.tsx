@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ArrowLeft, FileText, ClipboardList, Wallet, Info, ChevronDown } from "lucide-react";
+import { FileText, ClipboardList, Wallet, Info, ChevronDown } from "lucide-react";
 import type { Project } from "../data/mockData";
-import { useStore, type ProjectExt } from "../store";
+import { useStore } from "../store";
+import { TituloNavegacao } from "./TituloNavegacao";
 import { ResumoProjetoTopo } from "./project-tabs/ResumoProjetoTopo";
 import { TabDescricao } from "./project-tabs/TabDescricao";
 import { TabPlanoTrabalho, type PedidoVisaoPlano } from "./plano/TabPlanoTrabalho";
@@ -54,20 +55,7 @@ export function ProjectView({
   return (
     <div className="project-shell min-w-0">
       {!dentroDaOrganizacao && (
-        <div className="px-4 sm:px-6 py-3 border-b">
-          <nav aria-label="Caminho de navegação" className="mb-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <button type="button" onClick={onBack} className="flex shrink-0 items-center gap-1 hover:underline">
-            <ArrowLeft size={13} />
-            {rotuloVoltar}
-          </button>
-          <span aria-hidden>/</span><span aria-current="page" className="min-w-0 break-words [overflow-wrap:anywhere]">{project.name}</span>
-          </nav>
-          <h1 className="text-xl font-bold break-words">
-            {(project as ProjectExt).organizacao?.nome ??
-              (project as ProjectExt).org ??
-              project.name}
-          </h1>
-        </div>
+        <TituloNavegacao nome={project.name} aoVoltar={onBack} rotulo={rotuloVoltar} />
       )}
       <section className="border-b" aria-label="Resumo do projeto">
         <button
@@ -87,8 +75,22 @@ export function ProjectView({
         >
           <ResumoProjetoTopo
             project={project}
+            aoDescricao={() => mudarAba("descricao")}
+            aoPlano={() => {
+              if (haPendencias) {
+                toast.error("Salve ou cancele as linhas alteradas antes de navegar pelo resumo.");
+                return;
+              }
+              mudarAba("plano");
+              setPedidoVisao((p) => ({ visao: "tabela", contador: (p?.contador ?? 0) + 1 }));
+            }}
+            aoOrcamento={() => mudarAba("orcamento")}
             bloqueado={haPendencias}
             aoRiscos={() => {
+              if (haPendencias) {
+                toast.error("Salve ou cancele as linhas alteradas antes de navegar pelo resumo.");
+                return;
+              }
               mudarAba("plano");
               setPedidoVisao((p) => ({ visao: "riscos", contador: (p?.contador ?? 0) + 1 }));
             }}

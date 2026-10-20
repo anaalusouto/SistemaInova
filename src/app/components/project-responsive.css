@@ -18,11 +18,14 @@
   grid-column: 1 / -1;
 }
 .project-summary-value { grid-column: 1 / -1; grid-row: 3; }
-.project-summary-grid > button {
+.project-summary-grid > button:last-child {
   min-height: 44px;
   align-self: center;
   align-items: center;
 }
+.project-summary-link { border-radius: 6px; padding: 4px; margin: -4px; min-height: 44px; }
+.project-summary-link:hover { background: var(--surface-2); }
+.project-summary-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .project-summary-grid button svg {
   flex-shrink: 0;
 }

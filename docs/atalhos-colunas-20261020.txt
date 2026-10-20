@@ -1,0 +1,34 @@
+CRIA — atalhos do resumo, título e larguras — 20/10/2026
+
+Resultado
+- Projeto no resumo abre Descrição; Andamento abre Plano de Trabalho/Tabela;
+  Valor abre Orçamento. Botões ocupam a área inteira de cada indicador, com
+  foco e indicação visual ao passar o mouse. Riscos mantém seu destino próprio.
+- Alterações pendentes continuam bloqueando navegação que abandona o rascunho.
+- Título principal: ORGANIZAÇÕES ← NOME DO PROJETO. Organizações retorna à
+  lista. Removido o breadcrumb duplicado abaixo do título.
+- Removidos os ícones extras de detalhes de metas, etapas e atividades.
+  O texto do registro abre os detalhes; a seta existente recolhe os filhos.
+- Cada cabeçalho da tabela tem uma alça na borda direita. Arrastar altera só
+  aquela coluna; as demais conservam a largura. A tabela pode rolar horizontalmente.
+- Larguras iniciais legíveis por tipo de conteúdo; campos longos ganham mais
+  espaço. Ajuste também por setas do teclado, Shift para passo maior, Home/End
+  para os limites. Escape cancela um arraste em curso.
+- Restaurar larguras retorna ao formato inicial. Ajuste mantido durante a
+  montagem da visão atual; não é salvo no banco nem entre recarregamentos.
+- No celular, a tabela permanece em fichas e esconde as alças, sem ampliar
+  a largura da página ao reutilizar medidas do desktop.
+
+Verificações
+- Atalhos conferidos no navegador: três destinos com aria-current=page.
+- Arraste real: Atividade de 260px para 360px; outras 12 colunas sem mudança.
+- Teclado: ArrowLeft reduziu de 360px para 344px.
+- Nenhum ícone ExternalLink nas linhas da tabela.
+- Mobile 390px: documento com 390px, fichas dentro do contêiner e alças ocultas.
+- 23 testes passaram, incluindo arraste isolado, limites, cancelamento,
+  restauração, destinos do resumo e proteção de rascunhos.
+- TypeScript, ESLint dos TSX/TS alterados, build e git diff --check passaram.
+- Build mantém avisos preexistentes de chunks e importações.
+
+Evidência: docs/evidencias/atalhos-colunas-20261020/{desktop,mobile}.jpg.
+Sem mudança no banco, serviços externos, publicação, commit ou push.

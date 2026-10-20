@@ -221,7 +221,9 @@ test('ficha mantém um único H1 e isola diagnóstico e documentos por organiza�
     const { FichaOrganizacao } = carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx', { org, readOnly: true });
     const html = renderToStaticMarkup(React.createElement(FichaOrganizacao, { rota: { orgId: id, secao: 'parecer', projetoId: null }, aoNavegar: () => {} }));
     assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
-    assert.ok(html.includes(`>${id}</h1>`));
+    const titulo = html.match(/<h1\b[^>]*>(.*?)<\/h1>/)?.[1] ?? '';
+    assert.ok(titulo.includes('Organizações'));
+    assert.ok(titulo.includes(`>${id}</span>`));
     assert.ok(html.includes(`data-diagnostico-org="${id}"`));
     assert.ok(html.includes(`data-documentos-org="${id}"`));
     assert.ok(html.includes('data-instrumento="parecer"'));
@@ -229,11 +231,14 @@ test('ficha mantém um único H1 e isola diagnóstico e documentos por organiza�
   }
 });
 
-test('projeto mostra organização e abas sem acesso antigo ao parecer técnico', () => {
+test('projeto mostra Organizações e nome do projeto no título, com abas sem parecer antigo', () => {
   const project = { id: 101, name: 'Projeto A', code: '01-2026', financier: 'Financiador', status: 'Não iniciado', risks: [], changes: [], organizacao: { id: 'org-a', nome: 'Org A' } };
   const { ProjectView } = carregarInterface('src/app/components/ProjectView.tsx', { readOnly: true });
   const html = renderToStaticMarkup(React.createElement(ProjectView, { project, onBack: () => {} }));
-  assert.ok(html.includes('Org A</h1>'));
+  const titulo = html.match(/<h1\b[^>]*>(.*?)<\/h1>/)?.[1] ?? '';
+  assert.ok(titulo.includes('Organizações'));
+  assert.ok(titulo.includes('Projeto A</span>'));
+  assert.ok(!html.includes('Caminho de navegação'), 'Sem breadcrumb duplicado abaixo do título');
   assert.ok(!html.includes('Projeto A</h2>'));
   assert.ok(html.includes('Resumo do projeto'));
   for (const aba of ['Descrição', 'Plano de Trabalho', 'Orçamento']) assert.ok(html.includes(aba));

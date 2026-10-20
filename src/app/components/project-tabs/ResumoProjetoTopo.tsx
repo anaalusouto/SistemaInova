@@ -9,10 +9,16 @@ import { useFormatoPlano } from "../../theme/useFormatoPlano";
 export function ResumoProjetoTopo({
   project,
   aoRiscos,
+  aoDescricao,
+  aoPlano,
+  aoOrcamento,
   bloqueado = false,
 }: {
   project: Project;
   aoRiscos: () => void;
+  aoDescricao: () => void;
+  aoPlano: () => void;
+  aoOrcamento: () => void;
   bloqueado?: boolean;
 }) {
   const [baixando, setBaixando] = useState(false);
@@ -44,17 +50,17 @@ export function ResumoProjetoTopo({
   };
   return (
     <div className="project-summary-grid px-4 sm:px-6 pb-3 items-center gap-4">
-      <div className="min-w-0">
+      <button type="button" onClick={aoDescricao} aria-label="Projeto: abrir descrição" className="project-summary-link min-w-0 text-left">
         <p className="text-xs text-muted-foreground">Projeto</p>
         <p className="text-xs break-words">
           {project.code} · {project.name}
         </p>
-      </div>
-      <div>
+      </button>
+      <button type="button" onClick={aoPlano} aria-label="Andamento: abrir plano de trabalho" className="project-summary-link text-left">
         <p className="text-xs text-muted-foreground">Andamento</p>
         <p className="text-xs">{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</p>
-      </div>
-      <div className="project-summary-value">
+      </button>
+      <button type="button" onClick={aoOrcamento} aria-label="Valor: abrir orçamento" className="project-summary-link project-summary-value text-left">
         <p className="text-xs text-muted-foreground">Valor executado / proposto (reais)</p>
         <p className="text-xs font-mono">
           {project.budgetExecuted > 0 ||
@@ -63,7 +69,7 @@ export function ResumoProjetoTopo({
             : "Não informado"}{" "}
           / {project.budgetApproved > 0 ? moeda(project.budgetApproved) : "Não informado"}
         </p>
-      </div>
+      </button>
       <div>
         <p className="text-xs text-muted-foreground">Riscos</p>
         <button

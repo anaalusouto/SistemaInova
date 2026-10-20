@@ -65,7 +65,7 @@ import { NavegacaoPlano, type SelecaoPlano } from "./NavegacaoPlano";
 import { ReclassificarRegistro } from "./ReclassificarRegistro";
 
 type Visao = "tabela" | "gantt" | "kanban" | "riscos" | "ordenar";
-export type PedidoVisaoPlano = { visao: "riscos" | "ordenar"; contador: number };
+export type PedidoVisaoPlano = { visao: "tabela" | "riscos" | "ordenar"; contador: number };
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
   { id: "tabela", rotulo: "Tabela", icone: Table2, disponivel: true },

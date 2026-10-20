@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import "../responsive-tables.css";
-import { ChevronDown, ChevronRight, Paperclip, ShieldAlert, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, Paperclip, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import type {
   Goal,
@@ -17,6 +17,7 @@ import { indiceConclusao } from "../../lib/conclusaoPlano";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { dadosDaAtividade, errosDaEdicao } from "../../lib/edicaoLinhaPlano";
 import { COLUNAS_PLANO, type ColunaPlano } from "../../lib/formatoPlano";
+import { useLargurasTabela, larguraInicialColuna } from "./useLargurasTabela";
 import {
   estaAtrasada,
   hojeISO,
@@ -82,8 +83,7 @@ const vazio = (nome: string): DadosLinha => ({
 });
 const ausente = <span className="text-muted-foreground">—</span>;
 const data = (v: string | null) =>
-  v ? <span className="whitespace-nowrap text-xs font-mono">{formatDateOnly(v)}</span> : ausente;
-const pesoColuna = (c: ColunaPlano) => c === "Atividade" ? 3 : c === "Observações / resultado esperado" || c === "Justificativa de atraso" ? 2 : c === "Anexo" ? 0.7 : 1;
+  v ? <span className="text-xs font-mono [overflow-wrap:anywhere]">{formatDateOnly(v)}</span> : ausente;
 
 /** Uma única grade para todas as organizações: cada valor ocupa sua coluna. */
 export function VisaoTabela({
@@ -106,6 +106,7 @@ export function VisaoTabela({
 }: VisaoTabelaProps) {
   const { readOnly } = useAuth();
   const store = useStore();
+  const { tabelaRef, larguras, larguraTotal, larguraInicialTotal, controles, restaurar } = useLargurasTabela(colunas);
   const conclusoes = useMemo(
     () => indiceConclusao(metasCompletas ?? metas),
     [metasCompletas, metas],
@@ -309,23 +310,8 @@ export function VisaoTabela({
               }}
               className="min-w-0"
             >
-              {!emEdicao ? <div className="flex min-w-0 items-start gap-1">
-                <button type="button"
-                  className="plano-registro-cabecalho plano-registro-titulo flex-1 min-w-0 rounded text-left hover:bg-accent focus-visible:outline-2"
-                  onClick={() => retratil ? alternarRecolhido(l.id) : abrirDetalhe()}
-                  disabled={editar}
-                  aria-expanded={retratil ? !recolhidos.has(l.id) : undefined}
-                  aria-label={retratil ? `${recolhidos.has(l.id) ? "Expandir" : "Recolher"} ${l.tipo}: ${l.dados.nome}` : `Abrir ${l.tipo}: ${l.dados.nome}`}
-                >
-                  <span className="plano-registro-expandir" aria-hidden>{retratil && (recolhidos.has(l.id) ? <ChevronRight size={13} /> : <ChevronDown size={13} />)}</span>
-                  <span className="plano-registro-numero text-xs text-muted-foreground">{codigos.get(l.id)}</span>
-                  <span className={`plano-registro-nome ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}>{d.nome}</span>
-                </button>
-                {retratil && <button type="button" onClick={abrirDetalhe}
-                  aria-label={`Abrir ${l.tipo}: ${l.dados.nome}`} title="Ver detalhes"
-                  className="shrink-0 rounded p-1 hover:bg-accent"><ExternalLink size={14} /></button>}
-              </div> : <div className="plano-registro-titulo">
-                {(estrutura || (atividade && (l.atividade?.tasks.length ?? 0) > 0)) && (
+              <div className="plano-registro-titulo">
+                {retratil && (
                   <button
                     type="button"
                     disabled={editar}
@@ -346,8 +332,10 @@ export function VisaoTabela({
                 <span className="plano-registro-numero text-xs text-muted-foreground">
                   {codigos.get(l.id)}
                 </span>
-                {campo("nome")}
-              </div>}
+                {emEdicao ? campo("nome") : <button type="button" onClick={abrirDetalhe}
+                  aria-label={`Abrir ${l.tipo}: ${l.dados.nome}`}
+                  className={`plano-registro-nome text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}>{d.nome}</button>}
+              </div>
               {!readOnly &&
                 !administrativo &&
                 !somenteEdicaoGlobal &&
@@ -573,28 +561,36 @@ export function VisaoTabela({
       <p className="p-6 text-sm text-muted-foreground">Nenhum registro encontrado neste filtro.</p>
     );
   return (
+    <div className="min-w-0">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2 text-xs text-muted-foreground">
+      <span>Arraste a borda direita do cabeçalho para ajustar cada coluna.</span>
+      {larguras && <button type="button" className="underline" onClick={restaurar}>Restaurar larguras</button>}
+    </div>
     <div className="inova-table-frame overflow-x-auto">
       <table
+        ref={tabelaRef}
         className="inova-table-cards w-full"
         aria-label="Plano de trabalho"
-        style={{ minWidth: 1100, tableLayout: "fixed" }}
+        style={{ width: larguraTotal ?? `max(100%, ${larguraInicialTotal}px)`, tableLayout: "fixed" }}
       >
+        <colgroup>{colunas.map(c => <col key={c} style={{ width: larguras?.[c] ?? larguraInicialColuna(c) }} />)}</colgroup>
         <thead>
           <tr>
             {colunas.map((c) => (
               <th
                 key={c}
                 scope="col"
-                className="p-2 text-left text-[10px] uppercase text-muted-foreground border-b"
-                style={{ width: `${pesoColuna(c) / colunas.reduce((s, coluna) => s + pesoColuna(coluna), 0) * 100}%` }}
+                className="relative p-2 pr-3 text-left text-[10px] uppercase text-muted-foreground border-b"
               >
                 {c}
+                <div {...controles(c)} className="plano-resize-handle" />
               </th>
             ))}
           </tr>
         </thead>
         <tbody>{linhas.map(renderLinha)}</tbody>
       </table>
+    </div>
     </div>
   );
 }

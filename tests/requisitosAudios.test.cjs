@@ -31,6 +31,38 @@ const atividade = { id: 'a', name: 'Reunião comunitária', responsible: 'LEGADO
   nextStep: 'Enviar convite', nextStepOwner: 'Maria', nextStepDue: '2026-10-03', riskOriginId: null, tasks: [] };
 const etapa = { id: 'e', name: 'Etapa', plannedStart: '2026-10-01', plannedEnd: '2026-10-31', actualStart: null, actualEnd: '2026-10-31', activities: [atividade] };
 
+test('colunas: arraste e teclado mudam só a coluna escolhida, com limites, cancelamento e restauração', () => {
+  let indice = 0;
+  const estados = [];
+  const hooks = {
+    useRef(valor) { const i = indice++; return estados[i] ??= { current: valor }; },
+    useState(valor) { const i = indice++; if (!(i in estados)) estados[i] = valor;
+      return [estados[i], novo => { estados[i] = novo; }]; },
+  };
+  const { useLargurasTabela } = carregar('src/app/components/plano/useLargurasTabela.ts', { react: hooks });
+  const render = () => { indice = 0; return useLargurasTabela(['Atividade', 'Responsável']); };
+  let tabela = render();
+  tabela.tabelaRef.current = { tHead: { rows: [{ cells: [300, 200].map(width => ({ getBoundingClientRect: () => ({ width }) })) }] } };
+  const evento = { button: 0, clientX: 100, pointerId: 1, preventDefault() {}, currentTarget: { setPointerCapture() {} } };
+  tabela.controles('Atividade').onPointerDown(evento);
+  tabela.controles('Atividade').onPointerMove({ clientX: 180 });
+  tabela = render();
+  assert.deepEqual(tabela.larguras, { Atividade: 380, Responsável: 200 });
+  assert.equal(tabela.larguraTotal, 580);
+  tabela.controles('Atividade').onPointerMove({ clientX: -1000 });
+  assert.equal(render().larguras.Atividade, 160);
+  tabela.controles('Atividade').onKeyDown({ key: 'Escape' });
+  assert.equal(render().larguras, null);
+  tabela.controles('Responsável').onKeyDown({ key: 'ArrowRight', preventDefault() {} });
+  assert.deepEqual(render().larguras, { Atividade: 300, Responsável: 216 });
+  tabela.controles('Responsável').onKeyDown({ key: 'Home', preventDefault() {} });
+  assert.equal(render().larguras.Responsável, 40);
+  tabela.controles('Responsável').onKeyDown({ key: 'End', preventDefault() {} });
+  assert.equal(render().larguras.Responsável, 1200);
+  tabela = render(); tabela.restaurar();
+  assert.equal(render().larguras, null);
+});
+
 test('demanda 19: formato recupera dados inválidos e nunca elimina nem duplica colunas', () => {
   const { validarFormatoPlano, COLUNAS_PLANO } = carregar('src/app/lib/formatoPlano.ts');
   for (const raw of [null, [], {colunas:['Status','Status','Inválida'],ordemCampos:{atividade:['name','name','<script>']}}]) {
@@ -57,7 +89,7 @@ test('demanda 19: cada nível mantém o mesmo número de células e o risco fica
 
 test('demanda 19: edição global salva campos de meta, etapa, atividade e tarefa sem perder vínculos', async () => {
   let indice=0;const estados=[], salvos=[];
-  const hooks={...React,useMemo:f=>f(),useState(inicial){const i=indice++;if(!(i in estados))estados[i]=inicial;return[estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];}};
+  const hooks={...React,useMemo:f=>f(),useRef:v=>({current:v}),useState(inicial){const i=indice++;if(!(i in estados))estados[i]=inicial;return[estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];}};
   const {VisaoTabela}=carregar('src/app/components/plano/VisaoTabela.tsx',{
     react:hooks,'../../auth/authStore':{useAuth:()=>({readOnly:false})},
     '../../store':{useStore:()=>({updateAtividade:async(id,d)=>salvos.push({tipo:'atividade',id,d}),saveMeta:async d=>salvos.push({tipo:'meta',d}),savePeriodoEtapa:async d=>salvos.push({tipo:'etapa',d}),renameTarefa:async(id,nome)=>salvos.push({tipo:'tarefa',id,d:{nome}})})},sonner:{toast:{success(){}}},
@@ -125,6 +157,7 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
     './project-tabs/TabFinanceiro': { TabFinanceiro: () => null },
     './project-tabs/TabMudancas': { TabMudancas: () => null },
     './DocumentosRegistro': { DocumentosRegistro: () => null },
+    sonner: { toast: { error() {} } },
   });
   const render = () => { indice = 0; return ProjectView({ project: p, onBack() {}, aoEncaminhamentos() { saidas++; },
     ...(controlada ? { abaAtual: rota.aba, focoAtual: rota.foco, aoMudarAba(aba, foco) { rota = { aba, foco }; } } : {}),
@@ -143,6 +176,14 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
   resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],true);
   achar(render(), e => e.type === 'button' && e.props.children?.includes?.('Plano de Trabalho')).props.onClick();
   assert.ok(achar(render(), e => e.type === Plano));
+  const atalhos = () => achar(render(), e => typeof e.props?.aoDescricao === 'function').props;
+  const abaAtiva = nome => achar(render(), e => e.type === 'button' && e.props.children?.includes?.(nome)).props['aria-current'];
+  atalhos().aoDescricao(); assert.equal(abaAtiva('Descrição'), 'page');
+  atalhos().aoOrcamento(); assert.equal(abaAtiva('Orçamento'), 'page');
+  atalhos().aoPlano(); assert.equal(abaAtiva('Plano de Trabalho'), 'page');
+  assert.equal(achar(render(), e => e.type === Plano).props.pedidoVisao.visao, 'tabela');
+  achar(render(), e => e.type === Plano).props.aoPendencias(true);
+  atalhos().aoDescricao(); assert.equal(abaAtiva('Plano de Trabalho'), 'page', 'Rascunhos bloqueiam a saída pelos atalhos');
   assert.equal(achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos'), undefined);
   assert.equal(saidas, 0);
   }

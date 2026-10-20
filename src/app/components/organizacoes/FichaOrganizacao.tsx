@@ -19,6 +19,7 @@ import { NotasDaOrganizacao } from './NotasDaOrganizacao';
 import { DiagnosticoModule } from '../DiagnosticoModule';
 import { DocumentosRegistro } from '../DocumentosRegistro';
 import { ProjectView } from '../ProjectView';
+import { TituloNavegacao } from '../TituloNavegacao';
 import { useStore } from '../../store';
 import { NAO_INFORMADO, ouNaoInformado, type OrganizacaoFicha } from '../../lib/organizacoes';
 import { ROTA_INICIO, SECOES_ORG, resolverProjetoOrg, type RotaOrg } from '../../lib/navegacaoOrg';
@@ -62,13 +63,9 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
-      <h1 className="px-4 sm:px-7 py-3 border-b flex-shrink-0"
-        style={{ background: 'var(--surface-0)', borderColor: 'var(--border)', fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--ink-1)', lineHeight: 1.25, overflowWrap: 'anywhere' }}>
-        {org.nome}
-      </h1>
+      <div className="shrink-0"><TituloNavegacao nome={tituloAtual} aoVoltar={() => aoNavegar(ROTA_INICIO)} /></div>
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
-      <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
-        <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} atual={tituloAtual} />
+      <div className="lg:hidden px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
 
 
         {/* No desktop a troca de seção é o menu lateral; aqui, só no celular. */}

@@ -7,8 +7,6 @@
   gap: 4px;
   line-height: 1.5;
 }
-.plano-registro-cabecalho { width: 100%; }
-.plano-registro-cabecalho .plano-registro-nome { grid-column: 3; min-width: 0; }
 .plano-registro-expandir {
   grid-column: 1;
   display: flex;
@@ -48,12 +46,33 @@
   min-width: 0;
   max-width: 100%;
 }
+.plano-resize-handle {
+  position: absolute;
+  inset-block: 0;
+  right: -4px;
+  width: 9px;
+  z-index: 1;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+.plano-resize-handle::after {
+  content: "";
+  position: absolute;
+  inset-block: 6px;
+  left: 4px;
+  width: 1px;
+  background: var(--border);
+}
+.plano-resize-handle:is(:hover, :focus-visible)::after { width: 3px; background: var(--brand); }
+.plano-resize-handle:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
 @container inova-table (max-width: 63.999rem) {
   .inova-table-cards {
     display: block;
-    width: 100%;
+    width: 100% !important;
     min-width: 0 !important;
   }
+  .inova-table-cards colgroup, .inova-table-cards .plano-resize-handle { display: none; }
   .inova-table-cards thead {
     position: absolute;
     width: 1px;
