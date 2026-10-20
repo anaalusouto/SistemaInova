@@ -18,6 +18,14 @@
   grid-column: 1 / -1;
 }
 .project-summary-value { grid-column: 1 / -1; }
+.project-summary-toggle {
+  left: 0;
+  bottom: 0;
+  height: 24px;
+  transform: translateY(100%);
+  border-radius: 0 0 8px 0;
+}
+.project-tabs { padding-inline-start: max(1.75rem, 28px); }
 .project-summary-grid > button:last-child {
   min-height: 44px;
   align-self: center;

@@ -1,0 +1,20 @@
+Controle do resumo — 20/10/2026
+
+Controle movido para a esquerda e encaixado na divisória inferior da faixa.
+Retirados altura mínima e recuo lateral reservados ao controle anterior.
+Quando fechado, o resumo ocupa apenas sua borda e as abas ficam imediatamente
+abaixo, sem faixa vazia. O controle se sobrepõe à faixa das abas, sem reservar
+altura própria; o recuo horizontal das abas evita colisão em telas estreitas.
+O botão fica dentro da região visível, evitando corte pela rolagem da ficha.
+Mantidos nome acessível, aria-expanded, aria-controls e navegação por teclado.
+
+Verificações:
+- 27 testes passaram (organizacaoInterface e requisitosAudios).
+- TypeScript, ESLint de ProjectView, build e git diff --check passaram.
+- Navegador local: fechamento, reabertura por Enter e clique.
+- Faixa fechada tem apenas a espessura da borda; distância até as abas = 0.
+- Celular de 320px: controle visível e separado dos ícones das abas;
+  sem transbordamento horizontal da página.
+- Evidências com dados sintéticos em evidencias/recolher-resumo-20261020/.
+
+Sem alterações de dados, serviços externos ou publicação.
