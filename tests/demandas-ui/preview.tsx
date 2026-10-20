@@ -29,7 +29,7 @@ function LayoutPreview() {
   const { toggleMode, setAccent, setFontScale } = useTheme();
   if (new URLSearchParams(location.search).has("login")) return <LoginScreen />;
   return (
-    <div className="h-dvh flex min-w-0 overflow-hidden">
+    <div className="relative h-dvh flex min-w-0 overflow-hidden">
       <Sidebar
         activeItem="organizations"
         onNavigate={(item) => setFormatoAberto(item === "settings")}
@@ -40,8 +40,8 @@ function LayoutPreview() {
         collapsed={recolhido}
         onToggleCollapsed={alternar}
       />
-      <div className="min-w-0 flex-1 flex flex-col">
-        <div className="flex flex-wrap gap-2 border-b p-2 text-xs">
+      <div className="min-h-0 min-w-0 flex-1 flex flex-col overflow-hidden">
+        <div className="shrink-0 flex flex-wrap gap-2 border-b p-2 text-xs">
           <button className="lg:hidden" aria-label="Abrir menu" onClick={() => setAberto(true)}>
             Menu
           </button>

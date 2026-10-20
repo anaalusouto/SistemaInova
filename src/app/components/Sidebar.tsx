@@ -127,7 +127,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, colla
         ref={menuRef}
         aria-label="Menu principal"
         data-collapsed={collapsed}
-        className={`cria-sidebar flex flex-col h-full max-w-[calc(100vw-2rem)] flex-shrink-0 fixed inset-y-0 left-0 z-50 lg:static lg:translate-x-0 ${
+        className={`cria-sidebar flex flex-col h-dvh min-h-0 overflow-hidden max-w-[calc(100vw-2rem)] flex-shrink-0 fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0 lg:self-start lg:translate-x-0 ${
           isOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible'
         }`}
         style={{ background: 'var(--sidebar)' }}
@@ -140,7 +140,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, colla
         <button type="button" onClick={onClose} aria-label="Fechar menu" className="lg:hidden flex items-center justify-center rounded-lg w-10 h-10 hover:bg-accent text-foreground"><X size={20} /></button>
       </div>
 
-      <div className="sidebar-search px-3 pt-4 pb-2">
+      <div className="sidebar-search shrink-0 px-3 pt-4 pb-2">
         <div className="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors"
           style={{ background: 'var(--sidebar-accent)', color: 'var(--sidebar-foreground)' }}>
           <Search size={13} style={{ opacity: 0.5 }} />
@@ -149,7 +149,7 @@ export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, colla
         </div>
       </div>
 
-      <nav id="navegacao-principal" className="flex-1 min-h-0 px-3 py-2 overflow-y-auto">
+      <nav id="navegacao-principal" className="flex-1 min-h-0 px-3 py-2 overflow-y-auto overscroll-contain">
         {topItems.map(i => renderBtn(i))}
 
         <div className="mt-1">

@@ -304,7 +304,7 @@ export function VisaoTabela({
               }}
               className="min-w-0"
             >
-              <div className="flex items-start gap-1">
+              <div className="plano-registro-titulo">
                 {(estrutura || (atividade && (l.atividade?.tasks.length ?? 0) > 0)) && (
                   <button
                     type="button"
@@ -318,12 +318,12 @@ export function VisaoTabela({
                           ? `${recolhidos.has(l.id) ? "Expandir" : "Recolher"} etapa`
                           : `${recolhidos.has(l.id) ? "Expandir" : "Recolher"} tarefas`
                     }
-                    className="shrink-0 p-1"
+                    className="plano-registro-expandir"
                   >
                     {recolhidos.has(l.id) ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
                   </button>
                 )}
-                <span className="shrink-0 text-xs text-muted-foreground pt-1">
+                <span className="plano-registro-numero text-xs text-muted-foreground">
                   {codigos.get(l.id)}
                 </span>
                 {emEdicao ? (
@@ -339,7 +339,7 @@ export function VisaoTabela({
                           ? aoAbrirEtapa(l.etapa!, l.meta)
                           : aoAbrirAtividade(l.atividade!, l.etapa!, l.meta)
                     }
-                    className={`text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}
+                    className={`plano-registro-nome text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}
                   >
                     {d.nome}
                   </button>

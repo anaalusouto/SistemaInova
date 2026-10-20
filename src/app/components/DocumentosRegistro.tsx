@@ -86,7 +86,7 @@ export function DocumentosRegistro({
     }
   };
   return (
-    <section aria-label="Documentos anexados" className="space-y-3 rounded-xl border p-3 min-w-0">
+    <section aria-label="Documentos anexados" className="relative space-y-3 rounded-xl border p-3 min-w-0">
       <h2 className="flex items-center gap-2 text-sm font-semibold">
         <Paperclip size={16} />
         Documentos anexados

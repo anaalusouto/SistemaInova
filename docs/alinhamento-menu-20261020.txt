@@ -1,0 +1,27 @@
+CRIA — alinhamento e rolagem — 20/10/2026
+
+- Tabela: espaço reservado para a seta de expansão em todos os níveis, recuos
+  progressivos e numeração alinhada à primeira linha do título. Datas e valores
+  permanecem alinhados ao início da mesma linha no desktop.
+- A mesma estrutura atende meta, etapa, atividade e tarefa, inclusive na edição.
+- Menu: altura limitada à viewport, posição estável no desktop, cabeçalho e
+  rodapé preservados. A navegação interna rola apenas quando não cabe na altura;
+  overscroll-contain impede que a rolagem passe para a página.
+- Contêiner relativo para os anexos e para o aplicativo impede que o campo
+  oculto de upload crie rolagem externa. A fixture reproduz esse confinamento.
+- Resumo superior: rótulos alinhados pelo topo e botão de download centralizado.
+
+Validação local com dados sintéticos:
+- Desktop: numeração, título e primeira data com a mesma coordenada vertical;
+  recuos de 12px entre os níveis conferidos.
+- Rolagem do menu: somente a navegação interna rolou; logo e lateral ficaram
+  em top=0, sem rolagem do documento.
+- Rolagem do conteúdo: área principal rolou mantendo o menu em top=0.
+- Mobile 390px e edição em 320px com texto extragrande: largura do documento
+  igual à viewport; os campos permaneceram dentro dos limites.
+- TypeScript, build e ESLint dos arquivos TSX alterados: passaram.
+- 22 testes de organizacaoInterface e requisitosAudios: passaram.
+- git diff --check: passou.
+
+Evidências: docs/evidencias/alinhamento-20261020/{desktop,mobile}.jpg.
+Sem alteração de dados, migrações, serviço externo ou publicação.

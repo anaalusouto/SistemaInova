@@ -12,12 +12,15 @@
 .project-summary-grid > * {
   min-width: 0;
   overflow-wrap: anywhere;
+  align-self: start;
 }
 .project-summary-grid > :is(:first-child, :nth-child(2), :last-child) {
   grid-column: 1 / -1;
 }
 .project-summary-grid > button {
   min-height: 44px;
+  align-self: center;
+  align-items: center;
 }
 .project-summary-grid button svg {
   flex-shrink: 0;
