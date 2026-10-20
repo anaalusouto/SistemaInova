@@ -38,7 +38,7 @@ export function useLargurasTabela(colunas: readonly ColunaPlano[]) {
     "aria-orientation": "vertical",
     "aria-valuemin": minimo(coluna),
     "aria-valuemax": MAX,
-    "aria-valuenow": larguras?.[coluna] === undefined ? undefined : Math.round(larguras[coluna]!),
+    "aria-valuenow": Math.round(larguras?.[coluna] ?? larguraInicialColuna(coluna)),
     title: "Arraste para ajustar a largura. Use ← e → pelo teclado.",
     onPointerDown: (e) => {
       if (e.button !== 0) return;

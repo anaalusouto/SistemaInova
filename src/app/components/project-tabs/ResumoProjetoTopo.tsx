@@ -49,40 +49,44 @@ export function ResumoProjetoTopo({
     }
   };
   return (
-    <div className="project-summary-grid px-4 sm:px-6 pb-3 items-center gap-4">
+    <div className="project-summary-grid px-4 sm:px-6 py-4 items-center gap-4">
       <button type="button" onClick={aoDescricao} aria-label="Projeto: abrir descrição" className="project-summary-link min-w-0 text-left">
-        <p className="text-xs text-muted-foreground">Projeto</p>
-        <p className="text-xs break-words">
+        <span className="project-summary-label">Projeto</span>
+        <span className="block text-sm break-words leading-snug">
           {project.code} · {project.name}
-        </p>
+        </span>
       </button>
       <button type="button" onClick={aoPlano} aria-label="Andamento: abrir plano de trabalho" className="project-summary-link text-left">
-        <p className="text-xs text-muted-foreground">Andamento</p>
-        <p className="text-xs">{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</p>
+        <span className="project-summary-label">Andamento</span>
+        <span className="flex items-center gap-2 text-sm font-semibold tabular-nums">
+          {andamento !== NAO_CALCULADO && <span className="project-summary-progress" aria-hidden>
+            <span style={{ width: `${andamento}%` }} />
+          </span>}
+          <span>{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</span>
+        </span>
       </button>
       <button type="button" onClick={aoOrcamento} aria-label="Valor: abrir orçamento" className="project-summary-link project-summary-value text-left">
-        <p className="text-xs text-muted-foreground">Valor executado / proposto (reais)</p>
-        <p className="text-xs font-mono">
+        <span className="project-summary-label">Valor executado / proposto (reais)</span>
+        <span className="block text-sm font-semibold tabular-nums">
           {project.budgetExecuted > 0 ||
           (project.financialItems ?? []).some((i) => i.executedValue > 0)
             ? moeda(project.budgetExecuted)
             : "Não informado"}{" "}
           / {project.budgetApproved > 0 ? moeda(project.budgetApproved) : "Não informado"}
-        </p>
+        </span>
       </button>
-      <div>
-        <p className="text-xs text-muted-foreground">Riscos</p>
         <button
           type="button"
           onClick={aoRiscos}
-          className="inline-flex gap-1 items-center text-xs font-semibold underline rounded focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="project-summary-link text-left rounded focus-visible:outline-2 focus-visible:outline-offset-2"
           style={{ color: "var(--danger)" }}
           aria-label="Ver riscos do projeto"
         >
-          <ShieldAlert size={14} />
-          {abertos} em aberto
+          <span className="project-summary-label">Riscos</span>
+          <span className="inline-flex gap-1.5 items-center text-sm font-semibold">
+            <ShieldAlert size={15} />{abertos} em aberto
+          </span>
         </button>
-      </div>
       <button
         type="button"
         disabled={baixando || bloqueado}

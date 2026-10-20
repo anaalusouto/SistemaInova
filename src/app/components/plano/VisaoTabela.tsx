@@ -562,10 +562,9 @@ export function VisaoTabela({
     );
   return (
     <div className="min-w-0">
-    <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2 text-xs text-muted-foreground">
-      <span>Arraste a borda direita do cabeçalho para ajustar cada coluna.</span>
-      {larguras && <button type="button" className="underline" onClick={restaurar}>Restaurar larguras</button>}
-    </div>
+    {larguras && <div className="flex justify-end px-2 py-1 text-xs text-muted-foreground">
+      <button type="button" className="underline" onClick={restaurar}>Restaurar larguras</button>
+    </div>}
     <div className="inova-table-frame overflow-x-auto">
       <table
         ref={tabelaRef}
@@ -573,6 +572,7 @@ export function VisaoTabela({
         aria-label="Plano de trabalho"
         style={{ width: larguraTotal ?? `max(100%, ${larguraInicialTotal}px)`, tableLayout: "fixed" }}
       >
+        <caption className="sr-only">Arraste a borda direita do cabeçalho para ajustar cada coluna. Também é possível usar as setas do teclado.</caption>
         <colgroup>{colunas.map(c => <col key={c} style={{ width: larguras?.[c] ?? larguraInicialColuna(c) }} />)}</colgroup>
         <thead>
           <tr>

@@ -325,33 +325,25 @@ export function TabPlanoTrabalho({
         />
       </div>
 
-      {/* RC-06: um único botão, logo abaixo da busca e antes da visão. Só nas
-          visões em árvore — o Kanban não recolhe nada. */}
-      {(visao === "tabela" || visao === "gantt") && recolhiveis.length > 0 && (
-        <div className="px-3 sm:px-6 pt-2">
+      {/* Seletor de visão (RF-011) */}
+      <div
+        ref={seletorRef}
+        className="project-plan-toolbar flex min-w-0 items-center gap-3 px-3 sm:px-6 py-3 flex-wrap"
+        style={{ scrollMarginTop: 8 }}
+      >
+        {(visao === "tabela" || visao === "gantt") && recolhiveis.length > 0 && (
           <button
+            type="button"
             disabled={edicaoAberta}
             onClick={alternarTudo}
             aria-pressed={expandidoPorInteiro}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[12px] font-medium"
-            style={{
-              borderColor: "var(--border)",
-              color: "var(--ink-2)",
-              background: "var(--surface-0)",
-            }}
+            className="inline-flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium"
+            style={{ borderColor: "var(--border)", color: "var(--ink-2)", background: "var(--surface-0)" }}
           >
             {expandidoPorInteiro ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
             {expandidoPorInteiro ? "Recolher tudo" : "Expandir tudo"}
           </button>
-        </div>
-      )}
-
-      {/* Seletor de visão (RF-011) */}
-      <div
-        ref={seletorRef}
-        className="flex min-w-0 items-center gap-2 px-3 sm:px-6 pt-3 pb-3 flex-wrap"
-        style={{ scrollMarginTop: 8 }}
-      >
+        )}
         <div
           className="inline-flex max-w-full flex-wrap rounded-lg border overflow-hidden"
           style={{ borderColor: "var(--border)" }}

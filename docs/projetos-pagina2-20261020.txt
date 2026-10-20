@@ -1,0 +1,44 @@
+CRIA — revisão visual da página 2 das demandas de 19/10 — 20/10/2026
+
+Fonte: DOCUMENTOS/demandas_simplificada_inova_2026-10-19.pdf, página 2.
+Conferida por renderização da página inteira, além da extração de texto.
+
+Ajustes
+- Faixa de resumo compacta. O botão de recolhimento ocupa apenas o canto,
+  eliminando a linha extra de texto que afastava os dados das abas.
+- Nome do projeto, andamento, valores, riscos e download alinhados na mesma
+  faixa em telas largas; adaptação em grade para telas estreitas.
+- Andamento com barra de progresso e percentual. Valores e riscos em destaque.
+- Riscos: rótulo e quantidade passam a compor o mesmo botão clicável.
+- Recolher/expandir tudo, seletor de visão, contagem, Editar e Ordenar na mesma
+  linha de ferramentas no desktop. Quebra de linha preservada no celular.
+- Instrução de redimensionamento sai da faixa visível da tabela e permanece
+  na legenda acessível e nos títulos das alças. Restaurar larguras aparece
+  quando há ajuste manual.
+- Indicadores acessíveis das alças passam a informar a largura inicial correta.
+
+Preferências posteriores do usuário preservadas
+- ORGANIZAÇÕES ← NOME DO PROJETO no título principal.
+- Andamento antes de valor e ausência do símbolo monetário.
+- Atalhos Projeto > Descrição, Andamento > Plano, Valor > Orçamento.
+- Redimensionamento por arraste, risco em vermelho, fonte única e menu fixo.
+
+Pontos já existentes da página 2 preservados
+- Todos os campos fica em Configurações > Formato do projeto.
+- Resumo visível e níveis da tabela abertos por padrão.
+- Edição global das células com proteção de rascunhos e permissões existentes.
+
+Validação
+- TypeScript, lint dos arquivos alterados, build e git diff --check passaram.
+- 23 testes passaram.
+- Desktop: resumo com cerca de 77px de altura; botões da barra na mesma altura.
+- Resumo recolheu e expandiu pelo controle; estado aria-expanded conferido.
+- Mobile: documento com 390px; teste adicional de 320px e fonte extragrande
+  manteve a largura do documento igual à viewport.
+- Download acionado no botão real, com dados sintéticos. A confirmação do
+  arquivo nesta rodada ficou inconclusiva: o evento de download não foi
+  retornado pela automação e o acesso à tela interna de downloads foi bloqueado
+  pela política do navegador. Não há novo PDF validado nesta evidência.
+
+Evidências: docs/evidencias/pagina2-20261020/{desktop,mobile}.jpg.
+Nenhuma publicação, migração, alteração remota, commit ou push.

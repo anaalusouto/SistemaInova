@@ -57,15 +57,16 @@ export function ProjectView({
       {!dentroDaOrganizacao && (
         <TituloNavegacao nome={project.name} aoVoltar={onBack} rotulo={rotuloVoltar} />
       )}
-      <section className="border-b" aria-label="Resumo do projeto">
+      <section className="relative min-h-8 border-b pr-6" aria-label="Resumo do projeto">
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-2 px-4 sm:px-6 py-3 text-left text-xs font-medium hover:bg-accent"
+          className="absolute right-1 top-1 z-10 flex size-6 items-center justify-center rounded text-muted-foreground hover:bg-accent focus-visible:outline-2"
+          aria-label={mostrarResumo ? "Recolher resumo" : "Expandir resumo"}
+          title={mostrarResumo ? "Recolher resumo" : "Expandir resumo"}
           aria-expanded={mostrarResumo}
           aria-controls={`project-context-${project.id}`}
           onClick={() => setMostrarResumo((v) => !v)}
         >
-          {mostrarResumo ? "Recolher resumo" : "Expandir resumo"}
           <ChevronDown size={16} aria-hidden className={mostrarResumo ? "rotate-180" : ""} />
         </button>
         <div

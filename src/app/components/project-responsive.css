@@ -24,6 +24,9 @@
   align-items: center;
 }
 .project-summary-link { border-radius: 6px; padding: 4px; margin: -4px; min-height: 44px; }
+.project-summary-label { display: block; margin-bottom: 5px; color: var(--ink-5); font-size: .68rem; line-height: 1.4; }
+.project-summary-progress { display: block; width: 80px; max-width: 100%; min-width: 40px; height: 6px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
+.project-summary-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); }
 .project-summary-link:hover { background: var(--surface-2); }
 .project-summary-link:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .project-summary-grid button svg {
@@ -37,9 +40,10 @@
 }
 @container cria-project (min-width: 64rem) {
   .project-summary-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 0.8fr) minmax(0, 1.6fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.15fr) minmax(0, 1.65fr) minmax(0, 1fr) 132px;
   }
 }
+.project-plan-toolbar button { min-height: 36px; }
 .project-disclosure > summary { list-style: none; }
 .project-disclosure > summary::-webkit-details-marker { display: none; }
 .project-disclosure > summary:hover { background: var(--surface-1); }
