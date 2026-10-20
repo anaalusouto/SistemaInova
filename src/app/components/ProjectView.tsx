@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, FileText, ClipboardList, DollarSign, Info } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, Wallet, Info, ChevronDown } from "lucide-react";
 import type { Project } from "../data/mockData";
 import { useStore, type ProjectExt } from "../store";
 import { ResumoProjetoTopo } from "./project-tabs/ResumoProjetoTopo";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
   { id: "plano", label: "Plano de Trabalho", icon: ClipboardList },
-  { id: "orcamento", label: "Orçamento", icon: DollarSign },
+  { id: "orcamento", label: "Orçamento", icon: Wallet },
 ] as const;
 interface ProjectViewProps {
   project: Project;
@@ -55,10 +55,13 @@ export function ProjectView({
     <div className="project-shell min-w-0">
       {!dentroDaOrganizacao && (
         <div className="px-4 sm:px-6 py-3 border-b">
-          <button type="button" onClick={onBack} className="mb-2 flex items-center gap-1 text-xs">
+          <nav aria-label="Caminho de navegação" className="mb-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+          <button type="button" onClick={onBack} className="flex shrink-0 items-center gap-1 hover:underline">
             <ArrowLeft size={13} />
             {rotuloVoltar}
           </button>
+          <span aria-hidden>/</span><span aria-current="page" className="min-w-0 break-words [overflow-wrap:anywhere]">{project.name}</span>
+          </nav>
           <h1 className="text-xl font-bold break-words">
             {(project as ProjectExt).organizacao?.nome ??
               (project as ProjectExt).org ??
@@ -69,12 +72,13 @@ export function ProjectView({
       <section className="border-b" aria-label="Resumo do projeto">
         <button
           type="button"
-          className="px-4 sm:px-6 py-2 text-xs underline"
+          className="flex w-full items-center justify-between gap-2 px-4 sm:px-6 py-3 text-left text-xs font-medium hover:bg-accent"
           aria-expanded={mostrarResumo}
           aria-controls={`project-context-${project.id}`}
           onClick={() => setMostrarResumo((v) => !v)}
         >
           {mostrarResumo ? "Recolher resumo" : "Expandir resumo"}
+          <ChevronDown size={16} aria-hidden className={mostrarResumo ? "rotate-180" : ""} />
         </button>
         <div
           id={`project-context-${project.id}`}
@@ -130,9 +134,9 @@ export function ProjectView({
           {activeTab === "orcamento" && <TabOrcamentoInterino project={project} />}
         </div>
       </div>
-      <details open className="px-4 sm:px-6 py-3 border-t">
-        <summary className="cursor-pointer text-sm font-medium">Documentos do projeto</summary>
-        <DocumentosRegistro area="projeto" projetoId={project.id} />
+      <details open className="project-disclosure border-t">
+        <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 sm:px-6 py-3 text-sm font-medium">Documentos do projeto<ChevronDown size={16} aria-hidden /></summary>
+        <div className="px-4 sm:px-6 pb-3"><DocumentosRegistro area="projeto" projetoId={project.id} /></div>
       </details>
     </div>
   );

@@ -7,6 +7,8 @@
   gap: 4px;
   line-height: 1.5;
 }
+.plano-registro-cabecalho { width: 100%; }
+.plano-registro-cabecalho .plano-registro-nome { grid-column: 3; min-width: 0; }
 .plano-registro-expandir {
   grid-column: 1;
   display: flex;
@@ -41,11 +43,12 @@
 
 /* A mesma tabela e os mesmos controles: no celular, cada registro vira uma ficha. */
 .inova-table-frame {
+  position: relative;
   container: inova-table / inline-size;
   min-width: 0;
   max-width: 100%;
 }
-@container inova-table (max-width: 47.999rem) {
+@container inova-table (max-width: 63.999rem) {
   .inova-table-cards {
     display: block;
     width: 100%;

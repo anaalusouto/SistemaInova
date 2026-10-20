@@ -9,7 +9,7 @@
  */
 import { type ReactNode } from 'react';
 import {
-  ArrowLeft, ExternalLink, Loader2,
+  ArrowLeft, ExternalLink, Loader2, ChevronDown,
 } from 'lucide-react';
 
 import { useFichaOrganizacao } from './useOrganizacoes';
@@ -52,6 +52,9 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   }
 
   const secaoMenu = rota.secao === 'projeto' ? 'projetos' : rota.secao;
+  const vinculoAtual = resolverProjetoOrg(org.projetos, rota.projetoId);
+  const tituloAtual = secaoMenu === 'projetos' && vinculoAtual.estado === 'unico'
+    ? vinculoAtual.projeto.nome : org.nome;
   const contagem: Partial<Record<typeof secaoMenu, number>> = {
     encaminhamentos: org.pendentes,
     registros: org.registros.length,
@@ -65,7 +68,7 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
       </h1>
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
       <div className="px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
-        <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} />
+        <Voltar aoVoltar={() => aoNavegar(ROTA_INICIO)} atual={tituloAtual} />
 
 
         {/* No desktop a troca de seção é o menu lateral; aqui, só no celular. */}
@@ -134,11 +137,14 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
   );
 }
 
-function Voltar({ aoVoltar }: { aoVoltar: () => void }) {
+function Voltar({ aoVoltar, atual }: { aoVoltar: () => void; atual?: string }) {
   return (
-    <button onClick={aoVoltar} className="flex items-center gap-1 text-[12px] w-fit hover:underline" style={{ color: 'var(--ink-4)' }}>
-      <ArrowLeft size={12} /> Organizações
-    </button>
+    <nav aria-label="Caminho de navegação" className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+      <button type="button" onClick={aoVoltar} className="flex shrink-0 items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}>
+        <ArrowLeft size={12} aria-hidden /> Organizações
+      </button>
+      {atual && <><span aria-hidden>/</span><span aria-current="page" className="min-w-0 break-words [overflow-wrap:anywhere]">{atual}</span></>}
+    </nav>
   );
 }
 
@@ -207,15 +213,15 @@ export function DadosCadastrais({ org, aoAbrirProjeto }: { org: OrganizacaoFicha
 }
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <section className="min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
-      <h2
-        className="px-4 py-3 border-b"
+    <details open className="project-disclosure min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+      <summary
+        className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 border-b"
         style={{ borderColor: 'var(--border)', fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--ink-1)' }}
       >
-        {titulo}
-      </h2>
+        <h2>{titulo}</h2><ChevronDown size={16} aria-hidden className="shrink-0" />
+      </summary>
       <dl className="px-4 py-1">{children}</dl>
-    </section>
+    </details>
   );
 }
 

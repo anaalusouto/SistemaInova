@@ -1,0 +1,31 @@
+CRIA — ajustes de cabeçalhos e responsividade — 20/10/2026
+
+Implementado
+- Gestão Interna inicia fechada. A abertura continua disponível pelo cabeçalho.
+- Caminho de navegação: seta + Organizações / Nome do projeto. Organizações
+  retorna à lista; em outras seções, o caminho identifica a organização atual.
+- Resumo com cabeçalho clicável em toda a largura e indicação de expansão.
+- Andamento antes de valor. Valores do resumo sem prefixo monetário; unidade
+  declarada como reais no rótulo. Ícone DollarSign substituído por carteira.
+- Descrição: espaçamentos responsivos, quebra de textos extensos e seções
+  retráteis pelo cabeçalho inteiro. Conteúdo e regras da proposta preservados.
+- Cadastro e documentos com cabeçalhos retráteis em toda a largura.
+- Tabela: título/numeração/seta formam um único botão retrátil nos níveis com
+  filhos. Botão Ver detalhes preserva a abertura do registro. Atividades sem
+  tarefas e tarefas continuam abrindo detalhes, pois não têm filhos a recolher.
+- Colunas proporcionais ao conteúdo, sem larguras fixas iguais. Largura mínima
+  da tabela reduzida de 1800 para 1100px; até 64rem disponíveis, usa fichas.
+- Transição dos blocos details quando suportada; respeita movimento reduzido.
+
+Verificações
+- 22 testes de organizacaoInterface.test.cjs e requisitosAudios.test.cjs passaram.
+- TypeScript, ESLint dos TSX alterados e build passaram.
+- Clique na meta recolheu de 3 para 1 linha; Enter expandiu de volta para 3.
+- Descrição recolheu a seção pelo título; Gestão Interna iniciou aria-expanded=false.
+- Desktop: tabela e contêiner com a mesma largura (1231px na viewport testada).
+- Mobile 390px: documento permaneceu com 390px, inclusive na edição.
+- Breadcrumb e valores sem símbolo conferidos no navegador com dados sintéticos.
+- git diff --check passou. Build mantém avisos existentes de chunks/importações.
+
+Evidências: docs/evidencias/ajustes-cabecalhos-20261020/{desktop,mobile}.jpg.
+Sem migração, gravação remota, publicação, commit ou push.

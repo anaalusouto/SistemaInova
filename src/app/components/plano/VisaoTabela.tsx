@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import "../responsive-tables.css";
-import { ChevronDown, ChevronRight, Paperclip, ShieldAlert } from "lucide-react";
+import { ChevronDown, ChevronRight, Paperclip, ShieldAlert, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import type {
   Goal,
@@ -83,6 +83,7 @@ const vazio = (nome: string): DadosLinha => ({
 const ausente = <span className="text-muted-foreground">—</span>;
 const data = (v: string | null) =>
   v ? <span className="whitespace-nowrap text-xs font-mono">{formatDateOnly(v)}</span> : ausente;
+const pesoColuna = (c: ColunaPlano) => c === "Atividade" ? 3 : c === "Observações / resultado esperado" || c === "Justificativa de atraso" ? 2 : c === "Anexo" ? 0.7 : 1;
 
 /** Uma única grade para todas as organizações: cada valor ocupa sua coluna. */
 export function VisaoTabela({
@@ -263,6 +264,10 @@ export function VisaoTabela({
       emEdicao = !readOnly && (editar || edicaoLocal === id);
     const atividade = l.tipo === "atividade",
       estrutura = l.tipo === "meta" || l.tipo === "etapa";
+    const retratil = estrutura || (atividade && (l.atividade?.tasks.length ?? 0) > 0);
+    const abrirDetalhe = () => l.tipo === "meta" ? aoAbrirMeta(l.meta)
+      : l.tipo === "etapa" ? aoAbrirEtapa(l.etapa!, l.meta)
+      : aoAbrirAtividade(l.atividade!, l.etapa!, l.meta);
     const concluido = atividade
       ? l.atividade?.status === "Concluído"
       : estrutura && conclusoes.get(id)?.concluido;
@@ -304,7 +309,22 @@ export function VisaoTabela({
               }}
               className="min-w-0"
             >
-              <div className="plano-registro-titulo">
+              {!emEdicao ? <div className="flex min-w-0 items-start gap-1">
+                <button type="button"
+                  className="plano-registro-cabecalho plano-registro-titulo flex-1 min-w-0 rounded text-left hover:bg-accent focus-visible:outline-2"
+                  onClick={() => retratil ? alternarRecolhido(l.id) : abrirDetalhe()}
+                  disabled={editar}
+                  aria-expanded={retratil ? !recolhidos.has(l.id) : undefined}
+                  aria-label={retratil ? `${recolhidos.has(l.id) ? "Expandir" : "Recolher"} ${l.tipo}: ${l.dados.nome}` : `Abrir ${l.tipo}: ${l.dados.nome}`}
+                >
+                  <span className="plano-registro-expandir" aria-hidden>{retratil && (recolhidos.has(l.id) ? <ChevronRight size={13} /> : <ChevronDown size={13} />)}</span>
+                  <span className="plano-registro-numero text-xs text-muted-foreground">{codigos.get(l.id)}</span>
+                  <span className={`plano-registro-nome ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}>{d.nome}</span>
+                </button>
+                {retratil && <button type="button" onClick={abrirDetalhe}
+                  aria-label={`Abrir ${l.tipo}: ${l.dados.nome}`} title="Ver detalhes"
+                  className="shrink-0 rounded p-1 hover:bg-accent"><ExternalLink size={14} /></button>}
+              </div> : <div className="plano-registro-titulo">
                 {(estrutura || (atividade && (l.atividade?.tasks.length ?? 0) > 0)) && (
                   <button
                     type="button"
@@ -326,25 +346,8 @@ export function VisaoTabela({
                 <span className="plano-registro-numero text-xs text-muted-foreground">
                   {codigos.get(l.id)}
                 </span>
-                {emEdicao ? (
-                  campo("nome")
-                ) : (
-                  <button
-                    type="button"
-                    aria-label={l.tipo === "meta" ? `Abrir meta: ${l.dados.nome}` : undefined}
-                    onClick={() =>
-                      l.tipo === "meta"
-                        ? aoAbrirMeta(l.meta)
-                        : l.tipo === "etapa"
-                          ? aoAbrirEtapa(l.etapa!, l.meta)
-                          : aoAbrirAtividade(l.atividade!, l.etapa!, l.meta)
-                    }
-                    className={`plano-registro-nome text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}
-                  >
-                    {d.nome}
-                  </button>
-                )}
-              </div>
+                {campo("nome")}
+              </div>}
               {!readOnly &&
                 !administrativo &&
                 !somenteEdicaoGlobal &&
@@ -558,7 +561,6 @@ export function VisaoTabela({
             key={c}
             data-label={c}
             className="p-2 text-xs whitespace-pre-wrap break-words"
-            style={{ minWidth: c === "Atividade" ? 280 : 120 }}
           >
             {celula(c)}
           </td>
@@ -575,7 +577,7 @@ export function VisaoTabela({
       <table
         className="inova-table-cards w-full"
         aria-label="Plano de trabalho"
-        style={{ minWidth: 1800, tableLayout: "fixed" }}
+        style={{ minWidth: 1100, tableLayout: "fixed" }}
       >
         <thead>
           <tr>
@@ -584,7 +586,7 @@ export function VisaoTabela({
                 key={c}
                 scope="col"
                 className="p-2 text-left text-[10px] uppercase text-muted-foreground border-b"
-                style={{ width: c === "Atividade" ? 320 : 140 }}
+                style={{ width: `${pesoColuna(c) / colunas.reduce((s, coluna) => s + pesoColuna(coluna), 0) * 100}%` }}
               >
                 {c}
               </th>

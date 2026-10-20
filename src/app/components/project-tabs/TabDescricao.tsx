@@ -12,7 +12,7 @@
  * isso explícito, porque quem lê pode facilmente confundir as duas coisas e
  * tomar decisão em cima de número que ainda não aconteceu.
  */
-import { Info } from 'lucide-react';
+import { Info, ChevronDown } from 'lucide-react';
 import { type Project } from '../../data/mockData';
 import { type ProjectExt } from '../../store';
 import { divergenciaDeCronograma, NAO_INFORMADO } from '../../lib/planoTrabalho';
@@ -28,16 +28,16 @@ function Secao({ titulo, itens }: { titulo: string; itens: Item[] }) {
   // Seção inteira vazia continua visível: sumir com ela esconderia do leitor
   // que a proposta não trouxe aquela informação.
   return (
-    <section className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
-      <h3
+    <details open className="project-disclosure min-w-0 bg-card rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+      <summary className="flex cursor-pointer items-center justify-between gap-3 p-4 sm:p-5"
         style={{
           fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '0.9rem',
-          color: 'var(--ink-1)', marginBottom: 12,
+          color: 'var(--ink-1)',
         }}
       >
-        {titulo}
-      </h3>
-      <div className="flex flex-col gap-3.5">
+        <h3>{titulo}</h3><ChevronDown size={16} className="shrink-0" aria-hidden />
+      </summary>
+      <div className="flex min-w-0 flex-col gap-3.5 px-4 pb-4 sm:px-5 sm:pb-5">
         {itens.map(item => {
           const vazio = item.valor === null || item.valor === undefined || String(item.valor).trim() === '';
           return (
@@ -58,7 +58,7 @@ function Secao({ titulo, itens }: { titulo: string; itens: Item[] }) {
                 <div
                   style={{
                     fontSize: '0.82rem', color: 'var(--ink-2)', lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap',
+                    whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
                   }}
                 >
                   {String(item.valor)}
@@ -68,7 +68,7 @@ function Secao({ titulo, itens }: { titulo: string; itens: Item[] }) {
           );
         })}
       </div>
-    </section>
+    </details>
   );
 }
 
@@ -83,8 +83,8 @@ export function TabDescricao({ project }: { project: Project }) {
     n === undefined || n === null ? undefined : `${n.toLocaleString('pt-BR')} ${tipo}`;
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col gap-4 max-w-5xl">
+    <div className="min-w-0 p-4 sm:p-6">
+      <div className="flex min-w-0 flex-col gap-4">
         {/* RN-007: o aviso vem antes do conteúdo, não depois. Quem lê precisa
             saber o que está lendo ANTES de ler os números. */}
         <div

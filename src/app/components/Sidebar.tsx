@@ -56,7 +56,7 @@ const bottomItems = [
 export function Sidebar({ activeItem, onNavigate, isOpen = false, onClose, collapsed = false, onToggleCollapsed, rotaOrg, aoNavegarOrg }: SidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const { paraMim } = useAgenda();
-  const [gestaoAberta, setGestaoAberta] = useState(true);
+  const [gestaoAberta, setGestaoAberta] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!isOpen || !menuRef.current || !onClose) return;

@@ -17,7 +17,7 @@ export function ResumoProjetoTopo({
 }) {
   const [baixando, setBaixando] = useState(false);
   const { formato } = useFormatoPlano();
-  const moeda = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const moeda = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const andamento = andamentoDoProjeto(
     project.goals.flatMap((m) => m.deliverables.flatMap((e) => e.activities)),
   );
@@ -51,7 +51,11 @@ export function ResumoProjetoTopo({
         </p>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">Valor executado / proposto</p>
+        <p className="text-xs text-muted-foreground">Andamento</p>
+        <p className="text-xs">{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</p>
+      </div>
+      <div className="project-summary-value">
+        <p className="text-xs text-muted-foreground">Valor executado / proposto (reais)</p>
         <p className="text-xs font-mono">
           {project.budgetExecuted > 0 ||
           (project.financialItems ?? []).some((i) => i.executedValue > 0)
@@ -59,10 +63,6 @@ export function ResumoProjetoTopo({
             : "Não informado"}{" "}
           / {project.budgetApproved > 0 ? moeda(project.budgetApproved) : "Não informado"}
         </p>
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground">Andamento</p>
-        <p className="text-xs">{andamento === NAO_CALCULADO ? NAO_CALCULADO : `${andamento}%`}</p>
       </div>
       <div>
         <p className="text-xs text-muted-foreground">Riscos</p>
