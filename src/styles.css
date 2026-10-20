@@ -19,6 +19,9 @@
  */
 
 @theme inline {
+  --font-sans: var(--font-ui);
+  --font-serif: var(--font-ui);
+  --font-mono: var(--font-ui);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -62,6 +65,11 @@
 }
 
 :root {
+  /* Uma família para títulos, texto, valores e controles em toda a plataforma. */
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-ui);
+  --font-body: var(--font-ui);
+  --font-mono: var(--font-ui);
   /* Fixados em px (não rem) de propósito: o controle "Tamanho do texto" muda o font-size da
      raiz para escalar só as letras — se --spacing/--radius ficassem em rem, botões, ícones,
      cards e espaçamentos (que usam a escala do Tailwind, baseada em --spacing) cresceriam
@@ -307,9 +315,22 @@
   }
 
   body {
+    font-family: var(--font-ui);
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+  button, input, select, textarea, optgroup, code, kbd, samp, pre {
+    font-family: var(--font-ui);
+  }
+}
+
+/* Componentes externos também seguem a tipografia da plataforma. */
+[data-sonner-toaster],
+.leaflet-container,
+.leaflet-container :is(a, button, input, select, textarea),
+.leaflet-popup-content,
+.leaflet-control {
+  font-family: var(--font-ui);
 }
 
 /* Campos nativos permanecem dentro das colunas; 16px evita zoom automático no iOS. */

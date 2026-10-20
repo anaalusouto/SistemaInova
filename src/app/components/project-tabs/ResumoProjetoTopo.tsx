@@ -69,7 +69,8 @@ export function ResumoProjetoTopo({
         <button
           type="button"
           onClick={aoRiscos}
-          className="inline-flex gap-1 items-center text-xs underline"
+          className="inline-flex gap-1 items-center text-xs font-semibold underline rounded focus-visible:outline-2 focus-visible:outline-offset-2"
+          style={{ color: "var(--danger)" }}
           aria-label="Ver riscos do projeto"
         >
           <ShieldAlert size={14} />

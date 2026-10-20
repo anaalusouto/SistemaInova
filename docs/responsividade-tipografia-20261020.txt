@@ -1,0 +1,36 @@
+CRIA — responsividade, tipografia e indicador de riscos — 20/10/2026
+
+Alterações
+- Família system-ui centralizada em --font-ui, compartilhada por títulos,
+  textos, valores, controles nativos, notificações e mapa. Os tamanhos e pesos
+  continuam distinguindo títulos, rótulos e conteúdo; a ampliação de texto permanece.
+- Resumo do projeto usa duas colunas em telas estreitas; identificação, valores
+  e download ocupam a largura inteira. Os conteúdos podem quebrar linha.
+- Removida a largura mínima de 220px no conteúdo do popup do mapa.
+- Indicador clicável de riscos no topo usa a cor semântica de perigo,
+  com vermelho adaptado aos temas claro e escuro.
+
+Verificação local
+- Fixture tests/demandas-ui com dados sintéticos, sem gravar no banco remoto.
+- Larguras 320, 390, 768, 1024 e 1440px, incluindo fonte extragrande.
+- Conferidos resumo, edição do plano, riscos, cadastro, diagnóstico e formato.
+- Sem elementos de formulário excedendo a viewport nas verificações mobile.
+- Família computada única nos títulos, textos, botões, células e campos conferidos.
+- Clique do indicador abriu a visão de riscos fora do modo de edição.
+- Vermelho claro rgb(220,38,38); escuro rgb(248,113,113).
+- TypeScript sem emissão: passou.
+- Build Vite: passou, com avisos existentes de dependências/chunks.
+- organizacaoInterface.test.cjs e requisitosAudios.test.cjs: 22 testes passaram.
+- ESLint de ResumoProjetoTopo e fixture: passou, sem regra de formatação.
+- ESLint de CronogramaPage encontra 7 usos de any já presentes no HEAD;
+  a alteração desta rodada nesse arquivo é apenas o estilo do popup.
+- git diff --check: passou.
+
+Como conferir
+1. Abrir uma organização e seu projeto em um celular ou janela estreita.
+2. Conferir resumo, abas e edição do plano; ampliar texto nas preferências.
+3. Acionar o indicador vermelho de riscos no topo e alternar o tema.
+4. Conferir cadastro, diagnóstico e Configurações > Formato do projeto.
+
+Evidência: docs/evidencias/responsividade-20261020/mobile.jpg.
+Sem migração, alteração de permissões, serviço externo ou publicação.

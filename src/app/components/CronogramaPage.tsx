@@ -198,7 +198,7 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
           fillOpacity: 0.95,
         }).addTo(layer);
         marker.bindPopup(`
-          <div style="font-family:Inter,sans-serif;min-width:220px">
+          <div style="font-family:var(--font-ui);max-width:100%;overflow-wrap:anywhere">
             <div style="font-weight:700;color:${color};font-size:12px">${esc(rotaName)}</div>
             <div style="font-weight:600;font-size:13px;margin-top:2px">${esc(r.organizacao)}</div>
             <div style="font-size:11px;color:var(--ink-4);margin-top:2px">${esc(r.municipio)}/${esc(r.uf)}</div>

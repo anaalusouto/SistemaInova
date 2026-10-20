@@ -26,7 +26,7 @@ function LayoutPreview() {
   const [aberto, setAberto] = useState(false);
   const [formatoAberto, setFormatoAberto] = useState(false);
   const { recolhido, alternar } = useMenuLateral();
-  const { toggleMode, setAccent } = useTheme();
+  const { toggleMode, setAccent, setFontScale } = useTheme();
   if (new URLSearchParams(location.search).has("login")) return <LoginScreen />;
   return (
     <div className="h-dvh flex min-w-0 overflow-hidden">
@@ -47,6 +47,8 @@ function LayoutPreview() {
           </button>
           <MarcaCria compacta className="lg:!hidden" />
           <button onClick={toggleMode}>Alternar tema</button>
+          <button onClick={() => setFontScale("xl")}>Texto extragrande</button>
+          <button onClick={() => setFontScale("md")}>Texto padrão</button>
           <button onClick={() => setAccent("terracota")}>Terracota</button>
           <button onClick={() => setAccent("azul")}>Azul</button>
           <strong>Teste isolado — dados sintéticos</strong>
