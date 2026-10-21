@@ -1,23 +1,24 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowLeft, ClipboardList, Gauge, ShoppingBasket, FileCheck2, Lock, CopyPlus } from 'lucide-react';
+import { Download, ArrowLeft, ClipboardList, Gauge, ShoppingBasket, LayoutDashboard, Lock, CopyPlus } from 'lucide-react';
 import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
 import { IeoTab } from './diagnostic/IeoTab';
 import { CestaProdutosTab } from './diagnostic/CestaProdutosTab';
 import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
+import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
-type TabId = 'matriz' | 'ieo' | 'cesta' | 'parecer';
+type TabId = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 const TABS: { id: TabId; label: string; icon: typeof ClipboardList }[] = [
+  { id: 'resumo', label: 'Resumo', icon: LayoutDashboard },
   { id: 'matriz', label: 'Matriz Funcional', icon: ClipboardList },
-  { id: 'ieo', label: 'Índice de Estruturação Organizacional', icon: Gauge },
+  { id: 'ieo', label: 'IEO', icon: Gauge },
   { id: 'cesta', label: 'Cesta de Produtos', icon: ShoppingBasket },
-  { id: 'parecer', label: 'Parecer Técnico', icon: FileCheck2 },
 ];
 
 interface DiagnosticoEditorProps {
@@ -26,9 +27,11 @@ interface DiagnosticoEditorProps {
   onNovaVersao: (novoDiagnosticoId: string) => void;
   incorporado?: boolean;
   instrumentoInicial?: TabId;
+  onHistorico?: () => void;
+  rotuloVoltar?: string;
 }
 
-export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'matriz' }: DiagnosticoEditorProps) {
+export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Visão Geral' }: DiagnosticoEditorProps) {
   const [tab, setTab] = useState<TabId>(instrumentoInicial);
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
@@ -44,7 +47,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
       queryClient.invalidateQueries({ queryKey: ['diagnostico', diagnosticoId] });
       queryClient.invalidateQueries({ queryKey: ['diagnosticos'] });
       queryClient.invalidateQueries({ queryKey: ['diagnostico-visao-geral'] });
-      toast.success('Diagnóstico concluído — os 4 instrumentos agora estão em modo leitura.');
+      toast.success('Diagnóstico concluído. Para alterar, crie uma nova versão.');
     },
     onError: (e: Error) => toast.error(e.message || 'Não foi possível concluir o diagnóstico.'),
   });
@@ -63,9 +66,11 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
   return (
     <div className={incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}>
       <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
-        <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
-          <ArrowLeft size={12} /> Organização
-        </button>
+        <nav aria-label="Caminho do diagnóstico" className="flex flex-wrap items-center gap-2 text-xs">
+          <button onClick={onBack} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
+          <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
+          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={onHistorico}>Histórico de diagnósticos</button>}
+        </nav>
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
           <div>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
@@ -82,7 +87,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
                 try {
                   const dados=await getDadosCompletosDiagnostico({data:{diagnosticoId}});
                   const {buildDiagnosticoReportModel,exportDiagnosticoReportPdf}=await import('../lib/diagnosticReportExport');
-                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Diagnóstico Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta','parecer']));
+                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Diagnóstico Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta']));
                 } catch(e){toast.error(e instanceof Error ? e.message : 'Não foi possível baixar o PDF.');}
                 finally{setBaixando(false);}
               }}><Download size={18} className={baixando ? 'animate-pulse' : undefined} aria-hidden /></button>
@@ -97,7 +102,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
               </span>
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
-                  onClick={() => { if (window.confirm('Concluir este diagnóstico? Os 4 instrumentos passam a ser somente leitura — para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
+                  onClick={() => { if (window.confirm('Concluir este diagnóstico? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
                   disabled={concluir.isPending}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium text-white disabled:opacity-60"
                   style={{ background: 'var(--primary)' }}
@@ -117,7 +122,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             </div>
           )}
         </div>
-        <label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do diagnóstico
+        {instrumentoInicial !== 'parecer' && <><label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do diagnóstico
           <select aria-label="Instrumento do diagnóstico" value={tab} onChange={e=>setTab(e.target.value as TabId)} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
             {TABS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
@@ -129,6 +134,8 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             return (
               <button
                 key={t.id}
+                type="button"
+                aria-current={active ? 'page' : undefined}
                 onClick={() => setTab(t.id)}
                 className="flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 text-center text-[13px] font-medium transition-colors"
                 style={{ color: active ? 'var(--primary)' : 'var(--ink-4)', borderBottom: active ? '2px solid var(--primary)' : '2px solid transparent' }}
@@ -138,13 +145,14 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
               </button>
             );
           })}
-        </div>
+        </div></>}
       </div>
       <div className={incorporado ? 'p-4 sm:p-7 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-7'}>
         {isLoading && <p role="status">Carregando diagnóstico…</p>}
         {error && <p role="alert">Não foi possível abrir o diagnóstico. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
+        {tab === 'resumo' && diagnostico && <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} />}
         {tab === 'matriz' && diagnostico && (
-          <MatrizFuncionalTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'ieo' && diagnostico && (
           <IeoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />

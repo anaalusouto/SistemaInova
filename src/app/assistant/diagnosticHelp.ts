@@ -3,13 +3,11 @@ import { CESTA_BLOCOS } from "../diagnostic/catalog/cestaProdutos";
 import { PARECER_GRUPOS } from "../diagnostic/catalog/parecerComplementar";
 import { CHECKLIST_DOCUMENTAL } from "../diagnostic/catalog/checklistDocumental";
 import {
-  MATRIZ_FUNCOES,
-  ATUACAO_OPCOES,
-  QUEM_EXECUTA_OPCOES,
-  INTERESSE_OPCOES,
-  CRITICIDADE_OPCOES,
-  ABRANGENCIA_OPCOES,
-} from "../diagnostic/catalog/matrizFuncional";
+  FUNCOES_MATRIZ,
+  ATUACAO_MATRIZ,
+  EXPERIENCIA_MATRIZ,
+  NIVEIS_MATRIZ,
+} from "../diagnostic/catalog/matrizPrototipo";
 
 const opcoes = (items?: { label: string }[]) =>
   items?.length ? `\nOpções disponíveis: ${items.map((i) => i.label).join("; ")}.` : "";
@@ -69,24 +67,25 @@ export const ajudaDiagnostico = {
   matriz: {
     titulo: "Matriz Funcional",
     fontes: [
-      "src/app/diagnostic/catalog/matrizFuncional.ts",
+      "src/app/diagnostic/catalog/matrizPrototipo.ts",
       "src/app/components/diagnostic/MatrizFuncionalTab.tsx",
     ],
     orientacao:
-      "Leia a função, descrição e exemplo; depois caracterize a atuação da organização, o interesse, a criticidade, a abrangência e a observação.",
+      "Escolha uma das 21 funções. Preencha atuação, experiência, criticidade atual, interesse em desenvolvimento, observação e externo. Confira a leitura orientativa calculada antes de salvar.",
     campos: {
       ...Object.fromEntries(
-        MATRIZ_FUNCOES.map((f) => [
+        FUNCOES_MATRIZ.map((f) => [
           f.id,
-          `${f.funcao}\n${f.descricao}\nExemplo de referência do instrumento: ${f.exemplo}\nPreencha a atuação real da organização, sem copiar o exemplo como se fosse um fato observado.`,
+          `${f.id} — ${f.nome}\n${f.grupo}\nPreencha a situação real da organização nesta função.`,
         ]),
       ),
-      Atuação: `Seleção múltipla: ${ATUACAO_OPCOES.join("; ")}. Descreva a situação atual da organização na função.`,
-      "Quem executa": `Aplica-se quando a organização marca Não realiza. Opções: ${QUEM_EXECUTA_OPCOES.join("; ")}.`,
-      Interesse: `Selecione a alternativa aplicável: ${INTERESSE_OPCOES.join("; ")}.`,
-      Criticidade: CRITICIDADE_OPCOES.map((o) => `${o.label}: ${o.descricao}`).join("\n"),
-      Abrangência: ABRANGENCIA_OPCOES.map((o) => `${o.label}: ${o.descricao}`).join("\n"),
-      Observações: "Registre os fatos que contextualizam a resposta e as evidências disponíveis.",
+      Atuação: `Selecione uma opção: ${ATUACAO_MATRIZ.join("; ")}.`,
+      Experiência: `Selecione uma opção: ${EXPERIENCIA_MATRIZ.join("; ")}.`,
+      "Criticidade atual": `Escala de ${NIVEIS_MATRIZ.join(', ')}.`,
+      "Interesse em desenvolvimento": `Escala de ${NIVEIS_MATRIZ.join(', ')}.`,
+      "Leitura orientativa": "Calculada a partir da criticidade atual e da experiência; confira a prévia antes de salvar.",
+      Observação: "Reúna o relato, a necessidade, o público e a mudança desejada.",
+      Externo: "Informe quem participa externamente; deixe vazio quando não identificado.",
     } as Record<string, string>,
   },
 };

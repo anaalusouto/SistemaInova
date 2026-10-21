@@ -43,7 +43,7 @@ export default defineConfig({
           const names = [
             ...fs
               .readFileSync(filename, "utf8")
-              .matchAll(/export (?:async )?(?:const|function|class) (\w+)/g),
+              .matchAll(/export\s+(?:async\s+)?(?:const|function|class)\s+(\w+)/g),
           ].map((m) => m[1]);
           return (
             `import{call}from'/dados.ts';` +

@@ -56,7 +56,7 @@ export function DiagnosticoVisaoGeral({ onSelectOrganizacao }: DiagnosticoVisaoG
     <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full min-h-0 [&>*]:shrink-0">
       <div>
         <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
-          Diagnóstico
+          Visão Geral do diagnóstico
         </h1>
         <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
           {organizacoes.length} organizações · {filtered.length} exibidas
@@ -145,7 +145,9 @@ export function DiagnosticoVisaoGeral({ onSelectOrganizacao }: DiagnosticoVisaoG
                     <div className="flex items-center gap-2">
                       <Building2 size={13} color="var(--ink-5)" />
                       <div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{o.nome}</div>
+                        <button type="button" aria-label={`Abrir resumo de ${o.nome}`} className="text-left hover:underline"
+                          onClick={e => { e.stopPropagation(); onSelectOrganizacao(o.comunidadeId); }}
+                          style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{o.nome}</button>
                         <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{o.code}</div>
                       </div>
                     </div>

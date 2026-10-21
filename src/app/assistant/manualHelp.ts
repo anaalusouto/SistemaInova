@@ -146,9 +146,10 @@ export function responderManual(
           ? "parecerDiagnostico"
           : (guia?.id ?? ctx.formulario);
   const f = escopo ? conhecimento.formularios[escopo] : undefined;
+  const buscaCampo=escopo==='matriz'?q.replace(/\bcriticidade\b(?! atual)/,'criticidade atual').replace(/\binteresse\b(?! em desenvolvimento)/,'interesse em desenvolvimento'):q;
   const exatos = f
     ? Object.entries(f.campos)
-        .filter(([campo]) => normal(campo).length >= 3 && ` ${q} `.includes(` ${normal(campo)} `))
+        .filter(([campo]) => normal(campo).length >= 3 && ` ${buscaCampo} `.includes(` ${normal(campo)} `))
         .sort((a, b) => b[0].length - a[0].length)
     : [];
   if (

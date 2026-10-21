@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { DiagnosticoCompleto } from '../diagnosticos.server';
-import { MATRIZ_FUNCOES } from '../diagnostic/catalog/matrizFuncional';
+import { FUNCOES_MATRIZ, leituraMatriz } from '../diagnostic/catalog/matrizPrototipo';
 import { IEO_PERGUNTAS_FLAT } from '../diagnostic/catalog/ieo';
 import { calcularIeo } from '../diagnostic/ieoCalculation';
 import { CESTA_BLOCOS } from '../diagnostic/catalog/cestaProdutos';
@@ -10,12 +10,13 @@ import { PARECER_GRUPOS } from '../diagnostic/catalog/parecerComplementar';
 export type ReportComponente = 'identificacao' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 
 export interface ReportMatrizFuncao {
+  experiencia?: string;
+  externo?: string;
+  leitura?: string;
   funcao: string;
   atuacao: string;
-  quemExecuta: string;
   interesse: string;
   criticidade: string;
-  abrangencia: string;
   observacoes: string;
 }
 
@@ -104,12 +105,14 @@ export function buildDiagnosticoReportModel(
 
     if (has('matriz')) {
       const respostaPorFuncao = new Map(d.matriz.map(r => [r.funcaoId, r]));
-      entry.matriz = MATRIZ_FUNCOES.filter(f => respostaPorFuncao.has(f.id)).map(f => {
+      const catalogo=FUNCOES_MATRIZ.map(f=>({id:f.id,funcao:f.nome}));
+      entry.matriz = catalogo.filter(f => respostaPorFuncao.has(f.id)).map(f => {
         const r = respostaPorFuncao.get(f.id)!;
         return {
-          funcao: f.funcao, atuacao: valorLegivel(r.atuacao), quemExecuta: valorLegivel(r.quemExecuta),
+          experiencia:valorLegivel(r.experiencia),externo:valorLegivel(r.externo),leitura:leituraMatriz(r.criticidade,r.experiencia??null),
+          funcao: r.nomeFuncao||f.funcao, atuacao: valorLegivel(r.atuacao),
           interesse: valorLegivel(r.interesse), criticidade: valorLegivel(r.criticidade),
-          abrangencia: valorLegivel(r.abrangencia), observacoes: valorLegivel(r.observacoes),
+          observacoes: valorLegivel(r.observacoes),
         };
       });
     }
@@ -214,14 +217,13 @@ export function exportDiagnosticoReportPdf(model: DiagnosticoReportModel) {
 
     if (entry.matriz) {
       ensureSpace(80);
-      autoTable(doc, {
-        startY: y,
-        head: [['Função', 'Atuação', 'Quem executa', 'Interesse', 'Criticidade', 'Abrangência', 'Observações']],
-        body: entry.matriz.map(m => [m.funcao, m.atuacao, m.quemExecuta, m.interesse, m.criticidade, m.abrangencia, m.observacoes]),
-        theme: 'grid', styles: { fontSize: 7, cellPadding: 3 }, headStyles: { fillColor: [37, 99, 235] },
-        margin: { left: marginX, right: marginX },
-      });
-      y = (doc as any).lastAutoTable.finalY + 16;
+      const atuais=entry.matriz;
+      if(atuais.length){
+        autoTable(doc,{startY:y,head:[['Função','Atuação','Experiência','Criticidade atual','Interesse em desenvolvimento','Leitura orientativa','Observação','Externo']],
+          body:atuais.map(m=>[m.funcao,m.atuacao,m.experiencia??'—',m.criticidade,m.interesse,m.leitura??'—',m.observacoes,m.externo??'—']),
+          theme:'grid',styles:{fontSize:7,cellPadding:3},headStyles:{fillColor:[37,99,235]},margin:{left:marginX,right:marginX}});
+        y=(doc as any).lastAutoTable.finalY+16;
+      }
     }
 
     if (entry.ieo) {

@@ -5,7 +5,7 @@ import { Check, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { PARECER_GRUPOS, type ParecerCampo } from '../../diagnostic/catalog/parecerComplementar';
 import { CHECKLIST_DOCUMENTAL } from '../../diagnostic/catalog/checklistDocumental';
 import { IEO_DIMENSOES } from '../../diagnostic/catalog/ieo';
-import { MATRIZ_FUNCOES } from '../../diagnostic/catalog/matrizFuncional';
+import { FUNCOES_MATRIZ } from '../../diagnostic/catalog/matrizPrototipo';
 import { calcularIeo } from '../../diagnostic/ieoCalculation';
 import {
   getParecer, salvarParecer, listarChecklist, salvarChecklistItem, uploadAnexoChecklist, getAnexo,
@@ -116,7 +116,7 @@ export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTab
       <div className="bg-card rounded-xl border p-4 grid grid-cols-1 sm:grid-cols-3 gap-4" style={{ borderColor: 'var(--border)' }}>
         <div>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase' }}>Matriz Funcional</p>
-          <p style={{ fontSize: '0.9rem', color: 'var(--ink-1)' }}>{matrizRespostas.length} de {MATRIZ_FUNCOES.length} funções preenchidas</p>
+          <p style={{ fontSize: '0.9rem', color: 'var(--ink-1)' }}>{matrizRespostas.filter(r=>FUNCOES_MATRIZ.some(f=>f.id===r.funcaoId)).length} de {FUNCOES_MATRIZ.length} funções do protótipo registradas</p>
         </div>
         <div>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase' }}>IEO</p>

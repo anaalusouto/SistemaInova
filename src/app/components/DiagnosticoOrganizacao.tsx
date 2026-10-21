@@ -59,7 +59,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
     <div className="flex flex-col gap-6 p-4 sm:p-7 min-w-0">
       <div className="flex flex-col gap-3">
         {!incorporado && <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
-          <ArrowLeft size={12} /> Diagnóstico
+          <ArrowLeft size={12} /> Visão Geral
         </button>}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

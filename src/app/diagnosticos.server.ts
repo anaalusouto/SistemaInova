@@ -6,6 +6,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
 import { validarDocumento, LIMITE_DOCUMENTO } from './lib/documentosRegistro';
+import { diagnosticoAtual } from './diagnostic/navegacaoDiagnostico';
+import { validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
 
 async function getAdmin() {
   await (await import('./sessao.server')).exigirSessao();
@@ -69,17 +71,17 @@ export const listarVisaoGeralDiagnosticos = createServerFn({ method: 'GET' }).ha
     const supabaseAdmin = await getAdmin();
     const { data, error } = await supabaseAdmin
       .from('comunidades')
-      .select('id, code, nome, segmento_social, diagnosticos(id, data_aplicacao, status, criado_em, atualizado_em)')
+      .select('id, code, nome, segmento_social, diagnosticos(id, data_aplicacao, versao, status, criado_em, atualizado_em)')
       .order('nome');
     if (error) throw new Error(error.message);
 
     return (data ?? []).map((row: any): OrganizacaoDiagnosticoResumo => {
       const diags: any[] = row.diagnosticos ?? [];
-      const maisRecente = diags.slice().sort((a, b) => (a.data_aplicacao < b.data_aplicacao ? 1 : -1))[0];
+      const maisRecente = diagnosticoAtual(diags.map(d => mapDiagnostico({...d,comunidade_id:row.id})),row.id);
       const ultimaEdicaoRow = diags.slice().sort((a, b) => (a.atualizado_em < b.atualizado_em ? 1 : -1))[0];
       return {
         comunidadeId: row.id, code: row.code, nome: nomeCurtoOrg(row.nome), classificacao: row.segmento_social ?? '',
-        dataAplicacaoMaisRecente: maisRecente?.data_aplicacao ?? null,
+        dataAplicacaoMaisRecente: maisRecente?.dataAplicacao ?? null,
         ultimaEdicao: ultimaEdicaoRow?.atualizado_em ?? null,
         statusMaisRecente: maisRecente?.status ?? null,
         totalDiagnosticos: diags.length,
@@ -142,6 +144,9 @@ export const concluirDiagnostico = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 export interface MatrizResposta {
   funcaoId: string;
+  nomeFuncao?: string | null;
+  experiencia?: string | null;
+  externo?: string | null;
   atuacao: string[];
   quemExecuta: string | null;
   interesse: string | null;
@@ -154,18 +159,38 @@ export interface MatrizResposta {
 function mapMatrizResposta(row: any): MatrizResposta {
   return {
     funcaoId: row.funcao_id, atuacao: row.atuacao ?? [], quemExecuta: row.quem_executa ?? null,
+    nomeFuncao: row.funcao_nome ?? null, experiencia: row.experiencia ?? null, externo: row.externo ?? null,
     interesse: row.interesse ?? null, criticidade: row.criticidade ?? null, abrangencia: row.abrangencia ?? null,
     observacoes: row.observacoes ?? null, atualizadoEm: row.atualizado_em,
   };
 }
 
 export const listarRespostasMatriz = createServerFn({ method: 'GET' })
-  .validator((d: { diagnosticoId: string }) => d)
-  .handler(async ({ data: { diagnosticoId } }): Promise<MatrizResposta[]> => {
+  .validator((d: { diagnosticoId: string; organizacaoId?: string }) => d)
+  .handler(async ({ data: { diagnosticoId, organizacaoId } }): Promise<MatrizResposta[]> => {
     const supabaseAdmin = await getAdmin();
+    if(organizacaoId) {
+      const {data: pai,error: falha}=await supabaseAdmin.from('diagnosticos').select('id').eq('id',diagnosticoId).eq('comunidade_id',organizacaoId).maybeSingle();
+      if(falha || !pai) throw new Error('A aplicação não pertence à organização selecionada.');
+    }
     const { data, error } = await supabaseAdmin.from('diagnostico_matriz').select('*').eq('diagnostico_id', diagnosticoId);
     if (error) throw new Error(error.message);
-    return (data ?? []).map(mapMatrizResposta);
+    return (data ?? []).filter((r:any)=>/^F(0[1-9]|1[0-9]|2[01])$/.test(r.funcao_id)).map(mapMatrizResposta);
+  });
+
+export const salvarMatrizPrototipo = createServerFn({method:'POST'})
+  .validator((d: MatrizPrototipoInput)=>d)
+  .handler(async({data}):Promise<MatrizResposta>=>{
+    await exigirEscritaDiagnostico(); validarMatrizPrototipo(data);
+    const db=await getAdmin();
+    const {data: row,error}=await db.rpc('salvar_matriz_prototipo',{
+      p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,p_funcao:data.funcaoId,p_nome:data.nomeFuncao,
+      p_atuacao:data.atuacao,p_experiencia:data.experiencia,p_criticidade:data.criticidade,p_interesse:data.interesse,
+      p_observacao:data.observacoes,p_externo:data.externo,
+    });
+    if(error) throw new Error(['PGRST202','42883'].includes(error.code)?'A Matriz atualizada precisa da migração do protótipo no banco.':error.message);
+    if(!row) throw new Error('Não foi possível confirmar a gravação da Matriz.');
+    return mapMatrizResposta(row);
   });
 
 export const salvarRespostaMatriz = createServerFn({ method: 'POST' })
@@ -175,21 +200,7 @@ export const salvarRespostaMatriz = createServerFn({ method: 'POST' })
   }) => d)
   .handler(async ({ data }): Promise<MatrizResposta> => {
     await exigirDiagnosticoEditavel(data.diagnosticoId);
-    const supabaseAdmin = await getAdmin();
-    const { data: row, error } = await supabaseAdmin
-      .from('diagnostico_matriz')
-      .upsert(
-        {
-          diagnostico_id: data.diagnosticoId, funcao_id: data.funcaoId, atuacao: data.atuacao,
-          quem_executa: data.quemExecuta, interesse: data.interesse, criticidade: data.criticidade,
-          abrangencia: data.abrangencia, observacoes: data.observacoes, atualizado_em: new Date().toISOString(),
-        },
-        { onConflict: 'diagnostico_id,funcao_id' },
-      )
-      .select('*')
-      .single();
-    if (error) throw new Error(error.message);
-    return mapMatrizResposta(row);
+    throw new Error('O catálogo anterior foi descontinuado. Reabra a Matriz de 21 funções para salvar.');
   });
 
 // ---------------------------------------------------------------------------
@@ -564,7 +575,7 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
     return {
       diagnostico: mapDiagnostico(diagRes.data),
       comunidade: { nome: nomeCurtoOrg(comunidadeRow.nome ?? '—'), code: comunidadeRow.code ?? '', classificacao: comunidadeRow.segmento_social ?? '' },
-      matriz: (matrizRes.data ?? []).map(mapMatrizResposta),
+      matriz: (matrizRes.data ?? []).filter((r:any)=>/^F(0[1-9]|1[0-9]|2[01])$/.test(r.funcao_id)).map(mapMatrizResposta),
       ieo: (ieoRes.data ?? []).map(mapIeoResposta),
       produtos: (produtosRes.data ?? []).map(mapProdutoRow),
       parecer: mapParecer(parecerRes.data, diagnosticoId),

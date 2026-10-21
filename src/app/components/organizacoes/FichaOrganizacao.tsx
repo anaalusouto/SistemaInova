@@ -95,8 +95,8 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
         <div className="min-w-0">
           {(rota.secao === 'mapeamento' || rota.secao === 'parecer') && (
             <section key={`${org.id}-${rota.secao}`}>
-              <DiagnosticoModule comunidadeId={org.id} instrumentoInicial={rota.secao === 'parecer' ? 'parecer' : 'matriz'} />
-              <div className="px-4 sm:px-7 pb-7"><DocumentosRegistro area={rota.secao} organizacaoId={org.id} relatorioUrl={rota.secao === 'parecer' ? org.parecerRelatorioUrl : org.mapeamentoRelatorioUrl} /></div>
+              <DiagnosticoModule comunidadeId={org.id} instrumentoInicial={rota.secao === 'parecer' ? 'parecer' : 'resumo'} />
+              {rota.secao === 'parecer' && <div className="px-4 sm:px-7 pb-7"><DocumentosRegistro area="parecer" organizacaoId={org.id} relatorioUrl={org.parecerRelatorioUrl} /></div>}
             </section>
           )}
           {rota.secao === 'dados' && (

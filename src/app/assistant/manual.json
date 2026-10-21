@@ -361,7 +361,7 @@
       "termos": "diagnostico ieo indice estruturacao organizacional matriz funcional cesta produto parecer tecnico checklist documental",
       "passos": [
         "Na ficha da organização, entre em Diagnóstico / Mapeamento ou Parecer, abra uma aplicação do histórico e selecione o instrumento. Conforme seu perfil, crie uma nova aplicação quando necessário.",
-        "Na Matriz Funcional, leia função, descrição e exemplo; registre a atuação observada e os demais campos.",
+        "Na Matriz Funcional, escolha criar do zero ou importar PDF. Confira as 21 funções e preencha ou revise os campos antes de salvar.",
         "No IEO, abra a pergunta e compare a situação real com as descrições dos níveis 1 a 4, registrando a observação quando pertinente.",
         "Na Cesta de Produtos, avalie um produto/subproduto por vez e percorra os blocos. No Parecer Técnico, preencha os campos abertos e o checklist conforme a evidência disponível."
       ],
@@ -369,14 +369,14 @@
         "Perguntas, níveis, opções e exemplos vêm dos catálogos do próprio sistema; não é necessário inventar critérios.",
         "O cálculo atual do IEO usa a média dos níveis respondidos em cada dimensão e a média das dimensões com resposta. Perguntas vazias não contam como zero.",
         "A metodologia oficial de ponderação do IEO ainda precisa de validação; a fórmula atual é uma implementação, não certificação institucional.",
-        "Na Matriz, Quem executa se aplica quando marcada a atuação Não realiza; função, descrição e exemplo são fixos.",
+        "Na Matriz, selecione uma atuação e uma experiência por função. Criticidade atual e interesse em desenvolvimento usam a escala de 1 a 4; a leitura orientativa é calculada. Respostas importadas exigem conferência antes do salvamento.",
         "Na Cesta, características desejadas não equivalem ao grau de processamento. Respostas de biodiversidade/conhecimento tradicional apoiam triagem técnica e não substituem enquadramento jurídico."
       ],
       "fontes": [
         "src/app/diagnostic/ieoCalculation.ts",
         "src/app/components/diagnostic/MatrizFuncionalTab.tsx",
         "src/app/diagnostic/catalog/ieo.ts",
-        "src/app/diagnostic/catalog/matrizFuncional.ts",
+        "src/app/diagnostic/catalog/matrizPrototipo.ts",
         "src/app/diagnostic/catalog/cestaProdutos.ts",
         "src/app/diagnostic/catalog/parecerComplementar.ts",
         "src/app/diagnostic/catalog/checklistDocumental.ts"

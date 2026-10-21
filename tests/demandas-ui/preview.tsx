@@ -15,6 +15,8 @@ import { projeto } from "./dados";
 import { TabPlanoTrabalho } from "../../src/app/components/plano/TabPlanoTrabalho";
 import type { Project } from "../../src/app/data/mockData";
 import { IeoTab } from "../../src/app/components/diagnostic/IeoTab";
+import { DiagnosticoEditor } from "../../src/app/components/DiagnosticoEditor";
+import { DiagnosticoModule } from "../../src/app/components/DiagnosticoModule";
 import "../../src/styles.css";
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 export function Preview() {
@@ -33,6 +35,8 @@ function LayoutPreview() {
   const [formatoAberto, setFormatoAberto] = useState(false);
   const { recolhido, alternar } = useMenuLateral();
   const { toggleMode, setAccent, setFontScale } = useTheme();
+  if (new URLSearchParams(location.search).has('matriz-navegacao')) return <DiagnosticoModule />;
+  if (new URLSearchParams(location.search).has('matriz-arquitetura')) return <DiagnosticoEditor diagnosticoId="diag-demo" onBack={() => {}} onNovaVersao={() => {}} />;
   if (new URLSearchParams(location.search).has('paleta')) return <div className="min-h-dvh p-6 bg-background text-foreground">
     <p className="mb-3">Prévia local da paleta institucional — dados sintéticos.</p>
     <button className="bg-primary text-primary-foreground rounded px-3 py-2 mb-5" onClick={toggleMode}>Alternar tema</button>

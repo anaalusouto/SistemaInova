@@ -143,9 +143,21 @@ export const diagnostico = {
   atualizadoEm: "2026-10-19T12:00:00Z",
 };
 const documentos: Record<string, unknown>[] = [];
+const matriz: Record<string, unknown>[] = [];
 export async function call(name: string, args?: { data?: Record<string, unknown> }) {
   const d = args?.data ?? {};
+  if (name === 'listarRespostasMatriz') return matriz.filter(r=>r.diagnosticoId===d.diagnosticoId);
+  if (name === 'salvarMatrizPrototipo') {
+    if(d.organizacaoId!==orgId || d.diagnosticoId!==diagnostico.id) throw new Error('Aplicação de outra organização.');
+    if(new URLSearchParams(location.search).has('falha')) throw new Error('Falha simulada ao salvar a Matriz.');
+    const row={...d,atuacao:d.atuacao?[d.atuacao]:[],quemExecuta:null,abrangencia:null,atualizadoEm:new Date().toISOString()};
+    const i=matriz.findIndex(r=>r.diagnosticoId===d.diagnosticoId&&r.funcaoId===d.funcaoId);
+    if(i<0) matriz.push(row); else matriz[i]=row;
+    return row;
+  }
   if (name === "listarComunidades") return [org];
+  if (name === "listarVisaoGeralDiagnosticos") return [{comunidadeId:orgId,code:org.code,nome:org.nome,classificacao:org.categoria,
+    dataAplicacaoMaisRecente:diagnostico.dataAplicacao,ultimaEdicao:diagnostico.atualizadoEm,statusMaisRecente:diagnostico.status,totalDiagnosticos:1}];
   if (name === "listarDiagnosticosPorComunidade") return [diagnostico];
   if (name === "getDiagnostico") return diagnostico;
   if (name === "listarProdutos")
@@ -164,7 +176,7 @@ export async function call(name: string, args?: { data?: Record<string, unknown>
     return {
       diagnostico,
       comunidade: { nome: org.nome, code: org.code, classificacao: org.categoria },
-      matriz: [],
+      matriz,
       ieo: [],
       produtos: [],
       parecer: {
