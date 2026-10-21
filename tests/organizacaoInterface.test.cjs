@@ -152,7 +152,7 @@ test('orçamento exibe a meta real de cada item e diferencia legado sem vínculo
 });
 
 test('AT-017/020: desktop e celular apresentam seis seções na ordem e organização corretas', () => {
-  const nomes = ['Cadastro', 'Projeto', 'Diagnóstico / Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato'];
+  const nomes = ['Projeto', 'Diagnóstico / Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato', 'Cadastro'];
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pessoas: [], pendentes: 0 };
     for (const secao of ['dados', 'projeto', 'mapeamento', 'parecer', 'encaminhamentos', 'registros']) {

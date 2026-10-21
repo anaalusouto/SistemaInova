@@ -37,12 +37,12 @@ export function resolverProjetoOrg<T extends { id: number }>(projetos: readonly 
 }
 
 export const SECOES_ORG: { id: Exclude<SecaoOrg, 'projeto'>; rotulo: string; emConstrucao?: boolean }[] = [
-  { id: 'dados', rotulo: 'Cadastro' },
   { id: 'projetos', rotulo: 'Projeto' },
   { id: 'mapeamento', rotulo: 'Diagnóstico / Mapeamento' },
   { id: 'parecer', rotulo: 'Parecer' },
   { id: 'encaminhamentos', rotulo: 'Encaminhamento' },
   { id: 'registros', rotulo: 'Registro de Contato' },
+  { id: 'dados', rotulo: 'Cadastro' },
 ];
 
 /**

@@ -29,7 +29,7 @@ export function OrganizacoesModule({ rota, aoNavegar }: OrganizacoesModuleProps)
   }
   return (
     <ListaOrganizacoes
-      aoAbrir={id => aoNavegar({ orgId: id, secao: 'dados', projetoId: null })}
+      aoAbrir={id => aoNavegar({ orgId: id, secao: 'projeto', projetoId: null })}
       filtros={filtros}
       aoMudarFiltros={setFiltros}
     />
