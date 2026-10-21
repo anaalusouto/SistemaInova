@@ -24,6 +24,21 @@ const helper = carregar('src/app/lib/reordenacaoPlano.ts');
 const plano = carregar('src/app/lib/planoRelatorio.ts');
 const { codigosHierarquicos } = carregar('src/app/lib/planoTrabalho.ts');
 const lista = [1, 2, 3, 4].map(n => ({ id: uid(n), order: n }));
+test('número legado no título não duplica a posição atual nem altera o texto armazenado', () => {
+  const { tituloSemNumeroLegado } = carregar('src/app/lib/tituloPlano.ts');
+  for(const [tipo,nome,esperado] of [['etapa','1.2 Nome da etapa','Nome da etapa'],['etapa','Etapa 1.2 — Oficina','Oficina'],
+    ['meta','1. Produção','Produção'],['atividade','1.2.3 - Oficina','Oficina'],['meta','2026 resultados','2026 resultados'],
+    ['etapa','1.2','1.2'],['etapa','Produção 1.2','Produção 1.2']])
+    assert.equal(tituloSemNumeroLegado(nome,tipo),esperado);
+  const metas=[{id:uid(10),name:'Meta A',order:1,deliverables:[{id:uid(20),name:'1.2 Nome da etapa',order:1,activities:[]}]}];
+  const antes=structuredClone(metas);
+  const { VisaoOrdenacao }=carregar('src/app/components/plano/VisaoOrdenacao.tsx',{
+    '../../store':{useStore:()=>({})},'../../auth/authStore':{useAuth:()=>({readOnly:false})},
+  });
+  const html=renderToStaticMarkup(React.createElement(VisaoOrdenacao,{projetoId:1,metas,codigos:new Map([[uid(20),'2.3']])}));
+  assert.match(html,/Etapa 2.3<\/strong> · Nome da etapa/);
+  assert.deepEqual(metas,antes);
+});
 const dados = (nivel = 'atividade') => ({ nivel, paiId: nivel === 'meta' ? 10 : uid(20), antes: lista, ids: helper.moverParaPosicao(lista, uid(2), 4) });
 
 test('atividade 1.2.2 vira 1.2.4 e mantém subtarefas, riscos, anexos e vínculo com a etapa', () => {

@@ -16,6 +16,7 @@ import { useStore } from "../../store";
 import { indiceConclusao } from "../../lib/conclusaoPlano";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { dadosDaAtividade, errosDaEdicao } from "../../lib/edicaoLinhaPlano";
+import { tituloSemNumeroLegado } from "../../lib/tituloPlano";
 import { COLUNAS_PLANO, type ColunaPlano } from "../../lib/formatoPlano";
 import { useLargurasTabela, larguraInicialColuna } from "./useLargurasTabela";
 import {
@@ -329,12 +330,12 @@ export function VisaoTabela({
                     {recolhidos.has(l.id) ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
                   </button>
                 )}
-                <span className="plano-registro-numero text-xs text-muted-foreground">
+                {!emEdicao && <span className="plano-registro-numero text-xs text-muted-foreground">
                   {codigos.get(l.id)}
-                </span>
+                </span>}
                 {emEdicao ? campo("nome") : <button type="button" onClick={abrirDetalhe}
                   aria-label={`Abrir ${l.tipo}: ${l.dados.nome}`}
-                  className={`plano-registro-nome text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}>{d.nome}</button>}
+                  className={`plano-registro-nome text-left hover:underline ${concluido ? "line-through" : ""} ${estrutura ? "font-semibold" : ""}`}>{tituloSemNumeroLegado(d.nome, l.tipo)}</button>}
               </div>
               {!readOnly &&
                 !administrativo &&

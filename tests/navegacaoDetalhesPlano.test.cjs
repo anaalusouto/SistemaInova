@@ -77,7 +77,7 @@ test('navegação da lateral abre o tipo e ID corretos; salvar bloqueia navegaç
   assert.equal(salvar.length, 1);
 });
 
-test('Tabela separa abrir meta de expandir; Todos os campos e Ordenar abrem o mesmo detalhe', () => {
+test('Tabela separa abrir meta de expandir; Todos os campos abre detalhe e Ordenar só oferece posições', () => {
   const abrir = []; let expandiu = 0;
   const mocks = { react: { ...React, useMemo: fn => fn(), useRef: v => ({ current: v }), useState: v => [v, () => {}] },
     '../../auth/authStore': { useAuth: () => ({ readOnly: false }) }, '../../store': { useStore: () => ({}) } };
@@ -94,9 +94,9 @@ test('Tabela separa abrir meta de expandir; Todos os campos e Ordenar abrem o me
   achar(completa, n => n.type === 'button').props.onClick();
   assert.deepEqual(abrir.at(-1), { tipo: 'atividade', id: 'a1' });
   const { VisaoOrdenacao } = carregar('src/app/components/plano/VisaoOrdenacao.tsx', mocks);
-  const ordem = VisaoOrdenacao({ projetoId: 1, metas: [meta], codigos: new Map(), aoAbrir: alvo => abrir.push(alvo) });
-  achar(ordem, n => n.type === 'button').props.onClick();
-  assert.deepEqual(abrir.at(-1), { tipo: 'meta', id: 'm1' });
+  const ordem = VisaoOrdenacao({ projetoId: 1, metas: [meta], codigos: new Map() });
+  assert.equal(achar(ordem, n => n.type === 'button'), undefined, 'Ordenação não abre o editor');
+  assert.ok(achar(ordem, n => n.type === 'select'), 'As posições permanecem disponíveis em Ordenar');
 });
 
 test('detalhe da atividade recebe lateral e mantém observações, encaminhamento, subtarefas, anexo, risco e orçamento visíveis', () => {

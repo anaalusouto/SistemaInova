@@ -4,9 +4,9 @@ import type { Goal } from '../../data/mockData';
 import { useStore } from '../../store';
 import { useAuth } from '../../auth/authStore';
 import { moverParaPosicao, type ItemOrdemPlano, type NivelPlano } from '../../lib/reordenacaoPlano';
-import type { SelecaoPlano } from './NavegacaoPlano';
+import { tituloSemNumeroLegado } from '../../lib/tituloPlano';
 
-export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projetoId: number; metas: Goal[]; codigos: Map<string, string>; aoAbrir?: (alvo: SelecaoPlano) => void }) {
+export function VisaoOrdenacao({ projetoId, metas, codigos }: { projetoId: number; metas: Goal[]; codigos: Map<string, string> }) {
   const { reorderPlano, moveEtapa } = useStore();
   const { readOnly } = useAuth();
   const [salvando, setSalvando] = useState(false);
@@ -42,8 +42,7 @@ export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projeto
     const prefixo = codigo.split('.').slice(0, -1);
     const rotulo = { meta: 'Meta', etapa: 'Etapa', atividade: 'Atividade' }[nivel];
     return <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2">
-      {aoAbrir ? <button type="button" disabled={salvando} className="flex-1 min-w-0 text-left text-sm break-words hover:underline" onClick={() => aoAbrir({ tipo: nivel, id: item.id })}><strong>{rotulo} {codigo}</strong> · {item.name}</button>
-        : <span className="flex-1 min-w-0 text-sm break-words"><strong>{rotulo} {codigo}</strong> · {item.name}</span>}
+      <span className="flex-1 min-w-0 text-sm break-words"><strong>{rotulo} {codigo}</strong> · {tituloSemNumeroLegado(item.name, nivel)}</span>
       {!readOnly && <select aria-label={`Posição de ${rotulo.toLowerCase()} ${codigo}: ${item.name}`} value={irmaos.findIndex(i => i.id === item.id) + 1}
         disabled={salvando || irmaos.length < 2} className="border rounded-lg p-2 text-xs disabled:opacity-50"
         style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
@@ -67,13 +66,14 @@ export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projeto
               <legend className="text-xs">Transferir etapa {codigos.get(etapa.id)}</legend>
               <label className="text-xs">Meta de destino<select className="block border rounded p-2 bg-card" value={transferencia.destinoId}
                 onChange={e => setTransferencia({ ...transferencia, destinoId: e.target.value, posicao: 1 })}>
-                {metas.filter(m => m.id !== meta.id).map(m => <option key={m.id} value={m.id}>Meta {codigos.get(m.id)} · {m.name}</option>)}
+                {metas.filter(m => m.id !== meta.id).map(m => <option key={m.id} value={m.id}>Meta {codigos.get(m.id)} · {tituloSemNumeroLegado(m.name, 'meta')}</option>)}
               </select></label>
               <label className="text-xs">Posição no destino<select className="block border rounded p-2 bg-card" value={transferencia.posicao}
                 onChange={e => setTransferencia({ ...transferencia, posicao: Number(e.target.value) })}>
                 {Array.from({ length: (metas.find(m => m.id === transferencia.destinoId)?.deliverables.length ?? 0) + 1 }, (_, i) =>
                   <option key={i} value={i + 1}>Posição {i + 1} ({codigos.get(transferencia.destinoId)}.{i + 1})</option>)}
               </select></label>
+              <p role="status" className="basis-full text-sm">Etapa {codigos.get(etapa.id)} → {codigos.get(transferencia.destinoId)}.{transferencia.posicao}. As atividades acompanham a etapa.</p>
               <button type="button" className="border rounded p-2 text-xs" onClick={() => setTransferencia(null)}>Cancelar</button>
               <button type="button" className="bg-primary text-primary-foreground rounded p-2 text-xs" onClick={() => void transferir()}>Confirmar movimentação</button>
             </fieldset>}

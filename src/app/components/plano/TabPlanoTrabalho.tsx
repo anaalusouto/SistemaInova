@@ -514,7 +514,6 @@ export function TabPlanoTrabalho({
               projetoId={p.id}
               metas={metas}
               codigos={codigos}
-              aoAbrir={abrirRegistro}
             />
           )}
           {visao === "tabela" && (
