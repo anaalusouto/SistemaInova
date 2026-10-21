@@ -7,9 +7,8 @@
  * divergem com o tempo. O servidor revalida de qualquer forma: a checagem
  * daqui é conveniência para quem digita, não barreira (RN-001).
  *
- * Os limites de data também vão para os atributos min/max dos campos, para que
- * o calendário do navegador já não ofereça data fora da etapa — evitar o erro
- * é melhor do que explicá-lo depois.
+ * Os limites previstos vão para min/max. As datas realizadas ficam livres
+ * para registrar atrasos, exigindo apenas uma sequência cronológica válida.
  */
 import { useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -76,7 +75,6 @@ export function FormularioAtividade({
     [form.inicioPrevisto, form.fimPrevisto, form.inicioRealizado, form.fimRealizado],
   );
 
-  const tetoRealizado = etapa.actualEnd ?? etapa.plannedEnd;
   const validacaoJustificativa = validarJustificativaAtraso({
     plannedStart: form.inicioPrevisto, plannedEnd: form.fimPrevisto,
     actualStart: form.inicioRealizado, actualEnd: form.fimRealizado,
@@ -213,14 +211,13 @@ export function FormularioAtividade({
           Realizado — preencher só quando acontecer
         </legend>
         <Campo rotulo="Início real">
-          <Data valor={form.inicioRealizado} aoMudar={v => alterar('inicioRealizado', v)} max={tetoRealizado} />
+          <Data valor={form.inicioRealizado} aoMudar={v => alterar('inicioRealizado', v)} />
         </Campo>
         <Campo rotulo="Fim real">
           <Data
             valor={form.fimRealizado}
             aoMudar={v => alterar('fimRealizado', v)}
             min={form.inicioRealizado}
-            max={tetoRealizado}
           />
         </Campo>
       </fieldset>

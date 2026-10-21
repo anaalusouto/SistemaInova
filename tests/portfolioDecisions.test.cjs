@@ -287,6 +287,16 @@ test('busca encontra organizações pela sigla, nome completo e projeto', () => 
 });
 
 const { validarJustificativaAtraso, temAtrasoNasDatas, validarDatasDaAtividade } = loadTs('src/app/lib/planoTrabalho');
+test('execução realizada aceita atraso longo sem alterar o previsto nem exigir estender antes a etapa', () => {
+  const atividade = { plannedStart:'2026-01-01',plannedEnd:'2026-01-31',actualStart:'2027-02-01',actualEnd:'2027-12-31' };
+  for(const actualEnd of [null,'2026-02-28']) {
+    const etapa = {plannedStart:'2026-01-01',plannedEnd:'2026-01-31',actualStart:null,actualEnd};
+    assert.equal(validarDatasDaAtividade(atividade,etapa).ok,true);
+    assert.equal(validarDatasDaAtividade({...atividade,actualEnd:'2027-01-31'},etapa).ok,false,'Fim anterior ao início continua inválido');
+    assert.equal(validarDatasDaAtividade({...atividade,plannedEnd:'2026-02-01'},etapa).ok,false,'Limite do previsto permanece');
+  }
+  assert.equal(validarJustificativaAtraso(atividade,'Execução adiada por indisponibilidade do fornecedor.').ok,true);
+});
 for (const [inicio, inicioReal] of [['antecipado', '2026-10-09'], ['igual', '2026-10-10'], ['posterior', '2026-10-11']]) {
   for (const [fim, fimReal] of [['antecipado', '2026-10-19'], ['igual', '2026-10-20'], ['posterior', '2026-10-21']]) {
     test(`justificativa: início ${inicio} e fim ${fim}`, () => {

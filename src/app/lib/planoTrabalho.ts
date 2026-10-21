@@ -940,9 +940,8 @@ export interface ValidacaoDatas {
  * Valida as datas de uma atividade contra o período da etapa que a contém.
  *
  * Regras (RN-015): início previsto não pode ser anterior ao da etapa, fim
- * previsto não pode ultrapassar o da etapa, e início <= fim em cada par. Para
- * o par realizado, o teto é o fim realizado da etapa quando preenchido e, na
- * falta dele, o fim previsto.
+ * previsto não pode ultrapassar o da etapa, e início <= fim em cada par.
+ * O realizado registra a execução efetiva, inclusive após o prazo da etapa.
  *
  * Etapa sem período previsto não aceita atividade (CA-07): o documento prefere
  * pedir o preenchimento do período a aceitar uma atividade sem limite algum.
@@ -973,19 +972,6 @@ export function validarDatasDaAtividade(
   }
   if (plannedEnd && plannedEnd > etapa.plannedEnd) {
     erros.push('O fim previsto não pode ultrapassar o fim previsto da etapa.');
-  }
-
-  // RN-016: o teto do realizado acompanha o realizado da etapa quando ele
-  // existe. É isso que permite registrar um atraso de verdade — primeiro a
-  // etapa estende o período realizado, depois a atividade
-  // recebe a data. Sem isso, a validação obrigaria a descartar a ocorrência.
-  const tetoRealizado = etapa.actualEnd ?? etapa.plannedEnd;
-  if (actualEnd && actualEnd > tetoRealizado) {
-    erros.push(
-      etapa.actualEnd
-        ? 'O fim realizado não pode ultrapassar o fim realizado da etapa.'
-        : 'O fim realizado ultrapassa o fim previsto da etapa. Atualize primeiro o período realizado da etapa para incluir essa data.',
-    );
   }
 
   return { ok: erros.length === 0, erros };

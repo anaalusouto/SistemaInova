@@ -39,6 +39,9 @@ function FormularioPeriodo({ etapa, aoFechar }: { etapa: Deliverable; aoFechar: 
       etapa.activities.map(a => ({ name: a.name, plannedStart: a.plannedStart, plannedEnd: a.plannedEnd })),
     );
     if (!validacao.ok) { setErros(validacao.erros); return; }
+    if (inicioRealizado && fimRealizado && inicioRealizado > fimRealizado) {
+      setErros(['O início realizado não pode ser posterior ao fim realizado.']); return;
+    }
 
     setSalvando(true);
     try {
@@ -65,12 +68,10 @@ function FormularioPeriodo({ etapa, aoFechar }: { etapa: Deliverable; aoFechar: 
         <Campo rotulo="Fim previsto"><Data valor={fimPrevisto} aoMudar={setFimPrevisto} min={inicioPrevisto} /></Campo>
       </fieldset>
 
-      {/* RN-016: é estendendo o realizado da etapa que se registra um atraso de
-          verdade. Sem este campo, a validação da atividade obrigaria a
-          descartar a ocorrência do atraso. */}
+      {/* O realizado registra a execução efetiva, inclusive após o previsto. */}
       <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-3 border rounded-lg p-3" style={{ borderColor: 'var(--line-1)' }}>
         <legend style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-4)', padding: '0 6px' }}>
-          Realizado — estenda aqui quando a execução passar do previsto
+          Realizado — informe as datas efetivas, mesmo após o previsto
         </legend>
         <Campo rotulo="Início"><Data valor={inicioRealizado} aoMudar={setInicioRealizado} max={fimRealizado} /></Campo>
         <Campo rotulo="Fim"><Data valor={fimRealizado} aoMudar={setFimRealizado} min={inicioRealizado} /></Campo>

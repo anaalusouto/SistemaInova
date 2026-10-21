@@ -23,6 +23,18 @@ function carregar(file, mocks = {}, cache = new Map()) {
   return mod.exports;
 }
 const helper = carregar('src/app/lib/conclusaoPlano.ts');
+test('calendário realizado aceita atraso além do previsto e do realizado da etapa', () => {
+  const { FormularioAtividade }=carregar('src/app/components/plano/FormularioAtividade.tsx',{
+    '../../store':{useStore:()=>({})},'../../auth/authStore':{usePeople:()=>[]},
+  });
+  const etapa={id:'e',plannedStart:'2026-01-01',plannedEnd:'2026-02-01',actualStart:null,actualEnd:'2026-03-01',activities:[]};
+  const html=renderToStaticMarkup(React.createElement(FormularioAtividade,{etapa,aoFechar(){}}));
+  const datas=[...html.matchAll(/<input\b[^>]*type="date"[^>]*>/g)].map(m=>m[0]);
+  assert.equal(datas.length,5);
+  assert.ok(datas[0].includes('max="2026-02-01"'));
+  assert.ok(datas[1].includes('max="2026-02-01"'));
+  for(const campo of datas.slice(2,4)) assert.ok(!campo.includes('max='),'Realizado sem teto do previsto ou da etapa');
+});
 const arvore = () => [{ id: 'm1', name: 'Meta', deliverables: [
   { id: 'e1', name: 'Etapa', activities: [{ id: 'a1', status: 'Concluído' }, { id: 'a2', status: 'A iniciar' }] },
   { id: 'e2', name: 'Etapa vazia', activities: [] },
