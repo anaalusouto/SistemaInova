@@ -1,6 +1,6 @@
 /** Paleta institucional CRIA. Só o fundo da escala usa transparência. */
 export const CORES_INSTITUCIONAIS = {
-  fundo: '#FFFCF8',
+  fundo: '#FAFAFA',
   superficie: '#FFFFFF',
   acao: '#344980',
   texto: '#253253',

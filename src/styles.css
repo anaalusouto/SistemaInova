@@ -122,8 +122,8 @@
   --line-2: #C5CBD9;
   --surface-0: #FFFFFF;
   --surface-1: #FFFFFF;
-  --surface-2: #FFFCF8;
-  --background: #FFFCF8;
+  --surface-2: #FAFAFA;
+  --background: #FAFAFA;
   --foreground: #253253;
   --card: #FFFFFF;
   --card-foreground: #253253;
@@ -131,7 +131,7 @@
   --popover-foreground: #253253;
   --border: var(--line-1);
   --input: var(--line-2);
-  --muted: #FFFCF8;
+  --muted: #FAFAFA;
   --muted-foreground: var(--ink-4);
   --accent: rgba(52,73,128,0.08);
   --accent-foreground: #253253;
