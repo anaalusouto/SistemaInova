@@ -24,7 +24,7 @@ import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade, alterarConclusaoPlano,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco, excluirRisco,
   criarParecer, atualizarParecer, excluirParecer, definirResponsavel, reordenarPlano,
-  salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa,
+  salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa, moverEtapaPlano,
   type PeriodoEtapaInput, type SalvarMetaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
@@ -181,6 +181,7 @@ type Ctx = {
   deleteParecer: (parecerId: string) => Promise<void>;
   setResponsavel: (atividadeId: string, responsavel: string) => Promise<void>;
   reorderPlano: (input: import('./lib/reordenacaoPlano').ReordenarPlanoInput) => Promise<void>;
+  moveEtapa: (input: import('./lib/reordenacaoPlano').MoverEtapaInput) => Promise<void>;
   reclassificarPlano: (input: ReclassificarPlanoInput) => Promise<string>;
 
   // Orçamento (RF-030, RF-039, RF-040, RF-041)
@@ -390,6 +391,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
     createAtividade: input => run(() => criarAtividade({ data: input })),
     updateAtividade: (atividadeId, input) => run(() => atualizarAtividade({ data: { atividadeId, dados: input } })),
     setConclusaoPlano: input => run(() => alterarConclusaoPlano({ data: input })),
+    moveEtapa: input => run(() => moverEtapaPlano({ data: input })),
     deleteAtividade: atividadeId => run(() => excluirAtividade({ data: { atividadeId } })),
     createTarefa: (atividadeId, titulo) => run(() => criarTarefa({ data: { atividadeId, titulo } })),
     renameTarefa: (tarefaId, titulo) => run(() => renomearTarefa({ data: { tarefaId, titulo } })),

@@ -75,6 +75,19 @@ test('handler salva os três níveis em uma RPC e usa autoria da sessão', async
   }
 });
 
+test('transferência valida origem, destino e posição, envia snapshots e exige permissão de escrita', async () => {
+  const d={projetoId:10,etapaId:uid(2),origemId:uid(10),destinoId:uid(20),posicao:1,antesOrigem:lista,antesDestino:[]};
+  const s=servidor(); await s.moverEtapaPlano({data:d});
+  assert.equal(s.chamadas[0].nome,'mover_etapa_plano');
+  assert.deepEqual(s.chamadas[0].params.p_antes_origem,lista);
+  assert.equal(s.chamadas[0].params.p_autor,'Pessoa');
+  assert.equal(s.chamadas[0].params.p_destino,uid(20));
+  await assert.rejects(servidor({consulta:true}).moverEtapaPlano({data:d}),/permissão/);
+  for(const patch of [{destinoId:uid(10)},{antesOrigem:[]},{posicao:2},{antesDestino:[lista[1]]},{projetoId:NaN}]) {
+    const invalido=servidor();await assert.rejects(invalido.moverEtapaPlano({data:{...d,...patch}}));assert.equal(invalido.chamadas.length,0);
+  }
+});
+
 test('permissão de consulta e listas inválidas são recusadas antes de qualquer RPC', async () => {
   const consulta = servidor({ consulta: true });
   await assert.rejects(consulta.reordenarPlano({ data: dados() }), /permissão/); assert.equal(consulta.chamadas.length, 0);

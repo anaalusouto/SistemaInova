@@ -7,10 +7,26 @@ import { moverParaPosicao, type ItemOrdemPlano, type NivelPlano } from '../../li
 import type { SelecaoPlano } from './NavegacaoPlano';
 
 export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projetoId: number; metas: Goal[]; codigos: Map<string, string>; aoAbrir?: (alvo: SelecaoPlano) => void }) {
-  const { reorderPlano } = useStore();
+  const { reorderPlano, moveEtapa } = useStore();
   const { readOnly } = useAuth();
   const [salvando, setSalvando] = useState(false);
   const emExecucao = useRef(false);
+  const [transferencia, setTransferencia] = useState<{ etapaId: string; origemId: string; destinoId: string; posicao: number } | null>(null);
+  const transferir = async () => {
+    if (readOnly || emExecucao.current || !transferencia) return;
+    const origem = metas.find(m => m.id === transferencia.origemId);
+    const destino = metas.find(m => m.id === transferencia.destinoId);
+    if (!origem || !destino) return;
+    emExecucao.current = true; setSalvando(true);
+    try {
+      await moveEtapa({ projetoId, ...transferencia,
+        antesOrigem: origem.deliverables.map(({ id, order }) => ({ id, order })),
+        antesDestino: destino.deliverables.map(({ id, order }) => ({ id, order })),
+      });
+      setTransferencia(null); toast.success('Etapa transferida. A numeração do plano foi atualizada.');
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível transferir a etapa.'); }
+    finally { emExecucao.current = false; setSalvando(false); }
+  };
   const mover = async (nivel: NivelPlano, paiId: string | number, irmaos: ItemOrdemPlano[], id: string, posicao: number) => {
     if (readOnly || emExecucao.current || irmaos.findIndex(i => i.id === id) === posicao - 1) return;
     emExecucao.current = true;
@@ -44,6 +60,24 @@ export function VisaoOrdenacao({ projetoId, metas, codigos, aoAbrir }: { projeto
       {linha('meta', projetoId, metas, meta)}
       {meta.deliverables.map(etapa => <div key={etapa.id} className="ml-3 pl-3 border-l" style={{ borderColor: 'var(--border)' }}>
         {linha('etapa', meta.id, meta.deliverables, etapa)}
+        {!readOnly && metas.length > 1 && <div className="mb-2">
+          {transferencia?.etapaId !== etapa.id ? <button type="button" className="text-xs underline" disabled={salvando || transferencia !== null}
+            onClick={() => setTransferencia({ etapaId: etapa.id, origemId: meta.id, destinoId: metas.find(m => m.id !== meta.id)!.id, posicao: 1 })}>Mover para outra meta</button>
+            : <fieldset disabled={salvando} className="flex flex-wrap items-end gap-2 border rounded p-3">
+              <legend className="text-xs">Transferir etapa {codigos.get(etapa.id)}</legend>
+              <label className="text-xs">Meta de destino<select className="block border rounded p-2 bg-card" value={transferencia.destinoId}
+                onChange={e => setTransferencia({ ...transferencia, destinoId: e.target.value, posicao: 1 })}>
+                {metas.filter(m => m.id !== meta.id).map(m => <option key={m.id} value={m.id}>Meta {codigos.get(m.id)} · {m.name}</option>)}
+              </select></label>
+              <label className="text-xs">Posição no destino<select className="block border rounded p-2 bg-card" value={transferencia.posicao}
+                onChange={e => setTransferencia({ ...transferencia, posicao: Number(e.target.value) })}>
+                {Array.from({ length: (metas.find(m => m.id === transferencia.destinoId)?.deliverables.length ?? 0) + 1 }, (_, i) =>
+                  <option key={i} value={i + 1}>Posição {i + 1} ({codigos.get(transferencia.destinoId)}.{i + 1})</option>)}
+              </select></label>
+              <button type="button" className="border rounded p-2 text-xs" onClick={() => setTransferencia(null)}>Cancelar</button>
+              <button type="button" className="bg-primary text-primary-foreground rounded p-2 text-xs" onClick={() => void transferir()}>Confirmar movimentação</button>
+            </fieldset>}
+        </div>}
         {etapa.activities.map(atividade => <div key={atividade.id} className="ml-3 pl-3 border-l" style={{ borderColor: 'var(--border)' }}>
           {linha('atividade', etapa.id, etapa.activities, atividade)}
         </div>)}

@@ -50,6 +50,7 @@ export const projeto = {
       id: "r1",
       title: "Risco de demonstração",
       description: "Exemplo fictício",
+      category: "Técnico",
       status: "Aberto",
       probability: 2,
       impact: 3,
@@ -202,4 +203,8 @@ export async function call(name: string, args?: { data?: Record<string, unknown>
   }
   if (name.startsWith("listar") || name.startsWith("buscar")) return [];
   return {};
+}
+
+if(typeof window!=='undefined' && new URLSearchParams(location.search).has('movimentacao')) {
+  projeto.goals.push({...structuredClone(projeto.goals[0]),id:'m2',name:'Meta de destino',order:2,deliverables:[]});
 }

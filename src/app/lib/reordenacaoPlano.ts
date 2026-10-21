@@ -6,6 +6,26 @@ export interface ReordenarPlanoInput {
   antes: ItemOrdemPlano[];
   ids: string[];
 }
+export interface MoverEtapaInput {
+  projetoId: number;
+  etapaId: string;
+  origemId: string;
+  destinoId: string;
+  posicao: number;
+  antesOrigem: ItemOrdemPlano[];
+  antesDestino: ItemOrdemPlano[];
+}
+export function validarMovimentoEtapa(d: MoverEtapaInput): void {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!d || !Number.isSafeInteger(d.projetoId) || d.projetoId <= 0 || ![d.etapaId,d.origemId,d.destinoId].every(id => typeof id === 'string' && uuid.test(id)) || d.origemId === d.destinoId)
+    throw new Error('Escolha a etapa e outra meta do mesmo projeto.');
+  for (const lista of [d.antesOrigem,d.antesDestino]) {
+    if (!Array.isArray(lista) || lista.some(i => !i || !uuid.test(i.id) || !Number.isFinite(i.order)) || new Set(lista.map(i => i.id)).size !== lista.length)
+      throw new Error('Atualize a estrutura antes de mover a etapa.');
+  }
+  if (!d.antesOrigem.some(i => i.id === d.etapaId) || d.antesDestino.some(i => i.id === d.etapaId) || !Number.isInteger(d.posicao) || d.posicao < 1 || d.posicao > d.antesDestino.length + 1)
+    throw new Error('Posição ou origem da etapa inválida.');
+}
 
 export function moverParaPosicao(lista: readonly ItemOrdemPlano[], id: string, posicao: number): string[] {
   const atual = lista.findIndex(i => i.id === id);

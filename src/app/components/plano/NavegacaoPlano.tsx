@@ -1,9 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
 import type { Activity, Goal } from '../../data/mockData';
 import { useAuth } from '../../auth/authStore';
-import { useStore } from '../../store';
+import { useConclusaoComPeriodo } from './useConclusaoComPeriodo';
 import { resumirConclusao, type TipoConclusaoPlano } from '../../lib/conclusaoPlano';
 import { CheckConclusaoPlano } from './CheckConclusaoPlano';
 
@@ -34,22 +33,11 @@ export function NavegacaoPlano({ meta, selecionado, codigos, aoAbrir, aoOcupar }
   aoAbrir: (selecao: SelecaoPlano) => void; aoOcupar?: (ocupado: boolean) => void;
 }) {
   const { readOnly } = useAuth();
-  const { setConclusaoPlano } = useStore();
-  const [ocupado, setOcupado] = useState(false);
-  const emCurso = useRef(false);
+  const { solicitar, ocupado, salvando, dialogo } = useConclusaoComPeriodo(aoOcupar);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
-  const concluir = async (alvo: SelecaoPlano, concluido: boolean) => {
-    if (readOnly || emCurso.current) return;
-    emCurso.current = true; setOcupado(true); aoOcupar?.(true);
-    try {
-      await setConclusaoPlano({ ...alvo, concluido });
-      toast.success(concluido ? 'Conclusão salva.' : 'Retornado para Em andamento.');
-    } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível salvar a conclusão.'); }
-    finally { emCurso.current = false; setOcupado(false); aoOcupar?.(false); }
-  };
   const registro = (tipo: TipoConclusaoPlano, id: string, nome: string, atividades: Activity[]) =>
     <RegistroDaArvore tipo={tipo} id={id} nome={nome} codigo={codigos.get(id)} atividades={atividades} selecionado={selecionado}
-      ocupado={ocupado} readOnly={readOnly} aoAbrir={alvo => { if (!emCurso.current) aoAbrir(alvo); }} aoConcluir={(alvo, concluido) => void concluir(alvo, concluido)} />;
+      ocupado={ocupado} readOnly={readOnly} aoAbrir={alvo => { if (!ocupado) aoAbrir(alvo); }} aoConcluir={(alvo, concluido) => solicitar(alvo, concluido, atividades)} />;
   return <nav aria-label="Navegação do plano de trabalho" className="space-y-2">
     <p className="px-2 text-xs font-semibold">Nesta meta</p>
     {registro('meta', meta.id, meta.name, meta.deliverables.flatMap(e => e.activities))}
@@ -71,6 +59,7 @@ export function NavegacaoPlano({ meta, selecionado, codigos, aoAbrir, aoOcupar }
       </li>;
     })}</ul>
     <p className="px-2 text-[11px]" style={{ color: 'var(--ink-4)' }}>A bolinha da meta ou etapa conclui todas as atividades do grupo. Desmarcar volta para Em andamento.</p>
-    {ocupado && <p role="status" className="px-2 text-xs">Salvando conclusão…</p>}
+    {ocupado && <p role="status" className="px-2 text-xs">{salvando ? 'Salvando conclusão…' : 'Aguardando os períodos realizados.'}</p>}
+    {dialogo}
   </nav>;
 }

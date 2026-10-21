@@ -35,10 +35,10 @@ export const salvarPlanejado = createServerFn({ method: 'POST' })
     if (!mantemChave && existentes.some(i => i.id !== data.itemId && chaveExistente(i) === campos.chave_origem)) {
       throw new Error('Já existe um item com este grupo, categoria e descrição. Edite o item existente.');
     }
-    const itens = [...existentes].sort((a, b) => Number(a.ordem) - Number(b.ordem) || a.id.localeCompare(b.id)).map(i => ({ id: i.id, meta_id: i.meta_id, grupo: i.grupo ?? '',
-      categoria: i.categoria ?? '', item: i.item ?? '', qtd: Number(i.qtd ?? 0), unidade: i.unidade ?? '',
-      qtd_unidades: Number(i.qtd_unidades ?? 0), valor_unitario: Number(i.valor_unitario ?? 0),
-      valor_proposto: Number(i.valor_proposto ?? 0), chave_origem: i.chave_origem || chaveDeOrigem(i.grupo ?? '', i.categoria ?? '', i.item ?? ''),
+    const itens = [...existentes].sort((a, b) => Number(a.ordem) - Number(b.ordem) || a.id.localeCompare(b.id)).map(i => ({ id: i.id, meta_id: i.meta_id, grupo: i.grupo,
+      categoria: i.categoria, item: i.item, qtd: i.qtd, unidade: i.unidade,
+      qtd_unidades: i.qtd_unidades, valor_unitario: i.valor_unitario,
+      valor_proposto: i.valor_proposto, chave_origem: i.chave_origem,
       ...(i.id === data.itemId ? campos : {}),
     }));
     if (!data.itemId) itens.push({ id: null, ...campos });

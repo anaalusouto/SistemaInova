@@ -19,6 +19,7 @@ import { usePeople } from '../../auth/authStore';
 import { type AtividadeInput } from '../../planoTrabalho.server';
 import { validarDatasDaAtividade, validarJustificativaAtraso, temAtrasoNasDatas, progressoParaStatus } from '../../lib/planoTrabalho';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes } from './camposFormulario';
+import { errosPeriodoConclusao } from '../../lib/conclusaoPlano';
 
 const STATUS: readonly ActivityStatus[] = ['A iniciar', 'Em andamento', 'Concluído'];
 const VINCULOS: readonly BudgetLink[] = ['Sim', 'Não', 'Não informado'];
@@ -85,6 +86,7 @@ export function FormularioAtividade({
   const salvar = async () => {
     setTentouSalvar(true);
     const problemas: string[] = [];
+    if (form.status === 'Concluído') problemas.push(...errosPeriodoConclusao(form.inicioRealizado, form.fimRealizado));
     if (!form.nome.trim()) problemas.push('Informe o título da atividade.');
     if (!form.inicioPrevisto || !form.fimPrevisto) problemas.push('Informe o início e o fim previstos.');
 

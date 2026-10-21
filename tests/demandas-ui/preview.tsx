@@ -11,6 +11,9 @@ import { FormatoProjetoSection } from "../../src/app/components/plano/FormatoPro
 import { FichaOrganizacao } from "../../src/app/components/organizacoes/FichaOrganizacao";
 import type { RotaOrg } from "../../src/app/lib/navegacaoOrg";
 import { orgId } from "./dados";
+import { projeto } from "./dados";
+import { TabPlanoTrabalho } from "../../src/app/components/plano/TabPlanoTrabalho";
+import type { Project } from "../../src/app/data/mockData";
 import "../../src/styles.css";
 const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 export function Preview() {
@@ -29,6 +32,10 @@ function LayoutPreview() {
   const [formatoAberto, setFormatoAberto] = useState(false);
   const { recolhido, alternar } = useMenuLateral();
   const { toggleMode, setAccent, setFontScale } = useTheme();
+  if (new URLSearchParams(location.search).has('riscos')) return <>
+    <p className="p-3 bg-muted">Teste isolado de riscos — dados sintéticos, sem conexão com o banco.</p>
+    <TabPlanoTrabalho project={projeto as unknown as Project} />
+  </>;
   if (new URLSearchParams(location.search).has("login")) return <LoginScreen />;
   return (
     <div className="relative h-dvh flex min-w-0 overflow-hidden">

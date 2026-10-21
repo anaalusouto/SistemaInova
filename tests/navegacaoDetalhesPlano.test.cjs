@@ -21,7 +21,7 @@ function carregar(file, mocks = {}, cache = new Map()) {
   }, mod, mod.exports); return mod.exports;
 }
 function fixture() {
-  const a = (id, status = 'A iniciar') => ({ id, name: id, status, tasks: [], order: 1, nextStep: '', observations: '' });
+  const a = (id, status = 'A iniciar') => ({ id, name: id, status, actualStart:'2026-01-01', actualEnd:'2026-02-01', tasks: [], order: 1, nextStep: '', observations: '' });
   return { id: 'm1', name: 'Meta principal', order: 1, deliverables: [
     { id: 'e1', name: 'Etapa atual', order: 1, activities: [a('Atividade aberta'), a('Atividade concluída', 'Concluído')] },
     { id: 'e2', name: 'Outra etapa', order: 2, activities: [a('Outra atividade')] },

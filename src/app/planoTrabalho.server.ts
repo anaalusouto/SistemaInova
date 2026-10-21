@@ -17,7 +17,7 @@ import {
   type MetaInput, type Periodo,
 } from './lib/planoTrabalho';
 import type { ActivityStatus, BudgetLink } from './data/mockData';
-import type { ConclusaoPlanoInput } from './lib/conclusaoPlano';
+import { errosPeriodoConclusao, validarConclusaoInput, type ConclusaoPlanoInput } from './lib/conclusaoPlano';
 
 async function getAdmin() {
   const { supabaseAdmin } = await import('../integrations/supabase/client.server');
@@ -47,31 +47,12 @@ export const alterarConclusaoPlano = createServerFn({ method: 'POST' })
   .validator((d: ConclusaoPlanoInput) => d)
   .handler(async ({ data }): Promise<void> => {
     await exigirEscrita();
-    if (!data || !['meta', 'etapa', 'atividade'].includes(data.tipo) ||
-        typeof data.id !== 'string' || !data.id.trim() || typeof data.concluido !== 'boolean') {
-      throw new DadosInvalidos(['Informe o registro e a conclusão desejada.']);
-    }
+    validarConclusaoInput(data);
     const supabaseAdmin = await getAdmin();
-    const tabela = data.tipo === 'meta' ? 'metas' : data.tipo === 'etapa' ? 'etapas' : 'atividades';
-    const { data: alvo, error: erroAlvo } = await supabaseAdmin.from(tabela).select('id').eq('id', data.id).single();
-    if (erroAlvo || !alvo) throw new Error('Registro não encontrado.');
-
-    let etapas: string[] = [];
-    if (data.tipo === 'meta') {
-      const { data: linhas, error } = await supabaseAdmin.from('etapas').select('id').eq('meta_id', data.id);
-      if (error) throw new Error(error.message);
-      etapas = (linhas ?? []).map(e => e.id);
-      if (!etapas.length) throw new DadosInvalidos(['Esta meta ainda não tem atividades para concluir.']);
-    }
-    // Um único UPDATE torna a conclusão do grupo atômica. Nenhuma data real
-    // é inventada; atividades excluídas e as já no estado desejado são preservadas.
-    const status = data.concluido ? 'Concluído' : 'Em andamento';
-    let escrita = supabaseAdmin.from('atividades').update({ status, progresso: progressoParaStatus(status) }).is('excluido_em', null);
-    escrita = data.tipo === 'meta' ? escrita.in('etapa_id', etapas)
-      : escrita.eq(data.tipo === 'etapa' ? 'etapa_id' : 'id', data.id);
-    escrita = data.concluido ? escrita.neq('status', 'Concluído') : escrita.eq('status', 'Concluído');
-    const { error } = await escrita;
-    if (error) throw new Error(error.message);
+    const { error } = await supabaseAdmin.rpc('concluir_plano_com_periodos', {
+      p_tipo: data.tipo, p_id: data.id, p_concluido: data.concluido, p_periodos: data.periodos ?? [],
+    });
+    if (error) throw new Error(['PGRST202','42883'].includes(error.code) ? 'A conclusão com período precisa da migração de conclusão e movimentação de etapas no banco.' : error.message);
   });
 
 const vazioParaNulo = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
@@ -360,6 +341,7 @@ async function validarAtividade(
 ): Promise<void> {
   const erros: string[] = [];
   if (!data.nome.trim()) erros.push('Informe o título da atividade.');
+  if (data.status === 'Concluído') erros.push(...errosPeriodoConclusao(data.inicioRealizado, data.fimRealizado));
   if (!data.inicioPrevisto || !data.fimPrevisto) {
     erros.push('Informe o início e o fim previstos da atividade.');
   }
@@ -742,4 +724,19 @@ export const reordenarPlano = createServerFn({ method: 'POST' })
       if (error.code === 'PGRST202' || error.code === '42883') throw new Error('A ordenação manual requer a migração 0021 no banco de dados.');
       throw new Error(error.message);
     }
+  });
+
+export const moverEtapaPlano = createServerFn({ method: 'POST' })
+  .validator((d: import('./lib/reordenacaoPlano').MoverEtapaInput) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const { validarMovimentoEtapa } = await import('./lib/reordenacaoPlano');
+    validarMovimentoEtapa(data);
+    const db = await getAdmin();
+    const { error } = await db.rpc('mover_etapa_plano', {
+      p_projeto: data.projetoId, p_etapa: data.etapaId, p_origem: data.origemId, p_destino: data.destinoId,
+      p_posicao: data.posicao, p_antes_origem: data.antesOrigem, p_antes_destino: data.antesDestino,
+      p_autor: sessao.displayName, p_papel: sessao.role,
+    });
+    if (error) throw new Error(['PGRST202','42883'].includes(error.code) ? 'A movimentação de etapas ainda precisa ser instalada no banco.' : error.message);
   });

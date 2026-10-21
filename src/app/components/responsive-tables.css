@@ -99,6 +99,10 @@
   }
   .inova-table-cards td[colspan],
   .inova-table-cards td[data-label="Atividade"],
+  .inova-table-cards td[data-label="Risco"],
+  .inova-table-cards td[data-label="Especificação"],
+  .inova-table-cards td[data-label="Estratégia de resposta"],
+  .inova-table-cards td[data-label="Ações de resposta"],
   .inova-table-cards td[data-label="Produto"],
   .inova-table-cards td[data-label="Observações"],
   .inova-table-cards td[data-label="Observações / resultado esperado"],

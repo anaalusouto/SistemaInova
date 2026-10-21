@@ -134,6 +134,10 @@ export function TabPlanoTrabalho({
                 : null;
   const setPainel = (p: PainelAberto) => {
     if (conclusaoPendente) return;
+    if (pendentes.size > 0) {
+      toast.error('Salve ou cancele as linhas alteradas antes de abrir outro registro.');
+      return;
+    }
     mudarPopup(
       !p
         ? null
@@ -150,6 +154,7 @@ export function TabPlanoTrabalho({
 
   // O botão Riscos do cabeçalho abre esta visão e rola até ela.
   const seletorRef = useRef<HTMLDivElement>(null);
+  const ultimoPedidoVisao = useRef<PedidoVisaoPlano | null>(null);
   useEffect(() => {
     if (pedidoRiscos === 0) return;
     setVisao("riscos");
@@ -157,13 +162,15 @@ export function TabPlanoTrabalho({
   }, [pedidoRiscos]);
   useEffect(() => {
     if (!pedidoVisao || (pedidoVisao.visao === "ordenar" && readOnly)) return;
-    if (edicaoAberta) {
+    if (ultimoPedidoVisao.current === pedidoVisao) return;
+    ultimoPedidoVisao.current = pedidoVisao;
+    if (edicaoAberta || pendentes.size > 0) {
       toast.error("Feche a edição da tabela antes de abrir outra visão.");
       return;
     }
     setVisao(pedidoVisao.visao);
     seletorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [pedidoVisao, readOnly, edicaoAberta]);
+  }, [pedidoVisao, readOnly, edicaoAberta, pendentes.size]);
 
   useEffect(() => {
     if (!pendentes.size) return;
@@ -360,7 +367,7 @@ export function TabPlanoTrabalho({
               <button
                 key={v.id}
                 onClick={() => v.disponivel && setVisao(v.id)}
-                disabled={!v.disponivel || edicaoAberta}
+                disabled={!v.disponivel || edicaoAberta || pendentes.size > 0}
                 aria-pressed={ativa}
                 title={v.disponivel ? undefined : "Disponível na próxima entrega"}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px]"
@@ -425,7 +432,7 @@ export function TabPlanoTrabalho({
                 type="button"
                 disabled={pendentes.size > 0}
                 onClick={() => {
-                  if (!edicaoAberta) {
+                  if (!edicaoAberta && visao !== 'riscos') {
                     setExpandidos(new Set(recolhiveis));
                     setVisao("tabela");
                   }
@@ -437,7 +444,7 @@ export function TabPlanoTrabalho({
               </button>
               <button
                 type="button"
-                disabled={edicaoAberta}
+                disabled={edicaoAberta || pendentes.size > 0}
                 onClick={() => setVisao("ordenar")}
                 className="border rounded-lg px-3 py-1.5 text-xs"
               >
@@ -575,6 +582,13 @@ export function TabPlanoTrabalho({
 
           {visao === "riscos" && (
             <VisaoRiscos
+              projetoId={p.id}
+              editar={edicaoAberta}
+              aoPendencia={(id, pendente) => setPendentes(atual => {
+                const proximo = new Set(atual);
+                if (pendente) proximo.add(id); else proximo.delete(id);
+                return proximo;
+              })}
               pedidoAbertos={pedidoVisao?.visao === "riscos" && pedidoVisao.somenteAbertos ? pedidoVisao.contador : 0}
               riscos={riscos}
               metas={metas}

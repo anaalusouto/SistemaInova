@@ -27,7 +27,7 @@ try {
   const ler = async () => (await db.query('SELECT * FROM orcamento_itens WHERE projeto_id=1 AND vigente ORDER BY id')).rows;
   const snapshot = async () => (await db.query("SELECT coalesce(jsonb_agg(to_jsonb(o) ORDER BY id),'[]'::jsonb) AS s FROM orcamento_itens o WHERE projeto_id=1 AND vigente")).rows[0].s;
   const novo = (nome, valor, extra = {}) => ({ id: null, meta_id: id(1), grupo: 'Grupo', categoria: 'Material', item: nome, qtd: 1, unidade: 'un', qtd_unidades: 1, valor_unitario: valor, valor_proposto: valor, chave_origem: nome, ...extra });
-  const planejado = i => Object.fromEntries(['id','meta_id','grupo','categoria','item','qtd','unidade','qtd_unidades','valor_unitario','valor_proposto','chave_origem'].map(k => [k, i[k]]));
+  const planejado = i => Object.fromEntries(['id','meta_id','grupo','categoria','item','qtd','unidade','qtd_unidades','valor_unitario','valor_proposto','chave_origem'].map(k => [k, ['qtd','qtd_unidades','valor_unitario','valor_proposto'].includes(k) && i[k] !== null ? Number(i[k]) : i[k]]));
   const gravar = async (itens, antes, imp = null) => (await db.query('SELECT salvar_versao_orcamento($1,$2::jsonb,$3::jsonb,$4,$5::jsonb) AS r', [1, JSON.stringify(antes ?? await snapshot()), JSON.stringify(itens), 'Teste', imp && JSON.stringify(imp)])).rows[0].r;
   const imp = { nome_arquivo: 'versao.xlsx', aba: 'Orçamento', resumo: {} };
   assert.equal((await gravar([novo('A',100),novo('B',200)], undefined, imp)).versao, 1);
@@ -99,5 +99,33 @@ try {
   for (const papel of ['anon','authenticated','service_role']) {
     assert.equal((await db.query("SELECT has_function_privilege($1,'public.salvar_versao_orcamento(bigint,jsonb,jsonb,text,jsonb)','EXECUTE') AS p",[papel])).rows[0].p,papel==='service_role');
   }
+  // Reproduz o legado real: importação anterior ? exigência de meta.
+  const impAntiga=(await db.query('SELECT id FROM orcamento_importacoes LIMIT 1')).rows[0].id;
+  await db.query(`INSERT INTO orcamento_itens(id,projeto_id,item,importacao_id,ordem,chave_origem)
+    VALUES($1,1,'Sem meta A',$3,5,'sem-a'),($2,1,'Sem meta B',$3,6,'sem-b')`,[id(80),id(81),impAntiga]);
+  await db.exec(await readFile('supabase/migrations/0020_orcamento_meta.sql','utf8'));
+  const regularizar=(await ler()).map(planejado);
+  regularizar.find(i=>i.id===id(80)).meta_id=id(1);
+  const antesVinculo=await snapshot();
+  await assert.rejects(gravar(regularizar),/Todo item importado/, 'Reproduz o erro ao salvar uma linha por causa de outra sem meta');
+  assert.deepEqual(await snapshot(),antesVinculo);
+  const correcaoVinculos=await readFile('supabase/migrations/20261021180926_orcamento_vinculos_metas_revisao.sql','utf8');
+  await db.exec(correcaoVinculos);await db.exec(correcaoVinculos);
+  assert.deepEqual(await snapshot(),antesVinculo,'Instalar e reexecutar preserva o legado');
+  await db.query('INSERT INTO metas(id,projeto_id,nome,ordem) VALUES($1,1,$2,2)',[id(4),'Meta ainda sem orçamento']);
+  regularizar.find(i=>i.id===id(80)).meta_id=id(4);
+  await gravar(regularizar);
+  assert.equal((await ler()).find(i=>i.id===id(80)).meta_id,id(4),'Aceita meta do projeto nunca vinculada ao orçamento');
+  assert.equal((await ler()).find(i=>i.id===id(81)).meta_id,null,'Outra linha antiga fica intocada');
+  const semMeta=(await ler()).map(planejado);
+  semMeta.find(i=>i.id===id(81)).valor_proposto=25;
+  const antesSemMeta=await snapshot();
+  await assert.rejects(gravar(semMeta),/Sem meta B.*selecione uma meta/);
+  assert.deepEqual(await snapshot(),antesSemMeta);
+  await assert.rejects(gravar([novo('Importado sem meta',25,{meta_id:null})],undefined,imp),/selecione uma meta/);
+  assert.deepEqual(await snapshot(),antesSemMeta,'Importação inválida não cria versão parcial');
+  const completar=(await ler()).map(planejado);completar.find(i=>i.id===id(81)).meta_id=id(4);
+  await gravar(completar);
+  assert.equal((await ler()).filter(i=>i.importacao_id&&i.meta_id===null).length,0,'Todos os importados regularizados');
   console.log('SQL aprovado: substituição, reimportação, edição com repetições legadas, bloqueio de novas duplicações, notas/anexos preservados, concorrência, isolamento, rollback e permissões.');
 } finally { await db.close(); }

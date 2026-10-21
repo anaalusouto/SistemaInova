@@ -43,78 +43,43 @@ test('checks derivados acompanham conclusão parcial, total e grupos vazios', ()
   assert.equal(indice.get('etapa:e1').concluido, true);
 });
 
-function servidor({ consulta = false, erro = false, inexistente = false } = {}) {
-  const rows = [
-    { id: 'a1', etapa_id: 'e1', status: 'A iniciar', progresso: 0, excluido_em: null, inicio_realizado: null },
-    { id: 'a2', etapa_id: 'e1', status: 'Em andamento', progresso: 30, excluido_em: null },
-    { id: 'a3', etapa_id: 'e2', status: 'Concluído', progresso: 100, excluido_em: null },
-    { id: 'a4', etapa_id: 'e2', status: 'A iniciar', progresso: 0, excluido_em: '2026-10-01' },
-    { id: 'outro', etapa_id: 'fora', status: 'A iniciar', progresso: 0, excluido_em: null },
-  ];
-  const updates = [];
-  const db = { from(tabela) {
-    let patch; const filtros = [];
-    const resultado = () => {
-      if (!patch) return { data: tabela === 'etapas' && filtros.some(f => f[1] === 'meta_id') ? [{ id: 'e1' }, { id: 'e2' }] : inexistente ? null : { id: 'alvo' }, error: null };
-      if (erro) return { data: null, error: { message: 'Falha de gravação' } };
-      for (const row of rows) {
-        if (filtros.every(([op, c, v]) => op === 'in' ? v.includes(row[c]) : op === 'neq' ? row[c] !== v : row[c] === v)) Object.assign(row, patch);
-      }
-      return { error: null };
-    };
-    return {
-      select() { return this; },
-      eq(c, v) { filtros.push(['eq', c, v]); return this; },
-      neq(c, v) { filtros.push(['neq', c, v]); return this; },
-      is(c, v) { filtros.push(['is', c, v]); return this; },
-      in(c, v) { filtros.push(['in', c, v]); return this; },
-      update(d) { patch = d; updates.push({ tabela, patch, filtros }); return this; },
-      single() { return Promise.resolve(resultado()); },
-      then(ok, fail) { return Promise.resolve(resultado()).then(ok, fail); },
-    };
-  } };
+function servidor({ consulta = false, erro = false } = {}) {
+  const chamadas = [];
   const api = carregar('src/app/planoTrabalho.server.ts', {
     '@tanstack/react-start': { createServerFn: () => { const f = { validator() { return f; }, handler(h) { return h; } }; return f; } },
     './sessao.server': { exigirEscrita: async () => { if (consulta) throw new Error('Sem permissão'); return {}; } },
-    '../integrations/supabase/client.server': { supabaseAdmin: db },
+    '../integrations/supabase/client.server': { supabaseAdmin: { async rpc(nome, dados) { chamadas.push({nome,dados}); return {error: erro ? {message:'Períodos pendentes'} : null}; } } },
   });
-  return { rows, updates, salvar: data => api.alterarConclusaoPlano({ data }) };
+  return { chamadas, salvar: data => api.alterarConclusaoPlano({ data }) };
 }
 
-test('concluir meta altera todas as atividades ativas em uma escrita, preservando excluídas e outros projetos', async () => {
-  const a = servidor(); const antes = structuredClone(a.rows);
-  await a.salvar({ tipo: 'meta', id: 'm1', concluido: true });
-  assert.equal(a.updates.length, 1);
-  assert.deepEqual(a.rows.slice(0, 3).map(r => [r.status, r.progresso]), Array(3).fill(['Concluído', 100]));
-  assert.deepEqual(a.rows.slice(3), antes.slice(3));
-  assert.deepEqual(Object.keys(a.updates[0].patch).sort(), ['progresso', 'status'], 'Check não inventa datas ou altera observações');
-});
-
-test('etapa e atividade limitam a alteração ao próprio vínculo e reabrir mantém status/progresso coerentes', async () => {
-  for (const tipo of ['etapa', 'atividade']) {
+test('conclusão dos três níveis usa uma única transação com os períodos e snapshots', async () => {
+  for (const tipo of ['meta','etapa','atividade']) {
     const a = servidor();
-    const id = tipo === 'etapa' ? 'e1' : 'a1';
-    await a.salvar({ tipo, id, concluido: true });
-    assert.equal(a.rows[0].status, 'Concluído');
-    assert.equal(a.rows[1].status, tipo === 'etapa' ? 'Concluído' : 'Em andamento');
-    await a.salvar({ tipo, id, concluido: false });
-    assert.equal(a.rows[0].status, 'Em andamento');
-    assert.equal(a.rows[0].progresso, 50);
-    assert.equal(a.rows[2].status, 'Concluído', 'Outra etapa não é reaberta');
-    assert.equal(a.rows[1].progresso, tipo === 'etapa' ? 50 : 30);
+    const periodos = [{id:'a1',inicioRealizado:'2026-01-01',fimRealizado:'2026-02-01',antes:{inicioRealizado:null,fimRealizado:null}}];
+    await a.salvar({tipo,id:'alvo',concluido:true,periodos});
+    assert.deepEqual(a.chamadas,[{nome:'concluir_plano_com_periodos',dados:{p_tipo:tipo,p_id:'alvo',p_concluido:true,p_periodos:periodos}}]);
+    await a.salvar({tipo,id:'alvo',concluido:false});
+    assert.deepEqual(a.chamadas[1].dados.p_periodos,[]);
   }
 });
 
-test('servidor recusa consulta, alvo inexistente e parâmetros inválidos; falha não conclui parcialmente o grupo', async () => {
-  for (const op of [{ consulta: true }, { inexistente: true }, { erro: true }]) {
-    const a = servidor(op); const antes = structuredClone(a.rows);
-    await assert.rejects(a.salvar({ tipo: 'meta', id: 'm1', concluido: true }));
-    assert.deepEqual(a.rows, antes);
-    if (!op.erro) assert.equal(a.updates.length, 0);
+test('consulta e períodos inválidos são recusados antes da escrita; falha do banco é propagada', async () => {
+  const consulta=servidor({consulta:true});
+  await assert.rejects(consulta.salvar({tipo:'meta',id:'alvo',concluido:true}),/Sem permissão/);
+  assert.equal(consulta.chamadas.length,0);
+  for(const data of [{tipo:'outro',id:'x',concluido:true},{tipo:'meta',id:'x',concluido:'sim'},
+    {tipo:'meta',id:'x',concluido:true,periodos:[{id:'a',inicioRealizado:'2026-02-30',fimRealizado:'2026-02-01',antes:{inicioRealizado:null,fimRealizado:null}}]}]) {
+    const a=servidor(); await assert.rejects(a.salvar(data)); assert.equal(a.chamadas.length,0);
   }
-  for (const data of [{ tipo: 'projeto', id: 'm1', concluido: true }, { tipo: 'meta', id: '', concluido: true }, { tipo: 'meta', id: 'm1', concluido: 'sim' }]) {
-    const a = servidor(); await assert.rejects(a.salvar(data)); assert.equal(a.updates.length, 0);
-  }
+  await assert.rejects(servidor({erro:true}).salvar({tipo:'meta',id:'alvo',concluido:true}),/Períodos pendentes/);
+});
+
+test('datas realizadas obrigatórias incluem legados concluídos, datas impossíveis e intervalo invertido',()=>{
+  for (const [inicio,fim] of [[null,null],['2026-01-01',null],['2026-02-30','2026-03-01'],['2026-03-01','2026-02-01']])
+    assert.ok(helper.errosPeriodoConclusao(inicio,fim).length);
+  assert.deepEqual(helper.errosPeriodoConclusao('2024-02-29','2024-02-29'),[]);
+  assert.equal(helper.atividadesSemPeriodo([{status:'Concluído',actualStart:null,actualEnd:null}]).length,1);
 });
 
 test('controle parcial, de consulta e vazio oferece check acessível sem habilitar escrita indevida', () => {
@@ -182,7 +147,7 @@ test('conclusão no detalhe bloqueia cliques repetidos, respeita consulta e pres
     } }) },
     sonner: { toast: { success: m => avisos.push(m), error: m => avisos.push(m) } },
   });
-  const props = { tipo: 'atividade', id: 'a1', nome: 'Atividade', atividades: [{ id: 'a1', status: 'A iniciar' }] };
+  const props = { tipo: 'atividade', id: 'a1', nome: 'Atividade', atividades: [{ id: 'a1', status: 'A iniciar', actualStart:'2026-01-01', actualEnd:'2026-02-01' }] };
   const check = () => { indice = 0; indiceRef = 0; return ConclusaoNoDetalhe(props).props.children[0].props.children[0].props; };
   check().aoMudar(true); check().aoMudar(true);
   assert.equal(chamadas.length, 1); assert.equal(check().desativado, true);
@@ -193,4 +158,37 @@ test('conclusão no detalhe bloqueia cliques repetidos, respeita consulta e pres
   assert.equal(chamadas.length, 2); assert.match(avisos.at(-1), /Conclusão salva/);
   readOnly = true; check().aoMudar(false);
   assert.equal(chamadas.length, 2); assert.equal(check().desativado, true);
+});
+
+test('período pendente solicita somente atividades inválidas; cancelar preserva e confirmar envia datas com snapshot', async () => {
+  for (const tipo of ['meta','etapa','atividade']) {
+    const estados=[],refs=[],chamadas=[]; let i=0,ir=0;
+    const { useConclusaoComPeriodo }=carregar('src/app/components/plano/useConclusaoComPeriodo.tsx',{
+      react:{...React,useState(v){const k=i++;if(!(k in estados))estados[k]=v;return [estados[k],n=>{estados[k]=typeof n==='function'?n(estados[k]):n;}];},useRef(v){return refs[ir++]??=( {current:v});}},
+      '../../auth/authStore':{useAuth:()=>({readOnly:false})},
+      '../../store':{useStore:()=>({setConclusaoPlano:async d=>{chamadas.push(d);}})},
+      sonner:{toast:{success(){},error(){}}},
+    });
+    const render=()=>{i=0;ir=0;return useConclusaoComPeriodo();};
+    function achar(n,p){if(!n||typeof n!=='object')return;if(Array.isArray(n)){for(const c of n){const r=achar(c,p);if(r)return r;}}else return p(n)?n:achar(n.props?.children,p);}
+    const atividades=[{id:'a',name:'Pendente',status:'A iniciar',actualStart:null,actualEnd:null}];
+    if(tipo!=='atividade')atividades.push({id:'b',name:'Válida',actualStart:'2026-01-01',actualEnd:'2026-02-01'});
+    const pedir=()=>render().solicitar({tipo,id:'alvo'},true,atividades);
+    pedir(); assert.equal(chamadas.length,0); assert.equal(render().ocupado,true);
+    assert.equal(achar(render().dialogo,n=>n.type==='input'&&n.props['aria-label']?.includes('Válida')),undefined);
+    achar(render().dialogo,n=>n.type==='button'&&n.props.children==='Confirmar conclusão').props.onClick();
+    assert.equal(chamadas.length,0);
+    achar(render().dialogo,n=>n.type==='button'&&n.props.children==='Cancelar').props.onClick();
+    assert.equal(render().ocupado,false);assert.equal(chamadas.length,0);assert.equal(atividades[0].status,'A iniciar');
+    pedir();
+    for(const [label,value] of [['Início realizado: Pendente','2026-02-01'],['Fim realizado: Pendente','2026-01-01']])
+      achar(render().dialogo,n=>n.type==='input'&&n.props['aria-label']===label).props.onChange({target:{value}});
+    achar(render().dialogo,n=>n.type==='button'&&n.props.children==='Confirmar conclusão').props.onClick();
+    assert.equal(chamadas.length,0,'Intervalo invertido não salva');
+    achar(render().dialogo,n=>n.type==='input'&&n.props['aria-label']==='Fim realizado: Pendente').props.onChange({target:{value:'2026-03-01'}});
+    achar(render().dialogo,n=>n.type==='button'&&n.props.children==='Confirmar conclusão').props.onClick();
+    await new Promise(ok=>setImmediate(ok));
+    assert.deepEqual(chamadas,[{tipo,id:'alvo',concluido:true,periodos:[{id:'a',inicioRealizado:'2026-02-01',fimRealizado:'2026-03-01',antes:{inicioRealizado:null,fimRealizado:null}}]}]);
+    assert.equal(render().dialogo,null);
+  }
 });

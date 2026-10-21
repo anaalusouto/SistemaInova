@@ -52,14 +52,91 @@ test('resumo: ordem da referência, andamento independente do financeiro e risco
 test('atalho de riscos inicia com status não encerrados sem perder o projeto', () => {
   const { VisaoRiscos } = carregar('src/app/components/plano/VisaoRiscos.tsx', {
     '../../auth/authStore': { useAuth: () => ({ readOnly: true }) },
+    '../../store': { useStore: () => ({}) },
   });
   const riscos = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'].map((status, i) => ({ id: `r${i}`, title: `Risco-${i}`, status, probability: 2, impact: 3, severity: 6 }));
-  const props = { riscos, metas: [], codigos: new Map(), atividades: [] };
+  const props = { projetoId: 1, riscos, metas: [], codigos: new Map(), atividades: [] };
   const todos = renderToStaticMarkup(React.createElement(VisaoRiscos, props));
   const abertos = renderToStaticMarkup(React.createElement(VisaoRiscos, { ...props, pedidoAbertos: 1 }));
   assert.ok(todos.includes('Risco-3'));
   for (let i = 0; i < 3; i++) assert.ok(abertos.includes(`Risco-${i}`));
   assert.ok(!abertos.includes('Risco-3'));
+});
+
+test('planilha de riscos salva a linha inteira, preserva vínculos e mantém rascunho em erro', async () => {
+  let indice = 0, falhar = false, consulta = false;
+  const estados = [], salvos = [], pendencias = [];
+  const hooks = { ...React, useMemo: f => f(), useEffect() {},
+    useRef(valor) { const i = indice++; return estados[i] ??= { current: valor }; },
+    useState(inicial) {
+      const i = indice++;
+      if (!(i in estados)) estados[i] = typeof inicial === 'function' ? inicial() : inicial;
+      return [estados[i], v => { estados[i] = typeof v === 'function' ? v(estados[i]) : v; }];
+    },
+  };
+  const { VisaoRiscos } = carregar('src/app/components/plano/VisaoRiscos.tsx', {
+    react: hooks, '../../auth/authStore': { useAuth: () => ({ readOnly: consulta }) },
+    '../../store': { useStore: () => ({ updateRisco: async (id, d) => {
+      if (falhar) throw new Error('Falha de gravação'); salvos.push({ id, d });
+    } }) }, sonner: { toast: { success() {} } },
+  });
+  const risco = { id: 'r1', title: 'Entrega comprometida', description: 'Chuva', category: 'Técnico', responsible: 'Equipe',
+    probability: 2, impact: 3, severity: 6, status: 'Aberto', stageId: 'e', goalId: 'm', specification: 'Indicador antigo', responseStrategy: 'Acompanhar' };
+  const props = { projetoId: 7, riscos: [risco], metas: [{ id: 'm', name: 'Meta', deliverables: [etapa] }],
+    codigos: new Map(), atividades: [], editar: true, aoPendencia: (id, p) => pendencias.push([id, p]) };
+  const render = () => { indice = 0; return VisaoRiscos(props); };
+  function achar(n, pred) {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) { for (const c of n) { const r = achar(c, pred); if (r) return r; } return; }
+    return pred(n) ? n : achar(n.props?.children, pred);
+  }
+  const linha = () => {
+    const n = achar(render(), n => n.props?.risco?.id === 'r1' && n.props?.aoSalvar);
+    return n.type(n.props);
+  };
+  const campo = nome => achar(linha(), n => n.props?.['aria-label'] === `${nome}: ${risco.title}`);
+  const salvar = () => achar(linha(), n => n.type === 'button' && n.props.children === 'Salvar linha').props.onClick();
+  const fim = () => new Promise(resolve => setImmediate(resolve));
+  campo('Probabilidade').props.onChange({ target: { value: '2.5' } });
+  salvar(); await fim();
+  assert.equal(salvos.length, 0);
+  assert.match(achar(linha(), n => n.props?.role === 'alert').props.children, /inteiro entre 1 e 5/);
+  campo('Probabilidade').props.onChange({ target: { value: '5' } });
+  campo('Impacto').props.onChange({ target: { value: '4' } });
+  campo('Descrição').props.onChange({ target: { value: 'Chuvas persistentes\nAcesso interrompido' } });
+  falhar = true; salvar(); await fim();
+  assert.match(achar(linha(), n => n.props?.role === 'alert').props.children, /Falha de gravação/);
+  assert.equal(campo('Probabilidade').props.value, 5);
+  assert.deepEqual(pendencias.at(-1), ['risco:r1', true]);
+  assert.equal(achar(render(), n => n.props?.type === 'search').props.disabled, true);
+  falhar = false;
+  linha().props.onKeyDown({ key: 'Enter', ctrlKey: true, target: { tagName: 'TEXTAREA' }, preventDefault() {} });
+  await fim();
+  assert.equal(salvos.length, 1);
+  assert.equal(salvos[0].id, 'r1');
+  assert.equal(salvos[0].d.projetoId, 7);
+  assert.equal(salvos[0].d.etapaId, 'e');
+  assert.equal(salvos[0].d.especificacao, 'Indicador antigo');
+  assert.equal(salvos[0].d.estrategiaResposta, 'Acompanhar');
+  assert.equal(salvos[0].d.descricao, 'Chuvas persistentes\nAcesso interrompido');
+  assert.deepEqual(pendencias.at(-1), ['risco:r1', false]);
+  campo('Categoria').props.onChange({ target: { value: 'Ambiental' } });
+  linha().props.onKeyDown({ key: 'Escape', preventDefault() {} });
+  assert.equal(campo('Categoria').props.value, 'Técnico');
+  assert.equal(salvos.length, 1);
+  consulta = true;
+  assert.equal(achar(linha(), n => n.type === 'input' || n.type === 'textarea' || n.type === 'select'), undefined);
+  assert.equal(achar(linha(), n => n.props?.children === 'Editar linha'), undefined);
+});
+
+test('planilha de riscos mantém ausência de etapa legada e valida os limites da matriz', () => {
+  const { dadosDoRisco, errosDaEdicaoRisco } = carregar('src/app/lib/edicaoLinhaRisco.ts');
+  const risco = { title: 'Legado', description: 'Descrição', responsible: 'Equipe', category: 'Externo', probability: 1, impact: 5, status: 'Aberto' };
+  const dados = dadosDoRisco(1, risco);
+  assert.equal(dados.etapaId, '');
+  assert.deepEqual(errosDaEdicaoRisco(dados, risco), []);
+  assert.match(errosDaEdicaoRisco(dados, { ...risco, stageId: 'etapa' }).join(' '), /Selecione a etapa/);
+  for (const n of [0, 6, 1.5, NaN]) assert.ok(errosDaEdicaoRisco({ ...dados, impacto: n }, risco).length);
 });
 
 test('PDF propaga rejeição assíncrona da gravação', async () => {
@@ -328,6 +405,7 @@ test('R06: controles da linha salvam datas/status juntos e mantêm o rascunho em
   achar(render(), e => e.type === 'button' && e.props.children === 'Salvar linha').props.onClick();
   assert.equal(gravados.length, 0, 'Atraso sem justificativa não é enviado');
   achar(render(), e => e.props?.['aria-label'] === `Justificativa de atraso: ${atividade.name}`).props.onChange({ target: { value: 'Chuva' } });
+  achar(render(), e => e.props?.['aria-label'] === `Início realizado: ${atividade.name}`).props.onChange({ target: { value: '2026-01-01' } });
   achar(render(), e => e.props?.['aria-label'] === `Status: ${atividade.name}`).props.onChange({ target: { value: 'Concluído' } });
   achar(render(), e => e.type === 'button' && e.props.children === 'Salvar linha').props.onClick();
   await new Promise(resolve => setImmediate(resolve));

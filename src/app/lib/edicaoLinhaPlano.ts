@@ -1,6 +1,7 @@
 import type { Activity, Deliverable } from '../data/mockData';
 import type { AtividadeInput } from '../planoTrabalho.server';
 import { validarDatasDaAtividade, validarJustificativaAtraso } from './planoTrabalho';
+import { errosPeriodoConclusao } from './conclusaoPlano';
 
 export function dadosDaAtividade(a: Activity, etapaId: string): AtividadeInput {
   return { etapaId, nome: a.name, responsavel: a.responsible, status: a.status, progresso: a.progress,
@@ -15,6 +16,7 @@ export function errosDaEdicao(d: AtividadeInput, etapa: Deliverable): string[] {
   const datas = { plannedStart: d.inicioPrevisto, plannedEnd: d.fimPrevisto,
     actualStart: d.inicioRealizado, actualEnd: d.fimRealizado };
   return [ ...(!d.inicioPrevisto || !d.fimPrevisto ? ['Informe o início e o fim previstos.'] : []),
+    ...(d.status === 'Concluído' ? errosPeriodoConclusao(d.inicioRealizado, d.fimRealizado) : []),
     ...validarDatasDaAtividade(datas, etapa).erros,
     ...validarJustificativaAtraso(datas, d.justificativaAtraso).erros ];
 }
