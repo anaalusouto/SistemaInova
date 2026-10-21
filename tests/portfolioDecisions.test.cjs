@@ -20,6 +20,44 @@ function loadTs(file) {
   return mod.exports;
 }
 const { buildDecisionCharts } = loadTs('src/app/lib/portfolioDecisions');
+const { resumoAcompanhamento } = loadTs('src/app/lib/acompanhamentoPortfolio');
+
+test('acompanhamento exige registros do projeto, independentemente do status de execução', () => {
+  for (const status of ['Em andamento', 'Não iniciado', 'Concluído']) {
+    const resumo = resumoAcompanhamento({ status, commLogs: [{ meio: 'Presencial' }] });
+    assert.equal(resumo.temAcompanhamento, false);
+    assert.equal(resumo.ultimaVisita, null);
+  }
+  const reuniao = resumoAcompanhamento({ pareceres: [{ origem: 'Reunião de acompanhamento', data: '2026-10-20' }] });
+  assert.equal(reuniao.temAcompanhamento, true);
+  assert.equal(reuniao.visitas, 0);
+});
+
+test('acompanhamento considera visitas e mudanças e ignora histórico de atualizações', () => {
+  const projeto = {
+    pareceres: [
+      { origem: 'Visita técnica', data: '2026-10-15' },
+      { origem: 'Reunião de acompanhamento', data: '2026-10-20' },
+      { origem: 'Visita técnica', data: '2026-09-01' },
+    ],
+    changes: [{ date: '2026-10-03' }],
+    metaLog: [{ date: '2026-10-18T13:00:00Z' }, { date: '2026-08-01T12:00:00Z' }],
+  };
+  const antes = JSON.stringify(projeto);
+  const resumo = resumoAcompanhamento(projeto);
+  assert.equal(resumo.visitas, 2);
+  assert.equal(resumo.pareceres, 3);
+  assert.equal(resumo.mudancas, 1);
+  assert.equal(resumo.ultimaVisita, '2026-10-15');
+  assert.equal(resumo.ultimaMudanca, '2026-10-03');
+  assert.equal(resumo.temAlteracoes, true);
+  assert.equal(resumo.temAcompanhamento, true);
+  assert.equal(JSON.stringify(projeto), antes);
+  assert.equal(resumoAcompanhamento({ changes: [{ date: '2026-10-01' }] }).temAcompanhamento, true);
+  const soHistorico = resumoAcompanhamento({ metaLog: projeto.metaLog });
+  assert.equal(soHistorico.temAcompanhamento, false);
+  assert.equal(soHistorico.temAlteracoes, false);
+});
 const { portfolioDemo } = loadTs('src/app/data/portfolioDemo');
 const { metasAdministrativas, patchAtividadeAdministrativa } = loadTs('src/app/lib/planoAdministrativo');
 const { cronogramaExecutivoSeed } = loadTs('src/app/data/cronogramaExecutivo');

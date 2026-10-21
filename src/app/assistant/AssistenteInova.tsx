@@ -61,7 +61,7 @@ export function AssistenteInova({
           }}
         >
           <MessageCircle size={18} aria-hidden />
-          Assistente CRIA
+          crIA
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -79,13 +79,13 @@ export function AssistenteInova({
           <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
             <MarcaCria compacta />
             <div className="min-w-0 flex-1">
-              <Dialog.Title className="font-semibold">Assistente CRIA</Dialog.Title>
+              <Dialog.Title className="font-semibold">crIA</Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 Chatbot local · sem consumo de OpenAI
               </Dialog.Description>
             </div>
             <Dialog.Close
-              aria-label="Fechar Assistente CRIA"
+              aria-label="Fechar crIA"
               className="rounded-md p-2 hover:bg-accent"
             >
               <X size={20} />
@@ -200,7 +200,7 @@ function ConversaLocal({
       <div
         ref={lista}
         role="log"
-        aria-label="Conversa com Assistente CRIA"
+        aria-label="Conversa com a crIA"
         aria-live="polite"
         aria-relevant="additions"
         className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"

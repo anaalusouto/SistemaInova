@@ -31,13 +31,14 @@ import { buildFinancialTimeline } from '../lib/financialTimeline';
 import { portfolioDemo, DEMO_REFERENCE_DATE } from '../data/portfolioDemo';
 import { buildDecisionCharts } from '../lib/portfolioDecisions';
 import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
+import { AcompanhamentoPortfolio } from './portfolio/AcompanhamentoPortfolio';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
 type DataSource = 'demo' | 'real';
 
-export function PortfolioView() {
+export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) => void }) {
   const { projects: realProjects, projectsLoading } = useStore();
   const [source, setSource] = useState<DataSource>('real');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
@@ -118,6 +119,8 @@ export function PortfolioView() {
       ) : filteredProjects.length === 0 ? (
         <p className="py-10 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Nenhum projeto encontrado para os filtros selecionados.</p>
       ) : <>
+
+      <AcompanhamentoPortfolio projects={filteredProjects} onOpenProject={source === 'real' ? onOpenProject : undefined} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Conclusão do plano de trabalho">
         {resumoPlano.map(resumo => <section key={resumo.rotulo} className="rounded-xl border bg-card p-4" style={{ borderColor: 'var(--border)' }}>

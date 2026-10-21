@@ -37,7 +37,7 @@ export async function atenderAssistente(
   if (!url || !secret || secret.length < 32 || !domainKey)
     return json(
       503,
-      "Conexão real ainda não configurada. Solicite a configuração do Assistente CRIA ao administrador.",
+      "Conexão real ainda não configurada. Solicite a configuração da crIA ao administrador.",
       { configured: false },
     );
   let base: URL;

@@ -96,7 +96,7 @@ export function AssistenteInovaChatKit({ contexto }: { contexto: ContextoAssiste
           }}
         >
           <MessageCircle size={18} aria-hidden />
-          Assistente CRIA
+          crIA
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -117,14 +117,14 @@ export function AssistenteInovaChatKit({ contexto }: { contexto: ContextoAssiste
           <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
             <MessageCircle size={20} style={{ color: "var(--primary)" }} aria-hidden />
             <div className="min-w-0 flex-1">
-              <Dialog.Title className="font-semibold">Assistente CRIA</Dialog.Title>
+              <Dialog.Title className="font-semibold">crIA</Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 Ajuda com telas e formulários. Somente orientação.
               </Dialog.Description>
             </div>
             <Dialog.Close
               className="rounded-md p-2 hover:bg-accent"
-              aria-label="Fechar Assistente CRIA"
+              aria-label="Fechar crIA"
             >
               <X size={20} />
             </Dialog.Close>

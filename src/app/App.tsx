@@ -101,7 +101,7 @@ function AppShell() {
 
     switch (activeNav) {
       case 'overview':
-        return <PortfolioView />;
+        return <PortfolioView onOpenProject={handleSelectProject} />;
       case 'organizations':
         return <OrganizacoesModule rota={rotaOrg} aoNavegar={navegarOrg} />;
       case 'schedule':
@@ -114,7 +114,7 @@ function AppShell() {
         return <ConfiguracoesPage />;
 
       default:
-        return <PortfolioView />;
+        return <PortfolioView onOpenProject={handleSelectProject} />;
     }
   };
 
