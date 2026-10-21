@@ -291,7 +291,7 @@ function AparenciaSection() {
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-1)' }}>Cor de destaque</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)', marginTop: 2 }}>
-            Escolha entre as cores da marca e as opções complementares para os botões principais, itens ativos do menu e links.
+            A plataforma utiliza a paleta institucional CRIA: azul nas ações principais e na navegação.
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Cor de destaque">

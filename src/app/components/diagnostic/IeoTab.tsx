@@ -5,7 +5,9 @@ import { ChevronDown, ChevronRight, Check, Pencil } from 'lucide-react';
 import { IEO_DIMENSOES, type IeoPergunta } from '../../diagnostic/catalog/ieo';
 import { calcularIeo } from '../../diagnostic/ieoCalculation';
 import { listarRespostasIeo, salvarRespostaIeo, type IeoResposta } from '../../diagnosticos.server';
-import { Campo, Chip } from './DiagnosticUI';
+import { Campo } from './DiagnosticUI';
+import { OpcaoNivel } from './OpcaoNivel';
+import { CORES_ESCALA } from '../../theme/coresInstitucionais';
 
 interface IeoTabProps {
   diagnosticoId: string;
@@ -100,6 +102,7 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
               const open = openId === pergunta.id;
               const editing = editingId === pergunta.id;
               const nivelSelecionado = pergunta.niveis.find(n => n.valor === resposta?.nivel?.toString());
+              const cores = resposta && CORES_ESCALA[resposta.nivel as keyof typeof CORES_ESCALA];
 
               return (
                 <div key={pergunta.id} data-inova-form="ieo" data-inova-field={pergunta.id} className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
@@ -111,7 +114,7 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
                     </div>
                     <span
                       className="px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0"
-                      style={{ color: resposta ? 'var(--success)' : 'var(--ink-5)', background: resposta ? 'var(--success-soft)' : 'var(--surface-2)' }}
+                      style={{ color: cores ? cores.destaque : 'var(--ink-5)', background: cores ? `linear-gradient(${cores.fundo}, ${cores.fundo}), #FFFFFF` : 'var(--surface-2)' }}
                     >
                       {resposta ? `Nível ${resposta.nivel}` : 'Pendente'}
                     </span>
@@ -139,9 +142,9 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
                         <div className="flex flex-col gap-3 pt-3">
                           <div className="flex flex-col gap-1.5">
                             {pergunta.niveis.map(n => (
-                              <Chip key={n.valor} active={draft.nivel === n.valor} onClick={() => setDraft(d => ({ ...d, nivel: n.valor }))}>
-                                <span style={{ fontWeight: 700 }}>{n.valor}</span> — {n.descricao}
-                              </Chip>
+                              <OpcaoNivel key={n.valor} nivel={Number(n.valor) as keyof typeof CORES_ESCALA}
+                                descricao={n.descricao} selecionado={draft.nivel === n.valor}
+                                aoSelecionar={() => setDraft(d => ({ ...d, nivel: n.valor }))} />
                             ))}
                           </div>
                           <label className="flex flex-col gap-1">

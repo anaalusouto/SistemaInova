@@ -33,12 +33,12 @@ const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerr
 const COLUNAS = ['Risco', 'Meta / Etapa', 'Especificação', 'P × I', 'Categoria · Status', 'Responsável', 'Estratégia de resposta', 'Ações de resposta'] as const;
 const criteriosAbertos = (): CriteriosRisco => ({ ...CRITERIOS_RISCO_VAZIOS, status: STATUS.filter(status => riscoEmAberto({ status })) });
 
-const CORES: Record<string, { cor: string; fundo: string; forte: string }> = {
-  'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)', forte: 'var(--success)' },
-  'Médio':   { cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)', forte: 'var(--warning-strong-text)' },
-  'Alto':    { cor: 'var(--alert)', fundo: 'var(--alert-soft)', forte: 'var(--alert)' },
-  'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)', forte: 'var(--danger)' },
-  '—':       { cor: 'var(--ink-4)', fundo: 'var(--surface-2)', forte: 'var(--ink-4)' },
+const CORES: Record<string, { cor: string; fundo: string; forte: string; base: string }> = {
+  'Baixo':   { cor: 'var(--success)', fundo: 'var(--success-soft)', forte: 'var(--success)', base: 'var(--success-base)' },
+  'Médio':   { cor: 'var(--warning-strong-text)', fundo: 'var(--warning-soft)', forte: 'var(--warning-strong-text)', base: 'var(--warning-base)' },
+  'Alto':    { cor: 'var(--alert)', fundo: 'var(--alert-soft)', forte: 'var(--alert)', base: 'var(--alert-base)' },
+  'Crítico': { cor: 'var(--danger)', fundo: 'var(--danger-soft)', forte: 'var(--danger)', base: 'var(--danger-base)' },
+  '—':       { cor: 'var(--ink-4)', fundo: 'var(--surface-2)', forte: 'var(--ink-4)', base: 'var(--line-1)' },
 };
 
 const quebra: React.CSSProperties = { whiteSpace: 'pre-line', overflowWrap: 'anywhere', lineHeight: 1.5 };
@@ -515,9 +515,9 @@ function Matriz({
                         background: cor.fundo,
                         color: vazia ? 'var(--ink-5)' : cor.forte,
                         border: selecionada ? '2px solid var(--primary)' : '1px solid var(--line-1)',
+                        borderTop: `4px solid ${cor.base}`,
                         fontSize: '0.88rem', fontWeight: vazia ? 400 : 700,
                         cursor: vazia ? 'default' : 'pointer',
-                        opacity: vazia ? 0.35 : 1,
                       }}
                     >
                       {c.quantidade || '·'}

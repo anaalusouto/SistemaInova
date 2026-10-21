@@ -16,12 +16,12 @@ export interface RotaItem {
   status?: 'Operacional' | 'Atenção' | 'Crítico';
 }
 
-// Cores por tipo de comunidade — replicam o legend do My Maps.
+// Cores por tipo de comunidade na paleta institucional da plataforma.
 export const tipoComunidadeColors: Record<string, string> = {
-  'Quilombola': '#9C27B0',
-  'Indígena': '#FBC02D',
-  'Tradicional': '#0288D1',
-  'Agricultura Familiar': '#A52714',
+  'Quilombola': '#344980',
+  'Indígena': '#D3AD3E',
+  'Tradicional': '#58805B',
+  'Agricultura Familiar': '#B5473C',
 };
 
 export const rotas: RotaItem[] = [

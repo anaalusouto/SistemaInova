@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export const ACCENT_OPTIONS = ['azul', 'terracota', 'verde', 'petroleo', 'violeta', 'ocre'] as const;
-export type AccentColor = typeof ACCENT_OPTIONS[number];
+export const ACCENT_OPTIONS = ['azul'] as const;
+/** Valores antigos são aceitos pela API; a navegação usa a paleta institucional. */
+export type AccentColor = 'azul' | 'terracota' | 'verde' | 'petroleo' | 'violeta' | 'ocre';
 export type FontScale = 'sm' | 'md' | 'lg' | 'xl';
 
 export const ACCENT_LABEL: Record<AccentColor, string> = {
@@ -67,7 +68,7 @@ function readPrefs(): ThemePrefs {
 function applyToDocument(prefs: ThemePrefs) {
   const root = document.documentElement;
   root.classList.toggle('dark', prefs.mode === 'dark');
-  root.dataset.accent = prefs.accent;
+  root.dataset.accent = 'azul';
   root.style.fontSize = `${FONT_SCALE_VALUE[prefs.fontScale] * 100}%`;
 }
 
@@ -103,7 +104,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [prefs, hydrated]);
 
   const setMode = useCallback((m: ThemeMode) => setPrefs(p => ({ ...p, mode: m })), []);
-  const setAccent = useCallback((a: AccentColor) => setPrefs(p => ({ ...p, accent: a })), []);
+  const setAccent = useCallback((_a: AccentColor) => setPrefs(p => ({ ...p, accent: 'azul' })), []);
   const setFontScale = useCallback((f: FontScale) => setPrefs(p => ({ ...p, fontScale: f })), []);
   const toggleMode = useCallback(() => setPrefs(p => ({ ...p, mode: p.mode === 'dark' ? 'light' : 'dark' })), []);
   const increaseFontScale = useCallback(() => setPrefs(p => {

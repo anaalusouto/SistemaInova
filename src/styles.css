@@ -11,7 +11,7 @@
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
  * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * A paleta institucional utiliza os valores HEX oficiais.
  *
  * To add a new semantic color:
  * 1. Add the variable to :root (light value) and .dark (dark value)
@@ -112,163 +112,144 @@
 }
 
 :root {
-  /* Escala neutra (texto/bordas/superfícies) usada nas telas do app — permite dark mode real. */
-  --ink-1: #0F172A;
-  --ink-2: #1E293B;
-  --ink-3: #475569;
-  /* ink-4 e ink-5 escurecidos (UI/UX, 29/09/2026): #64748B e #94A3B8 davam
-     4,3:1 e 2,3:1 sobre surface-2 — abaixo do mínimo de 4,5:1 (WCAG AA) para
-     texto pequeno, e ink-5 é o cinza de "Não informado", rótulos e subtextos.
-     Os dois passam de 4,5:1 sobre surface-0/1/2 e sobre os fundos -soft. */
+  /* Paleta institucional CRIA. A opacidade fica apenas nos fundos da escala. */
+  --ink-1: #253253;
+  --ink-2: #253253;
+  --ink-3: #425271;
   --ink-4: #526177;
   --ink-5: #5F6E84;
-  --line-1: #E2E8F0;
-  --line-2: #CBD5E1;
+  --line-1: #E0E3EB;
+  --line-2: #C5CBD9;
   --surface-0: #FFFFFF;
-  --surface-1: #F8FAFC;
-  --surface-2: #F1F5F9;
-
-  /* Cor de destaque (marca) — controlada pelo usuário em Configurações › Aparência. */
+  --surface-1: #FFFFFF;
+  --surface-2: #FFFCF8;
+  --background: #FFFCF8;
+  --foreground: #253253;
+  --card: #FFFFFF;
+  --card-foreground: #253253;
+  --popover: #FFFFFF;
+  --popover-foreground: #253253;
+  --border: var(--line-1);
+  --input: var(--line-2);
+  --muted: #FFFCF8;
+  --muted-foreground: var(--ink-4);
+  --accent: rgba(52,73,128,0.08);
+  --accent-foreground: #253253;
   --brand: #344980;
   --brand-foreground: #FFFFFF;
   --brand-text: #344980;
-  --brand-soft: #EEF1F8;
+  --brand-soft: rgba(52,73,128,0.08);
   --brand-soft-border: #CBD3E6;
-  --brand-secondary: #B95C4A;
-  --brand-secondary-soft: #FAEEE9;
+  --brand-secondary: #8E3027;
+  --brand-secondary-soft: rgba(181,71,60,0.08);
 
-  /* Cores de status — fixas independente da cor de destaque escolhida. */
-  --success: #059669;
-  --success-soft: #ECFDF5;
-  --success-soft-border: #A7F3D0;
-  --success-strong-text: #166534;
-  --danger: #DC2626;
-  --danger-soft: #FEF2F2;
-  --danger-soft-border: #FCA5A5;
-  --danger-strong-text: #991B1B;
-  /* Alerta (laranja): atraso e risco Alto. Vermelho (--danger) fica só para
-     crítico e ação destrutiva (UI/UX, 29/09/2026). */
-  /* Azul fixo: etiqueta informativa que não segue o accent escolhido pelo
-     usuário (ex.: canal do registro de contato). */
-  --tag-blue-soft: #EFF6FF;
-  --tag-blue-text: #1D4ED8;
-  --alert: #C2410C;
-  --alert-soft: #FFF7ED;
-  --alert-soft-border: #FDBA74;
-  --warning: #D97706;
-  --warning-soft: #FFFBEB;
-  --warning-soft-border: #FDE68A;
-  --warning-strong-text: #92400E;
-  --info: #7C3AED;
-  --info-soft: #F5F3FF;
-  --info-soft-border: #DDD6FE;
+  --nivel-1-base: #B5473C;
+  --nivel-1-texto: #8E3027;
+  --nivel-1-fundo: rgba(181,71,60,0.08);
+  --nivel-2-base: #C47735;
+  --nivel-2-texto: #874718;
+  --nivel-2-fundo: rgba(196,119,53,0.08);
+  --nivel-3-base: #D3AD3E;
+  --nivel-3-texto: #705917;
+  --nivel-3-fundo: rgba(211,173,62,0.08);
+  --nivel-4-base: #58805B;
+  --nivel-4-texto: #365C39;
+  --nivel-4-fundo: rgba(88,128,91,0.08);
+
+  --success: var(--nivel-4-texto);
+  --success-base: var(--nivel-4-base);
+  --success-soft: var(--nivel-4-fundo);
+  --success-soft-border: var(--nivel-4-base);
+  --success-strong-text: var(--nivel-4-texto);
+  --danger: var(--nivel-1-texto);
+  --danger-base: var(--nivel-1-base);
+  --danger-soft: var(--nivel-1-fundo);
+  --danger-soft-border: var(--nivel-1-base);
+  --danger-strong-text: var(--nivel-1-texto);
+  --alert: var(--nivel-2-texto);
+  --alert-base: var(--nivel-2-base);
+  --alert-soft: var(--nivel-2-fundo);
+  --alert-soft-border: var(--nivel-2-base);
+  --warning: var(--nivel-3-texto);
+  --warning-base: var(--nivel-3-base);
+  --warning-soft: var(--nivel-3-fundo);
+  --warning-soft-border: var(--nivel-3-base);
+  --warning-strong-text: var(--nivel-3-texto);
+  --info: #344980;
+  --info-soft: rgba(52,73,128,0.08);
+  --info-soft-border: #CBD3E6;
+  --tag-blue-soft: rgba(52,73,128,0.08);
+  --tag-blue-text: #344980;
+  --destructive: var(--nivel-1-texto);
+  --destructive-foreground: #FFFFFF;
+  --primary: #344980;
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--brand-soft);
+  --secondary-foreground: #344980;
+  --ring: #344980;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #253253;
+  --sidebar-primary: #344980;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(52,73,128,0.08);
+  --sidebar-accent-foreground: #253253;
+  --sidebar-border: var(--line-1);
+  --sidebar-ring: #344980;
+  --chart-1: #344980;
+  --chart-2: #58805B;
+  --chart-3: #D3AD3E;
+  --chart-4: #C47735;
+  --chart-5: #B5473C;
 }
 
-[data-accent="terracota"] { --brand: #B95C4A; --brand-text: #A34E3E; --brand-soft: #FAEEE9; --brand-soft-border: #EACAC1; --brand-secondary: #344980; --brand-secondary-soft: #EEF1F8; }
-
-/* Opções complementares de personalização, com texto branco nos botões. */
-[data-accent="verde"] { --brand: #3F7054; --brand-text: #345D46; --brand-soft: #EDF5EF; --brand-soft-border: #C5DACA; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
-[data-accent="petroleo"] { --brand: #286B73; --brand-text: #225C63; --brand-soft: #EAF4F5; --brand-soft-border: #BDD9DC; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
-[data-accent="violeta"] { --brand: #74548A; --brand-text: #634676; --brand-soft: #F3EEF7; --brand-soft-border: #D9CBE4; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
-[data-accent="ocre"] { --brand: #896320; --brand-text: #76551C; --brand-soft: #F8F2E6; --brand-soft-border: #E4D4B3; --brand-secondary: #344980; --brand-secondary-soft: #EEF1F8; }
-
+/* O modo escuro conserva a marca e adapta as superfícies para leitura. */
 .dark {
+  --background: #111A2E;
+  --foreground: #F1F5F9;
+  --card: #1B2740;
+  --card-foreground: #F1F5F9;
+  --popover: #1B2740;
+  --popover-foreground: #F1F5F9;
   --ink-1: #F1F5F9;
   --ink-2: #E2E8F0;
   --ink-3: #CBD5E1;
-  --ink-4: #94A3B8;
-  /* Era #64748B: 3,1:1 sobre surface-0. Agora ≥ 4,8:1 em todas as superfícies. */
-  --ink-5: #8494AB;
+  --ink-4: #B7C3D9;
+  --ink-5: #A4B1C9;
   --line-1: rgba(255,255,255,0.12);
   --line-2: rgba(255,255,255,0.2);
   --surface-0: #1B2740;
-  --surface-1: #111A2E;
+  --surface-1: #1B2740;
   --surface-2: #16233D;
-
-  --brand: #344980;
-  --brand-foreground: #FFFFFF;
+  --muted: #16233D;
+  --muted-foreground: var(--ink-4);
+  --accent: rgba(190,202,235,0.08);
+  --accent-foreground: #F1F5F9;
   --brand-text: #BECAEB;
-  --brand-soft: rgba(100,124,188,0.18);
-  --brand-soft-border: rgba(142,162,213,0.45);
-  --brand-secondary: #B95C4A;
-  --brand-secondary-soft: rgba(185,92,74,0.18);
-
-  --success: #34D399;
-  --success-soft: rgba(5,150,105,0.16);
-  --success-soft-border: rgba(5,150,105,0.4);
-  --success-strong-text: #86EFAC;
-  --danger: #F87171;
-  --danger-soft: rgba(220,38,38,0.16);
-  --danger-soft-border: rgba(220,38,38,0.4);
-  --danger-strong-text: #FCA5A5;
-  --tag-blue-soft: rgba(59,130,246,0.16);
-  --tag-blue-text: #93C5FD;
-  --alert: #FB923C;
-  --alert-soft: rgba(234,88,12,0.16);
-  --alert-soft-border: rgba(234,88,12,0.4);
-  --warning: #FBBF24;
-  --warning-soft: rgba(217,119,6,0.16);
-  --warning-soft-border: rgba(217,119,6,0.4);
-  --warning-strong-text: #FCD34D;
-  --info: #A78BFA;
-  --info-soft: rgba(124,58,237,0.16);
-  --info-soft-border: rgba(124,58,237,0.4);
+  --brand-soft: rgba(190,202,235,0.08);
+  --brand-soft-border: #52658F;
+  --brand-secondary: #F1B5A8;
+  --success: #ABD4B0;
+  --success-strong-text: #ABD4B0;
+  --danger: #F1B5A8;
+  --danger-strong-text: #F1B5A8;
+  --alert: #E6BC94;
+  --warning: #E6D49A;
+  --warning-strong-text: #E6D49A;
+  --info: #BECAEB;
+  --tag-blue-text: #BECAEB;
+  --destructive: #B5473C;
+  --secondary: var(--brand-soft);
+  --secondary-foreground: #BECAEB;
+  --sidebar: #1B2740;
+  --sidebar-foreground: #F1F5F9;
+  --sidebar-accent: rgba(190,202,235,0.08);
+  --sidebar-accent-foreground: #F1F5F9;
 }
 
-.dark[data-accent="terracota"] { --brand: #B95C4A; --brand-text: #F1B5A8; --brand-soft: rgba(185,92,74,0.18); --brand-soft-border: rgba(216,149,134,0.45); --brand-secondary: #344980; --brand-secondary-soft: rgba(100,124,188,0.18); }
-
-.dark[data-accent="verde"] { --brand: #3F7054; --brand-text: #ABD4B8; --brand-soft: rgba(63,112,84,0.18); --brand-soft-border: rgba(134,186,151,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
-.dark[data-accent="petroleo"] { --brand: #286B73; --brand-text: #A0D6DC; --brand-soft: rgba(40,107,115,0.18); --brand-soft-border: rgba(117,184,193,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
-.dark[data-accent="violeta"] { --brand: #74548A; --brand-text: #D5BCE7; --brand-soft: rgba(116,84,138,0.18); --brand-soft-border: rgba(182,150,204,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
-.dark[data-accent="ocre"] { --brand: #896320; --brand-text: #E6CA8E; --brand-soft: rgba(137,99,32,0.18); --brand-soft-border: rgba(204,170,104,0.45); --brand-secondary: #344980; --brand-secondary-soft: rgba(100,124,188,0.18); }
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
-}
-
-/* Unifica os tokens shadcn de "primário" com a cor de destaque escolhida pelo
-   usuário, para que botões, item ativo do menu e anel de foco sigam o mesmo
-   tom em qualquer modo/accent (precisa vir depois dos blocos :root/.dark acima). */
-:root {
-  --primary: var(--brand);
-  --primary-foreground: var(--brand-foreground);
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: var(--brand-foreground);
-  --secondary: var(--brand-secondary-soft);
-  --secondary-foreground: var(--brand-secondary);
-  --ring: var(--brand);
-}
+/* Cartões de nível mantêm a cor exata de destaque sobre suporte branco. */
+.escala-nivel { background: #FFFFFF; color: #253253; }
+.escala-nivel-conteudo { background: var(--nivel-fundo); border-top: 4px solid var(--nivel-base); }
+.escala-nivel-titulo { color: var(--nivel-texto); }
 
 /* CRIA: logos originais sobre suporte branco, inclusive no tema escuro. */
 .cria-brand {

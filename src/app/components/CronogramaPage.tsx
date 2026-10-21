@@ -17,12 +17,12 @@ import type { AbaGestao } from '../lib/navegacaoApp';
 
 const eventTypes: CalendarEventType[] = ['Visita técnica', 'Prazo', 'Logística', 'Reunião', 'Capacitação', 'Outro'];
 const typeColors: Record<CalendarEventType, string> = {
-  'Visita técnica': '#2E7D52',
-  'Prazo': '#EF4444',
-  'Logística': '#0D6E8A',
-  'Reunião': '#7C3AED',
-  'Capacitação': '#F59E0B',
-  'Outro': '#6B7280',
+  'Visita técnica': '#58805B',
+  'Prazo': '#B5473C',
+  'Logística': '#C47735',
+  'Reunião': '#344980',
+  'Capacitação': '#D3AD3E',
+  'Outro': '#253253',
 };
 const statusColors: Record<string, string> = {
   'Operacional': 'var(--success)',
@@ -175,7 +175,7 @@ function RotasMap({ routes, selectedId, onSelect }: { routes: RotaItem[]; select
     const groups: Record<string, RotaItem[]> = {};
     routes.forEach(r => { if (r.lat != null && r.lng != null) (groups[r.rota] ??= []).push(r); });
 
-    const palette = ['#1A5C3A', '#0D6E8A', '#F59E0B', '#EF4444', '#7C3AED', '#DB2777', '#059669', '#2563EB', '#B45309', '#0891B2', '#65A30D', '#DC2626'];
+    const palette = ['#344980', '#58805B', '#D3AD3E', '#B5473C', '#C47735', '#253253'];
     let idx = 0;
     const bounds: [number, number][] = [];
 

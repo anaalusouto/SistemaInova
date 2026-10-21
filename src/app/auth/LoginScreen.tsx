@@ -28,7 +28,7 @@ export function LoginScreen() {
   return (
     <div
       className="relative flex min-h-dvh w-full items-center justify-center p-4 sm:p-6"
-      style={{ background: 'linear-gradient(135deg, #344980 0%, #182749 65%, #B95C4A 160%)' }}
+      style={{ background: 'linear-gradient(135deg, #344980 0%, #253253 100%)' }}
     >
       <div
         className="absolute inset-0"

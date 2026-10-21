@@ -8,11 +8,11 @@ import type { Activity, Deliverable, Goal } from './mockData';
 export type GanttStatus = InternalStatus;
 
 export const ganttStatusColors: Record<GanttStatus, string> = {
-  'Não iniciado': '#94A3B8',
-  'Validação pendente': '#7C3AED',
-  'No prazo': '#0D6E8A',
-  'Entregue': '#22C55E',
-  'Atrasado': '#EF4444',
+  'Não iniciado': '#253253',
+  'Validação pendente': '#344980',
+  'No prazo': '#D3AD3E',
+  'Entregue': '#58805B',
+  'Atrasado': '#B5473C',
 };
 
 export interface GanttActivity {

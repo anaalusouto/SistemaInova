@@ -5,11 +5,11 @@ export type InternalStatus = 'Não iniciado' | 'Validação pendente' | 'No praz
 export const INTERNAL_STATUSES: InternalStatus[] = ['Não iniciado', 'Validação pendente', 'No prazo', 'Entregue', 'Atrasado'];
 
 export const internalStatusColors: Record<InternalStatus, { bg: string; color: string }> = {
-  'Não iniciado': { bg: '#F1F5F9', color: '#475569' },
-  'Validação pendente': { bg: '#EFF6FF', color: '#2563EB' },
-  'No prazo': { bg: '#FEFCE8', color: '#A16207' },
-  'Entregue': { bg: '#ECFDF5', color: '#059669' },
-  'Atrasado': { bg: '#FEF2F2', color: '#DC2626' },
+  'Não iniciado': { bg: 'var(--surface-2)', color: 'var(--ink-4)' },
+  'Validação pendente': { bg: 'var(--brand-soft)', color: 'var(--brand-text)' },
+  'No prazo': { bg: 'var(--warning-soft)', color: 'var(--warning-strong-text)' },
+  'Entregue': { bg: 'var(--success-soft)', color: 'var(--success-strong-text)' },
+  'Atrasado': { bg: 'var(--danger-soft)', color: 'var(--danger-strong-text)' },
 };
 
 export interface InternalSubtask {
