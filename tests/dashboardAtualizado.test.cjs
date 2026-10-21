@@ -15,6 +15,10 @@ function carregar(file, mocks = {}, cache = new Map()) {
   } }).outputText;
   new Function('require', 'module', 'exports', codigo)(r => {
     if (mocks[r]) return mocks[r];
+    if (r.startsWith('@/')) {
+      const rel = path.resolve('src', r.slice(2));
+      return carregar(fs.existsSync(rel + '.ts') ? rel + '.ts' : rel + '.tsx', mocks, cache);
+    }
     if (!r.startsWith('.')) return require(r);
     const rel = path.resolve(path.dirname(p), r);
     return carregar(fs.existsSync(rel + '.ts') ? rel + '.ts' : rel + '.tsx', mocks, cache);
@@ -88,6 +92,7 @@ test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de 
   }]));
   const { PortfolioView } = carregar('src/app/components/PortfolioView.tsx', {
     '../store': { useStore: () => ({ projects: reais, projectsLoading: false }) }, recharts,
+    '../auth/authStore': { useAuth: () => ({ readOnly: true }) },
   });
   let html = renderToStaticMarkup(React.createElement(PortfolioView));
   assert.match(html, /aria-pressed="true"[^>]*>Dados reais/);
@@ -100,4 +105,13 @@ test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de 
   html = renderToStaticMarkup(React.createElement(PortfolioView));
   assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.fisico === 100));
   assert.match(html, /Atividades concluídas[\s\S]*?>2 /);
+  reais[0].status = 'Suspenso';
+  graficos.length = 0;
+  html = renderToStaticMarkup(React.createElement(PortfolioView));
+  assert.ok(graficos.flat().some(row => row.name === 'Suspenso' && row.value === 1));
+  assert.ok(graficos.flat().some(row => row.name === 'Em andamento' && row.value === 0));
+  assert.match(html, /Suspenso/);
+  assert.doesNotMatch(html, /Alterar status de/);
+  assert.equal(filtros.applyPortfolioFilters(reais, { ...filtros.emptyPortfolioFilters(), status: ['Em andamento'] }).length, 0);
+  assert.equal(filtros.applyPortfolioFilters(reais, { ...filtros.emptyPortfolioFilters(), status: ['Suspenso'] }).length, 1);
 });

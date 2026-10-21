@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import type { ProjectExt } from '../../store';
 import { resumoAcompanhamento } from '../../lib/acompanhamentoPortfolio';
 import { formatDateOnly } from '../../lib/dateOnly';
+import type { ProjectStatus } from '../../data/mockData';
+import { TagStatusProjeto } from './TagStatusProjeto';
 
 const filtros = [
   ['acompanhados', 'Com acompanhamento'],
@@ -12,11 +14,12 @@ const filtros = [
 ] as const;
 type Filtro = typeof filtros[number][0];
 
-export function AcompanhamentoPortfolio({ projects, onOpenProject }: {
+export function AcompanhamentoPortfolio({ projects, onOpenProject, onChangeStatus }: {
   projects: ProjectExt[];
   onOpenProject?: (id: number) => void;
+  onChangeStatus?: (id: number, status: ProjectStatus) => Promise<void>;
 }) {
-  const [filtro, setFiltro] = useState<Filtro>('acompanhados');
+  const [filtro, setFiltro] = useState<Filtro>('todos');
   const linhas = useMemo(() => projects.map(projeto => ({ projeto, ...resumoAcompanhamento(projeto) })), [projects]);
   const visiveis = linhas.filter(l => filtro === 'todos' || (filtro === 'acompanhados' ? l.temAcompanhamento
     : filtro === 'visitados' ? l.visitas > 0 : filtro === 'alterados' ? l.temAlteracoes : !l.temAcompanhamento));
@@ -24,6 +27,9 @@ export function AcompanhamentoPortfolio({ projects, onOpenProject }: {
   return <section className="rounded-xl border bg-card p-4 sm:p-5" style={{ borderColor: 'var(--border)' }} aria-labelledby="acompanhamento-titulo">
     <h2 id="acompanhamento-titulo" className="font-semibold text-base">Acompanhamento dos projetos</h2>
     <p className="mt-1 text-xs text-muted-foreground">Veja quais projetos já têm visitas, pareceres ou mudanças registradas. A visita é comprovada por parecer de Visita técnica.</p>
+    <p className="mt-1 text-xs text-muted-foreground">{onChangeStatus
+      ? 'Clique na tag de status para definir a situação do projeto. Os gráficos e filtros da Visão Geral são atualizados com essa classificação.'
+      : 'As tags mostram a situação dos projetos definida no Acompanhamento.'}</p>
     <div className="my-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
       {[
         ['Com acompanhamento', linhas.filter(l => l.temAcompanhamento).length],
@@ -52,7 +58,8 @@ export function AcompanhamentoPortfolio({ projects, onOpenProject }: {
               : <span className="font-medium">{l.projeto.code} · {l.projeto.name}</span>}
             <p className="mt-1 text-xs text-muted-foreground">{l.projeto.org || l.projeto.organizacao?.nome || 'Organização não informada'}</p>
           </th>
-          <td className="p-3">{l.projeto.status}</td>
+          <td className="p-3"><TagStatusProjeto status={l.projeto.status} nomeProjeto={l.projeto.name}
+            aoAlterar={onChangeStatus ? status => onChangeStatus(l.projeto.id, status) : undefined} /></td>
           <td className="p-3 whitespace-nowrap">{l.ultimaVisita ? formatDateOnly(l.ultimaVisita) : 'Sem visita registrada'}</td>
           <td className="p-3">{l.pareceres}</td>
           <td className="p-3">{l.mudancas}</td>
