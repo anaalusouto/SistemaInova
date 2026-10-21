@@ -166,6 +166,12 @@
 
 [data-accent="terracota"] { --brand: #B95C4A; --brand-text: #A34E3E; --brand-soft: #FAEEE9; --brand-soft-border: #EACAC1; --brand-secondary: #344980; --brand-secondary-soft: #EEF1F8; }
 
+/* Opções complementares de personalização, com texto branco nos botões. */
+[data-accent="verde"] { --brand: #3F7054; --brand-text: #345D46; --brand-soft: #EDF5EF; --brand-soft-border: #C5DACA; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
+[data-accent="petroleo"] { --brand: #286B73; --brand-text: #225C63; --brand-soft: #EAF4F5; --brand-soft-border: #BDD9DC; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
+[data-accent="violeta"] { --brand: #74548A; --brand-text: #634676; --brand-soft: #F3EEF7; --brand-soft-border: #D9CBE4; --brand-secondary: #B95C4A; --brand-secondary-soft: #FAEEE9; }
+[data-accent="ocre"] { --brand: #896320; --brand-text: #76551C; --brand-soft: #F8F2E6; --brand-soft-border: #E4D4B3; --brand-secondary: #344980; --brand-secondary-soft: #EEF1F8; }
+
 .dark {
   --ink-1: #F1F5F9;
   --ink-2: #E2E8F0;
@@ -210,6 +216,11 @@
 }
 
 .dark[data-accent="terracota"] { --brand: #B95C4A; --brand-text: #F1B5A8; --brand-soft: rgba(185,92,74,0.18); --brand-soft-border: rgba(216,149,134,0.45); --brand-secondary: #344980; --brand-secondary-soft: rgba(100,124,188,0.18); }
+
+.dark[data-accent="verde"] { --brand: #3F7054; --brand-text: #ABD4B8; --brand-soft: rgba(63,112,84,0.18); --brand-soft-border: rgba(134,186,151,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
+.dark[data-accent="petroleo"] { --brand: #286B73; --brand-text: #A0D6DC; --brand-soft: rgba(40,107,115,0.18); --brand-soft-border: rgba(117,184,193,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
+.dark[data-accent="violeta"] { --brand: #74548A; --brand-text: #D5BCE7; --brand-soft: rgba(116,84,138,0.18); --brand-soft-border: rgba(182,150,204,0.45); --brand-secondary: #B95C4A; --brand-secondary-soft: rgba(185,92,74,0.18); }
+.dark[data-accent="ocre"] { --brand: #896320; --brand-text: #E6CA8E; --brand-soft: rgba(137,99,32,0.18); --brand-soft-border: rgba(204,170,104,0.45); --brand-secondary: #344980; --brand-secondary-soft: rgba(100,124,188,0.18); }
 
 .dark {
   --background: oklch(0.129 0.042 264.695);

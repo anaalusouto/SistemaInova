@@ -1,18 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type AccentColor = 'azul' | 'terracota';
+export const ACCENT_OPTIONS = ['azul', 'terracota', 'verde', 'petroleo', 'violeta', 'ocre'] as const;
+export type AccentColor = typeof ACCENT_OPTIONS[number];
 export type FontScale = 'sm' | 'md' | 'lg' | 'xl';
 
 export const ACCENT_LABEL: Record<AccentColor, string> = {
   azul: 'Azul CRIA',
   terracota: 'Terracota CRIA',
+  verde: 'Verde',
+  petroleo: 'Petróleo',
+  violeta: 'Violeta',
+  ocre: 'Ocre',
 };
 
 /** Amostra de cor sólida de cada opção — só para os "chips" de seleção na UI. */
 export const ACCENT_SWATCH: Record<AccentColor, string> = {
   azul: '#344980',
   terracota: '#B95C4A',
+  verde: '#3F7054',
+  petroleo: '#286B73',
+  violeta: '#74548A',
+  ocre: '#896320',
 };
 
 export const FONT_SCALE_ORDER: FontScale[] = ['sm', 'md', 'lg', 'xl'];
@@ -49,7 +58,7 @@ function readPrefs(): ThemePrefs {
     const parsed = JSON.parse(raw);
     return {
       mode: parsed.mode === 'dark' ? 'dark' : 'light',
-      accent: parsed.accent === 'terracota' ? 'terracota' : 'azul',
+      accent: ACCENT_OPTIONS.includes(parsed.accent) ? parsed.accent : 'azul',
       fontScale: FONT_SCALE_ORDER.includes(parsed.fontScale) ? parsed.fontScale : 'md',
     };
   } catch { return DEFAULT_PREFS; }

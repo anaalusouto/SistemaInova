@@ -9,7 +9,7 @@ import { listarUsuarios, criarUsuario, atualizarUsuario, excluirUsuario, type Ma
 import { AdminUnlockDialog } from '../auth/AdminUnlockDialog';
 import { useAudit } from '../audit/auditStore';
 import { useStore } from '../store';
-import { useTheme, ACCENT_LABEL, ACCENT_SWATCH, FONT_SCALE_LABEL, FONT_SCALE_ORDER, type AccentColor, type FontScale } from '../theme/themeStore';
+import { useTheme, ACCENT_OPTIONS, ACCENT_LABEL, ACCENT_SWATCH, FONT_SCALE_LABEL, FONT_SCALE_ORDER, type FontScale } from '../theme/themeStore';
 import { BotaoNovo } from './BotaoNovo';
 import { FormatoProjetoSection } from './plano/FormatoProjetoSection';
 
@@ -247,8 +247,6 @@ export function ConfiguracoesPage() {
   );
 }
 
-const ACCENT_OPTIONS: AccentColor[] = ['azul', 'terracota'];
-
 function AparenciaSection() {
   const { mode, accent, fontScale, setMode, setAccent, setFontScale } = useTheme();
 
@@ -293,19 +291,21 @@ function AparenciaSection() {
         <div>
           <div style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--ink-1)' }}>Cor de destaque</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--ink-5)', marginTop: 2 }}>
-            Define a cor dos botões principais, itens ativos do menu e links em toda a plataforma.
+            Escolha entre as cores da marca e as opções complementares para os botões principais, itens ativos do menu e links.
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Cor de destaque">
           {ACCENT_OPTIONS.map(a => {
             const isActive = accent === a;
             return (
               <button
                 key={a}
+                type="button"
                 onClick={() => setAccent(a)}
                 aria-label={ACCENT_LABEL[a]}
+                aria-pressed={isActive}
                 title={ACCENT_LABEL[a]}
-                className="flex flex-col items-center gap-1.5"
+                className="flex min-h-11 min-w-11 flex-col items-center gap-1.5 rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <span
                   className="rounded-full flex items-center justify-center transition-transform"
