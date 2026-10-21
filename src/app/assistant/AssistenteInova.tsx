@@ -81,7 +81,7 @@ export function AssistenteInova({
             <div className="min-w-0 flex-1">
               <Dialog.Title className="font-semibold">crIA</Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
-                Chatbot local · sem consumo de OpenAI
+                Assistente da plataforma
               </Dialog.Description>
             </div>
             <Dialog.Close
@@ -99,8 +99,7 @@ export function AssistenteInova({
               </strong>
             </p>
             <p className="mt-1">
-              Guias, regras verificadas e resumos dos projetos já carregados. A conversa fica só
-              nesta janela; nada é enviado à OpenAI.
+              Guias, regras verificadas e resumos dos projetos já carregados.
             </p>
           </div>
           {open && (
