@@ -1,0 +1,54 @@
+Deploy de migrações do CRIA pelo GitHub Actions
+
+Workflow: .github/workflows/supabase-producao.yml
+Projeto: tgkfysmwllbocwxlpyai (CRIA)
+
+Estado inicial: somente a validação local dos nomes e da sequência dos arquivos
+roda automaticamente. O job remoto fica desativado enquanto a variável de
+repositório SUPABASE_DEPLOY_ENABLED não for true. A integração nativa do
+Supabase continua responsável pelas migrações durante essa transição.
+
+Ativação, nesta ordem:
+1. Cadastrar em GitHub > Settings > Secrets and variables > Actions:
+   SUPABASE_ACCESS_TOKEN: token pessoal do Supabase com escopo limitado ao CRIA.
+   Para o comando link, a documentação exige leitura de Project Settings,
+   API Keys e API Key Secrets. Conferir os nomes atuais no painel do Supabase.
+   SUPABASE_DB_PASSWORD: senha atual do PostgreSQL do projeto CRIA.
+   Não usar a chave anon, publishable ou service_role como senha do banco.
+   Não colocar os valores no código, em arquivos versionados ou no chat.
+2. Em Actions, executar manualmente "Supabase - migracoes de producao" na main.
+   A execução manual consulta o histórico e executa db push --dry-run
+   --skip-vault. Não aplica migrações, seeds, roles ou segredos do Vault.
+   Confirmar que o histórico está alinhado e que não há migrações inesperadas.
+3. Só após essa simulação passar, desativar "Deploy to production" em Supabase
+   > Project Settings > Integrations > GitHub e salvar.
+4. Criar a variável de repositório SUPABASE_DEPLOY_ENABLED com valor true.
+   Conferir se algum commit em supabase/ entrou durante a troca; se entrou,
+   revisar a simulação e concluir esse deploy antes de encerrar a transição.
+
+Funcionamento após a ativação:
+- Push na main com mudanças em supabase/** aciona o workflow. Alterações no
+  próprio workflow ou no verificador de migrações também o acionam.
+- Mudanças somente em src/ (cores, layout, textos) não o acionam.
+- Execução manual é sempre apenas simulação, mesmo com deploy ativado.
+- Deploys são serializados e uma execução nova não cancela outra em andamento.
+- O job remoto termina por erro ou por timeout de 15 minutos, com logs no GitHub.
+- db push aplica só migrações pendentes; não há reset, repair, include-all,
+  include-seed ou renumeração automática do histórico.
+- Este workflow publica migrações SQL. Não sincroniza configurações do projeto,
+  buckets ou Edge Functions. Atualmente não há supabase/functions no repositório.
+  Se esses recursos forem adicionados, ampliar o workflow antes da publicação.
+- O filtro de paths não deve ser um check obrigatório para todos os PRs, pois
+  uma execução ignorada por esse filtro pode aparecer como check pendente.
+
+Os checks antigos de "Supabase Preview" não são corrigidos por este workflow.
+A divergência entre o término dos runs e o status no GitHub deve ser tratada
+com o suporte do Supabase caso seja necessário atualizar o histórico antigo.
+
+Reversão da automação: desativar SUPABASE_DEPLOY_ENABLED, aguardar qualquer
+execução em andamento terminar e reativar "Deploy to production" no Supabase.
+Isso não reverte migrações já aplicadas ao banco.
+
+Referências:
+https://supabase.com/docs/guides/deployment/managing-environments
+https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax

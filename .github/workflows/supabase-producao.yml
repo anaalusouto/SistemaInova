@@ -1,0 +1,80 @@
+name: Supabase - migracoes de producao
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - 'scripts/verificarMigracoes.mjs'
+      - '.github/workflows/supabase-producao.yml'
+  # A execucao manual apenas consulta o historico e simula as migracoes.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-producao
+  cancel-in-progress: false
+
+jobs:
+  validar:
+    name: Validar arquivos de migracao
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/verificarMigracoes.mjs
+      - name: Informar estado da ativacao
+        env:
+          DEPLOY_ENABLED: ${{ vars.SUPABASE_DEPLOY_ENABLED }}
+        run: |
+          if [ "$DEPLOY_ENABLED" != "true" ]; then
+            echo 'Deploy por Actions desativado. Manter a integracao atual ate validar a simulacao.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  migrar:
+    name: Conferir e aplicar migracoes
+    needs: validar
+    # A variavel permanece ausente durante a transicao para evitar dois deploys.
+    if: github.ref == 'refs/heads/main' && (vars.SUPABASE_DEPLOY_ENABLED == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_PROJECT_ID: tgkfysmwllbocwxlpyai
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Conferir secrets obrigatorios
+        run: |
+          missing=0
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Cadastre o secret $name nas configuracoes de Actions do repositorio."
+              missing=1
+            fi
+          done
+          exit "$missing"
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - name: Vincular ao projeto CRIA
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID" --yes
+      - name: Consultar historico remoto
+        run: supabase migration list --linked
+      - name: Simular migracoes pendentes sem alterar o banco
+        run: supabase db push --linked --dry-run --skip-vault --yes
+      - name: Aplicar apenas migracoes pendentes
+        if: github.event_name == 'push'
+        run: supabase db push --linked --skip-vault --yes
+      - name: Registrar historico apos a aplicacao
+        if: github.event_name == 'push'
+        run: supabase migration list --linked
