@@ -373,7 +373,7 @@ function FormularioEncaminhamento({
             <Texto
               valor={form.origem.texto}
               aoMudar={v => alterar('origem', { tipo: 'texto', texto: v })}
-              placeholder="Ex.: Diagnóstico de 12/08/2026, parecer técnico do projeto 04-2026"
+              placeholder="Ex.: Mapeamento de 12/08/2026, parecer técnico do projeto 04-2026"
             />
           </Campo>
         )}

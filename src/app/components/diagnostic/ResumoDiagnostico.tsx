@@ -4,7 +4,7 @@ import { useFichaOrganizacao } from '../organizacoes/useOrganizacoes';
 import { DocumentosRegistro } from '../DocumentosRegistro';
 import { formatDateOnly } from '../../lib/dateOnly';
 
-/** Reúne informações já existentes; não cria outro instrumento de diagnóstico. */
+/** Reúne informações já existentes; não cria outro instrumento de mapeamento. */
 export function ResumoDiagnostico({ diagnosticoId, organizacaoId }: { diagnosticoId: string; organizacaoId: string }) {
   const ficha = useFichaOrganizacao(organizacaoId);
   const matriz = useQuery({ queryKey: ['diagnostico-matriz', diagnosticoId], queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }) });

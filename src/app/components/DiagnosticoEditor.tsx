@@ -47,9 +47,9 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
       queryClient.invalidateQueries({ queryKey: ['diagnostico', diagnosticoId] });
       queryClient.invalidateQueries({ queryKey: ['diagnosticos'] });
       queryClient.invalidateQueries({ queryKey: ['diagnostico-visao-geral'] });
-      toast.success('Diagnóstico concluído. Para alterar, crie uma nova versão.');
+      toast.success('Mapeamento concluído. Para alterar, crie uma nova versão.');
     },
-    onError: (e: Error) => toast.error(e.message || 'Não foi possível concluir o diagnóstico.'),
+    onError: (e: Error) => toast.error(e.message || 'Não foi possível concluir o mapeamento.'),
   });
 
   const novaVersao = useMutation({
@@ -66,15 +66,15 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
   return (
     <div className={incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}>
       <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
-        <nav aria-label="Caminho do diagnóstico" className="flex flex-wrap items-center gap-2 text-xs">
+        <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={onBack} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
           <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
-          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={onHistorico}>Histórico de diagnósticos</button>}
+          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={onHistorico}>Histórico de mapeamentos</button>}
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
           <div>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
-              Diagnóstico {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : ''}
+              Mapeamento {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : ''}
             </h2>
             <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
               Versão {diagnostico?.versao ?? '—'}
@@ -82,12 +82,12 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
           </div>
           {diagnostico && (
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar diagnóstico em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
+              <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {
                   const dados=await getDadosCompletosDiagnostico({data:{diagnosticoId}});
                   const {buildDiagnosticoReportModel,exportDiagnosticoReportPdf}=await import('../lib/diagnosticReportExport');
-                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Diagnóstico Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta']));
+                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Mapeamento Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta']));
                 } catch(e){toast.error(e instanceof Error ? e.message : 'Não foi possível baixar o PDF.');}
                 finally{setBaixando(false);}
               }}><Download size={18} className={baixando ? 'animate-pulse' : undefined} aria-hidden /></button>
@@ -102,12 +102,12 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
               </span>
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
-                  onClick={() => { if (window.confirm('Concluir este diagnóstico? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
+                  onClick={() => { if (window.confirm('Concluir este mapeamento? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
                   disabled={concluir.isPending}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium text-white disabled:opacity-60"
                   style={{ background: 'var(--primary)' }}
                 >
-                  <Lock size={12} /> Concluir diagnóstico
+                  <Lock size={12} /> Concluir mapeamento
                 </button>
               ) : (
                 <button
@@ -122,8 +122,8 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             </div>
           )}
         </div>
-        {instrumentoInicial !== 'parecer' && <><label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do diagnóstico
-          <select aria-label="Instrumento do diagnóstico" value={tab} onChange={e=>setTab(e.target.value as TabId)} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
+        {instrumentoInicial !== 'parecer' && <><label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do mapeamento
+          <select aria-label="Instrumento do mapeamento" value={tab} onChange={e=>setTab(e.target.value as TabId)} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
             {TABS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
         </label>
@@ -148,8 +148,8 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
         </div></>}
       </div>
       <div className={incorporado ? 'p-4 sm:p-7 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-7'}>
-        {isLoading && <p role="status">Carregando diagnóstico…</p>}
-        {error && <p role="alert">Não foi possível abrir o diagnóstico. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
+        {isLoading && <p role="status">Carregando mapeamento…</p>}
+        {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
         {tab === 'resumo' && diagnostico && <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} />}
         {tab === 'matriz' && diagnostico && (
           <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />

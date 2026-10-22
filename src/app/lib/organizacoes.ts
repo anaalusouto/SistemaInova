@@ -2,7 +2,7 @@
  * Organizações (RC-01 a RC-04): tipos e regras que a tela e o servidor
  * compartilham.
  *
- * A Organização é a tabela `comunidades` — a mesma entidade que o Diagnóstico
+ * A Organização é a tabela `comunidades` — a mesma entidade que o Mapeamento
  * já usa. O nome da tabela ficou por compatibilidade; no código novo e na tela
  * ela se chama Organização.
  */

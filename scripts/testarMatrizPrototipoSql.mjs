@@ -8,7 +8,7 @@ const {PGlite}=require(require.resolve('@electric-sql/pglite',{paths:[path.resol
 const db=new PGlite();
 const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
 const q=async(sql,args=[]) =>(await db.query(sql,args)).rows;
-const arquivo='20261021201656_matriz_funcional_prototipo.sql';
+const arquivo='0031_matriz_funcional_prototipo.sql';
 const legado=async()=>q("SELECT to_jsonb(m)-'funcao_nome'-'experiencia'-'externo' d FROM diagnostico_matriz m WHERE funcao_id='1' ORDER BY diagnostico_id");
 const outras=async()=>({ieo:await q('SELECT * FROM diagnostico_ieo ORDER BY diagnostico_id,pergunta_id'),cesta:await q('SELECT * FROM diagnostico_produtos ORDER BY id')});
 const matriz=()=>q('SELECT * FROM diagnostico_matriz ORDER BY diagnostico_id,funcao_id');
@@ -54,7 +54,7 @@ try {
   const preenchida=await matriz();await db.exec(sql);assert.deepEqual(await matriz(),preenchida,'Reexecutar com dados novos preserva tudo');
   for(const role of ['anon','authenticated','service_role'])assert.equal((await q("SELECT has_function_privilege($1,'public.salvar_matriz_prototipo(uuid,uuid,text,text,text,text,text,text,text,text)','EXECUTE') p",[role]))[0].p,role==='service_role');
   // A retirada do catálogo antigo é uma migração posterior e explicitamente destrutiva.
-  const limpeza=await readFile('supabase/migrations/20261021203603_matriz_catalogo_21_funcoes.sql','utf8');
+  const limpeza=await readFile('supabase/migrations/0032_matriz_catalogo_21_funcoes.sql','utf8');
   const atuais=async()=>q("SELECT * FROM diagnostico_matriz WHERE funcao_id LIKE 'F%' ORDER BY diagnostico_id,funcao_id");
   const antesAtuais=await atuais(),antesCabecalhos=await q('SELECT * FROM diagnosticos ORDER BY id');
   await db.query("INSERT INTO diagnostico_matriz(diagnostico_id,funcao_id) VALUES($1,'desconhecida')",[id(1)]);

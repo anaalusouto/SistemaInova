@@ -56,7 +56,7 @@ export function DiagnosticoVisaoGeral({ onSelectOrganizacao }: DiagnosticoVisaoG
     <div className="flex flex-col gap-6 p-7 overflow-y-auto h-full min-h-0 [&>*]:shrink-0">
       <div>
         <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
-          Visão Geral do diagnóstico
+          Visão Geral do mapeamento
         </h1>
         <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
           {organizacoes.length} organizações · {filtered.length} exibidas
@@ -145,7 +145,7 @@ export function DiagnosticoVisaoGeral({ onSelectOrganizacao }: DiagnosticoVisaoG
                     <div className="flex items-center gap-2">
                       <Building2 size={13} color="var(--ink-5)" />
                       <div>
-                        <button type="button" aria-label={`Abrir resumo de ${o.nome}`} className="text-left hover:underline"
+                        <button type="button" aria-label={`Abrir versões do mapeamento de ${o.nome}`} className="text-left hover:underline"
                           onClick={e => { e.stopPropagation(); onSelectOrganizacao(o.comunidadeId); }}
                           style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--ink-1)' }}>{o.nome}</button>
                         <div style={{ fontSize: '0.7rem', color: 'var(--ink-5)' }}>{o.code}</div>
@@ -167,7 +167,7 @@ export function DiagnosticoVisaoGeral({ onSelectOrganizacao }: DiagnosticoVisaoG
                         {STATUS_LABEL[o.statusMaisRecente]}
                       </span>
                     ) : (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>Sem diagnóstico</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>Sem mapeamento</span>
                     )}
                   </td>
                   <td className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{o.totalDiagnosticos}</span></td>

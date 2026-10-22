@@ -144,15 +144,42 @@ export const diagnostico = {
 };
 const documentos: Record<string, unknown>[] = [];
 const matriz: Record<string, unknown>[] = [];
+const modoConferencia=typeof window!=='undefined'?new URLSearchParams(location.search).get('conferencia'):null;
+const chaveConferencia='inova-teste-matriz-conferencia-'+(modoConferencia??'padrao');
+let importacaoTeste:import('../../src/app/diagnostic/importarMatriz').ImportacaoSalva|null=null;
+if(modoConferencia){
+  const {interpretarTextoMatriz}=await import('../../src/app/diagnostic/importarMatriz');
+  const salvos=localStorage.getItem(chaveConferencia);
+  if(salvos){const dados=JSON.parse(salvos);importacaoTeste=dados.importacao;matriz.push(...dados.matriz);}
+  else importacaoTeste={id:'importacao-demo',origem:{nomeArquivo:'mapeamento-conferencia.pdf',sha256:'a'.repeat(64),tamanho:2000},
+    dados:interpretarTextoMatriz('F01 Representação e articulação institucional\nAtuação: Executa\nAtuação: Viabiliza\nExperiência: Inicial\nCriticidade atual: 3\nInteresse em desenvolvimento: 4'),pendentes:['F01'],estado:'pendente',criadoEm:'2026-10-22T12:00:00Z'};
+}
+const persistirConferencia=()=>{if(modoConferencia)localStorage.setItem(chaveConferencia,JSON.stringify({importacao:importacaoTeste,matriz}));};
 export async function call(name: string, args?: { data?: Record<string, unknown> }) {
   const d = args?.data ?? {};
+  if(name==='obterImportacaoMatrizPendente')return importacaoTeste?.estado==='pendente'?importacaoTeste:null;
+  if(name==='registrarImportacaoMatriz'){
+    const {interpretarTextoMatriz}=await import('../../src/app/diagnostic/importarMatriz');
+    const dados=interpretarTextoMatriz(d.texto as string);
+    importacaoTeste={id:'importacao-demo',dados,origem:d.origem as import('../../src/app/diagnostic/importarMatriz').OrigemPdf,
+      pendentes:Object.keys(dados.conferencia),estado:'pendente',criadoEm:new Date().toISOString()};persistirConferencia();return importacaoTeste;
+  }
+  if(name==='descartarImportacaoMatriz'){if(importacaoTeste){importacaoTeste.estado='descartada';importacaoTeste.pendentes=[];}persistirConferencia();return;}
   if (name === 'listarRespostasMatriz') return matriz.filter(r=>r.diagnosticoId===d.diagnosticoId);
   if (name === 'salvarMatrizPrototipo') {
     if(d.organizacaoId!==orgId || d.diagnosticoId!==diagnostico.id) throw new Error('Aplicação de outra organização.');
     if(new URLSearchParams(location.search).has('falha')) throw new Error('Falha simulada ao salvar a Matriz.');
     const row={...d,atuacao:d.atuacao?[d.atuacao]:[],quemExecuta:null,abrangencia:null,atualizadoEm:new Date().toISOString()};
+    if(d.importacao&&importacaoTeste){
+      const {validarConferencia}=await import('../../src/app/diagnostic/importarMatriz');
+      const revisao=d.importacao as {decisoes:import('../../src/app/diagnostic/importarMatriz').DecisoesImportacao;confirmado:boolean};
+      validarConferencia(importacaoTeste.dados.conferencia[d.funcaoId as string],d as unknown as import('../../src/app/diagnostic/importarMatriz').RascunhoMatriz,revisao.decisoes,revisao.confirmado);
+      Object.assign(row,{origemPdf:{...importacaoTeste.origem,conferidoEm:new Date().toISOString(),conferidoPor:'Teste',estado:'conferida'}});
+      importacaoTeste.pendentes=importacaoTeste.pendentes.filter(id=>id!==d.funcaoId);if(!importacaoTeste.pendentes.length)importacaoTeste.estado='conferida';
+    }
     const i=matriz.findIndex(r=>r.diagnosticoId===d.diagnosticoId&&r.funcaoId===d.funcaoId);
     if(i<0) matriz.push(row); else matriz[i]=row;
+    persistirConferencia();
     return row;
   }
   if (name === "listarComunidades") return [org];

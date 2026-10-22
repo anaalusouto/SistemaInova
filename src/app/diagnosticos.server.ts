@@ -1,13 +1,16 @@
-// Server functions do módulo Diagnóstico (RF-02).
+// Server functions do módulo Mapeamento (RF-02).
 // Mesmo padrão de src/app/projetos.server.ts (createServerFn + getAdmin() via
-// dynamic import + throw new Error(error.message)). Fase 1: cabeçalho do
-// diagnóstico (Organização + Aplicação + versão) e versionamento. As funções
+// dynamic import + throw new Error(mensagemMapeamento(error))). Fase 1: cabeçalho do
+// mapeamento (Organização + Aplicação + versão) e versionamento. As funções
 // de Matriz/IEO/Cesta/Parecer/Anexos entram nas fases seguintes.
 import { createServerFn } from '@tanstack/react-start';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
 import { validarDocumento, LIMITE_DOCUMENTO } from './lib/documentosRegistro';
 import { diagnosticoAtual } from './diagnostic/navegacaoDiagnostico';
 import { validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
+import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type OrigemPdf } from './diagnostic/importarMatriz';
+
+const mensagemMapeamento=(erro:{message:string})=>erro.message.replace(/diagnóstico/gi,termo=>termo[0]==='D'?'Mapeamento':'mapeamento');
 
 async function getAdmin() {
   await (await import('./sessao.server')).exigirSessao();
@@ -21,8 +24,8 @@ async function exigirDiagnosticoEditavel(id: string) {
   const usuario = await exigirEscritaDiagnostico();
   const db = await getAdmin();
   const {data, error} = await db.from('diagnosticos').select('status').eq('id',id).maybeSingle();
-  if(error || !data) throw new Error('Diagnóstico não encontrado.');
-  if(data.status !== 'em_edicao') throw new Error('Diagnóstico concluído é somente leitura. Crie uma nova versão para alterar.');
+  if(error || !data) throw new Error('Mapeamento não encontrado.');
+  if(data.status !== 'em_edicao') throw new Error('Mapeamento concluído é somente leitura. Crie uma nova versão para alterar.');
   return usuario;
 }
 async function exigirProdutoEditavel(id: string) {
@@ -65,7 +68,7 @@ function mapDiagnostico(row: any): DiagnosticoResumo {
   };
 }
 
-/** Visão Geral: uma linha por Organização, com o resumo do diagnóstico mais recente. */
+/** Visão Geral: uma linha por Organização, com o resumo do mapeamento mais recente. */
 export const listarVisaoGeralDiagnosticos = createServerFn({ method: 'GET' }).handler(
   async (): Promise<OrganizacaoDiagnosticoResumo[]> => {
     const supabaseAdmin = await getAdmin();
@@ -73,7 +76,7 @@ export const listarVisaoGeralDiagnosticos = createServerFn({ method: 'GET' }).ha
       .from('comunidades')
       .select('id, code, nome, segmento_social, diagnosticos(id, data_aplicacao, versao, status, criado_em, atualizado_em)')
       .order('nome');
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
 
     return (data ?? []).map((row: any): OrganizacaoDiagnosticoResumo => {
       const diags: any[] = row.diagnosticos ?? [];
@@ -100,7 +103,7 @@ export const listarDiagnosticosPorComunidade = createServerFn({ method: 'GET' })
       .eq('comunidade_id', comunidadeId)
       .order('data_aplicacao', { ascending: false })
       .order('versao', { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map(mapDiagnostico);
   });
 
@@ -109,7 +112,7 @@ export const getDiagnostico = createServerFn({ method: 'GET' })
   .handler(async ({ data: { id } }): Promise<DiagnosticoResumo> => {
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin.from('diagnosticos').select('*').eq('id', id).single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapDiagnostico(row);
   });
 
@@ -123,7 +126,7 @@ export const criarDiagnostico = createServerFn({ method: 'POST' })
       .insert({ comunidade_id: comunidadeId, data_aplicacao: dataAplicacao })
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapDiagnostico(row);
   });
 
@@ -136,7 +139,7 @@ export const concluirDiagnostico = createServerFn({ method: 'POST' })
       .from('diagnosticos')
       .update({ status: 'concluido', concluido_em: new Date().toISOString() })
       .eq('id', id);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
   });
 
 // ---------------------------------------------------------------------------
@@ -147,6 +150,7 @@ export interface MatrizResposta {
   nomeFuncao?: string | null;
   experiencia?: string | null;
   externo?: string | null;
+  origemPdf?: {nomeArquivo:string;sha256:string;conferidoEm:string;conferidoPor:string;estado:string}|null;
   atuacao: string[];
   quemExecuta: string | null;
   interesse: string | null;
@@ -160,6 +164,7 @@ function mapMatrizResposta(row: any): MatrizResposta {
   return {
     funcaoId: row.funcao_id, atuacao: row.atuacao ?? [], quemExecuta: row.quem_executa ?? null,
     nomeFuncao: row.funcao_nome ?? null, experiencia: row.experiencia ?? null, externo: row.externo ?? null,
+    origemPdf: row.origem_pdf ?? null,
     interesse: row.interesse ?? null, criticidade: row.criticidade ?? null, abrangencia: row.abrangencia ?? null,
     observacoes: row.observacoes ?? null, atualizadoEm: row.atualizado_em,
   };
@@ -174,7 +179,7 @@ export const listarRespostasMatriz = createServerFn({ method: 'GET' })
       if(falha || !pai) throw new Error('A aplicação não pertence à organização selecionada.');
     }
     const { data, error } = await supabaseAdmin.from('diagnostico_matriz').select('*').eq('diagnostico_id', diagnosticoId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).filter((r:any)=>/^F(0[1-9]|1[0-9]|2[01])$/.test(r.funcao_id)).map(mapMatrizResposta);
   });
 
@@ -183,14 +188,59 @@ export const salvarMatrizPrototipo = createServerFn({method:'POST'})
   .handler(async({data}):Promise<MatrizResposta>=>{
     await exigirEscritaDiagnostico(); validarMatrizPrototipo(data);
     const db=await getAdmin();
+    if(data.importacao){
+      const {data: registro,error:falha}=await db.from('diagnostico_matriz_importacoes').select('*').eq('id',data.importacao.id).eq('diagnostico_id',data.diagnosticoId).eq('estado','pendente').maybeSingle();
+      if(falha||!registro||!registro.pendentes.includes(data.funcaoId))throw new Error('Importação pendente não encontrada nesta aplicação.');
+      validarConferencia(registro.dados.conferencia[data.funcaoId],data,data.importacao.decisoes,data.importacao.confirmado);
+      const {data:linha,error:erro}=await db.rpc('confirmar_importacao_matriz',{p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,
+        p_importacao:data.importacao.id,p_funcao:data.funcaoId,p_resposta:data,p_decisoes:data.importacao.decisoes,p_confirmado:data.importacao.confirmado,
+        p_autor:(await (await import('./sessao.server')).exigirSessao()).id});
+      if(erro)throw new Error(mensagemMapeamento(erro));
+      if(!linha)throw new Error('Não foi possível confirmar a gravação da Matriz.');
+      return mapMatrizResposta(linha);
+    }
     const {data: row,error}=await db.rpc('salvar_matriz_prototipo',{
       p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,p_funcao:data.funcaoId,p_nome:data.nomeFuncao,
       p_atuacao:data.atuacao,p_experiencia:data.experiencia,p_criticidade:data.criticidade,p_interesse:data.interesse,
       p_observacao:data.observacoes,p_externo:data.externo,
     });
-    if(error) throw new Error(['PGRST202','42883'].includes(error.code)?'A Matriz atualizada precisa da migração do protótipo no banco.':error.message);
+    if(error) throw new Error(['PGRST202','42883'].includes(error.code)?'A Matriz atualizada precisa da migração do protótipo no banco.':mensagemMapeamento(error));
     if(!row) throw new Error('Não foi possível confirmar a gravação da Matriz.');
     return mapMatrizResposta(row);
+  });
+
+function mapImportacao(r:any):ImportacaoSalva {return {id:r.id,dados:r.dados,origem:r.origem,pendentes:r.pendentes,estado:r.estado,criadoEm:r.criado_em};}
+async function validarContextoImportacao(organizacaoId:string,diagnosticoId:string){
+  const db=await getAdmin();
+  const {data,error}=await db.from('diagnosticos').select('id').eq('id',diagnosticoId).eq('comunidade_id',organizacaoId).maybeSingle();
+  if(error||!data)throw new Error('A aplicação não pertence à organização selecionada.');
+  return db;
+}
+export const obterImportacaoMatrizPendente=createServerFn({method:'GET'})
+  .validator((d:{organizacaoId:string;diagnosticoId:string})=>d)
+  .handler(async({data}):Promise<ImportacaoSalva|null>=>{
+    const db=await validarContextoImportacao(data.organizacaoId,data.diagnosticoId);
+    const {data:r,error}=await db.from('diagnostico_matriz_importacoes').select('*').eq('diagnostico_id',data.diagnosticoId).eq('estado','pendente').maybeSingle();
+    if(error)throw new Error('Não foi possível carregar a conferência do PDF. Verifique a migração de importações.');
+    return r?mapImportacao(r):null;
+  });
+export const registrarImportacaoMatriz=createServerFn({method:'POST'})
+  .validator((d:{organizacaoId:string;diagnosticoId:string;origem:OrigemPdf;texto:string})=>d)
+  .handler(async({data}):Promise<ImportacaoSalva>=>{
+    const autor=await exigirEscritaDiagnostico();
+    if(!data.origem||typeof data.origem.nomeArquivo!=='string'||!data.origem.nomeArquivo.toLowerCase().endsWith('.pdf')||data.origem.nomeArquivo.length>255||!/^[a-f0-9]{64}$/.test(data.origem.sha256)||!Number.isInteger(data.origem.tamanho)||data.origem.tamanho<1||data.origem.tamanho>10485760)throw new Error('Origem do PDF inválida.');
+    const dados=interpretarTextoMatriz(data.texto);
+    if(!Object.keys(dados.conferencia).length)throw new Error('Nenhuma função oficial foi identificada no PDF.');
+    const db=await getAdmin();
+    const {data:r,error}=await db.rpc('registrar_importacao_matriz',{p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,p_origem:data.origem,p_dados:dados,p_autor:autor.id});
+    if(error)throw new Error(mensagemMapeamento(error));return mapImportacao(r);
+  });
+export const descartarImportacaoMatriz=createServerFn({method:'POST'})
+  .validator((d:{organizacaoId:string;diagnosticoId:string;importacaoId:string})=>d)
+  .handler(async({data}):Promise<void>=>{
+    await exigirEscritaDiagnostico();const db=await getAdmin();
+    const {error}=await db.rpc('descartar_importacao_matriz',{p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,p_importacao:data.importacaoId});
+    if(error)throw new Error(mensagemMapeamento(error));
   });
 
 export const salvarRespostaMatriz = createServerFn({ method: 'POST' })
@@ -222,7 +272,7 @@ export const listarRespostasIeo = createServerFn({ method: 'GET' })
   .handler(async ({ data: { diagnosticoId } }): Promise<IeoResposta[]> => {
     const supabaseAdmin = await getAdmin();
     const { data, error } = await supabaseAdmin.from('diagnostico_ieo').select('*').eq('diagnostico_id', diagnosticoId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map(mapIeoResposta);
   });
 
@@ -243,7 +293,7 @@ export const salvarRespostaIeo = createServerFn({ method: 'POST' })
       )
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapIeoResposta(row);
   });
 
@@ -276,7 +326,7 @@ export const listarProdutos = createServerFn({ method: 'GET' })
   .handler(async ({ data: { diagnosticoId } }): Promise<Produto[]> => {
     const supabaseAdmin = await getAdmin();
     const { data, error } = await supabaseAdmin.from('diagnostico_produtos').select('*').eq('diagnostico_id', diagnosticoId).order('criado_em');
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map(mapProdutoRow);
   });
 
@@ -290,7 +340,7 @@ export const criarProduto = createServerFn({ method: 'POST' })
       .insert({ diagnostico_id: data.diagnosticoId, nome: data.nome, cadeia: data.cadeia, respostas: {} })
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapProdutoRow(row);
   });
 
@@ -311,7 +361,7 @@ export const salvarRespostasProduto = createServerFn({ method: 'POST' })
       .eq('id', data.produtoId)
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapProdutoRow(row);
   });
 
@@ -321,7 +371,7 @@ export const excluirProduto = createServerFn({ method: 'POST' })
     await exigirProdutoEditavel(produtoId);
     const supabaseAdmin = await getAdmin();
     const { error } = await supabaseAdmin.from('diagnostico_produtos').delete().eq('id', produtoId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
   });
 
 // ---------------------------------------------------------------------------
@@ -361,7 +411,7 @@ export const getParecer = createServerFn({ method: 'GET' })
   .handler(async ({ data: { diagnosticoId } }): Promise<Parecer> => {
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin.from('diagnostico_parecer').select('*').eq('diagnostico_id', diagnosticoId).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapParecer(row, diagnosticoId);
   });
 
@@ -387,7 +437,7 @@ export const salvarParecer = createServerFn({ method: 'POST' })
       )
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapParecer(row, data.diagnosticoId);
   });
 
@@ -427,7 +477,7 @@ export const listarChecklist = createServerFn({ method: 'GET' })
   .handler(async ({ data: { diagnosticoId } }): Promise<ChecklistItemResposta[]> => {
     const supabaseAdmin = await getAdmin();
     const { data, error } = await supabaseAdmin.from('diagnostico_checklist_itens').select('*').eq('diagnostico_id', diagnosticoId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map(mapChecklistItem);
   });
 
@@ -444,7 +494,7 @@ export const salvarChecklistItem = createServerFn({ method: 'POST' })
       )
       .select('*')
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return mapChecklistItem(row);
   });
 
@@ -508,7 +558,7 @@ export const getAnexo = createServerFn({ method: 'GET' })
   .handler(async ({ data: { anexoId } }): Promise<{ anexo: Anexo; url: string }> => {
     const supabaseAdmin = await getAdmin();
     const { data: row, error } = await supabaseAdmin.from('diagnostico_anexos').select('*').eq('id', anexoId).single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     const { data: signed, error: signError } = await supabaseAdmin.storage
       .from('diagnostico-anexos')
       .createSignedUrl(row.storage_path, 60 * 10);
@@ -517,7 +567,7 @@ export const getAnexo = createServerFn({ method: 'GET' })
   });
 
 // ---------------------------------------------------------------------------
-// Relatórios > Diagnósticos (RF-03)
+// Relatórios > Mapeamentos (RF-03)
 // ---------------------------------------------------------------------------
 export interface DiagnosticoConcluidoResumo {
   diagnosticoId: string;
@@ -536,7 +586,7 @@ export const listarDiagnosticosConcluidosParaRelatorio = createServerFn({ method
       .select('id, data_aplicacao, versao, comunidades(nome, code, segmento_social)')
       .eq('status', 'concluido')
       .order('data_aplicacao', { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map((row: any) => ({
       diagnosticoId: row.id, dataAplicacao: row.data_aplicacao, versao: row.versao,
       comunidadeNome: nomeCurtoOrg(row.comunidades?.nome ?? '—'), comunidadeCode: row.comunidades?.code ?? '',
@@ -565,11 +615,11 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
       supabaseAdmin.from('diagnostico_produtos').select('*').eq('diagnostico_id', diagnosticoId).order('criado_em'),
       supabaseAdmin.from('diagnostico_parecer').select('*').eq('diagnostico_id', diagnosticoId).maybeSingle(),
     ]);
-    if (diagRes.error) throw new Error(diagRes.error.message);
-    if (matrizRes.error) throw new Error(matrizRes.error.message);
-    if (ieoRes.error) throw new Error(ieoRes.error.message);
-    if (produtosRes.error) throw new Error(produtosRes.error.message);
-    if (parecerRes.error) throw new Error(parecerRes.error.message);
+    if (diagRes.error) throw new Error(mensagemMapeamento(diagRes.error));
+    if (matrizRes.error) throw new Error(mensagemMapeamento(matrizRes.error));
+    if (ieoRes.error) throw new Error(mensagemMapeamento(ieoRes.error));
+    if (produtosRes.error) throw new Error(mensagemMapeamento(produtosRes.error));
+    if (parecerRes.error) throw new Error(mensagemMapeamento(parecerRes.error));
 
     const comunidadeRow: any = (diagRes.data as any).comunidades ?? {};
     return {
@@ -582,10 +632,10 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
     };
   });
 
-/** Copia uma tabela filha (chave composta diagnostico_id+campo) de um diagnóstico pra outro. */
+/** Copia uma tabela filha (chave composta diagnostico_id+campo) de um mapeamento pra outro. */
 async function copiarFilhaComposta(supabaseAdmin: any, tabela: string, deId: string, paraId: string) {
   const { data: linhas, error } = await supabaseAdmin.from(tabela).select('*').eq('diagnostico_id', deId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mensagemMapeamento(error));
   if (!linhas?.length) return;
   const copias = linhas.map((l: any) => ({ ...l, diagnostico_id: paraId }));
   const { error: insError } = await supabaseAdmin.from(tabela).insert(copias);
@@ -627,7 +677,7 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
     if (produtos?.length) {
       const copias = produtos.map(({ id: _id, ...rest }: any) => ({ ...rest, diagnostico_id: nova.id }));
       const { error } = await supabaseAdmin.from('diagnostico_produtos').insert(copias);
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(mensagemMapeamento(error));
     }
 
     const { data: parecer, error: parecerError } = await supabaseAdmin
@@ -638,7 +688,7 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
     if (parecerError) throw new Error(parecerError.message);
     if (parecer) {
       const { error } = await supabaseAdmin.from('diagnostico_parecer').insert({ ...parecer, diagnostico_id: nova.id });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(mensagemMapeamento(error));
     }
 
     return mapDiagnostico(nova);

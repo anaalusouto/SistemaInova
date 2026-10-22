@@ -29,6 +29,7 @@ export interface MatrizPrototipoInput {
   organizacaoId: string; diagnosticoId: string; funcaoId: string; nomeFuncao: string;
   atuacao: string | null; experiencia: string | null; criticidade: string | null;
   interesse: string | null; observacoes: string | null; externo: string | null;
+  importacao?: {id:string;confirmado:boolean;decisoes:Partial<Record<string,'corrigido'|'nao_identificado'>>};
 }
 export function leituraMatriz(criticidade: string | null, experiencia: string | null): string {
   if(!NIVEIS_MATRIZ.includes(criticidade as '1') || !EXPERIENCIA_MATRIZ.includes(experiencia as 'Inicial')) return 'Completar avaliação';

@@ -22,7 +22,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     AbaEncaminhamentos: { AbaEncaminhamentos: vazio },
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
     DocumentosRegistro: { DocumentosRegistro: ({area,organizacaoId}) => React.createElement('section',{'data-documentos-area':area,'data-documentos-org':organizacaoId},'Documentos anexados') },
-    DiagnosticoModule: { DiagnosticoModule: ({comunidadeId,instrumentoInicial}) => React.createElement('section',{'data-diagnostico-org':comunidadeId,'data-instrumento':instrumentoInicial},'Instrumentos de diagnóstico') },
+    DiagnosticoModule: { DiagnosticoModule: ({comunidadeId,instrumentoInicial}) => React.createElement('section',{'data-diagnostico-org':comunidadeId,'data-instrumento':instrumentoInicial},'Instrumentos de mapeamento') },
     ResumoProjetoTopo: { ResumoProjetoTopo: vazio },
     TabDescricao: { TabDescricao: vazio },
     TabPlanoTrabalho: { TabPlanoTrabalho: ({ project }) => React.createElement('section', { 'data-plano-projeto': project.id }, 'Plano do projeto') },
@@ -83,10 +83,10 @@ test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   const html = renderToStaticMarkup(React.createElement(Sidebar, {
     activeItem: 'diagnostics', onNavigate: () => {}, rotaOrg: { orgId: null }, aoNavegarOrg: () => {},
   }));
-  assert.equal((html.match(/>Diagnóstico</g) ?? []).length, 1);
+  assert.equal((html.match(/>Mapeamento</g) ?? []).length, 1);
   assert.equal((html.match(/>Relatórios</g) ?? []).length, 1);
-  assert.ok(html.indexOf('>Projeto<') < html.indexOf('>Diagnóstico<'));
-  assert.ok(html.indexOf('>Diagnóstico<') < html.indexOf('>Relatórios<'));
+  assert.ok(html.indexOf('>Projeto<') < html.indexOf('>Mapeamento<'));
+  assert.ok(html.indexOf('>Mapeamento<') < html.indexOf('>Relatórios<'));
   assert.match(html, /aria-label="Subáreas de Gestão Interna"/);
   assert.ok(html.indexOf('>Visão Geral<') < html.indexOf('>Organizações<'));
   assert.ok(html.indexOf('>Organizações<') < html.indexOf('Gestão Interna'));
@@ -102,7 +102,7 @@ test('menu renderiza as três subáreas uma vez e na ordem aprovada', () => {
   }));
   assert.match(compacto, /data-collapsed="true"/);
   assert.match(compacto, /aria-label="Expandir menu lateral"[^>]*aria-expanded="false"/);
-  assert.match(compacto, /aria-label="Diagnóstico"/);
+  assert.match(compacto, /aria-label="Mapeamento"/);
 });
 
 test('Kanban exibe responsável sem conta e criador da tarefa automática; consulta não oferece escrita', () => {
@@ -152,7 +152,7 @@ test('orçamento exibe a meta real de cada item e diferencia legado sem vínculo
 });
 
 test('AT-017/020: desktop e celular apresentam seis seções na ordem e organização corretas', () => {
-  const nomes = ['Projeto', 'Diagnóstico / Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato', 'Cadastro'];
+  const nomes = ['Projeto', 'Mapeamento', 'Parecer', 'Encaminhamento', 'Registro de Contato', 'Cadastro'];
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pessoas: [], pendentes: 0 };
     for (const secao of ['dados', 'projeto', 'mapeamento', 'parecer', 'encaminhamentos', 'registros']) {
@@ -166,7 +166,7 @@ test('AT-017/020: desktop e celular apresentam seis seções na ordem e organiza
         const posicoes = nomes.map(nome => html.indexOf(`>${nome}<`));
         assert.ok(posicoes.every(p => p >= 0));
         assert.deepEqual(posicoes, [...posicoes].sort((a, b) => a - b));
-        const atual = { dados: 'Cadastro', projeto: 'Projeto', mapeamento: 'Diagnóstico / Mapeamento', parecer: 'Parecer', encaminhamentos: 'Encaminhamento', registros: 'Registro de Contato' }[secao];
+        const atual = { dados: 'Cadastro', projeto: 'Projeto', mapeamento: 'Mapeamento', parecer: 'Parecer', encaminhamentos: 'Encaminhamento', registros: 'Registro de Contato' }[secao];
         assert.ok(html.includes(id));
         if (html === desktop) assert.match(html, new RegExp(`aria-current="page"[^>]*><span[^>]*><span[^>]*>${atual}<`));
         else {
@@ -234,7 +234,7 @@ test('página informativa abre relatório externo e não oferece escrita ao perf
   }
 });
 
-test('ficha mantém um único H1 e isola diagnóstico e documentos por organização', () => {
+test('ficha mantém um único H1 e isola mapeamento e documentos por organização', () => {
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pendentes: 0, parecerRelatorioUrl: `https://example.org/${id}.pdf` };
     const { FichaOrganizacao } = carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx', { org, readOnly: true });

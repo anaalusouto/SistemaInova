@@ -77,7 +77,7 @@ try {
   for(const tabela of ['atividades','tarefas','projeto_anexos']) assert.deepEqual((await snap())[tabela],before[tabela]);
   assert.equal((await rows('SELECT meta_id FROM plano_riscos WHERE id=$1',[id(33)]))[0].meta_id,id(2));
   const salvarAntes=await snap();
-  const migracao=await readFile('supabase/migrations/20261021180423_conclusao_periodo_movimentacao_etapas.sql','utf8');
+  const migracao=await readFile('supabase/migrations/0029_conclusao_periodo_movimentacao_etapas.sql','utf8');
   // Aplicação parcial (primeira função) e reexecução completa em banco preenchido.
   await db.exec(migracao.split('CREATE OR REPLACE FUNCTION public.mover_etapa_plano')[0]);
   await db.exec(migracao); await db.exec(migracao);

@@ -43,7 +43,7 @@ export function DiagnosticoReportsPage() {
   const toggleComponente = (id: ReportComponente) =>
     setComponentes(c => (c.includes(id) ? c.filter(x => x !== id) : [...c, id]));
 
-  const title = titleInput.trim() || (selecionados.length > 1 ? 'Relatório Consolidado de Diagnósticos' : 'Relatório de Diagnóstico');
+  const title = titleInput.trim() || (selecionados.length > 1 ? 'Relatório Consolidado de Mapeamentos' : 'Relatório de Mapeamento');
 
   const dadosQueries = useQueries({
     queries: selecionados.map(id => ({
@@ -62,8 +62,8 @@ export function DiagnosticoReportsPage() {
   };
 
   const handleExportPdf = () => {
-    if (selecionados.length === 0) { toast.error('Selecione ao menos um diagnóstico concluído.'); return; }
-    if (carregando) { toast.error('Aguarde o carregamento dos dados dos diagnósticos selecionados.'); return; }
+    if (selecionados.length === 0) { toast.error('Selecione ao menos um mapeamento concluído.'); return; }
+    if (carregando) { toast.error('Aguarde o carregamento dos dados dos mapeamentos selecionados.'); return; }
     exportDiagnosticoReportPdf(model);
     toast.success('PDF gerado.');
   };
@@ -73,10 +73,10 @@ export function DiagnosticoReportsPage() {
       <div className="flex items-center justify-between print:hidden">
         <div>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.375rem', color: 'var(--ink-1)' }}>
-            Relatórios de Diagnóstico
+            Relatórios de Mapeamento
           </h1>
           <p style={{ color: 'var(--ink-4)', fontSize: '0.825rem', marginTop: 2 }}>
-            Componha um relatório a partir de diagnósticos concluídos.
+            Componha um relatório a partir de mapeamentos concluídos.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export function DiagnosticoReportsPage() {
 
         <div className="bg-card rounded-xl border p-5" style={{ borderColor: 'var(--border)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
-            Diagnósticos concluídos ({selecionados.length}/{disponiveis.length})
+            Mapeamentos concluídos ({selecionados.length}/{disponiveis.length})
           </h3>
           {classificacaoOptions.length > 0 && (
             <div className="mb-3">
@@ -123,7 +123,7 @@ export function DiagnosticoReportsPage() {
               </label>
             ))}
             {filtrados.length === 0 && (
-              <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)' }}>Nenhum diagnóstico concluído encontrado.</p>
+              <p style={{ fontSize: '0.78rem', color: 'var(--ink-5)' }}>Nenhum mapeamento concluído encontrado.</p>
             )}
           </div>
         </div>
@@ -148,12 +148,12 @@ export function DiagnosticoReportsPage() {
           <div>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.15rem', color: 'var(--ink-1)' }}>{title}</h2>
             <p style={{ fontSize: '0.75rem', color: 'var(--ink-5)' }}>
-              Gerado em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())} · {selecionados.length} diagnóstico(s)
+              Gerado em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())} · {selecionados.length} mapeamento(s)
             </p>
           </div>
         </header>
 
-        {carregando && <p style={{ fontSize: '0.82rem', color: 'var(--ink-5)' }}>Carregando dados dos diagnósticos selecionados…</p>}
+        {carregando && <p style={{ fontSize: '0.82rem', color: 'var(--ink-5)' }}>Carregando dados dos mapeamentos selecionados…</p>}
 
         {!carregando && model.entries.map((entry, i) => (
           <section key={i} className="rounded-lg border p-5 flex flex-col gap-4" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
@@ -205,7 +205,7 @@ export function DiagnosticoReportsPage() {
 
         {!carregando && selecionados.length === 0 && (
           <div className="py-10 text-center" style={{ fontSize: '0.85rem', color: 'var(--ink-5)' }}>
-            Selecione ao menos um diagnóstico concluído para compor o relatório.
+            Selecione ao menos um mapeamento concluído para compor o relatório.
           </div>
         )}
       </div>

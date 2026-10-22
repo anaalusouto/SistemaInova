@@ -10,7 +10,7 @@ const subViewMemory: { value: ReportsSubView } = { value: 'projetos' };
 
 const TABS: { id: ReportsSubView; label: string; icon: typeof FolderKanban }[] = [
   { id: 'projetos', label: 'Projetos', icon: FolderKanban },
-  { id: 'diagnosticos', label: 'Diagnósticos', icon: ClipboardList },
+  { id: 'diagnosticos', label: 'Mapeamentos', icon: ClipboardList },
 ];
 
 export function ReportsModule() {

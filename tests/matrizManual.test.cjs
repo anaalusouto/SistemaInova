@@ -19,7 +19,7 @@ function ambiente() {
     const react={...React,useState(initial){const i=cursor++;if(!(i in estados))estados[i]=initial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];},useRef(initial){const i=cursor++;return estados[i]??(estados[i]={current:initial});},useMemo:f=>f()};
     const client={invalidateQueries(){},setQueryData(key,update){assert.deepEqual(key,['diagnostico-matriz',diagnosticoId,organizacaoId]);banco.set(contexto,update(banco.get(contexto)));}};
     const mocks={react,sonner:{toast:{success(){},error(){}}},'../../diagnosticos.server':{},'@tanstack/react-query':{
-      useQuery(options){consultas.push(options.queryKey);return {data:banco.get(contexto)??[]};},useQueryClient:()=>client,
+      useQuery(options){consultas.push(options.queryKey);return {data:options.queryKey[0]==='matriz-importacao'?null:banco.get(contexto)??[]};},useQueryClient:()=>client,
       useMutation(options){return {isPending:false,mutate(d){gravacoes.push(d);if(falha)options.onError(new Error('Falha ao salvar'));else options.onSuccess({...d,atuacao:d.atuacao?[d.atuacao]:[],quemExecuta:null,abrangencia:null,atualizadoEm:'2026-10-21T20:00:00Z'},d);options.onSettled();}};},
     }};
     const {MatrizFuncionalTab}=load('src/app/components/diagnostic/MatrizPrototipoTab.tsx',mocks);
@@ -42,6 +42,7 @@ const salvar=editor=>one(editor.render(),n=>n.type==='form').props.onSubmit({pre
 test('criar do zero apresenta exatamente 21 funções e todos os campos de resposta vazios',()=>{
   const a=ambiente(),e=a.abrir();e.render().props.onManual();
   assert.equal(nodes(e.render(),n=>n.props?.['data-inova-form']==='matriz').length,21);
+  assert.deepEqual(nodes(e.render(),n=>n.props?.['data-inova-form']==='matriz').map(n=>n.props['data-inova-field']),['F01','F02','F03','F04','F05','F07','F08','F06','F20','F21','F09','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19']);
   for(const id of ['F01','F21']) {
     funcao(e,id);const form=one(e.render(),n=>n.type==='form');
     for(const campo of nodes(form,n=>n.type==='select'||n.type==='textarea'))assert.equal(campo.props.value,'');
@@ -64,7 +65,25 @@ test('preencher, salvar, reabrir e editar restaura os dados confirmados na aplic
 test('falha mantém o formulário preenchido; cancelar não grava; outra aplicação começa vazia',()=>{
   const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);preencher(e,'Observação','Rascunho ainda não salvo');
   a.simularFalha(true);salvar(e);assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho ainda não salvo').props.value,'Rascunho ainda não salvo');assert.equal(a.banco.size,0);
-  clicar(e,'Cancelar');assert.equal(a.banco.size,0);assert.equal(nodes(e.render(),n=>n.type==='form').length,0);
+  assert.match(one(e.render(),n=>n.props?.role==='alert').props.children,/Suas alterações continuam visíveis/);
+  a.simularFalha(false);salvar(e);assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Rascunho ainda não salvo');assert.equal(nodes(e.render(),n=>n.props?.role==='alert').length,0);
+  clicar(e,'Editar');preencher(e,'Observação','Alteração cancelada');
+  clicar(e,'Cancelar');assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Rascunho ainda não salvo');assert.equal(nodes(e.render(),n=>n.type==='form').length,0);
   const outra=a.abrir('org-a','diag-b'),outraOrg=a.abrir('org-b','diag-c');assert.notEqual(e.key,outra.key);assert.notEqual(e.key,outraOrg.key);
   for(const entrada of [outra,outraOrg]){entrada.render().props.onManual();funcao(entrada);assert.equal(nodes(entrada.render(),n=>n.type==='textarea'&&n.props.value!=='').length,0);}
+});
+test('estado Revisada existe antes do salvamento e volta para Em edição quando um valor muda',()=>{
+  const a=ambiente(),e=a.abrir();e.render().props.onManual();
+  const estado=()=>one(e.render(),n=>n.props?.['data-inova-field']==='F01').props['data-estado-matriz'];
+  assert.equal(estado(),'vazia');funcao(e);assert.equal(estado(),'em_edicao');preencher(e,'Atuação','Executa');clicar(e,'Revisar valores');
+  assert.equal(estado(),'revisada');assert.equal(a.gravacoes.length,0);assert.ok(one(e.render(),n=>n.props?.['aria-label']==='Valores revisados da função F01'));
+  preencher(e,'Observação','Valor alterado após revisar');assert.equal(estado(),'em_edicao');clicar(e,'Revisar valores');salvar(e);assert.equal(estado(),'revisada');
+});
+test('rascunhos e revisão permanecem ao alternar funções; cancelar descarta somente a edição atual',()=>{
+  const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);preencher(e,'Observação','Rascunho F01');clicar(e,'Revisar valores');
+  funcao(e,'F02');preencher(e,'Observação','Rascunho F02');funcao(e);
+  assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho F01').props.value,'Rascunho F01');
+  assert.equal(one(e.render(),n=>n.props?.['data-inova-field']==='F01').props['data-estado-matriz'],'revisada');
+  clicar(e,'Cancelar');assert.equal(one(e.render(),n=>n.props?.['data-inova-field']==='F01').props['data-estado-matriz'],'vazia');
+  funcao(e,'F02');assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho F02').props.value,'Rascunho F02');assert.equal(a.gravacoes.length,0);
 });

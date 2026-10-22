@@ -10,7 +10,7 @@ function carregar(arquivo,mocks={}) {
 }
 const helper=carregar('src/app/diagnostic/navegacaoDiagnostico.ts');
 const diag=(id,versao,extra={})=>({id,versao,comunidadeId:'org-a',dataAplicacao:'2026-10-21',criadoEm:'2026-10-21T12:00:00Z',...extra});
-test('diagnóstico atual respeita organização, aplicação e versão, sem confundir edição recente com versão atual',()=>{
+test('mapeamento atual respeita organização, aplicação e versão, sem confundir edição recente com versão atual',()=>{
   const lista=[diag('v1',1,{atualizadoEm:'2030-01-01'}),diag('externo',99,{comunidadeId:'org-b'}),diag('antigo',10,{dataAplicacao:'2026-09-01'}),diag('v2',2)];
   const antes=structuredClone(lista);
   assert.equal(helper.diagnosticoAtual(lista,'org-a').id,'v2');assert.deepEqual(lista,antes);
@@ -28,23 +28,39 @@ function ambiente({data=[diag('v2',2),diag('v1',1)],isLoading=false,error=null}=
   });
   return {...api,VisaoGeral,Historico,Editor};
 }
-test('Visão Geral abre Resumo atual; histórico permite escolher versão antiga; voltar restaura a visão geral',()=>{
+test('Visão Geral abre versões; escolher uma versão abre seu Resumo e voltar retorna às versões',()=>{
   const a=ambiente();const render=()=>a.DiagnosticoModule({});
   let tela=render();assert.equal(tela.type,a.VisaoGeral);tela.props.onSelectOrganizacao('org-a');
-  tela=render();let editor=a.EntradaDiagnosticoAtual(tela.props);
-  assert.equal(editor.type,a.Editor);assert.equal(editor.props.diagnosticoId,'v2');assert.equal(editor.props.instrumentoInicial,'resumo');
-  editor.props.onHistorico();tela=render();assert.equal(tela.type,a.Historico);
-  tela.props.onSelectDiagnostico('v1');editor=render();assert.equal(editor.props.diagnosticoId,'v1');assert.equal(editor.props.instrumentoInicial,'resumo');
-  editor.props.onBack();assert.equal(render().type,a.VisaoGeral);
+  tela=render();assert.equal(tela.type,a.Historico);assert.equal(tela.props.comunidadeId,'org-a');
+  tela.props.onSelectDiagnostico('v1');let editor=render();assert.equal(editor.type,a.Editor);assert.equal(editor.props.diagnosticoId,'v1');assert.equal(editor.props.instrumentoInicial,'resumo');
+  editor.props.onBack();assert.equal(render().type,a.Historico);assert.equal(render().props.comunidadeId,'org-a');
+  render().props.onBack();assert.equal(render().type,a.VisaoGeral);
 });
-test('entrada incorporada começa em Resumo e mantém o acesso separado a Parecer',()=>{
-  for(const instrumentoInicial of ['matriz','parecer']){
+test('entrada na organização sempre começa nas versões, inclusive ao retornar ao Mapeamento',()=>{
+  for(const instrumentoInicial of ['resumo','matriz']){
     const a=ambiente();const tela=a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial});
-    const editor=a.EntradaDiagnosticoAtual(tela.props);assert.equal(editor.props.instrumentoInicial,instrumentoInicial==='parecer'?'parecer':'resumo');
-    assert.equal(editor.props.rotuloVoltar,'Histórico da organização');
+    assert.equal(tela.type,a.Historico);assert.equal(tela.props.incorporado,true);
+    tela.props.onSelectDiagnostico('v2');const editor=a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial});assert.equal(editor.type,a.Editor);
+    editor.props.onBack();assert.equal(a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial}).type,a.Historico);
+    const novaEntrada=ambiente();assert.equal(novaEntrada.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial}).type,novaEntrada.Historico);
   }
 });
-test('entrada sem diagnóstico oferece histórico/criação, enquanto carregamento e erro não abrem registro arbitrário',()=>{
+test('acesso separado a Parecer mantém seu instrumento atual',()=>{
+  const a=ambiente(),tela=a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial:'parecer'});
+  const editor=a.EntradaDiagnosticoAtual(tela.props);assert.equal(editor.type,a.Editor);assert.equal(editor.props.instrumentoInicial,'parecer');
+});
+
+test('página de versões identifica todas as versões, inclusive a primeira',()=>{
+  const {renderToStaticMarkup}=require('react-dom/server');
+  const {DiagnosticoOrganizacao}=carregar('src/app/components/DiagnosticoOrganizacao.tsx',{
+    './responsive-tables.css':{},'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='comunidades'?[{id:'org-a',nome:'Organização A'}]:[diag('v2',2),diag('v1',1)]}),useMutation:()=>({}),useQueryClient:()=>({})},
+    '../comunidades.server':{},'../diagnosticos.server':{},'../audit/auditStore':{useAudit:()=>({log(){}})},'../auth/authStore':{useAuth:()=>({readOnly:true})},'../lib/dateOnly':{formatDateOnly:d=>d},'./BotaoNovo':{BotaoNovo:()=>null},
+  });
+  const html=renderToStaticMarkup(React.createElement(DiagnosticoOrganizacao,{comunidadeId:'org-a',incorporado:true,onBack(){},onSelectDiagnostico(){}}));
+  assert.match(html,/Versões do mapeamento/);assert.match(html,/Versão 1/);assert.match(html,/Versão 2/);assert.equal([...html.matchAll(/>\s*Visualizar\s*</g)].length,2);
+});
+
+test('entrada sem mapeamento oferece histórico/criação, enquanto carregamento e erro não abrem registro arbitrário',()=>{
   for(const [op,tipo] of [[{data:[]},'historico'],[{isLoading:true},'status'],[{error:new Error('Falha')},'alert']]){
     const a=ambiente(op);const entrada=a.EntradaDiagnosticoAtual({comunidadeId:'org-a',incorporado:false,instrumentoInicial:'resumo',onBack(){},onHistorico(){},onNovaVersao(){}});
     if(tipo==='historico')assert.equal(entrada.type,a.Historico);else assert.equal(entrada.props.role,tipo);

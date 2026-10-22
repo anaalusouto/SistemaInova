@@ -32,10 +32,10 @@ test('slide 4 oferece exatamente quatro abas, na ordem fornecida, sem parecer ad
 test('parecer legado continua acessível separadamente, sem alterar as quatro abas da matriz',()=>{
   const html=render(ambiente(),'parecer');assert.match(html,/Parecer separado/);assert.doesNotMatch(html,/<select|>Matriz Funcional</);
 });
-test('resumo reúne informações existentes da organização e do diagnóstico sem inventar outro formulário',()=>{
+test('resumo reúne informações existentes da organização e do mapeamento sem inventar outro formulário',()=>{
   const html=render(ambiente());for(const texto of ['Documentos mapeamento org-a','Registro existente','Observação da matriz','Observação do IEO','Nota existente','Projeto A'])assert.ok(html.includes(texto));
   assert.match(html,/org=org-a/);assert.doesNotMatch(html,/<textarea|>Salvar</);
 });
-test('carregamento e erro do diagnóstico não mostram resumo vazio como se fosse dado confirmado',()=>{
-  for(const [op,esperado] of [[{carregando:true},/Carregando diagnóstico/],[{erro:true},/Não foi possível abrir o diagnóstico/]])assert.match(render(ambiente(op)),esperado);
+test('carregamento e erro do mapeamento não mostram resumo vazio como se fosse dado confirmado',()=>{
+  for(const [op,esperado] of [[{carregando:true},/Carregando mapeamento/],[{erro:true},/Não foi possível abrir o mapeamento/]])assert.match(render(ambiente(op)),esperado);
 });

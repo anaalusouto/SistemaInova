@@ -173,7 +173,7 @@ export function buildDiagnosticoReportModel(
   return { title, generatedAt: new Date(), entries };
 }
 
-/** Gera um PDF vetorial com o conteúdo completo do relatório de diagnóstico(s). */
+/** Gera um PDF vetorial com o conteúdo completo do relatório de mapeamento(s). */
 export function exportDiagnosticoReportPdf(model: DiagnosticoReportModel) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const marginX = 40;
@@ -192,7 +192,7 @@ export function exportDiagnosticoReportPdf(model: DiagnosticoReportModel) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(120);
-  doc.text(`Gerado em ${fmtDateTime(model.generatedAt)} · ${model.entries.length} diagnóstico(s)`, marginX, y);
+  doc.text(`Gerado em ${fmtDateTime(model.generatedAt)} · ${model.entries.length} mapeamento(s)`, marginX, y);
   doc.setTextColor(0);
   y += 20;
 

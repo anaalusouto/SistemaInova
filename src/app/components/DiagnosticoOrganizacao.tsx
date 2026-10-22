@@ -46,13 +46,13 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
     onSuccess: diag => {
       queryClient.invalidateQueries({ queryKey: ['diagnosticos', comunidadeId] });
       queryClient.invalidateQueries({ queryKey: ['diagnostico-visao-geral'] });
-      audit({ userLogin: user?.login ?? '—', area: 'diagnóstico', action: 'criar diagnóstico', detail: comunidade?.nome ?? comunidadeId, kind: 'alteracao' });
-      toast.success('Diagnóstico criado.');
+      audit({ userLogin: user?.login ?? '—', area: 'mapeamento', action: 'criar mapeamento', detail: comunidade?.nome ?? comunidadeId, kind: 'alteracao' });
+      toast.success('Mapeamento criado.');
       setShowNew(false);
       setNovaData('');
       onSelectDiagnostico(diag.id);
     },
-    onError: (e: Error) => toast.error(e.message || 'Não foi possível criar o diagnóstico.'),
+    onError: (e: Error) => toast.error(e.message || 'Não foi possível criar o mapeamento.'),
   });
 
   return (
@@ -67,24 +67,24 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
               <Building2 size={18} color="var(--brand)" />
             </div>
             <div>
-              {incorporado ? <h2 className="text-lg font-semibold">Diagnóstico / Mapeamento</h2> : <h1 className="text-xl font-bold">{comunidade?.nome ?? 'Organização'}</h1>}
+              {incorporado ? <h2 className="text-lg font-semibold">Mapeamento</h2> : <h1 className="text-xl font-bold">{comunidade?.nome ?? 'Organização'}</h1>}
             </div>
           </div>
-          {!readOnly && <BotaoNovo onClick={() => setShowNew(true)}>Novo diagnóstico</BotaoNovo>}
+          {!readOnly && <BotaoNovo onClick={() => setShowNew(true)}>Novo mapeamento</BotaoNovo>}
         </div>
       </div>
 
-      {error ? <p role="alert" className="text-sm text-destructive">Não foi possível carregar os diagnósticos. <button type="button" className="underline" onClick={() => void refetch()}>Tentar novamente</button></p> : isLoading ? <p role="status">Carregando diagnósticos…</p> : <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+      {error ? <p role="alert" className="text-sm text-destructive">Não foi possível carregar os mapeamentos. <button type="button" className="underline" onClick={() => void refetch()}>Tentar novamente</button></p> : isLoading ? <p role="status">Carregando mapeamentos…</p> : <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
-            Histórico de Diagnósticos
+            Versões do mapeamento
           </h3>
         </div>
         <div className="inova-table-frame overflow-x-auto">
-          <table className="inova-table-cards w-full" aria-label="Histórico de diagnósticos">
+          <table className="inova-table-cards w-full" aria-label="Versões do mapeamento">
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
-                {['Data da aplicação', 'Última edição', 'Status', 'Ação'].map(h => (
+                {['Versão', 'Data da aplicação', 'Última edição', 'Status', 'Ação'].map(h => (
                   <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: '0.71rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>
                     {h}
                   </th>
@@ -94,9 +94,9 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
             <tbody>
               {diagnosticos.map(d => (
                 <tr key={d.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td data-label="Versão" className="px-4 py-3 text-sm">Versão {d.versao}</td>
                   <td data-label="Data da aplicação" className="px-4 py-3">
                     <span style={{ fontSize: '0.82rem', color: 'var(--ink-1)' }}>{formatDateOnly(d.dataAplicacao)}</span>
-                    {d.versao > 1 && <span style={{ fontSize: '0.68rem', color: 'var(--ink-5)', marginLeft: 6 }}>v{d.versao}</span>}
                   </td>
                   <td data-label="Última edição" className="px-4 py-3"><span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{fmtDate(d.atualizadoEm)}</span></td>
                   <td data-label="Status" className="px-4 py-3">
@@ -119,8 +119,8 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
               ))}
               {!isLoading && diagnosticos.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center" style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>
-                    Nenhum diagnóstico registrado ainda para esta organização.
+                  <td colSpan={5} className="px-4 py-8 text-center" style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>
+                    Nenhum mapeamento registrado ainda para esta organização.
                   </td>
                 </tr>
               )}
@@ -140,7 +140,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
           >
             <div className="flex items-center justify-between mb-4">
               <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem', color: 'var(--ink-1)' }}>
-                Novo diagnóstico
+                Novo mapeamento
               </h3>
               <button type="button" onClick={() => setShowNew(false)} className="p-1 rounded hover:bg-accent">
                 <X size={16} />
@@ -162,7 +162,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                 Cancelar
               </button>
               <button type="submit" disabled={criar.isPending} className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
-                Criar diagnóstico
+                Criar mapeamento
               </button>
             </div>
           </form>

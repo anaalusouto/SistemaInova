@@ -109,7 +109,7 @@ try {
   const antesVinculo=await snapshot();
   await assert.rejects(gravar(regularizar),/Todo item importado/, 'Reproduz o erro ao salvar uma linha por causa de outra sem meta');
   assert.deepEqual(await snapshot(),antesVinculo);
-  const correcaoVinculos=await readFile('supabase/migrations/20261021180926_orcamento_vinculos_metas_revisao.sql','utf8');
+  const correcaoVinculos=await readFile('supabase/migrations/0030_orcamento_vinculos_metas_revisao.sql','utf8');
   await db.exec(correcaoVinculos);await db.exec(correcaoVinculos);
   assert.deepEqual(await snapshot(),antesVinculo,'Instalar e reexecutar preserva o legado');
   await db.query('INSERT INTO metas(id,projeto_id,nome,ordem) VALUES($1,1,$2,2)',[id(4),'Meta ainda sem orçamento']);

@@ -1,4 +1,4 @@
-// Blocos de UI compartilhados entre as abas do Diagnóstico (Matriz Funcional,
+// Blocos de UI compartilhados entre as abas do Mapeamento (Matriz Funcional,
 // IEO, Cesta de Produtos, Parecer Técnico) — mesmo padrão visual em todas.
 
 export function Campo({ label, valor }: { label: string; valor: string }) {

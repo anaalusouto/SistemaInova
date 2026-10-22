@@ -119,7 +119,7 @@ test('processos e regras possuem respostas específicas nos assuntos operacionai
     ['Como cadastrar registro de contato?', /participante/], ['Como preencher encaminhamento?', /Data final/],
   ]) assert.match(responderLocal(query, context, data).texto, expected, query);
 });
-test('diagnóstico consulta níveis e orientações diretamente dos catálogos oficiais', () => {
+test('mapeamento consulta níveis e orientações diretamente dos catálogos oficiais', () => {
   const ieo = responderLocal('Explique IEO 1.1.1', {tela:'diagnostics'}, data);
   assert.match(ieo.texto, /espaços de decisão/);
   assert.match(ieo.texto, /1\. .*2\. .*3\. .*4\./s);

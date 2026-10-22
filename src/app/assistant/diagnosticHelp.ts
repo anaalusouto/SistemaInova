@@ -44,7 +44,7 @@ export const ajudaDiagnostico = {
     ),
   },
   parecerDiagnostico: {
-    titulo: "Parecer Técnico do diagnóstico",
+    titulo: "Parecer Técnico do mapeamento",
     fontes: [
       "src/app/diagnostic/catalog/parecerComplementar.ts",
       "src/app/diagnostic/catalog/checklistDocumental.ts",

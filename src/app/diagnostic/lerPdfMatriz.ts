@@ -1,6 +1,7 @@
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 GlobalWorkerOptions.workerSrc=workerUrl;
+class LimitePaginasPdf extends Error {}
 
 export async function lerPdfMatriz(arquivo:File,signal:AbortSignal):Promise<string> {
   if(!arquivo.name.toLowerCase().endsWith('.pdf') || (arquivo.type && arquivo.type!=='application/pdf'))throw new Error('Selecione um arquivo PDF.');
@@ -12,7 +13,7 @@ export async function lerPdfMatriz(arquivo:File,signal:AbortSignal):Promise<stri
   const abortar=()=>void tarefa.destroy();signal.addEventListener('abort',abortar,{once:true});
   try {
     const pdf=await tarefa.promise;
-    if(pdf.numPages>100)throw new Error('Selecione um PDF com até 100 páginas.');
+    if(pdf.numPages>100)throw new LimitePaginasPdf('Selecione um PDF com até 100 páginas.');
     const paginas:string[]=[];
     for(let p=1;p<=pdf.numPages;p++) {
       signal.throwIfAborted();const pagina=await pdf.getPage(p);const conteudo=await pagina.getTextContent();
@@ -26,7 +27,8 @@ export async function lerPdfMatriz(arquivo:File,signal:AbortSignal):Promise<stri
     return paginas.join('\n');
   } catch(e) {
     signal.throwIfAborted();
+    if(e instanceof LimitePaginasPdf)throw e;
     if(e instanceof Error&&e.name==='PasswordException')throw new Error('O PDF está protegido por senha. Selecione uma cópia sem senha.');
-    throw e;
+    throw new Error('Não foi possível processar o PDF. O arquivo pode estar inválido, corrompido ou incompleto. Selecione outra cópia ou preencha a Matriz manualmente.');
   } finally {signal.removeEventListener('abort',abortar);await tarefa.destroy();}
 }
