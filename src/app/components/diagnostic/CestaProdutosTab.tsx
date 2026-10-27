@@ -82,7 +82,8 @@ export function CestaProdutosTab({ diagnosticoId, readOnly }: CestaProdutosTabPr
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 max-w-4xl">
+    <div className="flex min-w-0 flex-col gap-4 w-full">
+      <div><h3 className="text-2xl sm:text-3xl font-bold">Cesta de Produtos</h3><p className="mt-2 text-sm text-muted-foreground">Produtos, cadeias e informações da oferta da organização.</p></div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p style={{ fontSize: '0.8rem', color: 'var(--ink-4)' }}>
           {produtos.length} produtos cadastrados · {completos} preenchidos · {emPreenchimento} em preenchimento

@@ -1,0 +1,42 @@
+.diagnostico-painel { background: var(--surface-1); color: var(--ink-1); }
+.diagnostico-sobretitulo { color: var(--brand); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 700; margin-bottom: .35rem; }
+.diagnostico-abas { background: var(--card, #fff); border: 1px solid var(--border); border-radius: 18px; padding: 7px; margin-bottom: 16px; box-shadow: 0 4px 20px #10203805; }
+.diagnostico-aba { border-radius: 12px; color: var(--ink-3); border-bottom: 2px solid transparent; }
+.diagnostico-aba[data-active="true"] { background: var(--brand-soft); color: var(--primary); border-bottom-color: var(--primary); }
+.diagnostico-numero { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-1); font-size: .75rem; }
+.diagnostico-conteudo { min-width: 0; background: var(--card, #fff); border: 1px solid var(--border); border-radius: 20px; padding: clamp(14px, 2vw, 24px); box-shadow: 0 6px 24px #10203805; }
+.diagnostico-filtro { border: 1px solid var(--border); border-radius: 999px; padding: 9px 13px; font-size: .75rem; color: var(--ink-3); background: var(--card, #fff); }
+.diagnostico-filtro[data-active="true"] { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+.diagnostico-tabela-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+.diagnostico-tabela { width: 100%; min-width: 1250px; border-collapse: collapse; font-size: .76rem; line-height: 1.6; text-align: left; }
+.diagnostico-tabela th, .diagnostico-tabela td { padding: 16px 14px; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.diagnostico-tabela thead th { background: var(--surface-1); color: var(--ink-4); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; border-right: 1px solid var(--border); }
+.diagnostico-tabela th:first-child { width: 235px; }
+.diagnostico-tabela td:nth-child(2) { width: 190px; }
+.diagnostico-tabela td:nth-child(3) { width: 135px; }
+.diagnostico-tabela td:nth-child(4) { width: 100px; }
+.diagnostico-tabela td:nth-child(5) { width: 130px; }
+.diagnostico-tabela td:nth-child(6) { width: 160px; }
+.diagnostico-tabela td:last-child { min-width: 300px; }
+.diagnostico-tabela tbody tr:last-child > * { border-bottom: 0; }
+.diagnostico-tabela .diagnostico-grupo th { background: var(--surface-1); color: var(--ink-2); font-size: .86rem; padding-block: 15px; }
+.diagnostico-funcao { text-align: left; font-weight: 600; line-height: 1.7; }
+.diagnostico-funcao span { color: var(--ink-4); font-weight: 400; font-size: .68rem; margin-right: 12px; }
+.diagnostico-funcao:hover { color: var(--primary); text-decoration: underline; }
+.diagnostico-atuacao { background: var(--surface-1); border-radius: 5px; padding: 4px 7px; display: inline-block; }
+.diagnostico-leitura { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
+.diagnostico-nivel { white-space: nowrap; font-weight: 600; }
+.diagnostico-grade { min-width: 660px; width: 100%; table-layout: fixed; border-collapse: collapse; font-size: .8rem; }
+.diagnostico-grade th, .diagnostico-grade td { border: 1px solid var(--border); padding: 14px; vertical-align: top; text-align: left; }
+.diagnostico-grade th { background: var(--surface-1); font-weight: 600; }
+.diagnostico-grade th:first-child { width: 125px; }
+.diagnostico-grade small { display: block; color: var(--ink-4); font-size: .68rem; font-weight: 400; margin-top: 4px; }
+.diagnostico-grade td { height: 110px; }
+.diagnostico-contagem { display: block; margin-bottom: 12px; color: var(--ink-4); font-size: .75rem; }
+.diagnostico-codigo { border: 1px solid var(--border); background: var(--card, #fff); border-radius: 7px; padding: 5px 8px; font-size: .7rem; font-weight: 600; color: var(--ink-2); }
+.diagnostico-codigo:hover { border-color: var(--primary); color: var(--primary); }
+.diagnostico-termometro { position: relative; height: 8px; margin-top: 10px; border-radius: 999px; background: linear-gradient(90deg, #b44747, #c46b35, #c5a542, #528363); }
+.diagnostico-termometro span { position: absolute; top: -4px; height: 16px; width: 3px; border-radius: 2px; background: var(--ink-1); box-shadow: 0 0 0 2px var(--card, #fff); transform: translateX(-50%); }
+.diagnostico-painel button:focus-visible, .diagnostico-tabela-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.diagnostico-painel button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 640px) { .diagnostico-conteudo { border-radius: 14px; } .diagnostico-filtro { padding: 8px 10px; } }

@@ -14,16 +14,16 @@ interface IeoTabProps {
   readOnly: boolean;
 }
 
-const fmtScore = (v: number | null) => (v == null ? '—' : v.toFixed(1));
+const fmtScore = (v: number | null) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
 
 export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
   const queryClient = useQueryClient();
-  const [dimensaoId, setDimensaoId] = useState(IEO_DIMENSOES[0].id);
+  const [dimensaoId, setDimensaoId] = useState('todas');
   const [openId, setOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<{ nivel: string | null; observacao: string }>({ nivel: null, observacao: '' });
 
-  const { data: respostas = [] } = useQuery({
+  const { data: respostas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['diagnostico-ieo', diagnosticoId],
     queryFn: () => listarRespostasIeo({ data: { diagnosticoId } }),
   });
@@ -59,9 +59,32 @@ export function IeoTab({ diagnosticoId, readOnly }: IeoTabProps) {
     setEditingId(openId);
   };
 
+  if (isLoading) return <p role="status">Carregando IEO…</p>;
+  if (error) return <p role="alert">Não foi possível carregar o IEO. <button type="button" className="underline" onClick={() => void refetch()}>Tentar novamente</button></p>;
+  if (dimensaoId === 'todas') {
+    const respondidas = resultado.porDimensao.reduce((s, d) => s + d.respondidas, 0);
+    const total = resultado.porDimensao.reduce((s, d) => s + d.total, 0);
+    return <div className="space-y-6 min-w-0">
+      <h3 className="text-2xl sm:text-3xl font-bold">Índice de Estruturação Organizacional — IEO</h3>
+      <div className="flex flex-wrap gap-2" aria-label="Dimensões do IEO"><button type="button" className="diagnostico-filtro" data-active="true" aria-pressed="true">Todas as dimensões</button>{IEO_DIMENSOES.map(d => <button type="button" key={d.id} className="diagnostico-filtro" onClick={() => setDimensaoId(d.id)}>{d.titulo}</button>)}</div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-4"><div><h4 className="font-semibold">Pontuações do IEO</h4><p className="text-sm text-muted-foreground">Resultados por dimensão · selecione para aprofundar</p></div><div className="text-right"><p className="text-3xl font-bold">{fmtScore(resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p><p className="text-xs text-muted-foreground">IEO geral · {respondidas}/{total} perguntas respondidas</p></div></div>
+          <div className="grid gap-3 md:grid-cols-2">{resultado.porDimensao.map(d => <button type="button" key={d.dimensaoId} onClick={() => setDimensaoId(d.dimensaoId)} className="rounded-xl border bg-card p-5 text-left hover:border-primary transition-colors"><h4 className="font-semibold text-sm min-h-12">{d.dimensaoTitulo}</h4><p className="text-2xl font-bold mt-4">{fmtScore(d.media)}<span className="text-xs font-normal text-muted-foreground"> / 4</span></p><div className="diagnostico-termometro" role="img" aria-label={d.media == null ? 'Sem pontuação' : `Pontuação ${fmtScore(d.media)} de 4`}>{d.media != null && <span style={{ left: `${Math.max(0, Math.min(100, ((d.media - 1) / 3) * 100))}%` }}/>}</div><p className="text-xs text-muted-foreground mt-3">Média dos níveis respondidos</p><p className="text-xs text-muted-foreground mt-1">{d.respondidas}/{d.total} perguntas · {Math.round(d.respondidas / d.total * 100)}% de cobertura</p></button>)}</div>
+          <p className="text-xs text-muted-foreground">O IEO geral é a média das dimensões com respostas. Perguntas sem resposta não contam como zero.</p>
+        </div>
+        <aside className="rounded-xl border bg-muted/30 p-5 space-y-5"><div><p className="diagnostico-sobretitulo">Visão geral</p><h4 className="font-semibold">Resumo geral de análise</h4><p className="text-sm text-muted-foreground mt-3">{respondidas} de {total} perguntas respondidas.</p></div><h5 className="font-semibold text-sm">Relatos por dimensão</h5>{IEO_DIMENSOES.map(d => {
+          const relatos = d.subdimensoes.flatMap(s => s.perguntas).map(p => respostaMap.get(p.id)?.observacao).filter(Boolean);
+          return <section key={d.id} className="border-t pt-4"><h5 className="text-sm font-semibold">{d.titulo}</h5>{relatos.length ? relatos.map((texto, i) => <p key={i} className="text-xs text-muted-foreground whitespace-pre-wrap mt-2">{texto}</p>) : <p className="text-xs text-muted-foreground mt-2">Sem observações registradas.</p>}</section>;
+        })}</aside>
+      </div>
+    </div>;
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:gap-6 items-start max-w-6xl">
       <div className="grid w-full min-w-0 grid-cols-1 sm:grid-cols-2 gap-2 lg:flex lg:w-64 lg:shrink-0 lg:flex-col">
+        <button type="button" onClick={() => { setDimensaoId('todas'); setOpenId(null); setEditingId(null); }} className="text-sm text-primary text-left underline mb-2">← Todas as dimensões</button>
         <div className="bg-card rounded-xl border p-4 mb-2 sm:col-span-2" style={{ borderColor: 'var(--border)' }}>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>IEO Geral</p>
           <p style={{ fontSize: '1.8rem', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--ink-1)' }}>{fmtScore(resultado.geral)}</p>

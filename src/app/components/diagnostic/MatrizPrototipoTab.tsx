@@ -7,6 +7,7 @@ import { listarRespostasMatriz, salvarMatrizPrototipo, obterImportacaoMatrizPend
 import { LeituraFuncaoMatriz } from './LeituraFuncaoMatriz';
 import { ESTADOS_MATRIZ, estadoFuncaoMatriz, type EdicaoMatriz } from '../../diagnostic/estadoMatriz';
 import { EntradaMatriz } from './EntradaMatriz';
+import { PainelMatriz } from './PainelMatriz';
 import { validarConferencia, rascunhoVazio, type CampoImportado, type ConferenciaFuncao, type ImportacaoSalva, type DecisoesImportacao, type RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
 interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean }
@@ -85,8 +86,15 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     <label className="flex flex-col gap-1 text-sm">{label}<select className="min-h-10 border rounded-lg bg-card p-2" value={draft[campo]??''} onChange={e=>alterar(campo,e.target.value||null)}>
       <option value="">Não informado</option>{opcoes.map(o=><option key={o} value={o}>{o}</option>)}
     </select>{statusCampo(campo)}{(campo==='criticidade'||campo==='interesse')&&<span className="text-xs text-muted-foreground">Escala de 1 a 4.</span>}</label>;
-  return <div className="max-w-5xl space-y-4 min-w-0">
-    <h3 className="font-semibold text-lg">Matriz Funcional</h3>
+  const selecionarFuncao=(id:string)=>{
+    const f=FUNCOES_MATRIZ.find(item=>item.id===id)!;
+    carregarEdicao(id,importadas[id]??inicial(f.nome,indice.get(id)));
+    setAberta(id);setEditando(!readOnly&&(!indice.has(id)||Boolean(edicoes[id])));
+    requestAnimationFrame(()=>document.getElementById(`matriz-funcao-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'}));
+  };
+  return <div className="w-full space-y-4 min-w-0">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-2xl sm:text-3xl">Matriz Funcional</h3>
+    <p className="mt-2 text-sm text-muted-foreground">Leitura visual por criticidade atual e interesse em desenvolvimento.</p></div><span className="rounded-full border bg-muted px-3 py-2 text-xs text-muted-foreground">Criticidade × interesse</span></div>
     <section aria-label="Estados da Matriz" className="space-y-2">
       <ul className="flex flex-wrap gap-2 text-xs">{ESTADOS_MATRIZ.map(e=><li key={e.id} title={e.descricao} className="rounded-lg border bg-card px-3 py-2"><span>{e.rotulo}: </span><strong>{[...estados.values()].filter(estado=>estado===e.id).length}</strong></li>)}</ul>
       <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. As respostas do PDF pendente ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'As alterações só são gravadas ao salvar cada função. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
@@ -98,7 +106,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={salvar.isPending||descartando} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
-    {grupos.map(grupo=><section key={grupo} className="space-y-2"><h4 className="font-semibold text-sm">{grupo}</h4>
+    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:(!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome)),estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={salvar.isPending||descartando}/>
+    {grupos.map(grupo=><section key={grupo} className="space-y-2"><h4 className="sr-only">{grupo}</h4>
       {FUNCOES_MATRIZ.filter(f=>f.grupo===grupo).map(f=>{
         const r=indice.get(f.id),open=aberta===f.id;
         const reiniciar=()=>importadas[f.id]??inicial(f.nome,r);
@@ -106,7 +115,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
         const valoresConsulta=r?inicial(f.nome,r):importadas[f.id]??inicial(f.nome);
         const valoresLinha=(!readOnly?edicoes[f.id]?.valores:undefined)??valoresConsulta;
         const nome=valoresLinha.nomeFuncao||f.nome;
-        return <div key={f.id} data-inova-form="matriz" data-inova-field={f.id} data-estado-matriz={estado.id} className="border rounded-xl bg-card overflow-hidden">
+        return <div key={f.id} id={`matriz-funcao-${f.id}`} hidden={!open} data-inova-form="matriz" data-inova-field={f.id} data-estado-matriz={estado.id} className="border rounded-xl bg-card overflow-hidden scroll-mt-4">
           <button type="button" disabled={salvar.isPending||descartando} aria-expanded={open} className="w-full flex flex-wrap items-center gap-2 p-3 text-left"
             onClick={()=>{carregarEdicao(f.id,reiniciar());setAberta(open?null:f.id);setEditando(!open&&!readOnly&&(!r||Boolean(edicoes[f.id])));}}>
             {open?<ChevronDown size={14}/>:<ChevronRight size={14}/>}<span className="text-xs text-muted-foreground">{f.id}</span>

@@ -10,6 +10,7 @@ function ambiente({erro=false,carregando=false}={}) {
   const query=({queryKey:[key,id]})=>({data:key==='diagnostico'?diag:key==='diagnostico-matriz'?[{funcaoId:'1',observacoes:'Observação da matriz'}]:[{perguntaId:'1.1',observacao:'Observação do IEO'}],error:erro?new Error('Falha'):null,isLoading:carregando,refetch(){}});
   const vazio=()=>null;
   const mocks={react:React,'@tanstack/react-query':{useQuery:query,useMutation:()=>({}),useQueryClient:()=>({})},
+    '../comunidades.server':{},'./diagnostic/painel-diagnostico.css':{},
     '../auth/authStore':{useAuth:()=>({readOnly:true})},'../diagnosticos.server':{},'../../diagnosticos.server':{},
     './diagnostic/MatrizFuncionalTab':{MatrizFuncionalTab:vazio},'./diagnostic/IeoTab':{IeoTab:vazio},'./diagnostic/CestaProdutosTab':{CestaProdutosTab:vazio},
     './diagnostic/ParecerTecnicoTab':{ParecerTecnicoTab:()=>React.createElement('p',null,'Parecer separado')},
@@ -23,10 +24,10 @@ function ambiente({erro=false,carregando=false}={}) {
   return carregar('src/app/components/DiagnosticoEditor.tsx').DiagnosticoEditor;
 }
 const render=(Editor,instrumentoInicial='resumo')=>renderToStaticMarkup(React.createElement(Editor,{diagnosticoId:'d1',instrumentoInicial,onBack(){},onNovaVersao(){}}));
-test('slide 4 oferece exatamente quatro abas, na ordem fornecida, sem parecer adicional',()=>{
+test('painel oferece quatro abas na ordem da referência, sem parecer adicional',()=>{
   const html=render(ambiente());
   const opcoes=[...html.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map(m=>m[1]);
-  assert.deepEqual(opcoes,['Resumo','Matriz Funcional','IEO','Cesta de Produtos']);
+  assert.deepEqual(opcoes,['Matriz','IEO','Cesta','Resumo']);
   assert.doesNotMatch(html,/Parecer Técnico|Parecer separado/);
 });
 test('parecer legado continua acessível separadamente, sem alterar as quatro abas da matriz',()=>{

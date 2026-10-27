@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowLeft, ClipboardList, Gauge, ShoppingBasket, LayoutDashboard, Lock, CopyPlus } from 'lucide-react';
+import { Download, ArrowLeft, Lock, CopyPlus } from 'lucide-react';
 import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
@@ -10,15 +10,17 @@ import { CestaProdutosTab } from './diagnostic/CestaProdutosTab';
 import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
 import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
+import { listarComunidades } from '../comunidades.server';
+import './diagnostic/painel-diagnostico.css';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
 type TabId = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
-const TABS: { id: TabId; label: string; icon: typeof ClipboardList }[] = [
-  { id: 'resumo', label: 'Resumo', icon: LayoutDashboard },
-  { id: 'matriz', label: 'Matriz Funcional', icon: ClipboardList },
-  { id: 'ieo', label: 'IEO', icon: Gauge },
-  { id: 'cesta', label: 'Cesta de Produtos', icon: ShoppingBasket },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'matriz', label: 'Matriz' },
+  { id: 'ieo', label: 'IEO' },
+  { id: 'cesta', label: 'Cesta' },
+  { id: 'resumo', label: 'Resumo' },
 ];
 
 interface DiagnosticoEditorProps {
@@ -36,6 +38,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
   const queryClient = useQueryClient();
+  const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const { data: diagnostico, isLoading, error, refetch } = useQuery({
     queryKey: ['diagnostico', diagnosticoId],
     queryFn: () => getDiagnostico({ data: { id: diagnosticoId } }),
@@ -64,7 +67,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
   });
 
   return (
-    <div className={incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}>
+    <div className={`diagnostico-painel ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
       <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={onBack} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
@@ -73,11 +76,13 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
           <div>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--ink-1)' }}>
-              Mapeamento {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : ''}
+            <p className="diagnostico-sobretitulo">Inova Sociobio · Diagnóstico organizacional</p>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.8rem', color: 'var(--ink-1)' }}>
+              {comunidades.find(c => c.id === diagnostico?.comunidadeId)?.nome ?? 'Mapeamento organizacional'}
             </h2>
             <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
-              Versão {diagnostico?.versao ?? '—'}
+              Aplicação {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'} · Versão {diagnostico?.versao ?? '—'}
+              {diagnostico?.atualizadoEm && <> · Última alteração salva em {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>}
             </p>
           </div>
           {diagnostico && (
@@ -90,7 +95,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
                   exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Mapeamento Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta']));
                 } catch(e){toast.error(e instanceof Error ? e.message : 'Não foi possível baixar o PDF.');}
                 finally{setBaixando(false);}
-              }}><Download size={18} className={baixando ? 'animate-pulse' : undefined} aria-hidden /></button>
+              }}><span className="flex items-center gap-2 text-xs font-medium"><Download size={16} className={baixando ? 'animate-pulse' : undefined} aria-hidden />{baixando ? 'Preparando relatório…' : 'Baixar relatório completo'}</span></button>
               <span
                 className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium"
                 style={{
@@ -127,9 +132,8 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             {TABS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
         </label>
-        <div className="hidden min-w-0 flex-wrap items-stretch gap-1 sm:flex">
-          {TABS.map(t => {
-            const Icon = t.icon;
+        <div className="diagnostico-abas hidden min-w-0 flex-wrap items-stretch gap-1 sm:flex" aria-label="Módulos do diagnóstico">
+          {TABS.map((t, i) => {
             const active = tab === t.id;
             return (
               <button
@@ -137,17 +141,18 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
                 type="button"
                 aria-current={active ? 'page' : undefined}
                 onClick={() => setTab(t.id)}
-                className="flex min-w-0 flex-1 items-center justify-center gap-2 px-3 py-2.5 text-center text-[13px] font-medium transition-colors"
-                style={{ color: active ? 'var(--primary)' : 'var(--ink-4)', borderBottom: active ? '2px solid var(--primary)' : '2px solid transparent' }}
+                className="diagnostico-aba flex min-w-0 items-center justify-center gap-2 px-4 py-3 text-center text-[13px] font-semibold transition-colors"
+                data-active={active}
               >
-                <Icon size={14} />
+                <span className="diagnostico-numero">{i + 1}</span>
                 {t.label}
               </button>
             );
           })}
         </div></>}
       </div>
-      <div className={incorporado ? 'p-4 sm:p-7 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-7'}>
+      <div className={incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}>
+        <div className="diagnostico-conteudo">
         {isLoading && <p role="status">Carregando mapeamento…</p>}
         {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
         {tab === 'resumo' && diagnostico && <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} />}
@@ -163,6 +168,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
         {tab === 'parecer' && diagnostico && (
           <ParecerTecnicoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
+        </div>
       </div>
     </div>
   );
