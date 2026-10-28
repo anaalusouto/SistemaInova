@@ -10,7 +10,7 @@ function ambiente({erro=false,carregando=false}={}) {
   const query=({queryKey:[key,id]})=>({data:key==='diagnostico'?diag:key==='diagnostico-matriz'?[{funcaoId:'1',observacoes:'Observação da matriz'}]:[{perguntaId:'1.1',observacao:'Observação do IEO'}],error:erro?new Error('Falha'):null,isLoading:carregando,refetch(){}});
   const vazio=()=>null;
   const mocks={react:React,'@tanstack/react-query':{useQuery:query,useMutation:()=>({}),useQueryClient:()=>({})},
-    '../comunidades.server':{},'./diagnostic/painel-diagnostico.css':{},
+    '../comunidades.server':{},'./diagnostic/painel-diagnostico.css':{},'./CadernoItens':{useCaderno:()=>({data:[]})},
     './diagnostic/MatrizCadernoTab':{MatrizCadernoTab:vazio},'./diagnostic/QuestionarioCaderno':{QuestionarioCaderno:vazio},'./diagnostic/CestaCaderno':{CestaCaderno:vazio},'./diagnostic/CadernoItens':{CadernoItens:vazio},
     '../auth/authStore':{useAuth:()=>({readOnly:true})},'../diagnosticos.server':{},'../../diagnosticos.server':{},
     './diagnostic/MatrizFuncionalTab':{MatrizFuncionalTab:vazio},'./diagnostic/IeoTab':{IeoTab:vazio},'./diagnostic/CestaProdutosTab':{CestaProdutosTab:vazio},
@@ -28,7 +28,7 @@ const render=(Editor,instrumentoInicial='resumo')=>renderToStaticMarkup(React.cr
 test('painel oferece quatro abas na ordem da referência, sem parecer adicional',()=>{
   const html=render(ambiente());
   const opcoes=[...html.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map(m=>m[1]);
-  assert.deepEqual(opcoes,['Matriz','Questionário','Cesta','Resumo']);
+  assert.deepEqual(opcoes,['Matriz','IEO','Cesta','Resumo']);
   assert.doesNotMatch(html,/Parecer Técnico|Parecer separado/);
 });
 test('parecer legado continua acessível separadamente, sem alterar as quatro abas da matriz',()=>{

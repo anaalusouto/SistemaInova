@@ -20,7 +20,7 @@ const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em ediçã
 type TabId = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 const TABS: { id: TabId; label: string }[] = [
   { id: 'matriz', label: 'Matriz' },
-  { id: 'ieo', label: 'Questionário' },
+  { id: 'ieo', label: 'IEO' },
   { id: 'cesta', label: 'Cesta' },
   { id: 'resumo', label: 'Resumo' },
 ];
@@ -168,7 +168,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
           <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'parecer' && diagnostico && (
-          <ParecerTecnicoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <ParecerTecnicoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         </div>
       </div>

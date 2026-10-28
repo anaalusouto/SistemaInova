@@ -6,7 +6,7 @@ import path from 'node:path';
 const require=createRequire(import.meta.url);
 const {PGlite}=require(require.resolve('@electric-sql/pglite',{paths:[path.resolve('node_modules/.cache/reordenacao-test')]}));
 const db=new PGlite();
-const arquivo='20261028145227_caderno_instrumentos_cria.sql';
+const arquivo='0034_caderno_instrumentos_cria.sql';
 const id=n=>`00000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
 const q=async(sql,args=[]) => (await db.query(sql,args)).rows;
 const resposta=(valor,relato='Relato de teste')=>({valor,selecoes:[],relato,fonte:'Fonte sintética',respondentes:'Grupo de teste'});

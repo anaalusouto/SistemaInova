@@ -9,6 +9,45 @@ function load(file,mocks={},cache=new Map()){
 const catalogo=load('src/app/diagnostic/catalog/cadernoCria.ts');
 const {valoresVazios,validarRespostaCaderno:validar}=load('src/app/diagnostic/cadernoCria.ts');
 const uuid='00000000-0000-0000-0000-000000000011';
+
+test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos de operação',()=>{
+ const {DIMENSOES_IEO_CADERNO:dimensoes,calcularIeoCaderno:calcular}=load('src/app/diagnostic/ieoCaderno.ts');
+ const codigos=dimensoes.flatMap(d=>d.codigos);
+ assert.equal(new Set(codigos).size,25);assert.equal(codigos.length,25);
+ assert.deepEqual([...codigos].sort(),catalogo.QUESTIONARIO_CADERNO.map(q=>q.codigo).sort());
+ const r=(codigo,valor,contexto='')=>({codigo,contexto,resposta:{...valoresVazios(),valor}});
+ const resultado=calcular([r('Q01','4'),r('Q03','2'),r('Q02','1'),r('Q06','NS'),r('Q07','NC'),r('Q08','NA'),r('Q25','D'),r('Q11','4','OP01'),r('1.1.1','4')]);
+ assert.equal(resultado.geral,2);assert.equal(resultado.respondidas,7);assert.equal(resultado.pontuadas,3);
+ assert.equal(resultado.porDimensao[0].media,3);assert.equal(resultado.porDimensao[2].media,null);
+ assert.equal(calcular([]).geral,null);
+});
+
+test('visualização atual mantém dimensões, termômetros, relatos e perguntas novas na consulta',()=>{
+ const registro={codigo:'Q01',contexto:'',resposta:{...valoresVazios(),valor:'3',relato:'Decisões acompanhadas'},versao:1};
+ const mocks={'./IeoTab':{IeoTab:()=>null},'../../caderno.server':{},'@tanstack/react-query':{useQuery:()=>({data:[registro]}),useMutation:()=>({}),useQueryClient:()=>({})}};
+ const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
+ const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
+ assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Todas as dimensões/);
+ assert.match(html,/diagnostico-termometro/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
+ assert.doesNotMatch(html,/<input|<textarea|Salvar resposta/);
+});
+
+test('PDF usa as mesmas notas do IEO atual mesmo com respostas antigas presentes',()=>{
+ const {buildDiagnosticoReportModel}=load('src/app/lib/diagnosticReportExport.ts');
+ const d={diagnostico:{dataAplicacao:'2026-10-22',versao:1},comunidade:{nome:'Organização',code:'ORG',classificacao:''},matriz:[],ieo:[{perguntaId:'1.1.1',nivel:1}],produtos:[],caderno:[{codigo:'Q01',contexto:'',resposta:{...valoresVazios(),valor:'4',relato:'Relato atual'}},{codigo:'Q03',contexto:'',resposta:{...valoresVazios(),valor:'NS'}}]};
+ const r=buildDiagnosticoReportModel('Mapeamento',[d],['ieo']).entries[0].ieo;
+ assert.equal(r.instrumento,'caderno');assert.equal(r.geral,4);assert.equal(r.perguntas.length,2);
+ assert.match(r.perguntas[0].pergunta,/Q01/);assert.equal(r.perguntas[0].observacao,'Relato atual');
+ assert.equal(r.perguntas[1].nivel,'NS');assert.match(r.perguntas[1].descricaoNivel,/Não sabe/);
+});
+
+test('Matriz distingue código explícito de não avaliado de avaliação ainda não registrada',()=>{
+ const arquivo=fs.readFileSync('src/app/components/diagnostic/MatrizCadernoTab.tsx','utf8');
+ assert.match(arquivo,/valor \? 'Opção não reconhecida' : 'Sem avaliação registrada'/);
+ assert.match(fs.readFileSync('src/app/components/diagnostic/PainelMatriz.tsx','utf8'),/Sem avaliação registrada/);
+ assert.doesNotMatch(arquivo,/\?\? 'Não avaliado'/);
+});
 test('caderno contém os 25 códigos Q, públicos e escalas transcritos da revisão 22/10/2026',()=>{
  const q=catalogo.QUESTIONARIO_CADERNO;
  assert.equal(q.length,25);assert.equal(new Set(q.map(i=>i.codigo)).size,25);

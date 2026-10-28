@@ -4,12 +4,12 @@ import { toast } from 'sonner';
 import { Check, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { PARECER_GRUPOS, type ParecerCampo } from '../../diagnostic/catalog/parecerComplementar';
 import { CHECKLIST_DOCUMENTAL } from '../../diagnostic/catalog/checklistDocumental';
-import { IEO_DIMENSOES } from '../../diagnostic/catalog/ieo';
 import { FUNCOES_MATRIZ } from '../../diagnostic/catalog/matrizPrototipo';
-import { calcularIeo } from '../../diagnostic/ieoCalculation';
+import { calcularIeoCaderno } from '../../diagnostic/ieoCaderno';
+import { useCaderno } from './CadernoItens';
 import {
   getParecer, salvarParecer, listarChecklist, salvarChecklistItem, uploadAnexoChecklist, getAnexo,
-  listarRespostasMatriz, listarRespostasIeo, listarProdutos, type EvidenciaVinculada,
+  listarRespostasMatriz, listarProdutos, type EvidenciaVinculada,
 } from '../../diagnosticos.server';
 import { useAuth } from '../../auth/authStore';
 import { Chip } from './DiagnosticUI';
@@ -18,6 +18,7 @@ import { validarDocumento } from '../../lib/documentosRegistro';
 
 interface ParecerTecnicoTabProps {
   diagnosticoId: string;
+  organizacaoId: string;
   readOnly: boolean;
 }
 
@@ -29,15 +30,15 @@ function temValor(v: string | string[] | null | undefined): boolean {
   return Array.isArray(v) ? v.length > 0 : v.trim() !== '';
 }
 
-export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTabProps) {
+export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: ParecerTecnicoTabProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   // --- Resumo de apoio (Matriz / IEO / Cesta), somente leitura --------------
   const { data: matrizRespostas = [] } = useQuery({ queryKey: ['diagnostico-matriz', diagnosticoId], queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }) });
-  const { data: ieoRespostas = [] } = useQuery({ queryKey: ['diagnostico-ieo', diagnosticoId], queryFn: () => listarRespostasIeo({ data: { diagnosticoId } }) });
+  const caderno = useCaderno({ diagnosticoId, organizacaoId });
   const { data: produtos = [] } = useQuery({ queryKey: ['diagnostico-produtos', diagnosticoId], queryFn: () => listarProdutos({ data: { diagnosticoId } }) });
-  const ieoResultado = useMemo(() => calcularIeo(ieoRespostas.map(r => ({ perguntaId: r.perguntaId, nivel: r.nivel }))), [ieoRespostas]);
+  const ieoResultado = calcularIeoCaderno(caderno.data ?? []);
 
   // --- Parecer (Parte 1 + Parte 2 + evidências) ------------------------------
   const { data: parecer } = useQuery({ queryKey: ['diagnostico-parecer', diagnosticoId], queryFn: () => getParecer({ data: { diagnosticoId } }) });
@@ -121,7 +122,7 @@ export function ParecerTecnicoTab({ diagnosticoId, readOnly }: ParecerTecnicoTab
         <div>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase' }}>IEO</p>
           <p style={{ fontSize: '0.9rem', color: 'var(--ink-1)' }}>
-            Geral {ieoResultado.geral?.toFixed(1) ?? '—'} · {ieoRespostas.length}/{IEO_DIMENSOES.flatMap(d => d.subdimensoes.flatMap(s => s.perguntas)).length} perguntas
+            {caderno.isLoading ? 'Carregando IEO…' : caderno.error ? 'Não foi possível carregar o IEO.' : <>Geral {ieoResultado.geral?.toFixed(1) ?? '—'} · {ieoResultado.respondidas}/{ieoResultado.total} perguntas · CRIA 22/10/2026</>}
           </p>
         </div>
         <div>

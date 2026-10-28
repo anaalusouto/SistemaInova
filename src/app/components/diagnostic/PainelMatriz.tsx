@@ -42,7 +42,7 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes }:
                 <td>{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
                 <td><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
                 <td><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
-                <td><button type="button" className="rounded-lg border px-2 py-1 text-left text-xs hover:underline" disabled={desabilitado} onClick={() => onSelecionar(f.id)} aria-label={`Avaliação ${f.id}`}>{avaliacoes?.[f.id] ?? 'Não avaliado'}</button></td>
+                <td><button type="button" className="rounded-lg border px-2 py-1 text-left text-xs hover:underline" disabled={desabilitado} onClick={() => onSelecionar(f.id)} aria-label={`Avaliação ${f.id}`}>{avaliacoes?.[f.id] ?? 'Sem avaliação registrada'}</button></td>
                 <td className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
             })}

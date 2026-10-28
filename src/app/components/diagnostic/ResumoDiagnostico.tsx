@@ -3,22 +3,28 @@ import { listarRespostasMatriz, listarRespostasIeo } from '../../diagnosticos.se
 import { useFichaOrganizacao } from '../organizacoes/useOrganizacoes';
 import { DocumentosRegistro } from '../DocumentosRegistro';
 import { formatDateOnly } from '../../lib/dateOnly';
+import { useCaderno } from './CadernoItens';
+import { calcularIeoCaderno } from '../../diagnostic/ieoCaderno';
 
 /** Reúne informações já existentes; não cria outro instrumento de mapeamento. */
 export function ResumoDiagnostico({ diagnosticoId, organizacaoId }: { diagnosticoId: string; organizacaoId: string }) {
   const ficha = useFichaOrganizacao(organizacaoId);
+  const caderno = useCaderno({ diagnosticoId, organizacaoId });
+  const resultado = calcularIeoCaderno(caderno.data ?? []);
   const matriz = useQuery({ queryKey: ['diagnostico-matriz', diagnosticoId], queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }) });
   const ieo = useQuery({ queryKey: ['diagnostico-ieo', diagnosticoId], queryFn: () => listarRespostasIeo({ data: { diagnosticoId } }) });
   const org = ficha.data;
-  if (ficha.isLoading || matriz.isLoading || ieo.isLoading) return <p role="status">Carregando resumo…</p>;
-  if (ficha.error || matriz.error || ieo.error || !org) return <p role="alert">Não foi possível carregar o resumo. <button type="button" className="underline" onClick={() => { void ficha.refetch(); void matriz.refetch(); void ieo.refetch(); }}>Tentar novamente</button></p>;
+  if (ficha.isLoading || matriz.isLoading || ieo.isLoading || caderno.isLoading) return <p role="status">Carregando resumo…</p>;
+  if (ficha.error || matriz.error || ieo.error || caderno.error || !org) return <p role="alert">Não foi possível carregar o resumo. <button type="button" className="underline" onClick={() => { void ficha.refetch(); void matriz.refetch(); void ieo.refetch(); void caderno.refetch(); }}>Tentar novamente</button></p>;
   const observacoes = [
     ...(matriz.data ?? []).filter(r => r.observacoes?.trim()).map(r => ({ id: `matriz-${r.funcaoId}`, origem: `Matriz Funcional · função ${r.funcaoId}`, texto: r.observacoes })),
-    ...(ieo.data ?? []).filter(r => r.observacao?.trim()).map(r => ({ id: `ieo-${r.perguntaId}`, origem: `IEO · pergunta ${r.perguntaId}`, texto: r.observacao })),
+    ...(caderno.data ?? []).filter(r => r.resposta.relato.trim()).map(r => ({ id: `caderno-${r.codigo}-${r.contexto}`, origem: `Caderno CRIA · ${r.codigo}${r.contexto ? ` · ${r.contexto}` : ''}`, texto: r.resposta.relato })),
+    ...(ieo.data ?? []).filter(r => r.observacao?.trim()).map(r => ({ id: `ieo-${r.perguntaId}`, origem: `IEO anterior · pergunta ${r.perguntaId}`, texto: r.observacao })),
     ...(org.notas ?? []).map(n => ({ id: `nota-${n.id}`, origem: 'Nota da organização', texto: n.conteudo })),
   ];
   return <div className="space-y-6 min-w-0">
     <h3 className="font-semibold text-lg">Resumo · {org.nome}</h3>
+    <section className="rounded-xl border bg-card p-4 space-y-2" aria-label="Síntese do IEO atual"><h4 className="font-semibold">IEO · Questionário CRIA 22/10/2026</h4><p className="text-sm">Geral {resultado.geral?.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) ?? '—'} / 4 · {resultado.respondidas}/{resultado.total} perguntas respondidas · {resultado.pontuadas} com nota.</p><p className="text-xs text-muted-foreground">Síntese do sistema: média das notas 1–4 por dimensão e média das dimensões com nota. NS, NC, N/A, divergência e vazios não entram nas médias.</p></section>
     <section aria-label="Documentos do mapeamento"><h4 className="font-semibold mb-3">Documentos</h4>
       <DocumentosRegistro area="mapeamento" organizacaoId={organizacaoId} relatorioUrl={org.mapeamentoRelatorioUrl} />
     </section>

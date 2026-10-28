@@ -7,6 +7,7 @@ import { calcularIeo } from '../diagnostic/ieoCalculation';
 import { CESTA_BLOCOS } from '../diagnostic/catalog/cestaProdutos';
 import { PARECER_GRUPOS } from '../diagnostic/catalog/parecerComplementar';
 import { ITENS_CADERNO } from '../diagnostic/catalog/cadernoCria';
+import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from '../diagnostic/ieoCaderno';
 
 export type ReportComponente = 'identificacao' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 
@@ -24,12 +25,13 @@ export interface ReportMatrizFuncao {
 export interface ReportIeoPergunta {
   dimensao: string;
   pergunta: string;
-  nivel: number;
+  nivel: number | string;
   descricaoNivel: string;
   observacao: string;
 }
 
 export interface ReportIeoModel {
+  instrumento?: 'caderno' | 'anterior';
   geral: number | null;
   porDimensao: { dimensao: string; media: number | null }[];
   perguntas: ReportIeoPergunta[];
@@ -145,7 +147,20 @@ export function buildDiagnosticoReportModel(
             descricaoNivel: nivel?.descricao ?? '', observacao: valorLegivel(r.observacao),
           };
         });
-      entry.ieo = { geral: resultado.geral, porDimensao: resultado.porDimensao.map(r => ({ dimensao: r.dimensaoTitulo, media: r.media })), perguntas };
+      entry.ieo = { instrumento: 'anterior', geral: resultado.geral, porDimensao: resultado.porDimensao.map(r => ({ dimensao: r.dimensaoTitulo, media: r.media })), perguntas };
+      if (d.caderno !== undefined) {
+        const atual = calcularIeoCaderno(d.caderno);
+        const respostas = new Map(d.caderno.filter(r => r.contexto === '').map(r => [r.codigo, r.resposta]));
+        entry.ieo = {
+          instrumento: 'caderno', geral: atual.geral,
+          porDimensao: atual.porDimensao.map(r => ({ dimensao: r.dimensaoTitulo, media: r.media })),
+          perguntas: DIMENSOES_IEO_CADERNO.flatMap(dimensao => dimensao.perguntas.flatMap(q => {
+            const r = respostas.get(q.codigo);
+            return r?.valor ? [{ dimensao: dimensao.titulo, pergunta: `${q.codigo} · ${q.texto}`, nivel: r.valor,
+              descricaoNivel: q.opcoes?.find(o => o.valor === r.valor)?.descricao ?? '', observacao: valorLegivel(r.relato) }] : [];
+          })),
+        };
+      }
     }
 
     if (has('cesta')) {
@@ -252,7 +267,13 @@ export function exportDiagnosticoReportPdf(model: DiagnosticoReportModel) {
 
     if (entry.ieo) {
       ensureSpace(80);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('IEO anterior - instrumento legado, sem conversão para Q01-Q25', marginX, y); y += 4;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(entry.ieo.instrumento === 'caderno' ? 'IEO - Questionário CRIA 22/10/2026' : 'IEO anterior - instrumento legado, sem conversão para Q01-Q25', marginX, y); y += 4;
+      if (entry.ieo.instrumento === 'caderno') {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+        doc.text('Síntese do sistema: médias das notas 1-4; geral = média das dimensões com nota.', marginX, y + 5);
+        doc.text('NS, NC, N/A, divergência e vazios ficam fora das médias. Prioridades são pactuadas.', marginX, y + 9);
+        y += 12;
+      }
       autoTable(doc, {
         startY: y + 6,
         head: [['Dimensão', 'Média']],
