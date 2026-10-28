@@ -383,6 +383,11 @@ export const salvarDadosCestaProduto = createServerFn({ method: 'POST' })
     if (!['nao_informada','ano_inteiro','sazonal'].includes(data.safra.estado) || !Array.isArray(data.safra.intervalos) || data.safra.intervalos.some(i => !Number.isInteger(i.inicio) || !Number.isInteger(i.fim) || i.inicio < 1 || i.inicio > 12 || i.fim < 1 || i.fim > 12)) throw new Error('Revise a safra e os meses informados.');
     if (data.safra.estado !== 'sazonal' && data.safra.intervalos.length) throw new Error('Informe intervalos somente para safra sazonal.');
     if (!Array.isArray(data.canaisComerciais) || !Array.isArray(data.etapasEconomicas) || JSON.stringify(data).length > 100000) throw new Error('Dados da Cesta invÃ¡lidos ou extensos demais.');
+    if (data.canaisComerciais.some(c => !c || typeof c.canal !== 'string' || typeof c.periodoReferencia !== 'string' || typeof c.unidade !== 'string' || typeof c.baseRepasse !== 'string' || !Array.isArray(c.custos) || c.custos.some(k => !k || typeof k.nome !== 'string'))) throw new Error('Revise os canais e custos informados.');
+    if (data.canaisComerciais.some(c => c.tipoRepasse === 'percentual' && (!c.baseRepasse.trim() || c.repasse !== null && c.repasse > 100))) throw new Error('Informe a base do percentual e use um repasse entre 0 e 100%.');
+    if (data.canaisComerciais.some(c => [c.valorCompra,c.valorVenda,c.repasse,c.parcelaOrganizacao,...c.custos.map(k=>k.valor)].some(v=>v!==null) && !(c.unidade || data.unidadeMedida || '').trim())) throw new Error('Informe a unidade para comparar os valores do canal.');
+    if (data.etapasEconomicas.some(e => !e || typeof e.etapa !== 'string' || typeof e.executor !== 'string' || typeof e.pagador !== 'string' || typeof e.recebedor !== 'string' || typeof e.unidade !== 'string' || !['','custo','pagamento_produto','receita_servico','repasse'].includes(e.natureza))) throw new Error('Revise as etapas e os participantes informados.');
+    if (data.etapasEconomicas.some(e => e.valor !== null && !e.unidade.trim())) throw new Error('Informe a unidade do valor da etapa.');
     const finiteValues = [
       ...data.canaisComerciais.flatMap(c => [c.valorCompra,c.valorVenda,c.repasse,c.parcelaOrganizacao,...c.custos.map(k=>k.valor)]),
       ...data.etapasEconomicas.map(e=>e.valor),
