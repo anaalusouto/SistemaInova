@@ -308,15 +308,39 @@ export interface Produto {
   diagnosticoId: string;
   nome: string;
   cadeia: string | null;
+  categoriaId: string | null;
+  unidadeMedida: string | null;
+  safra: SafraProduto;
+  canaisComerciais: CanalComercialProduto[];
+  etapasEconomicas: EtapaEconomicaProduto[];
   statusPreenchimento: ProdutoStatusPreenchimento;
   respostas: Record<string, string | string[] | number | null>;
   criadoEm: string;
   atualizadoEm: string;
 }
 
+export interface CategoriaProduto { id: string; diagnosticoId: string; nome: string }
+export interface SafraProduto { estado: 'nao_informada' | 'ano_inteiro' | 'sazonal'; intervalos: { inicio: number; fim: number }[] }
+export interface CanalComercialProduto {
+  canal: string; periodoReferencia: string; unidade: string;
+  modelo: 'compra_revenda' | 'venda_repasse' | 'beneficiamento_servico' | '';
+  valorCompra: number | null; valorVenda: number | null;
+  repasse: number | null; tipoRepasse: 'valor' | 'percentual' | null;
+  baseRepasse: string; parcelaOrganizacao: number | null;
+  custos: { nome: string; valor: number | null }[];
+}
+export interface EtapaEconomicaProduto {
+  etapa: string; executor: string; pagador: string; recebedor: string;
+  valor: number | null; unidade: string;
+  natureza: 'custo' | 'pagamento_produto' | 'receita_servico' | 'repasse' | '';
+}
+
 function mapProdutoRow(row: any): Produto {
   return {
     id: row.id, diagnosticoId: row.diagnostico_id, nome: row.nome, cadeia: row.cadeia ?? null,
+    categoriaId: row.categoria_id ?? null, unidadeMedida: row.unidade_medida ?? null,
+    safra: row.safra ?? { estado: 'nao_informada', intervalos: [] },
+    canaisComerciais: row.canais_comerciais ?? [], etapasEconomicas: row.etapas_economicas ?? [],
     statusPreenchimento: row.status_preenchimento, respostas: row.respostas ?? {},
     criadoEm: row.criado_em, atualizadoEm: row.atualizado_em,
   };
@@ -329,6 +353,45 @@ export const listarProdutos = createServerFn({ method: 'GET' })
     const { data, error } = await supabaseAdmin.from('diagnostico_produtos').select('*').eq('diagnostico_id', diagnosticoId).order('criado_em');
     if (error) throw new Error(mensagemMapeamento(error));
     return (data ?? []).map(mapProdutoRow);
+  });
+
+export const listarCategoriasProduto = createServerFn({ method: 'GET' })
+  .validator((d: { diagnosticoId: string }) => d)
+  .handler(async ({ data: { diagnosticoId } }): Promise<CategoriaProduto[]> => {
+    const db = await getAdmin();
+    const { data, error } = await db.from('diagnostico_cesta_categorias').select('id,diagnostico_id,nome').eq('diagnostico_id', diagnosticoId).order('nome');
+    if (error) throw new Error(mensagemMapeamento(error));
+    return (data ?? []).map((r: any) => ({ id: r.id, diagnosticoId: r.diagnostico_id, nome: r.nome }));
+  });
+
+export const criarCategoriaProduto = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; nome: string }) => d)
+  .handler(async ({ data }): Promise<CategoriaProduto> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    const nome = data.nome.trim();
+    if (!nome || nome.length > 120) throw new Error('Informe uma categoria com até 120 caracteres.');
+    const db = await getAdmin();
+    const { data: row, error } = await db.from('diagnostico_cesta_categorias').insert({ diagnostico_id: data.diagnosticoId, nome }).select('id,diagnostico_id,nome').single();
+    if (error) throw new Error(mensagemMapeamento(error));
+    return { id: row.id, diagnosticoId: row.diagnostico_id, nome: row.nome };
+  });
+
+export const salvarDadosCestaProduto = createServerFn({ method: 'POST' })
+  .validator((d: { produtoId: string; categoriaId: string | null; unidadeMedida: string | null; safra: SafraProduto; canaisComerciais: CanalComercialProduto[]; etapasEconomicas: EtapaEconomicaProduto[] }) => d)
+  .handler(async ({ data }): Promise<Produto> => {
+    await exigirProdutoEditavel(data.produtoId);
+    if (!['nao_informada','ano_inteiro','sazonal'].includes(data.safra.estado) || !Array.isArray(data.safra.intervalos) || data.safra.intervalos.some(i => !Number.isInteger(i.inicio) || !Number.isInteger(i.fim) || i.inicio < 1 || i.inicio > 12 || i.fim < 1 || i.fim > 12)) throw new Error('Revise a safra e os meses informados.');
+    if (data.safra.estado !== 'sazonal' && data.safra.intervalos.length) throw new Error('Informe intervalos somente para safra sazonal.');
+    if (!Array.isArray(data.canaisComerciais) || !Array.isArray(data.etapasEconomicas) || JSON.stringify(data).length > 100000) throw new Error('Dados da Cesta invÃ¡lidos ou extensos demais.');
+    const finiteValues = [
+      ...data.canaisComerciais.flatMap(c => [c.valorCompra,c.valorVenda,c.repasse,c.parcelaOrganizacao,...c.custos.map(k=>k.valor)]),
+      ...data.etapasEconomicas.map(e=>e.valor),
+    ];
+    if (finiteValues.some(v => v !== null && (!Number.isFinite(v) || v < 0))) throw new Error('Valores devem ser não negativos ou permanecer não informados.');
+    const db = await getAdmin();
+    const { data: row, error } = await db.from('diagnostico_produtos').update({ categoria_id: data.categoriaId, unidade_medida: data.unidadeMedida?.trim() || null, safra: data.safra, canais_comerciais: data.canaisComerciais, etapas_economicas: data.etapasEconomicas, atualizado_em: new Date().toISOString() }).eq('id', data.produtoId).select('*').single();
+    if (error) throw new Error(mensagemMapeamento(error));
+    return mapProdutoRow(row);
   });
 
 export const criarProduto = createServerFn({ method: 'POST' })
@@ -681,9 +744,20 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
       .select('*')
       .eq('diagnostico_id', diagnosticoAnteriorId);
     if (prodError) throw new Error(prodError.message);
+    const { data: categorias, error: catError } = await supabaseAdmin
+      .from('diagnostico_cesta_categorias')
+      .select('id,nome')
+      .eq('diagnostico_id', diagnosticoAnteriorId);
+    if (catError) throw new Error(mensagemMapeamento(catError));
+    const categoriasNovas = new Map<string,string>();
+    if (categorias?.length) {
+      const copias = categorias.map((c: any) => { const id = crypto.randomUUID(); categoriasNovas.set(c.id,id); return { id, diagnostico_id: nova.id, nome: c.nome }; });
+      const { error } = await supabaseAdmin.from('diagnostico_cesta_categorias').insert(copias);
+      if (error) throw new Error(mensagemMapeamento(error));
+    }
     const produtosNovos = new Map<string,string>();
     if (produtos?.length) {
-      const copias = produtos.map(({ id: anteriorId, ...rest }: any) => { const id = crypto.randomUUID(); produtosNovos.set(anteriorId,id); return { ...rest, id, diagnostico_id: nova.id }; });
+      const copias = produtos.map(({ id: anteriorId, categoria_id: categoriaAnterior, ...rest }: any) => { const id = crypto.randomUUID(); produtosNovos.set(anteriorId,id); return { ...rest, id, diagnostico_id: nova.id, categoria_id: categoriaAnterior ? categoriasNovas.get(categoriaAnterior) ?? null : null }; });
       const { error } = await supabaseAdmin.from('diagnostico_produtos').insert(copias);
       if (error) throw new Error(mensagemMapeamento(error));
     }
