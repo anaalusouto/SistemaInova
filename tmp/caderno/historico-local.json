@@ -1,0 +1,1497 @@
+{
+  "tabelas": [
+    {
+      "tablename": "aportes"
+    },
+    {
+      "tablename": "aprovacoes_pendentes"
+    },
+    {
+      "tablename": "atividades"
+    },
+    {
+      "tablename": "comunidade_capacitacoes"
+    },
+    {
+      "tablename": "comunidade_fornecedores"
+    },
+    {
+      "tablename": "comunidade_pessoas"
+    },
+    {
+      "tablename": "comunidade_produtos"
+    },
+    {
+      "tablename": "comunidades"
+    },
+    {
+      "tablename": "contatos"
+    },
+    {
+      "tablename": "cronograma_atividade_projetos"
+    },
+    {
+      "tablename": "cronograma_atividades"
+    },
+    {
+      "tablename": "cronograma_blocos"
+    },
+    {
+      "tablename": "cronograma_entregas"
+    },
+    {
+      "tablename": "cronograma_rotas"
+    },
+    {
+      "tablename": "cronograma_rotas_historico"
+    },
+    {
+      "tablename": "cronograma_tracking"
+    },
+    {
+      "tablename": "diagnostico_anexos"
+    },
+    {
+      "tablename": "diagnostico_checklist_itens"
+    },
+    {
+      "tablename": "diagnostico_ieo"
+    },
+    {
+      "tablename": "diagnostico_matriz"
+    },
+    {
+      "tablename": "diagnostico_matriz_importacoes"
+    },
+    {
+      "tablename": "diagnostico_parecer"
+    },
+    {
+      "tablename": "diagnostico_produtos"
+    },
+    {
+      "tablename": "diagnosticos"
+    },
+    {
+      "tablename": "documentos_registro"
+    },
+    {
+      "tablename": "encaminhamentos"
+    },
+    {
+      "tablename": "etapas"
+    },
+    {
+      "tablename": "eventos_calendario"
+    },
+    {
+      "tablename": "evidencias"
+    },
+    {
+      "tablename": "log_alteracoes_meta"
+    },
+    {
+      "tablename": "log_auditoria"
+    },
+    {
+      "tablename": "logs_comunicacao"
+    },
+    {
+      "tablename": "mensagem_atribuicoes"
+    },
+    {
+      "tablename": "mensagens"
+    },
+    {
+      "tablename": "metas"
+    },
+    {
+      "tablename": "mudancas"
+    },
+    {
+      "tablename": "orcamento_contrapartidas"
+    },
+    {
+      "tablename": "orcamento_importacoes"
+    },
+    {
+      "tablename": "orcamento_item_historico"
+    },
+    {
+      "tablename": "orcamento_itens"
+    },
+    {
+      "tablename": "orcamento_notas"
+    },
+    {
+      "tablename": "organizacao_notas"
+    },
+    {
+      "tablename": "pareceres_tecnicos"
+    },
+    {
+      "tablename": "plano_riscos"
+    },
+    {
+      "tablename": "projeto_anexos"
+    },
+    {
+      "tablename": "projeto_equipe"
+    },
+    {
+      "tablename": "projetos"
+    },
+    {
+      "tablename": "rotas"
+    },
+    {
+      "tablename": "sessoes"
+    },
+    {
+      "tablename": "tarefas"
+    },
+    {
+      "tablename": "tarefas_gestao"
+    },
+    {
+      "tablename": "tarefas_gestao_projetos"
+    },
+    {
+      "tablename": "usuarios"
+    }
+  ],
+  "colunas": [
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "checklist_item_id",
+      "udt_name": "int2",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "storage_path",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "nome_arquivo",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "tipo_mime",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "tamanho_bytes",
+      "udt_name": "int8",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "enviado_por",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "column_name": "criado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "item_id",
+      "udt_name": "int2",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "disponivel",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "observacoes",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "anexo_id",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "column_name": "pergunta_id",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "column_name": "nivel",
+      "udt_name": "int2",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "column_name": "observacao",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "funcao_id",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "atuacao",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "quem_executa",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "interesse",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "criticidade",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "abrangencia",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "observacoes",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "funcao_nome",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "experiencia",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "externo",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "column_name": "origem_pdf",
+      "udt_name": "jsonb",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "origem",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "dados",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "pendentes",
+      "udt_name": "_text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "conferencias",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "estado",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "criado_por",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "criado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "respostas_complementares",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "sintese",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "capacidades",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "fragilidades",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "pontos_prioritarios",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "consideracoes_tecnicas",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "evidencias_vinculadas",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'[]'::jsonb"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "diagnostico_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "nome",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "cadeia",
+      "udt_name": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "status_preenchimento",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'em_preenchimento'::text"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "respostas",
+      "udt_name": "jsonb",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "criado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "comunidade_id",
+      "udt_name": "uuid",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "data_aplicacao",
+      "udt_name": "date",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "versao",
+      "udt_name": "int4",
+      "is_nullable": "NO",
+      "column_default": "1"
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "diagnostico_anterior_id",
+      "udt_name": "uuid",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "status",
+      "udt_name": "text",
+      "is_nullable": "NO",
+      "column_default": "'em_edicao'::text"
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "concluido_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "criado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    },
+    {
+      "table_name": "diagnosticos",
+      "column_name": "atualizado_em",
+      "udt_name": "timestamptz",
+      "is_nullable": "NO",
+      "column_default": "timezone('utc'::text, now())"
+    }
+  ],
+  "indices": [
+    {
+      "tablename": "diagnostico_anexos",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_anexos_pkey ON public.diagnostico_anexos USING btree (id)"
+    },
+    {
+      "tablename": "diagnostico_checklist_itens",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_checklist_itens_pkey ON public.diagnostico_checklist_itens USING btree (diagnostico_id, item_id)"
+    },
+    {
+      "tablename": "diagnostico_ieo",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_ieo_pkey ON public.diagnostico_ieo USING btree (diagnostico_id, pergunta_id)"
+    },
+    {
+      "tablename": "diagnostico_matriz",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_matriz_pkey ON public.diagnostico_matriz USING btree (diagnostico_id, funcao_id)"
+    },
+    {
+      "tablename": "diagnostico_matriz_importacoes",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_matriz_importacao_pendente_idx ON public.diagnostico_matriz_importacoes USING btree (diagnostico_id) WHERE (estado = 'pendente'::text)"
+    },
+    {
+      "tablename": "diagnostico_matriz_importacoes",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_matriz_importacoes_pkey ON public.diagnostico_matriz_importacoes USING btree (id)"
+    },
+    {
+      "tablename": "diagnostico_parecer",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_parecer_pkey ON public.diagnostico_parecer USING btree (diagnostico_id)"
+    },
+    {
+      "tablename": "diagnostico_produtos",
+      "indexdef": "CREATE UNIQUE INDEX diagnostico_produtos_pkey ON public.diagnostico_produtos USING btree (id)"
+    },
+    {
+      "tablename": "diagnostico_produtos",
+      "indexdef": "CREATE INDEX idx_diagnostico_produtos_diagnostico ON public.diagnostico_produtos USING btree (diagnostico_id)"
+    },
+    {
+      "tablename": "diagnosticos",
+      "indexdef": "CREATE UNIQUE INDEX diagnosticos_pkey ON public.diagnosticos USING btree (id)"
+    },
+    {
+      "tablename": "diagnosticos",
+      "indexdef": "CREATE INDEX idx_diagnosticos_comunidade ON public.diagnosticos USING btree (comunidade_id)"
+    }
+  ],
+  "restricoes": [
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_criado_em_not_null",
+      "definicao": "NOT NULL criado_em"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_id_not_null",
+      "definicao": "NOT NULL id"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_nome_arquivo_not_null",
+      "definicao": "NOT NULL nome_arquivo"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_pkey",
+      "definicao": "PRIMARY KEY (id)"
+    },
+    {
+      "tabela": "diagnostico_anexos",
+      "conname": "diagnostico_anexos_storage_path_not_null",
+      "definicao": "NOT NULL storage_path"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_anexo_fk",
+      "definicao": "FOREIGN KEY (anexo_id) REFERENCES diagnostico_anexos(id) ON DELETE SET NULL"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_disponivel_check",
+      "definicao": "CHECK ((disponivel = ANY (ARRAY['Sim'::text, 'Não'::text, 'N/A'::text])))"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_item_id_not_null",
+      "definicao": "NOT NULL item_id"
+    },
+    {
+      "tabela": "diagnostico_checklist_itens",
+      "conname": "diagnostico_checklist_itens_pkey",
+      "definicao": "PRIMARY KEY (diagnostico_id, item_id)"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_nivel_check",
+      "definicao": "CHECK (((nivel >= 1) AND (nivel <= 4)))"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_nivel_not_null",
+      "definicao": "NOT NULL nivel"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_pergunta_id_not_null",
+      "definicao": "NOT NULL pergunta_id"
+    },
+    {
+      "tabela": "diagnostico_ieo",
+      "conname": "diagnostico_ieo_pkey",
+      "definicao": "PRIMARY KEY (diagnostico_id, pergunta_id)"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_atuacao_not_null",
+      "definicao": "NOT NULL atuacao"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_funcao_21_ck",
+      "definicao": "CHECK ((funcao_id ~ '^F(0[1-9]|1[0-9]|2[01])$'::text))"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_funcao_id_not_null",
+      "definicao": "NOT NULL funcao_id"
+    },
+    {
+      "tabela": "diagnostico_matriz",
+      "conname": "diagnostico_matriz_pkey",
+      "definicao": "PRIMARY KEY (diagnostico_id, funcao_id)"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_conferencias_not_null",
+      "definicao": "NOT NULL conferencias"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_criado_em_not_null",
+      "definicao": "NOT NULL criado_em"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_criado_por_not_null",
+      "definicao": "NOT NULL criado_por"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_dados_not_null",
+      "definicao": "NOT NULL dados"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_estado_check",
+      "definicao": "CHECK ((estado = ANY (ARRAY['pendente'::text, 'conferida'::text, 'descartada'::text])))"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_estado_not_null",
+      "definicao": "NOT NULL estado"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_id_not_null",
+      "definicao": "NOT NULL id"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_origem_not_null",
+      "definicao": "NOT NULL origem"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_pendentes_not_null",
+      "definicao": "NOT NULL pendentes"
+    },
+    {
+      "tabela": "diagnostico_matriz_importacoes",
+      "conname": "diagnostico_matriz_importacoes_pkey",
+      "definicao": "PRIMARY KEY (id)"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_evidencias_vinculadas_not_null",
+      "definicao": "NOT NULL evidencias_vinculadas"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_pkey",
+      "definicao": "PRIMARY KEY (diagnostico_id)"
+    },
+    {
+      "tabela": "diagnostico_parecer",
+      "conname": "diagnostico_parecer_respostas_complementares_not_null",
+      "definicao": "NOT NULL respostas_complementares"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_criado_em_not_null",
+      "definicao": "NOT NULL criado_em"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_diagnostico_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_id) REFERENCES diagnosticos(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_diagnostico_id_not_null",
+      "definicao": "NOT NULL diagnostico_id"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_id_not_null",
+      "definicao": "NOT NULL id"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_nome_not_null",
+      "definicao": "NOT NULL nome"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_pkey",
+      "definicao": "PRIMARY KEY (id)"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_respostas_not_null",
+      "definicao": "NOT NULL respostas"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_status_preenchimento_check",
+      "definicao": "CHECK ((status_preenchimento = ANY (ARRAY['completo'::text, 'em_preenchimento'::text])))"
+    },
+    {
+      "tabela": "diagnostico_produtos",
+      "conname": "diagnostico_produtos_status_preenchimento_not_null",
+      "definicao": "NOT NULL status_preenchimento"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_atualizado_em_not_null",
+      "definicao": "NOT NULL atualizado_em"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_comunidade_id_fkey",
+      "definicao": "FOREIGN KEY (comunidade_id) REFERENCES comunidades(id) ON DELETE CASCADE"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_comunidade_id_not_null",
+      "definicao": "NOT NULL comunidade_id"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_criado_em_not_null",
+      "definicao": "NOT NULL criado_em"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_data_aplicacao_not_null",
+      "definicao": "NOT NULL data_aplicacao"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_diagnostico_anterior_id_fkey",
+      "definicao": "FOREIGN KEY (diagnostico_anterior_id) REFERENCES diagnosticos(id) ON DELETE SET NULL"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_id_not_null",
+      "definicao": "NOT NULL id"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_pkey",
+      "definicao": "PRIMARY KEY (id)"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_status_check",
+      "definicao": "CHECK ((status = ANY (ARRAY['em_edicao'::text, 'concluido'::text])))"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_status_not_null",
+      "definicao": "NOT NULL status"
+    },
+    {
+      "tabela": "diagnosticos",
+      "conname": "diagnosticos_versao_not_null",
+      "definicao": "NOT NULL versao"
+    }
+  ],
+  "gatilhos": [
+    {
+      "event_object_table": "diagnostico_anexos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_anexos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_anexos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_checklist_itens",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_checklist_itens",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_checklist_itens",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_ieo",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_ieo",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_ieo",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz_importacoes",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz_importacoes",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_matriz_importacoes",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_parecer",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_parecer",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_parecer",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_produtos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_produtos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnostico_produtos",
+      "trigger_name": "diagnostico_editavel_guard",
+      "action_statement": "EXECUTE FUNCTION validar_diagnostico_editavel()"
+    },
+    {
+      "event_object_table": "diagnosticos",
+      "trigger_name": "set_diagnosticos_updated_at",
+      "action_statement": "EXECUTE FUNCTION handle_updated_at()"
+    }
+  ],
+  "permissoes": [
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_anexos",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_checklist_itens",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_ieo",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_matriz",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "service_role",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_matriz_importacoes",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_parecer",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnostico_produtos",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "postgres",
+      "privilege_type": "DELETE"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "service_role",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "diagnosticos",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "funcoes": [
+    {
+      "proname": "confirmar_importacao_matriz",
+      "argumentos": "p_organizacao uuid, p_diagnostico uuid, p_importacao uuid, p_funcao text, p_resposta jsonb, p_decisoes jsonb, p_confirmado boolean, p_autor text",
+      "definicao": "CREATE OR REPLACE FUNCTION public.confirmar_importacao_matriz(p_organizacao uuid, p_diagnostico uuid, p_importacao uuid, p_funcao text, p_resposta jsonb, p_decisoes jsonb, p_confirmado boolean, p_autor text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nDECLARE i public.diagnostico_matriz_importacoes%ROWTYPE; status_pai text; campo text; decisao text; comprovante jsonb; resultado jsonb;\nBEGIN\n  SELECT status INTO status_pai FROM public.diagnosticos WHERE id=p_diagnostico AND comunidade_id=p_organizacao FOR UPDATE;\n  IF NOT FOUND OR status_pai<>'em_edicao' THEN RAISE EXCEPTION 'Organização/aplicação inválida ou mapeamento concluído'; END IF;\n  SELECT * INTO i FROM public.diagnostico_matriz_importacoes WHERE id=p_importacao AND diagnostico_id=p_diagnostico FOR UPDATE;\n  IF NOT FOUND OR i.estado<>'pendente' OR NOT (p_funcao=ANY(i.pendentes)) THEN RAISE EXCEPTION 'Função não pertence a esta importação pendente'; END IF;\n  IF p_confirmado IS DISTINCT FROM true OR nullif(trim(p_autor),'') IS NULL THEN RAISE EXCEPTION 'Confirme a conferência antes de salvar'; END IF;\n  FOREACH campo IN ARRAY ARRAY['atuacao','experiencia','criticidade','interesse','observacoes','externo'] LOOP\n    IF i.dados #>> ARRAY['conferencia',p_funcao,'campos',campo] = 'ambiguo' THEN\n      decisao:=p_decisoes->>campo;\n      IF decisao='nao_identificado' AND (p_resposta->>campo) IS NULL THEN CONTINUE; END IF;\n      IF decisao='corrigido' AND nullif(trim(p_resposta->>campo),'') IS NOT NULL THEN CONTINUE; END IF;\n      RAISE EXCEPTION 'Resolva a ambiguidade do campo % antes de salvar',campo;\n    END IF;\n  END LOOP;\n  -- Retira a pendência sob o mesmo bloqueio. Qualquer falha na resposta desfaz ambas as gravações.\n  UPDATE public.diagnostico_matriz_importacoes SET pendentes=array_remove(pendentes,p_funcao),atualizado_em=now(),\n    estado=CASE WHEN cardinality(pendentes)=1 THEN 'conferida' ELSE 'pendente' END WHERE id=i.id;\n  resultado:=public.salvar_matriz_prototipo(p_organizacao,p_diagnostico,p_funcao,p_resposta->>'nomeFuncao',p_resposta->>'atuacao',\n    p_resposta->>'experiencia',p_resposta->>'criticidade',p_resposta->>'interesse',p_resposta->>'observacoes',p_resposta->>'externo');\n  comprovante:=jsonb_build_object('importacaoId',i.id,'nomeArquivo',i.origem->>'nomeArquivo','sha256',i.origem->>'sha256',\n    'importadoEm',i.criado_em,'conferidoEm',now(),'conferidoPor',p_autor,'estado','conferida','decisoes',p_decisoes);\n  UPDATE public.diagnostico_matriz SET origem_pdf=comprovante WHERE diagnostico_id=p_diagnostico AND funcao_id=p_funcao;\n  UPDATE public.diagnostico_matriz_importacoes SET conferencias=conferencias||jsonb_build_object(p_funcao,comprovante) WHERE id=i.id;\n  RETURN resultado||jsonb_build_object('origem_pdf',comprovante);\nEND $function$\n"
+    },
+    {
+      "proname": "descartar_importacao_matriz",
+      "argumentos": "p_organizacao uuid, p_diagnostico uuid, p_importacao uuid",
+      "definicao": "CREATE OR REPLACE FUNCTION public.descartar_importacao_matriz(p_organizacao uuid, p_diagnostico uuid, p_importacao uuid)\n RETURNS void\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nDECLARE status_pai text;\nBEGIN\n  SELECT status INTO status_pai FROM public.diagnosticos WHERE id=p_diagnostico AND comunidade_id=p_organizacao FOR UPDATE;\n  IF NOT FOUND OR status_pai<>'em_edicao' THEN RAISE EXCEPTION 'Organização/aplicação inválida ou mapeamento concluído'; END IF;\n  UPDATE public.diagnostico_matriz_importacoes SET estado='descartada',pendentes='{}',atualizado_em=now()\n    WHERE id=p_importacao AND diagnostico_id=p_diagnostico AND estado='pendente';\n  IF NOT FOUND THEN RAISE EXCEPTION 'Importação pendente não encontrada'; END IF;\nEND $function$\n"
+    },
+    {
+      "proname": "registrar_importacao_matriz",
+      "argumentos": "p_organizacao uuid, p_diagnostico uuid, p_origem jsonb, p_dados jsonb, p_autor text",
+      "definicao": "CREATE OR REPLACE FUNCTION public.registrar_importacao_matriz(p_organizacao uuid, p_diagnostico uuid, p_origem jsonb, p_dados jsonb, p_autor text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nDECLARE status_pai text; ids text[]; r public.diagnostico_matriz_importacoes%ROWTYPE; codigo text;\nBEGIN\n  SELECT status INTO status_pai FROM public.diagnosticos WHERE id=p_diagnostico AND comunidade_id=p_organizacao FOR UPDATE;\n  IF NOT FOUND OR status_pai<>'em_edicao' THEN RAISE EXCEPTION 'Organização/aplicação inválida ou mapeamento concluído'; END IF;\n  IF jsonb_typeof(p_origem) IS DISTINCT FROM 'object' OR nullif(trim(p_origem->>'nomeArquivo'),'') IS NULL\n    OR length(p_origem->>'nomeArquivo')>255 OR (p_origem->>'sha256') IS NULL OR (p_origem->>'sha256') !~ '^[a-f0-9]{64}$'\n    OR (p_origem->>'tamanho') IS NULL OR (p_origem->>'tamanho')::bigint NOT BETWEEN 1 AND 10485760\n    OR nullif(trim(p_autor),'') IS NULL OR jsonb_typeof(p_dados->'conferencia') IS DISTINCT FROM 'object'\n    OR pg_column_size(p_dados)>600000 THEN RAISE EXCEPTION 'Origem ou conteúdo da importação inválido'; END IF;\n  FOR codigo IN SELECT jsonb_object_keys(p_dados->'conferencia') LOOP\n    IF codigo !~ '^F(0[1-9]|1[0-9]|2[01])$' THEN RAISE EXCEPTION 'Função da importação inválida'; END IF;\n  END LOOP;\n  IF EXISTS (SELECT 1 FROM public.diagnostico_matriz_importacoes WHERE diagnostico_id=p_diagnostico AND estado='pendente') THEN\n    RAISE EXCEPTION 'Conclua ou descarte a importação pendente antes de importar outro PDF';\n  END IF;\n  SELECT coalesce(array_agg(k ORDER BY k),'{}') INTO ids FROM jsonb_object_keys(p_dados->'conferencia') k\n    WHERE NOT EXISTS (SELECT 1 FROM public.diagnostico_matriz WHERE diagnostico_id=p_diagnostico AND funcao_id=k);\n  INSERT INTO public.diagnostico_matriz_importacoes(diagnostico_id,origem,dados,pendentes,estado,criado_por)\n    VALUES(p_diagnostico,p_origem,p_dados,ids,CASE WHEN cardinality(ids)>0 THEN 'pendente' ELSE 'conferida' END,p_autor) RETURNING * INTO r;\n  RETURN to_jsonb(r);\nEND $function$\n"
+    },
+    {
+      "proname": "salvar_matriz_prototipo",
+      "argumentos": "p_organizacao uuid, p_diagnostico uuid, p_funcao text, p_nome text, p_atuacao text, p_experiencia text, p_criticidade text, p_interesse text, p_observacao text, p_externo text",
+      "definicao": "CREATE OR REPLACE FUNCTION public.salvar_matriz_prototipo(p_organizacao uuid, p_diagnostico uuid, p_funcao text, p_nome text, p_atuacao text, p_experiencia text, p_criticidade text, p_interesse text, p_observacao text, p_externo text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nDECLARE estado text; resultado public.diagnostico_matriz%ROWTYPE;\nBEGIN\n  IF p_organizacao IS NULL OR p_diagnostico IS NULL OR p_funcao IS NULL OR p_funcao !~ '^F(0[1-9]|1[0-9]|2[01])$'\n    OR nullif(trim(p_nome),'') IS NULL OR length(p_nome)>500 THEN RAISE EXCEPTION 'Organização, aplicação ou função da Matriz inválida.'; END IF;\n  IF (p_atuacao IS NOT NULL AND p_atuacao NOT IN ('Não realiza','Executa','Viabiliza','Viabiliza e executa'))\n    OR (p_experiencia IS NOT NULL AND p_experiencia NOT IN ('Não está acontecendo','Inicial','Recorrente'))\n    OR (p_criticidade IS NOT NULL AND p_criticidade NOT IN ('1','2','3','4'))\n    OR (p_interesse IS NOT NULL AND p_interesse NOT IN ('1','2','3','4'))\n    OR length(p_observacao)>20000 OR length(p_externo)>20000 THEN RAISE EXCEPTION 'Opções ou textos da Matriz inválidos.'; END IF;\n  -- A linha pai é bloqueada antes da escrita, inclusive contra conclusão concorrente.\n  SELECT status INTO estado FROM public.diagnosticos WHERE id=p_diagnostico AND comunidade_id=p_organizacao FOR UPDATE;\n  IF NOT FOUND THEN RAISE EXCEPTION 'A aplicação não pertence à organização selecionada.'; END IF;\n  IF estado<>'em_edicao' THEN RAISE EXCEPTION 'Diagnóstico concluído: crie uma nova versão para alterar.'; END IF;\n  IF EXISTS (SELECT 1 FROM public.diagnostico_matriz_importacoes imp WHERE imp.diagnostico_id=p_diagnostico AND imp.estado='pendente' AND p_funcao=ANY(imp.pendentes)) THEN\n    RAISE EXCEPTION 'Esta função possui importação pendente; confirme a conferência antes de salvar';\n  END IF;\n  INSERT INTO public.diagnostico_matriz(diagnostico_id,funcao_id,funcao_nome,atuacao,experiencia,criticidade,interesse,observacoes,externo,atualizado_em)\n    VALUES(p_diagnostico,p_funcao,trim(p_nome),CASE WHEN p_atuacao IS NULL THEN '{}'::text[] ELSE ARRAY[p_atuacao] END,\n      p_experiencia,p_criticidade,p_interesse,p_observacao,p_externo,now())\n    ON CONFLICT(diagnostico_id,funcao_id) DO UPDATE SET funcao_nome=EXCLUDED.funcao_nome,atuacao=EXCLUDED.atuacao,\n      experiencia=EXCLUDED.experiencia,criticidade=EXCLUDED.criticidade,interesse=EXCLUDED.interesse,\n      observacoes=EXCLUDED.observacoes,externo=EXCLUDED.externo,atualizado_em=EXCLUDED.atualizado_em\n    RETURNING * INTO resultado;\n  UPDATE public.diagnosticos SET atualizado_em=now() WHERE id=p_diagnostico;\n  RETURN to_jsonb(resultado);\nEND $function$\n"
+    },
+    {
+      "proname": "validar_diagnostico_editavel",
+      "argumentos": "",
+      "definicao": "CREATE OR REPLACE FUNCTION public.validar_diagnostico_editavel()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\nDECLARE v_id uuid; v_status text;\nBEGIN\n  v_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.diagnostico_id ELSE NEW.diagnostico_id END;\n  SELECT status INTO v_status FROM public.diagnosticos WHERE id = v_id FOR UPDATE;\n  -- Preserva as cascatas já previstas no modelo quando o próprio pai foi removido.\n  IF TG_OP = 'DELETE' AND NOT FOUND THEN RETURN OLD; END IF;\n  IF v_status IS DISTINCT FROM 'em_edicao' THEN\n    RAISE EXCEPTION 'Diagnóstico concluído ou inexistente: instrumento somente leitura';\n  END IF;\n  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    }
+  ]
+}

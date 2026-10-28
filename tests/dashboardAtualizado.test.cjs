@@ -85,7 +85,7 @@ test('filtro mostra todas selecionadas, retira controles de período e permite r
 
 test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de período escondido', () => {
   const reais = projetos(); const graficos = [];
-  const nomes = ['AreaChart', 'Area', 'XAxis', 'YAxis', 'CartesianGrid', 'Tooltip', 'ResponsiveContainer', 'PieChart', 'Pie', 'Cell', 'BarChart', 'Bar', 'Legend'];
+  const nomes = ['AreaChart', 'Area', 'XAxis', 'YAxis', 'CartesianGrid', 'Tooltip', 'ResponsiveContainer', 'PieChart', 'Pie', 'Cell', 'BarChart', 'Bar', 'Legend', 'Line', 'LineChart', 'Scatter', 'ScatterChart'];
   const recharts = Object.fromEntries(nomes.map(nome => [nome, ({ children, data }) => {
     if (data) graficos.push(data);
     return React.createElement('div', null, children);
@@ -98,6 +98,8 @@ test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de 
   assert.match(html, /aria-pressed="true"[^>]*>Dados reais/);
   assert.doesNotMatch(html, /Dados simulados|PERÍODO/);
   assert.match(html, /Comunidade Real/);
+  assert.match(html, /Minhas visualizações/); assert.match(html, /Personalizar visualizações/);
+  assert.doesNotMatch(html, /Acompanhamento dos projetos/);
   assert.match(html, /Metas concluídas/); assert.match(html, /Etapas concluídas/); assert.match(html, /Atividades concluídas/);
   assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.fisico === 50));
   reais[0].goals[0].deliverables[0].activities[1].status = 'Concluído'; reais[0].progress = 100;

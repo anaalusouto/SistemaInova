@@ -1,0 +1,32 @@
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { listarProdutos, criarProduto } from '../../diagnosticos.server';
+import { PORTFOLIO_CESTA, PERFIL_CESTA, AVALIACOES_OPERACAO, IMPLANTACAO_CADERNO } from '../../diagnostic/catalog/cadernoCria';
+import { CadernoItens, useCaderno, type ContextoCaderno } from './CadernoItens';
+import { CestaProdutosTab } from './CestaProdutosTab';
+export function CestaCaderno(props: ContextoCaderno) {
+  const client = useQueryClient();
+  const consulta = useQuery({ queryKey: ['diagnostico-produtos', props.diagnosticoId], queryFn: () => listarProdutos({ data: { diagnosticoId: props.diagnosticoId } }) });
+  const caderno = useCaderno(props);
+  const [selecionado, setSelecionado] = useState('');
+  const [nome, setNome] = useState('');
+  const criar = useMutation({ mutationFn: () => criarProduto({ data: { diagnosticoId: props.diagnosticoId, nome: nome.trim(), cadeia: null } }), onSuccess: p => { void client.invalidateQueries({ queryKey: ['diagnostico-produtos', props.diagnosticoId] }); setSelecionado(p.id); setNome(''); } });
+  if (consulta.isLoading || caderno.isLoading) return <p role="status">Carregando Cesta de Produtos…</p>;
+  if (consulta.error || caderno.error) return <p role="alert">{consulta.error?.message || caderno.error?.message} <button className="underline" type="button" onClick={() => { void consulta.refetch(); void caderno.refetch(); }}>Tentar novamente</button></p>;
+  const produtos = consulta.data ?? [];
+  const produto = produtos.find(p => p.id === selecionado);
+  const valor = (codigo: string, id: string) => caderno.data?.find(r => r.codigo === codigo && r.contexto === id)?.resposta.valor;
+  const situacao = produto ? valor('PR_SITUACAO', produto.id) : null;
+  const operacao = produto ? valor('PR_OPERACAO', produto.id) : null;
+  return <div className="space-y-5"><div><h3 className="text-2xl font-bold">Cesta de Produtos</h3><p className="text-sm text-muted-foreground mt-2">Portfólio PR01, PR02… e operações OP01, OP02… · caderno CRIA, revisão 22/10/2026.</p></div>
+    {!props.readOnly && <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); if (nome.trim() && !criar.isPending) criar.mutate(); }}><input aria-label="Novo produto ou serviço" required maxLength={500} value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome do produto ou serviço" className="min-w-0 flex-1 rounded-lg border bg-card p-2 text-sm"/><button disabled={criar.isPending} className="rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm">Adicionar ao portfólio</button>{criar.error && <p role="alert" className="w-full text-sm text-destructive">{criar.error.message}</p>}</form>}
+    <div className="overflow-x-auto rounded-xl border"><table className="w-full text-left text-sm"><caption className="sr-only">Lista do portfólio</caption><thead className="bg-muted"><tr>{['Código', 'Produto / serviço', 'Operação', 'Situação', 'Papel'].map(n => <th key={n} className="p-3" scope="col">{n}</th>)}</tr></thead><tbody>{produtos.map(p => <tr key={p.id} className="border-t"><td className="p-3">{valor('PR_CODIGO', p.id) || 'Não informado'}</td><th scope="row" className="p-3 font-medium"><button type="button" className="text-primary underline" onClick={() => setSelecionado(p.id)}>{p.nome}</button></th><td className="p-3">{valor('PR_OPERACAO', p.id) || 'Não informado'}</td><td className="p-3">{valor('PR_SITUACAO', p.id) || 'Não informado'}</td><td className="p-3">{valor('PR_PAPEL', p.id) || 'Não informado'}</td></tr>)}</tbody></table></div>
+    {!produtos.length && <p className="text-sm text-muted-foreground">Nenhum produto ou serviço cadastrado.</p>}
+    {produto && <section className="space-y-4" aria-label={`Ficha ${produto.nome}`}><h4 className="font-semibold text-lg">{produto.nome}</h4><CadernoItens {...props} itens={PORTFOLIO_CESTA} contexto={produto.id}/>
+      {situacao === 'Funcionamento' ? <><h4 className="text-lg font-semibold">Perfil e avaliação da operação atual</h4><p className="text-sm text-muted-foreground">Marcar o maior nível integralmente atendido. Relato/justificativa e fonte/referência ficam associados a cada item. Triagens não recebem nota nem conclusão jurídica.</p><CadernoItens {...props} itens={[...PERFIL_CESTA, ...AVALIACOES_OPERACAO]} contexto={produto.id}/></>
+        : situacao === 'Implantação' ? <><h4 className="text-lg font-semibold">Preparação da implantação</h4>{operacao ? <CadernoItens {...props} itens={IMPLANTACAO_CADERNO} contexto={operacao}/> : <p className="text-sm text-muted-foreground">Registre e salve o código OP da operação para abrir a preparação. A ficha é compartilhada pelos produtos vinculados à mesma operação.</p>}</>
+        : <p className="text-sm text-muted-foreground">{situacao === 'Futuro' ? 'Produto futuro: registrar no portfólio, sem pontuar a operação.' : 'Defina e salve a situação para abrir a ficha pertinente. Não há situação presumida.'}</p>}
+    </section>}
+    <details className="rounded-xl border p-4"><summary className="cursor-pointer text-sm font-medium">Consultar respostas da Cesta anterior — instrumento legado</summary><p className="my-3 text-xs text-muted-foreground">Dados anteriores preservados para consulta. Não foram convertidos em notas ou respostas do caderno.</p><CestaProdutosTab diagnosticoId={props.diagnosticoId} readOnly/></details>
+  </div>;
+}

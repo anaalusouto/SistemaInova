@@ -31,7 +31,7 @@ import { buildFinancialTimeline } from '../lib/financialTimeline';
 import { portfolioDemo, DEMO_REFERENCE_DATE } from '../data/portfolioDemo';
 import { buildDecisionCharts } from '../lib/portfolioDecisions';
 import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
-import { AcompanhamentoPortfolio } from './portfolio/AcompanhamentoPortfolio';
+import { VisualizacoesPersonalizadas } from './portfolio/VisualizacoesPersonalizadas';
 import { useAuth } from '../auth/authStore';
 
 const fmt = (n: number) =>
@@ -40,8 +40,8 @@ const fmt = (n: number) =>
 type DataSource = 'demo' | 'real';
 
 export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) => void }) {
-  const { projects: realProjects, projectsLoading, updateProject } = useStore();
-  const { readOnly } = useAuth();
+  const { projects: realProjects, projectsLoading } = useStore();
+  const { user } = useAuth();
   const [source, setSource] = useState<DataSource>('real');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
@@ -118,12 +118,8 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
 
       {source === 'real' && projectsLoading ? (
         <p className="py-10 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Carregando dados reais…</p>
-      ) : filteredProjects.length === 0 ? (
-        <p className="py-10 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Nenhum projeto encontrado para os filtros selecionados.</p>
       ) : <>
-
-      <AcompanhamentoPortfolio projects={filteredProjects} onOpenProject={source === 'real' ? onOpenProject : undefined}
-        onChangeStatus={source === 'real' && !readOnly ? (id, status) => updateProject(id, { status }) : undefined} />
+      {filteredProjects.length === 0 && <p className="py-6 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Nenhum projeto encontrado para os filtros selecionados.</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Conclusão do plano de trabalho">
         {resumoPlano.map(resumo => <section key={resumo.rotulo} className="rounded-xl border bg-card p-4" style={{ borderColor: 'var(--border)' }}>
@@ -132,7 +128,12 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </section>)}
       </div>
 
-      {/* Gráficos do portfólio */}
+      <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={filteredProjects} login={user?.login}
+        onOpenProject={source === 'real' ? onOpenProject : undefined}/>
+
+      <details className="space-y-4 rounded-xl border p-4 sm:p-5 bg-card">
+        <summary className="cursor-pointer font-semibold text-sm">Gráficos de referência</summary>
+      {/* Gráficos predefinidos disponíveis para comparação durante o teste. */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-7 bg-card rounded-xl p-5 border" style={{ borderColor: 'var(--border)' }}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -184,7 +185,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
             <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
               Status dos Projetos
             </h3>
-            <p className="text-xs mb-3" style={{ color: 'var(--ink-5)' }}>Situação definida nas tags de Acompanhamento dos projetos.</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--ink-5)' }}>Situação registrada no cadastro de cada projeto.</p>
             <div className="flex flex-wrap items-center gap-3">
               <PieChart width={170} height={170}>
                 <Pie data={pieData} cx={80} cy={80} innerRadius={48} outerRadius={75} dataKey="value" strokeWidth={0}>
@@ -266,6 +267,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
           </ResponsiveContainer>
         </ChartCard>
       </div>
+      </details>
       </>}
     </div>
   );

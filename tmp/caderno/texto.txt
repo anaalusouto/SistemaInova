@@ -1,0 +1,1779 @@
+
+
+--- PAGINA 1 ---
+12 Identificação e organização da visita 
+Organização:   Data:   /   / 
+ID01: Nome e Sigla
+ID02: Autodefinição da organização 
+[ ] Cooperativa [ ] Associação 
+ID03: Aplicador 
+Ferramentas neste arquivo 
+1. Matriz Funcional
+2. Questionário
+3. Cesta de Produtos 
+Cada ferramenta tem numeração de páginas própria, iniciada em 1. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Identificação 
+
+--- PAGINA 2 ---
+Matriz Funcional: orientação de preenchimento 
+Usar os registros da jornada para preencher posteriormente. Circular ou marcar as alternativas e fundamentar a Avaliação em Observação. As fichas seguintes mantêm a
+ordem dos campos solicitada. 
+Avaliação: atendimento da necessidade e acompanhamento 
+1 — Não atende:   a necessidade não é atendida. 
+2 — Atende parcialmente:   há atendimento, mas persistem lacunas importantes. 
+3 — Atende com limitações pontuais:   a necessidade é atendida regularmente, com aspectos específicos a melhorar. 
+4 — Atende satisfatoriamente:   o atendimento é satisfatório e contínuo, com resultados verificados. 
+Não se aplica:   o item não se aplica ao contexto avaliado. Registrar o motivo em Observação. 
+Não avaliado:   faltam informações ou evidências suficientes para atribuir uma nota. 
+Experiência:   Não está acontecendo / Inicial / Recorrente. O antigo “N/A” desse campo significava “Não está acontecendo”. Ele não corresponde a “Não se aplica” da
+Avaliação. Se a experiência for desconhecida, deixar sem marcação e registrar em Observação. 
+Criticidade:   1 Baixo impacto / 2 Limitações pontuais / 3 Compromete resultados / 4 Compromete atuação ou continuidade. Não informado quando não houver base. 
+Leitura:   cruzamento entre criticidade e experiência, conforme o guia.   Avaliação:   parecer técnico próprio. Recorrência não gera nota 4 automaticamente. Uma atividade
+necessária que não acontece não é “Não se aplica” apenas pela ausência de execução. Não converter avaliações antigas automaticamente. 
+Externo:   identificar quem realiza ou apoia externamente. Se não houver, deixar em branco. Registrar executores internos, membros, relatos, evidências, limitações e
+justificativas em   Observação . As diferenças entre Leitura e Avaliação devem ser explicadas pelas evidências. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 1 de 12 
+
+--- PAGINA 3 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F01 Representação e articulação
+institucional 
+Defender interesses e articular
+acesso a instituições e políticas. 
+Exemplo:   Participar de conselho
+municipal e levar demandas de
+melhoria das estradas.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F02 Valorização cultural 
+Valorizar manifestações e
+referências culturais. 
+Exemplo:   Organizar uma feira
+cultural ou apoiar festas e
+manifestações da comunidade.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 2 de 12 
+
+--- PAGINA 4 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F03 Fortalecimento de saberes e
+práticas tradicionais 
+Apoiar continuidade e transmissão
+de conhecimentos tradicionais. 
+Exemplo:   Promover troca de
+saberes entre pessoas mais velhas
+e jovens sobre manejo tradicional.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F04 Organização e planejamento
+da produção 
+Combinar oferta, períodos,
+responsabilidades e entregas. 
+Exemplo:   Combinar calendário de
+colheita, volumes disponíveis e
+responsáveis pelas entregas.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 3 de 12 
+
+--- PAGINA 5 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F05 Assistência/orientação técnica 
+Oferecer ou viabilizar orientação
+para as atividades. 
+Exemplo:   Articular visitas de
+técnico para orientar o manejo dos
+cultivos ou das colmeias.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F06 Capacitação em gestão e
+desenvolvimento organizacional 
+Desenvolver competências de
+gestão e organização. 
+Exemplo:   Organizar formação
+sobre prestação de contas,
+planejamento ou divisão de
+responsabilidades.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 4 de 12 
+
+--- PAGINA 6 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F07 Compra coletiva de insumos 
+Organizar compras de interesse
+coletivo. 
+Exemplo:   Reunir pedidos dos
+membros para comprar sementes,
+embalagens ou insumos em
+conjunto.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F08 Disponibilização de
+máquinas/equipamentos 
+Disponibilizar ou facilitar acesso a
+estruturas produtivas. 
+Exemplo:   Organizar o uso
+compartilhado de trator,
+despolpadeira ou equipamentos de
+extração de mel.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 5 de 12 
+
+--- PAGINA 7 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F09 Beneficiamento 
+Realizar ou organizar
+transformação ou preparo dos
+produtos. 
+Exemplo:   Organizar a extração e o
+envase de mel ou a transformação
+de frutas em polpa.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F10 Armazenamento 
+Disponibilizar ou organizar
+conservação e armazenamento. 
+Exemplo:   Organizar o uso de
+câmara fria ou depósito para
+conservar os produtos.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 6 de 12 
+
+--- PAGINA 8 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F11 Controle de qualidade 
+Definir ou acompanhar requisitos
+de qualidade. 
+Exemplo:   Conferir higiene, aspecto
+e condições dos produtos antes da
+entrega.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F12 Padronização 
+Estabelecer ou orientar padrões
+comuns. 
+Exemplo:   Combinar peso,
+tamanho, apresentação e
+procedimentos comuns entre
+produtores.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 7 de 12 
+
+--- PAGINA 9 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F13 Regularização/certificação 
+Apoiar ou conduzir requisitos e
+adequações. 
+Exemplo:   Apoiar a organização dos
+documentos e o acompanhamento
+de adequações e certificações.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F14 Comercialização em mercado
+privado e canais voluntários 
+Organizar ou viabilizar vendas a
+compradores e consumidores. 
+Exemplo:   Negociar vendas
+coletivas com mercados,
+restaurantes ou consumidores em
+feiras.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 8 de 12 
+
+--- PAGINA 10 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F15 Comercialização em políticas
+públicas 
+Organizar ou apoiar acesso a
+compras e programas públicos. 
+Exemplo:   Organizar propostas e
+entregas para chamadas públicas
+de alimentação escolar.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F16 Formação/orientação de
+preços 
+Apoiar preços considerando custos
+e condições de mercado. 
+Exemplo:   Levantar custos de
+produção e transporte para discutir
+o preço de venda.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 9 de 12 
+
+--- PAGINA 11 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F17 Transporte/logística 
+Organizar ou viabilizar coleta,
+transporte e entrega. 
+Exemplo:   Combinar rotas, veículos
+e datas para coletar e entregar os
+produtos.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F18 Gestão de marca 
+Administrar identidade ou marca
+coletiva. 
+Exemplo:   Definir a identidade
+visual e as regras de uso da marca
+coletiva nas embalagens.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 10 de 12 
+
+--- PAGINA 12 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F19 Divulgação/promoção de
+produtos 
+Promover produtos, membros e
+seus diferenciais. 
+Exemplo:   Produzir catálogo,
+divulgar produtos nas redes sociais
+e participar de feiras.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+F20 Captação de recursos/projetos 
+Acessar recursos e parcerias para
+objetivos coletivos. 
+Exemplo:   Elaborar proposta para
+edital ou buscar parceria para
+equipar uma agroindústria.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 11 de 12 
+
+--- PAGINA 13 ---
+Matriz Funcional 
+Organização:   Data:   Responsável pelo registro:
+Circular ou marcar. Atuação pode combinar Viabiliza e Executa. Leitura e Avaliação são independentes. Consultar a legenda. 
+Função   Atuação   Externo   Experiência   Interesse   Criticidade   Leitura   Avaliação   Observação
+F21 Gestão de projetos 
+Planejar, executar e acompanhar
+projetos e prestação de contas. 
+Exemplo:   Acompanhar
+cronograma, orçamento, entregas
+e prestação de contas de um
+projeto.
+Viabiliza
+Executa
+Não realiza
+Não
+informado
+Não está
+acontecendo
+Inicial
+Recorrente
+1 Sem
+interesse
+2 Baixo
+3 Médio
+4 Alto
+Não
+informado
+1 / 2
+3 / 4
+Não
+informado
+1 / 2 / 3 / 4
+Não se aplica
+Não avaliado 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Matriz Funcional | Página 12 de 12 
+
+--- PAGINA 14 ---
+12 Questionário — Presidente 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q01 Como funcionam as decisões coletivas e o acompanhamento do que foi decidido? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Não há funcionamento definido. As decisões e os encaminhamentos são pontuais ou informais.
+2 — Existem espaços e regras, mas reuniões ou encaminhamentos funcionam de forma irregular.
+3 — Os espaços funcionam segundo regras conhecidas e os encaminhamentos têm responsáveis.
+4 — Além do nível 3, decisões e encaminhamentos são registrados e acompanhados até sua resolução.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais instâncias existem? Quando se reuniram e o que decidiram recentemente? 
+Q03 Como preparam novas lideranças e a continuidade das funções quando alguém 
+se afasta? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Não há preparação definida. A substituição é improvisada ou depende de uma única pessoa.
+2 — Há preparação de algumas pessoas, mas funções importantes continuam sem substituição possível.
+3 — As funções prioritárias têm substitutos preparados e há compartilhamento de responsabilidades.
+4 — Além do nível 3, a preparação e a substituição são acompanhadas e revistas pela organização.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais funções dependem de uma pessoa? Como ocorreu a última substituição? 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 1 de 18 
+
+--- PAGINA 15 ---
+12 Questionário — Presidente 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q10 Como a representação e as parcerias geram resultados para os membros e o 
+território? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — As relações são pontuais ou informais, sem objetivos e acompanhamento definidos.
+2 — Há objetivos ou iniciativas, mas resultados são acompanhados de forma irregular.
+3 — Há objetivos para as relações prioritárias e acompanhamento de sua contribuição concreta.
+4 — Além do nível 3, registram resultados e os utilizam para rever e fortalecer as relações.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais parceiros, conselhos ou redes? O que cada relação entregou? 
+Q22 Como se preparam para a perda de um apoio, parceiro ou comprador essencial? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Não há alternativas ou preparação definida para dependências essenciais.
+2 — Existem alternativas identificadas, mas ainda não estabelecidas ou acessíveis.
+3 — Há alternativas acessíveis ou acordos que permitem manter as funções prioritárias, ainda que com
+limitações.
+4 — Além do nível 3, acompanha dependências e revê os acordos e medidas de continuidade.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais funções seriam interrompidas? Distinguir apoio pontual de capacidade incorporada. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 2 de 18 
+
+--- PAGINA 16 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q02 Como são divididas as responsabilidades internas? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — As tarefas dependem de decisões do momento ou de acordos informais.
+2 — Algumas responsabilidades estão definidas, mas há lacunas ou sobreposições recorrentes.
+3 — As principais responsabilidades estão definidas e são conhecidas pelas pessoas envolvidas.
+4 — Além do nível 3, as responsabilidades estão registradas e são revistas quando necessário.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quem faz o quê? Onde há acúmulo ou dificuldade? 
+Q04 Como organizam e mantêm acessíveis os documentos e registros? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Os documentos ficam dispersos e sua localização depende de pessoas específicas.
+2 — Parte do acervo está organizada, mas há lacunas de atualização ou de acesso.
+3 — Os principais documentos têm local definido, atualização e acesso por quem precisa utilizá-los.
+4 — Além do nível 3, há responsáveis e conferência da atualização e do acesso ao acervo.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Pode ser papel ou digital. Quem consegue localizar e utilizar os registros? 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 3 de 18 
+
+--- PAGINA 17 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q05 Como planejam ações e utilizam os resultados para melhorar? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Planejamento e avaliação ocorrem de forma pontual ou informal.
+2 — Há planejamento ou revisões, mas de modo incompleto e irregular.
+3 — Há objetivos, responsáveis e momentos definidos para acompanhar resultados e discutir problemas.
+4 — Além do nível 3, registram aprendizados e mudanças e verificam seus efeitos.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Conte uma mudança recente. O que a motivou e o que aconteceu depois? 
+Q07 Como conhecem os membros e mantêm suas informações atualizadas? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Informações são dispersas ou atualizadas apenas informalmente.
+2 — Existe cadastro organizado, mas há lacunas ou atualização irregular.
+3 — Há cadastro e informações pertinentes revisados em rotina definida, com responsável.
+4 — Além do nível 3, acompanham a atualização e utilizam as informações para planejar ações e serviços.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais informações mantêm? Quem atualiza e quando? Não exigir base digital. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 4 de 18 
+
+--- PAGINA 18 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q16 Como a organização planeja sua contribuição à oferta de produtos ou serviços? 
+Aplicar quando a organização exerce ou prioriza função de apoio, organização ou execução produtiva/comercial. 
+1 — Não há prática definida de planejamento da oferta sob sua responsabilidade.
+2 — Existem combinações de oferta e entrega, mas de forma incompleta ou irregular.
+3 — Há rotina para combinar disponibilidade, responsabilidades e entregas pertinentes à sua atuação.
+4 — Além do nível 3, acompanha o combinado e ajusta o planejamento a partir das diferenças.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Usar registros da Cesta quando suficientes. Qual operação está coberta? 
+Q17 Como a organização assegura orientação e acompanhamento da qualidade nas
+atividades que apoia ou realiza? 
+Aplicar a capacidades de qualidade pertinentes às funções exercidas ou prioritárias. 
+1 — Orientações e verificações são pontuais ou não estão definidas.
+2 — Há orientações ou verificações, mas com lacunas ou aplicação irregular.
+3 — Há critérios conhecidos e forma definida de verificar a qualidade nas atividades pertinentes.
+4 — Além do nível 3, registra problemas e utiliza os resultados para melhorar as práticas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Pode executar ou viabilizar apoio externo. Reutilizar exemplos da Cesta. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 5 de 18 
+
+--- PAGINA 19 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q18 Como a organização busca e acompanha oportunidades de comercialização? 
+Aplicar quando comercialização ou apoio comercial faz parte da atuação ou prioridade da organização. 
+1 — A busca de oportunidades é pontual ou informal.
+2 — Existem ações comerciais, mas são irregulares ou não têm acompanhamento definido.
+3 — Há ações planejadas, responsáveis e acompanhamento de contatos e oportunidades.
+4 — Além do nível 3, registra resultados e utiliza o aprendizado para rever canais e ações comerciais.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais canais atuais e pretendidos? O que já foi testado? 
+Q20 Como organizam recursos e logística necessários às operações que assumem? 
+Aplicar às capacidades operacionais pertinentes às funções exercidas ou prioritárias. 
+1 — Recursos e logística são resolvidos pontualmente ou sem responsabilidades definidas.
+2 — Há organização de parte dos recursos, mas persistem lacunas ou irregularidade.
+3 — Há responsáveis e acordos para assegurar recursos, manutenção e logística pertinentes.
+4 — Além do nível 3, acompanha falhas e disponibilidade e usa as informações para ajustar a operação.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Inclui acesso a estrutura de membros ou externos. Não exigir propriedade dos equipamentos. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 6 de 18 
+
+--- PAGINA 20 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q21 Como identificam exigências e acompanham documentos e providências de
+regularização? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — As exigências e providências são tratadas apenas pontualmente ou informalmente.
+2 — Conhecem parte das exigências, mas o controle de documentos e prazos é incompleto ou irregular.
+3 — As exigências pertinentes estão identificadas e há responsáveis e acompanhamento de prazos e
+providências.
+4 — Além do nível 3, mantém registro atualizado, revê mudanças e acompanha a resolução das pendências.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Avaliar gestão da regularidade. Registrar situação de licenças separadamente, sem autocertificar
+conformidade. 
+Q23 Como identificam e tratam os principais riscos para seu funcionamento? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Riscos são tratados quando ocorrem, sem processo definido.
+2 — Reconhecem riscos e adotam medidas, mas de forma incompleta ou irregular.
+3 — Os principais riscos estão identificados e há responsáveis e medidas preventivas ou respostas combinadas.
+4 — Além do nível 3, registra e revê riscos e acompanha o andamento e os resultados das medidas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Selecionar três riscos. Podem envolver energia, pessoas, finanças, território ou operação. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 7 de 18 
+
+--- PAGINA 21 ---
+12 Questionário — Diretoria 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q24 Como acompanham e respondem às vulnerabilidades ambientais e climáticas
+pertinentes à atuação? 
+Aplicar quando houver vulnerabilidade pertinente à atuação. N/A exige justificativa da não pertinência. 
+1 — Não há prática definida para acompanhar e responder às vulnerabilidades identificadas.
+2 — Há respostas pontuais ou preparação incompleta.
+3 — Há formas definidas de acompanhar vulnerabilidades e medidas de prevenção ou adaptação aplicadas.
+4 — Além do nível 3, registra ocorrências e resultados e utiliza as informações para rever as medidas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Não confundir exposição a um evento com baixa capacidade. Não ter ocorrido dano não prova N/A. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 8 de 18 
+
+--- PAGINA 22 ---
+12 Questionário — Tesoureiro / responsável financeiro 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q11 Como registram entradas e saídas e conferem as movimentações financeiras? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Não há controle definido. Registros ou conferências são pontuais ou informais.
+2 — Há registros e alguma conferência, mas são incompletos ou irregulares.
+3 — Entradas e saídas são registradas em rotina definida e conferidas com movimentações e comprovantes.
+4 — Além do nível 3, diferenças são registradas e tratadas e as informações apoiam decisões.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quem registra e confere? Como a contabilidade externa é acompanhada? 
+Q12 Como identificam custos institucionais e planejam receitas e despesas? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Custos e previsões são tratados pontualmente ou por estimativas informais.
+2 — Há identificação de custos e previsões, mas de modo incompleto ou irregular.
+3 — Os principais custos estão registrados e há prática definida de prever receitas e despesas.
+4 — Além do nível 3, comparam previsto e realizado e utilizam diferenças para ajustar decisões.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Separar manutenção da organização de custos específicos dos produtos. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 9 de 18 
+
+--- PAGINA 23 ---
+12 Questionário — Tesoureiro / responsável financeiro 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q13 Como prestam contas aos membros? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — A prestação de contas é pontual, informal ou inexistente.
+2 — Há apresentação de informações, mas de forma irregular ou incompleta.
+3 — Ocorre em momentos definidos, com informações organizadas e espaço para esclarecimentos.
+4 — Além do nível 3, membros conseguem conferir as informações e dúvidas e providências são acompanhadas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quando foi a última apresentação? Confirmar compreensão com os sócios. 
+Q14 Como acompanham operações, valores e repasses devidos aos membros? 
+Aplicar quando a organização recebe, intermedeia, comercializa ou administra recursos/operações dos membros. 
+1 — Registros, critérios ou repasses são tratados de forma pontual ou informal.
+2 — Há controles, mas faltam informações, comunicação prévia ou acompanhamento regular dos repasses.
+3 — Entregas e valores são registrados, critérios e prazos são informados e repasses são acompanhados.
+4 — Além do nível 3, membros conferem o histórico e diferenças ou atrasos são registrados e tratados.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Como informam preços e descontos? Há pendências? Como tratam sobras, perdas ou saldos? 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 10 de 18 
+
+--- PAGINA 24 ---
+12 Questionário — Tesoureiro / responsável financeiro 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q15 Como preparam recursos para manter o funcionamento e enfrentar imprevistos? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Não há planejamento de recursos para continuidade ou imprevistos.
+2 — Existem iniciativas de reserva ou previsão de recursos, mas são incompletas ou irregulares.
+3 — Há planejamento das fontes e necessidades, com regras para uso dos recursos destinados à continuidade.
+4 — Além do nível 3, acompanham suficiência e recomposição dos recursos e ajustam o planejamento.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais receitas, reservas e capital de giro existem? Quais recursos estão vinculados a projetos? 
+Q19 Como os resultados econômicos das operações orientam decisões? 
+Aplicar quando a organização realiza ou prioriza gestão/apoio econômico de operações produtivas ou comerciais. 
+1 — Não há uso definido de informações econômicas para decisões.
+2 — Há consultas ou estimativas, mas de forma pontual ou incompleta.
+3 — Informações de custos e resultados são analisadas e utilizadas em decisões das operações pertinentes.
+4 — Além do nível 3, há rotina de análise e acompanhamento dos efeitos das decisões tomadas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Citar uma decisão de preço, negociação ou operação. Reutilizar dados da Cesta. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 11 de 18 
+
+--- PAGINA 25 ---
+12 Questionário — Sócios/cooperados 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q06 Como vocês participam das decisões e como a organização favorece essa
+participação? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — A participação é pontual ou concentrada e não há prática definida para ampliá-la.
+2 — Existem iniciativas de participação, mas são irregulares ou deixam grupos sem acesso.
+3 — Existem formas regulares de convocar e possibilitar a participação dos grupos pertinentes.
+4 — Além do nível 3, a organização registra participação, identifica ausências e acompanha ações de inclusão.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quem participa menos? Distância, horários ou outras barreiras dificultam? Confirmar registros com a
+diretoria. 
+Q08 Como as informações chegam aos membros e como vocês apresentam 
+demandas e recebem retorno? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — A comunicação e o tratamento das demandas são pontuais ou informais.
+2 — Há canais, mas o envio de informações ou o retorno às demandas é irregular.
+3 — Há canais conhecidos, rotina de comunicação e responsáveis pelo encaminhamento e retorno.
+4 — Além do nível 3, acompanham alcance e demandas, registram providências e ajustam falhas.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: O que aconteceu com uma demanda recente? Quem não recebe bem as informações? 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 12 de 18 
+
+--- PAGINA 26 ---
+12 Questionário — Sócios/cooperados 
+Organização:   Data:   /   /
+Respondentes:   | Perguntas complementares apenas quando necessárias. 
+Q09 Como são escolhidos e acompanhados os serviços e apoios aos membros? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Os apoios são definidos pontualmente, sem consulta ou acompanhamento definidos.
+2 — Há consultas ou retorno dos membros, mas de forma incompleta ou irregular.
+3 — Há consulta aos membros e forma definida de acompanhar acesso e resultados dos serviços.
+4 — Além do nível 3, registram as informações e as utilizam para rever prioridades e melhorar serviços.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Quais serviços usam? Quem não consegue acessar? Confirmar o processo com a diretoria. 
+Q25 Como são encaminhados os conflitos e acompanhadas as soluções? 
+Aplicar à situação atual. N/A somente com justificativa de não pertinência. 
+1 — Cada conflito é tratado de modo improvisado ou informal.
+2 — Há pessoas ou práticas reconhecidas, mas o encaminhamento é incompleto ou irregular.
+3 — Há responsáveis ou instâncias e procedimentos conhecidos para encaminhar conflitos.
+4 — Além do nível 3, registra encaminhamentos e acompanha o cumprimento das soluções.
+[ ] Não sabe informar [ ] Não coletado [ ] N/A [ ] Divergência 
+Relato/exemplo, justificativa de N/A ou diferença entre grupos: 
+Aprofundar se necessário: Sem conflito recente, verificar como seria encaminhado. Não registrar detalhes pessoais desnecessários. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 13 de 18 
+
+--- PAGINA 27 ---
+12 Informações complementares por público 
+Organização:   Data:   /   /
+Não repetir relatos já registrados. Indicar o código onde a resposta pode ser encontrada. 
+P01 — Presidente: Quais três capacidades precisam fortalecer? O que seria sucesso ao final 
+do projeto? 
+P02 — Presidente: Quais parceiros, redes e espaços de representação são essenciais? 
+Registrar contribuição, frequência e dependências.
+D01 — Diretoria: Quais são os principais gargalos e tentativas de solução? Quais grupos
+participam menos ou não acessam serviços? 
+D02 — Diretoria: Como funcionam cadastro, documentos e controles? O que está em 
+atualização ou implantação? 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 14 de 18 
+
+--- PAGINA 28 ---
+12 Informações complementares por público 
+Organização:   Data:   /   /
+Não repetir relatos já registrados. Indicar o código onde a resposta pode ser encontrada. 
+T01 — Tesoureiro / responsável financeiro: Quais receitas, contribuições, reservas e recursos 
+vinculados existem? Quais custos e necessidades de capital de giro?
+T02 — Tesoureiro / responsável financeiro: Há apoio contábil/jurídico e auditorias? Quem 
+acompanha? Como definem descontos, prazos, repasses e destinação de sobras/perdas? 
+S01 — Sócios/cooperados: O que a organização faz de mais útil? Quem enfrenta dificuldades 
+para participar, receber informações ou acessar serviços? 
+S02 — Sócios/cooperados: Vocês conseguem conferir contas, entregas e pagamentos? Relatar 
+experiências diferentes e melhorias desejadas. 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 15 de 18 
+
+--- PAGINA 29 ---
+12 Fechamento estratégico 
+Organização:   Data:   /   /
+Ouvir gestão e membros. Prioridades são pactuadas e não derivam automaticamente de notas. 
+E01 Qual papel a organização deseja fortalecer para seus membros e território? 
+E02 Quais capacidades precisam ser preservadas? 
+E03 Que funções deseja executar diretamente e quais deseja viabilizar com outros? 
+PRIO1 Prioridade e função/produto relacionado. Mudança desejada, obstáculo inicial, apoio
+necessário, responsável e prazo quando conhecidos:
+PRIO2 Prioridade e função/produto relacionado. Mudança desejada, obstáculo inicial, apoio
+necessário, responsável e prazo quando conhecidos:
+PRIO3 Prioridade e função/produto relacionado. Mudança desejada, obstáculo inicial, apoio
+necessário, responsável e prazo quando conhecidos: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 16 de 18 
+
+--- PAGINA 30 ---
+12 Evidências e pendências 
+Organização:   Data:   /   /
+Registrar documentos efetivamente consultados separadamente dos apenas mencionados. Falta de documento não
+prova ausência de prática. 
+Estatuto vigente   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Ata de eleição/posse   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Atas recentes   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Cadastro de membros   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Planejamento/plano de trabalho   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Prestação de contas   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Registros de operações e repasses   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+Demonstrativos financeiros   [ ] Consultado [ ] Relatado [ ] Não apresentado [ ] N/A
+Referência, data, código relacionado, limites ou justificativa: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 17 de 18 
+
+--- PAGINA 31 ---
+12 Anotações complementares 
+Organização:   Data:   /   /
+Código da pergunta/função/produto:   Público/grupo:   Continuação da página:   Cópia nº 
+Relato original ou observação. Identificar claramente quem informou e o que foi observado: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Questionário | Página 18 de 18 
+
+--- PAGINA 32 ---
+12 Cesta — lista do portfólio 
+Organização:   Data:   /   /
+Usar PR01, PR02... para produtos e OP01, OP02... para operações. Repetir esta folha se necessário. 
+PR01 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR02 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR03 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR04 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR05 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR06 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR07 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+PR08 Produto/serviço:   Operação: OP 
+Situação: [ ] Funcionamento [ ] Implantação [ ] Futuro | Papel: [ ] Executa [ ] Viabiliza [ ] Não participa 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 1 de 15 
+
+--- PAGINA 33 ---
+12 Cesta - perfil do produto ou serviço 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Perguntas nas colunas e um produto por linha. Bloco 1 de 2. 
+Respondentes:   Cópia nº   | Repetir os mesmos produtos nos blocos seguintes.
+Preencher apenas produtos em funcionamento. Para implantação, utilizar apenas a ficha de preparação da implantação. 
+Produto / serviço   CP01 
+Quem realiza e qual é o papel
+da organização? Tipo de
+produto, cadeia e forma de
+oferta/processamento: 
+CP02 
+Importância econômica, social,
+cultural ou territorial.
+Diferenciais e características
+desejadas: 
+CP03 
+Interesse: 1 sem / 2 baixo / 3
+médio / 4 alto. Membros
+atuantes, se conhecido, fonte e
+período: 
+CP04 
+Sazonalidade. Meses de pico,
+regularidade, entressafra e
+meses desconhecidos:
+Contínua / Sazonal / Não
+informado
+Meses e detalhes:
+Contínua / Sazonal / Não
+informado
+Meses e detalhes:
+Contínua / Sazonal / Não
+informado
+Meses e detalhes:
+Contínua / Sazonal / Não
+informado
+Meses e detalhes:
+1 Sem / 2 Baixo / 3 Médio /
+4 Alto
+Membros, fonte e período:
+1 Sem / 2 Baixo / 3 Médio /
+4 Alto
+Membros, fonte e período:
+1 Sem / 2 Baixo / 3 Médio /
+4 Alto
+Membros, fonte e período:
+1 Sem / 2 Baixo / 3 Médio /
+4 Alto
+Membros, fonte e período: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 2 de 15 
+
+--- PAGINA 34 ---
+12 Cesta - perfil do produto ou serviço 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Perguntas nas colunas e um produto por linha. Bloco 2 de 2. 
+Respondentes:   Cópia nº   | Repetir os mesmos produtos nos blocos seguintes.
+Preencher apenas produtos em funcionamento. Para implantação, utilizar apenas a ficha de preparação da implantação. 
+Produto / serviço   CP05 
+Disponibilidade para venda/serviço difere
+da produção? Estoques ou restrições
+conhecidas: 
+CP06 
+Canais e compradores atuais e pretendidos.
+Recorrência, acordos e método de
+formação do preço: 
+CP07 
+Marca, embalagem, código de barras,
+selos/reconhecimentos e diferenciais.
+Situação conhecida: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 3 de 15 
+
+--- PAGINA 35 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 1 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C01 Como combinam disponibilidade, entregas e
+responsabilidades? 
+Operações atuais em que existe ou é prioritária uma função
+coletiva de planejamento. 
+1.   Não há prática definida de planejamento da oferta sob sua
+responsabilidade. 
+2.   Existem combinações de oferta e entrega, mas de forma
+incompleta ou irregular. 
+3.   Há rotina para combinar disponibilidade, responsabilidades e
+entregas pertinentes à sua atuação. 
+4.   Além do nível 3, acompanha o combinado e ajusta o
+planejamento a partir das diferenças. 
+C02 Como são definidos e utilizados os procedimentos da
+produção ou serviço? 
+Aplicar a processo realizado ou viabilizado pela operação. 
+1.   Não há procedimento comum definido. 
+2.   Há orientações, mas são incompletas ou utilizadas
+irregularmente. 
+3.   Há procedimentos conhecidos e utilizados nas etapas
+pertinentes. 
+4.   Além do nível 3, procedimentos e revisões são registrados e sua
+aplicação é acompanhada.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 4 de 15 
+
+--- PAGINA 36 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 2 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C03 Como verificam a qualidade do produto ou serviço? 
+Aplicar conforme o papel da organização e da operação. 
+1.   Orientações e verificações são pontuais ou não estão definidas. 
+2.   Há orientações ou verificações, mas com lacunas ou aplicação
+irregular. 
+3.   Há critérios conhecidos e forma definida de verificar a qualidade
+nas atividades pertinentes. 
+4.   Além do nível 3, registra problemas e utiliza os resultados para
+melhorar as práticas. 
+C04 Como identificam e tratam perdas, desperdícios ou
+retrabalho? 
+Aplicar quando perdas ou retrabalho forem pertinentes. 
+1.   Não há acompanhamento definido. 
+2.   Percebem problemas e estimam perdas pontualmente, sem
+rotina. 
+3.   Há rotina para identificar ocorrências e suas causas. 
+4.   Além do nível 3, registra ocorrências e acompanha se as
+medidas reduzem os problemas.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 5 de 15 
+
+--- PAGINA 37 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 3 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C05 Como conhecem e utilizam os custos desta operação? 
+Considerar custos sob responsabilidade da operação. 
+1.   Não identificam os principais custos de forma definida. 
+2.   Há estimativas ou registros parciais, atualizados irregularmente. 
+3.   Os principais custos são registrados e atualizados em rotina
+definida. 
+4.   Além do nível 3, utiliza custos para analisar preço, resultado ou
+decisões operacionais. 
+C06 Como combinam e acompanham as condições
+comerciais? 
+Aplicar quando a operação comercializa ou viabiliza vendas. 
+1.   Acordos comerciais são pontuais ou informais, sem critérios
+definidos. 
+2.   Há critérios ou acordos, mas informações e acompanhamento
+são incompletos. 
+3.   Há forma definida de combinar preço, entrega,
+responsabilidades e pagamento. 
+4.   Além do nível 3, registra e acompanha os acordos e trata
+diferenças identificadas.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 6 de 15 
+
+--- PAGINA 38 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 4 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C07 Como organizam armazenamento, transporte e 
+entrega? 
+Aplicar aos componentes logísticos pertinentes. 
+1.   A logística é resolvida de forma improvisada ou pontual. 
+2.   Parte das responsabilidades e condições está definida, mas há
+lacunas recorrentes. 
+3.   Responsáveis e condições necessárias são definidos antes da
+operação. 
+4.   Além do nível 3, registra falhas e resultados e ajusta a
+organização da logística. 
+C08 Como acompanham os resultados esperados desta
+operação? 
+Resultados econômicos e/ou sociais conforme finalidade declarada. 
+1.   Não há resultado esperado ou acompanhamento definido. 
+2.   Há avaliação informal ou irregular dos resultados. 
+3.   Há resultados esperados e uma forma definida de
+acompanhá-los. 
+4.   Além do nível 3, registra resultados e os utiliza para rever
+decisões.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 7 de 15 
+
+--- PAGINA 39 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 5 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C09 Como se preparam e respondem aos impactos 
+climáticos? 
+Aplicar quando existir vulnerabilidade pertinente. 
+1.   Não há preparação ou resposta definida para as
+vulnerabilidades. 
+2.   Há respostas pontuais ou preparação incompleta. 
+3.   Há medidas de prevenção ou adaptação definidas e aplicadas. 
+4.   Além do nível 3, acompanha efeitos das medidas e as revê com
+base nas ocorrências. 
+C10 Como identificam lotes e sua origem e destino? 
+Somente quando controle de lotes for pertinente. 
+1.   Não há identificação definida. 
+2.   A identificação existe, mas é incompleta ou irregular. 
+3.   Lotes são identificados e associados à origem e período de
+produção. 
+4.   Além do nível 3, registros permitem rastrear origem e destino
+dos lotes.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 8 de 15 
+
+--- PAGINA 40 ---
+12 Cesta de Produtos | Matriz de avaliação da operação 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 6 de 6 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. Marcar o maior nível integralmente atendido.
+NS: não sabe informar. NC: não coletado. NA: não se aplica (justificar). D: divergência. H: heterogênea. Não pontuar implantação. 
+Produto / serviço   C11 Como definem, identificam e acompanham a validade? 
+Somente quando controle de validade for pertinente. 
+1.   Não há definição ou identificação de validade. 
+2.   Existe definição, mas a identificação ou aplicação é incompleta. 
+3.   A validade é definida com base pertinente e identificada nos
+produtos ou registros. 
+4.   Além do nível 3, registra e acompanha a validade para orientar o
+uso ou a comercialização. 
+C12 Como escolhem e verificam a embalagem? 
+Somente quando embalagem for pertinente. 
+1.   Não há escolha definida conforme as necessidades do produto. 
+2.   Há embalagem utilizada, mas sua adequação é conhecida
+apenas parcialmente. 
+3.   A embalagem foi definida considerando conservação, transporte
+e uso pretendido. 
+4.   Além do nível 3, registra verificações e acompanha problemas
+para ajustar a embalagem.
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência:
+[ ] 1 [ ] 2 [ ] 3 [ ] 4
+[ ] NS [ ] NC [ ] NA [ ] D [ ] H
+Relato / justificativa:
+Fonte / referência: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 9 de 15 
+
+--- PAGINA 41 ---
+12 Cesta - dificuldades e condições 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 1 de 2 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. NI: não informado. N/A: não se aplica.
+Circular as alternativas na linha de cada produto. Múltiplas respostas permitidas. Registrar detalhes e período. 
+Produto / serviço   CP08 
+Limitações produtivas - circular ou marcar as opções. Detalhar
+período e produtos/grupos afetados. 
+CP09 
+Dificuldades comerciais - circular ou marcar as opções. Detalhar
+período e produtos/grupos afetados.
+Insumos / Equipamentos / Infraestrutura / Energia / Água /
+Refrigeração / Armazenamento / Trabalho / Assistência / Capital de
+giro / Licenças / Clima / Demanda / Nenhuma identificada / NI /
+Outra
+Detalhes:
+Preço / Compradores / Volume / Padrão / Marca / Embalagem /
+Rótulo / Nota fiscal / Regularização / Logística / Capital de giro /
+Nenhuma identificada / NI / Outra
+Detalhes:
+Insumos / Equipamentos / Infraestrutura / Energia / Água /
+Refrigeração / Armazenamento / Trabalho / Assistência / Capital de
+giro / Licenças / Clima / Demanda / Nenhuma identificada / NI /
+Outra
+Detalhes:
+Preço / Compradores / Volume / Padrão / Marca / Embalagem /
+Rótulo / Nota fiscal / Regularização / Logística / Capital de giro /
+Nenhuma identificada / NI / Outra
+Detalhes:
+Insumos / Equipamentos / Infraestrutura / Energia / Água /
+Refrigeração / Armazenamento / Trabalho / Assistência / Capital de
+giro / Licenças / Clima / Demanda / Nenhuma identificada / NI /
+Outra
+Detalhes:
+Preço / Compradores / Volume / Padrão / Marca / Embalagem /
+Rótulo / Nota fiscal / Regularização / Logística / Capital de giro /
+Nenhuma identificada / NI / Outra
+Detalhes: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 10 de 15 
+
+--- PAGINA 42 ---
+12 Cesta - dificuldades e condições 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 2 de 2 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. NI: não informado. N/A: não se aplica.
+Circular as alternativas na linha de cada produto. Múltiplas respostas permitidas. Registrar detalhes e período. 
+Produto / serviço   CP10 
+Eventos climáticos nos últimos três anos -
+circular ou marcar as opções. Detalhar
+período e produtos/grupos afetados. 
+CP11 
+Efeitos concretos e medidas adotadas.
+Distinguir ocorrência de causa climática
+não verificada: 
+CP12 
+Infraestrutura: qual, de quem, condição e
+acesso. Logística: rota, transporte,
+refrigeração e frequência possível:
+Seca / Excesso de chuva / Cheia ou vazante
+atípica / Calor / Ventos / Incêndios /
+Alteração de safra / Nenhum identificado /
+NI / Outro
+Detalhes:
+Seca / Excesso de chuva / Cheia ou vazante
+atípica / Calor / Ventos / Incêndios /
+Alteração de safra / Nenhum identificado /
+NI / Outro
+Detalhes:
+Seca / Excesso de chuva / Cheia ou vazante
+atípica / Calor / Ventos / Incêndios /
+Alteração de safra / Nenhum identificado /
+NI / Outro
+Detalhes: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 11 de 15 
+
+--- PAGINA 43 ---
+12 Cesta - triagem e informações adicionais 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 1 de 3 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. NI: não informado. N/A: não se aplica.
+Circular as alternativas na linha do produto, quando disponíveis. Não atribuir nota ou conclusão jurídica às respostas. 
+Produto / serviço   CP13 
+Exigências sanitárias, ambientais, fiscais ou
+de rotulagem conhecidas. Qual, situação,
+prazo e fonte da informação: 
+CP14 
+Necessidade de análise laboratorial,
+controle de lote/validade e verificação
+técnica. Pendências e responsável pelo
+encaminhamento: 
+CP15 
+Resíduos e destinação. Riscos/impactos
+ambientais e medidas adotadas: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 12 de 15 
+
+--- PAGINA 44 ---
+12 Cesta - triagem e informações adicionais 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 2 de 3 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. NI: não informado. N/A: não se aplica.
+Circular as alternativas na linha do produto, quando disponíveis. Não atribuir nota ou conclusão jurídica às respostas. 
+Produto / serviço   CP16 
+Espécie nativa? Conhecimento tradicional? Circular as opções.
+Descrever e identificar detentores quando pertinente. 
+CP17 
+Já receberam orientação sobre PGCT/SisGen/CGen? Qual atividade
+requer triagem? Registrar dúvida e encaminhamento:
+Espécie nativa: Sim / Não / NI
+Conhecimento tradicional: Sim / Não / Possivelmente / NI
+Detalhes:
+Espécie nativa: Sim / Não / NI
+Conhecimento tradicional: Sim / Não / Possivelmente / NI
+Detalhes:
+Espécie nativa: Sim / Não / NI
+Conhecimento tradicional: Sim / Não / Possivelmente / NI
+Detalhes: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 13 de 15 
+
+--- PAGINA 45 ---
+12 Cesta - triagem e informações adicionais 
+Organização:   Data:   /   / 
+PRODUTOS EM OPERAÇÃO | Bloco 3 de 3 | Respondentes:   Cópia nº 
+Um produto por linha. Repetir os mesmos produtos em todos os blocos. NI: não informado. N/A: não se aplica.
+Circular as alternativas na linha do produto, quando disponíveis. Não atribuir nota ou conclusão jurídica às respostas. 
+Produto / serviço   CP18 
+O preço cobre custos? Circular a opção. Informar base, canal e
+período. 
+CP19 
+Dados disponíveis: indicador, valor, unidade, período, fonte e
+produto. Ex.: perdas, volume, custos, vendas ou compradores:
+Informação insuficiente / Não / Algumas condições / Sim / N/A
+Detalhes:
+Informação insuficiente / Não / Algumas condições / Sim / N/A
+Detalhes:
+Informação insuficiente / Não / Algumas condições / Sim / N/A
+Detalhes: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 14 de 15 
+
+--- PAGINA 46 ---
+12 Cesta — preparação da implantação 
+Organização:   Data:   /   /
+Operação OP   Produtos PR   Responsável:   Cópia nº 
+IM01 Pessoas e responsabilidades 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM02 Instalações e equipamentos 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM03 Matéria-prima ou condições de serviço 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM04 Procedimentos de operação e qualidade 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM05 Custos e recursos para funcionamento 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM06 Mercado ou público pretendido 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+IM07 Exigências técnicas e regularização 
+[ ] Disponível [ ] Em andamento [ ] Ainda não iniciado [ ] Não informado [ ] N/A
+O que existe / falta / próximo passo e responsável: 
+INOVA SOCIOBIO / INSTRUMENTOS • PREENCHIMENTO POSTERIOR 12 
+REVISÃO 22/10/2026 • Jornada em campo. Preenchimento e validação posteriores. 
+Cesta de Produtos | Página 15 de 15 

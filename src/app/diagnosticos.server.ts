@@ -9,6 +9,7 @@ import { validarDocumento, LIMITE_DOCUMENTO } from './lib/documentosRegistro';
 import { diagnosticoAtual } from './diagnostic/navegacaoDiagnostico';
 import { validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
 import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type OrigemPdf } from './diagnostic/importarMatriz';
+import type { RegistroCaderno } from './diagnostic/cadernoCria';
 
 const mensagemMapeamento=(erro:{message:string})=>erro.message.replace(/diagnóstico/gi,termo=>termo[0]==='D'?'Mapeamento':'mapeamento');
 
@@ -602,24 +603,27 @@ export interface DiagnosticoCompleto {
   ieo: IeoResposta[];
   produtos: Produto[];
   parecer: Parecer;
+  caderno?: RegistroCaderno[];
 }
 
 export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
   .validator((d: { diagnosticoId: string }) => d)
   .handler(async ({ data: { diagnosticoId } }): Promise<DiagnosticoCompleto> => {
     const supabaseAdmin = await getAdmin();
-    const [diagRes, matrizRes, ieoRes, produtosRes, parecerRes] = await Promise.all([
+    const [diagRes, matrizRes, ieoRes, produtosRes, parecerRes, cadernoRes] = await Promise.all([
       supabaseAdmin.from('diagnosticos').select('*, comunidades(nome, code, segmento_social)').eq('id', diagnosticoId).single(),
       supabaseAdmin.from('diagnostico_matriz').select('*').eq('diagnostico_id', diagnosticoId),
       supabaseAdmin.from('diagnostico_ieo').select('*').eq('diagnostico_id', diagnosticoId),
       supabaseAdmin.from('diagnostico_produtos').select('*').eq('diagnostico_id', diagnosticoId).order('criado_em'),
       supabaseAdmin.from('diagnostico_parecer').select('*').eq('diagnostico_id', diagnosticoId).maybeSingle(),
+      supabaseAdmin.from('diagnostico_caderno_respostas').select('*').eq('diagnostico_id', diagnosticoId).order('codigo'),
     ]);
     if (diagRes.error) throw new Error(mensagemMapeamento(diagRes.error));
     if (matrizRes.error) throw new Error(mensagemMapeamento(matrizRes.error));
     if (ieoRes.error) throw new Error(mensagemMapeamento(ieoRes.error));
     if (produtosRes.error) throw new Error(mensagemMapeamento(produtosRes.error));
     if (parecerRes.error) throw new Error(mensagemMapeamento(parecerRes.error));
+    if (cadernoRes.error) throw new Error('Não foi possível carregar as respostas do Caderno CRIA para o relatório: ' + mensagemMapeamento(cadernoRes.error));
 
     const comunidadeRow: any = (diagRes.data as any).comunidades ?? {};
     return {
@@ -629,6 +633,7 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
       ieo: (ieoRes.data ?? []).map(mapIeoResposta),
       produtos: (produtosRes.data ?? []).map(mapProdutoRow),
       parecer: mapParecer(parecerRes.data, diagnosticoId),
+      caderno: cadernoRes.data ?? [],
     };
   });
 
@@ -654,6 +659,8 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
       .single();
     if (getError) throw new Error(getError.message);
     if (anterior.status !== 'concluido') throw new Error('Conclua a versão atual antes de criar outra.');
+    const caderno = await supabaseAdmin.from('diagnostico_caderno_respostas').select('*').eq('diagnostico_id', diagnosticoAnteriorId);
+    if (caderno.error) throw new Error(mensagemMapeamento(caderno.error));
 
     const { data: nova, error: insError } = await supabaseAdmin
       .from('diagnosticos')
@@ -674,10 +681,21 @@ export const criarNovaVersaoDiagnostico = createServerFn({ method: 'POST' })
       .select('*')
       .eq('diagnostico_id', diagnosticoAnteriorId);
     if (prodError) throw new Error(prodError.message);
+    const produtosNovos = new Map<string,string>();
     if (produtos?.length) {
-      const copias = produtos.map(({ id: _id, ...rest }: any) => ({ ...rest, diagnostico_id: nova.id }));
+      const copias = produtos.map(({ id: anteriorId, ...rest }: any) => { const id = crypto.randomUUID(); produtosNovos.set(anteriorId,id); return { ...rest, id, diagnostico_id: nova.id }; });
       const { error } = await supabaseAdmin.from('diagnostico_produtos').insert(copias);
       if (error) throw new Error(mensagemMapeamento(error));
+    }
+
+    if (caderno.data?.length) {
+      const copias = caderno.data.map((r:any) => {
+        const produto = r.produto_id ? produtosNovos.get(r.produto_id) : null;
+        if (r.produto_id && !produto) throw new Error('Vínculo do produto não encontrado ao copiar o caderno.');
+        return { ...r, diagnostico_id: nova.id, produto_id: produto, contexto: produto ?? r.contexto, versao: 1 };
+      });
+      const escrita = await supabaseAdmin.from('diagnostico_caderno_respostas').insert(copias);
+      if (escrita.error) throw new Error(mensagemMapeamento(escrita.error));
     }
 
     const { data: parecer, error: parecerError } = await supabaseAdmin

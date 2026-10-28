@@ -4,9 +4,11 @@ import { toast } from 'sonner';
 import { Download, ArrowLeft, Lock, CopyPlus } from 'lucide-react';
 import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
-import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
-import { IeoTab } from './diagnostic/IeoTab';
-import { CestaProdutosTab } from './diagnostic/CestaProdutosTab';
+import { MatrizCadernoTab } from './diagnostic/MatrizCadernoTab';
+import { QuestionarioCaderno } from './diagnostic/QuestionarioCaderno';
+import { CestaCaderno } from './diagnostic/CestaCaderno';
+import { CadernoItens } from './diagnostic/CadernoItens';
+import { IDENTIFICACAO_CADERNO, EVIDENCIAS_CADERNO } from '../diagnostic/catalog/cadernoCria';
 import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
 import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
@@ -18,7 +20,7 @@ const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em ediçã
 type TabId = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 const TABS: { id: TabId; label: string }[] = [
   { id: 'matriz', label: 'Matriz' },
-  { id: 'ieo', label: 'IEO' },
+  { id: 'ieo', label: 'Questionário' },
   { id: 'cesta', label: 'Cesta' },
   { id: 'resumo', label: 'Resumo' },
 ];
@@ -155,15 +157,15 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
         <div className="diagnostico-conteudo">
         {isLoading && <p role="status">Carregando mapeamento…</p>}
         {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
-        {tab === 'resumo' && diagnostico && <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} />}
+        {tab === 'resumo' && diagnostico && <div className="space-y-6"><section className="space-y-3"><h3 className="font-semibold text-lg">Identificação · Caderno CRIA 22/10/2026</h3><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={IDENTIFICACAO_CADERNO}/></section><section className="space-y-3"><h3 className="font-semibold text-lg">Evidências e pendências</h3><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={EVIDENCIAS_CADERNO}/></section><ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} /></div>}
         {tab === 'matriz' && diagnostico && (
-          <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <MatrizCadernoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'ieo' && diagnostico && (
-          <IeoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <QuestionarioCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'cesta' && diagnostico && (
-          <CestaProdutosTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'parecer' && diagnostico && (
           <ParecerTecnicoTab diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} />

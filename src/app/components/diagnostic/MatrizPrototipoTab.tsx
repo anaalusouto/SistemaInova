@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ChevronDown, ChevronRight } from 'lucide-react';
@@ -10,7 +11,7 @@ import { EntradaMatriz } from './EntradaMatriz';
 import { PainelMatriz } from './PainelMatriz';
 import { validarConferencia, rascunhoVazio, type CampoImportado, type ConferenciaFuncao, type ImportacaoSalva, type DecisoesImportacao, type RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
-interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean }
+interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean; caderno?: { avaliacoes: Record<string,string>; renderAvaliacao: (id:string)=>ReactNode } }
 type Draft = RascunhoMatriz;
 const inicial=(nome:string,r?:MatrizResposta):Draft=>({nomeFuncao:r?.nomeFuncao??nome,atuacao:r?.atuacao[0]??null,
   experiencia:r?.experiencia??null,criticidade:r?.criticidade??null,interesse:r?.interesse??null,observacoes:r?.observacoes??null,externo:r?.externo??null});
@@ -24,7 +25,7 @@ export function MatrizFuncionalTab(props:Props) {
   return <MatrizDaAplicacao key={`${props.organizacaoId}:${props.diagnosticoId}:${pendente.data?.id??'manual'}:${pendente.data?.pendentes.join(',')??''}`} {...props} importacao={pendente.data??null}
     onRegistro={r=>client.setQueryData(key,r)} onImportacaoAlterada={()=>void client.invalidateQueries({queryKey:key})}/>;
 }
-function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
+function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
   const client=useQueryClient();
   const importadasIniciais=Object.fromEntries((importacao?.pendentes??[]).map(id=>[id,importacao?.dados.respostas[id]??rascunhoVazio(FUNCOES_MATRIZ.find(f=>f.id===id)?.nome??id)]));
   const [aberta,setAberta]=useState<string|null>(importacao?.pendentes[0]??null);
@@ -106,7 +107,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={salvar.isPending||descartando} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
-    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:(!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome)),estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={salvar.isPending||descartando}/>
+    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:(!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome)),estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} avaliacoes={caderno?.avaliacoes} onSelecionar={selecionarFuncao} desabilitado={salvar.isPending||descartando}/>
     {grupos.map(grupo=><section key={grupo} className="space-y-2"><h4 className="sr-only">{grupo}</h4>
       {FUNCOES_MATRIZ.filter(f=>f.grupo===grupo).map(f=>{
         const r=indice.get(f.id),open=aberta===f.id;
@@ -149,6 +150,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
               {!readOnly&&<button type="button" className="underline text-primary text-sm" onClick={()=>{carregarEdicao(f.id,reiniciar());setEditando(true);}}>Editar</button>}
             </div>}
           </div>}
+          {open&&caderno&&<div className="border-t p-4 space-y-3"><h4 className="font-semibold">Avaliação técnica independente da Leitura</h4>{caderno.renderAvaliacao(f.id)}</div>}
         </div>;
       })}
     </section>)}

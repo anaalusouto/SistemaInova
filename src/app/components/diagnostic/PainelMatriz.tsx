@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
+import { FUNCOES_GUIA_CRIA } from '../../diagnostic/catalog/cadernoCriaDados';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
-interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean }
+interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; avaliacoes?: Record<string,string> }
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
-const CRITICIDADE = ['Baixa', 'Moderada', 'Alta', 'Crítica'];
+const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
 const grupos = [...new Set(FUNCOES_MATRIZ.map(f => f.grupo))];
 
-export function PainelMatriz({ linhas, onSelecionar, desabilitado }: Props) {
+export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes }: Props) {
   const [grupo, setGrupo] = useState('Todos');
   const indice = new Map(linhas.map(l => [l.id, l]));
   const visiveis = FUNCOES_MATRIZ.filter(f => grupo === 'Todos' || f.grupo === grupo);
@@ -25,21 +26,23 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado }: Props) {
       <h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4>
       <div className="diagnostico-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
         <table className="diagnostico-tabela"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <thead><tr>{['Função', 'Atuação', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Observação'].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
+          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
-            <tr className="diagnostico-grupo"><th colSpan={7} scope="rowgroup">{g}</th></tr>
+            <tr className="diagnostico-grupo"><th colSpan={9} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;
               const v = linha.valores;
               const leitura = leituraMatriz(v.criticidade, v.experiencia);
               const cor = leitura === 'Lacuna crítica' ? '#b44747' : leitura === 'Lacuna relevante' ? '#c46b35' : leitura === 'Acompanhar' ? '#528363' : '#b27b24';
               return <tr key={f.id}>
-                <th scope="row"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{v.nomeFuncao || f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small></th>
-                <td><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span>{v.externo && <p className="mt-2 text-muted-foreground whitespace-pre-wrap">{v.externo}</p>}</td>
+                <th scope="row"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{v.nomeFuncao || f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small><details className="mt-2 text-xs font-normal text-muted-foreground"><summary className="cursor-pointer">Descrição e exemplo</summary><p className="mt-2">{FUNCOES_GUIA_CRIA.find(g => g.codigo === f.id)?.descricao}</p><p className="mt-2">Exemplo: {FUNCOES_GUIA_CRIA.find(g => g.codigo === f.id)?.exemplo}</p></details></th>
+                <td><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span></td>
+                <td className="whitespace-pre-wrap">{v.externo || '—'}</td>
                 <td>{v.experiencia || 'Não informado'}</td>
                 <td>{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
                 <td><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
                 <td><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
+                <td><button type="button" className="rounded-lg border px-2 py-1 text-left text-xs hover:underline" disabled={desabilitado} onClick={() => onSelecionar(f.id)} aria-label={`Avaliação ${f.id}`}>{avaliacoes?.[f.id] ?? 'Não avaliado'}</button></td>
                 <td className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
             })}

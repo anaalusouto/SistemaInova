@@ -6,6 +6,7 @@ import { IEO_PERGUNTAS_FLAT } from '../diagnostic/catalog/ieo';
 import { calcularIeo } from '../diagnostic/ieoCalculation';
 import { CESTA_BLOCOS } from '../diagnostic/catalog/cestaProdutos';
 import { PARECER_GRUPOS } from '../diagnostic/catalog/parecerComplementar';
+import { ITENS_CADERNO } from '../diagnostic/catalog/cadernoCria';
 
 export type ReportComponente = 'identificacao' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 
@@ -60,6 +61,7 @@ export interface DiagnosticoReportEntry {
   ieo?: ReportIeoModel;
   produtos?: ReportProdutoModel[];
   parecer?: ReportParecerModel;
+  caderno?: { codigo: string; item: string; contexto: string; resposta: string; relato: string; fonte: string; respondentes: string }[];
 }
 
 export interface DiagnosticoReportModel {
@@ -102,6 +104,19 @@ export function buildDiagnosticoReportModel(
       organizacao: d.comunidade.nome, code: d.comunidade.code, classificacao: d.comunidade.classificacao,
       dataAplicacao: fmtDateOnly(d.diagnostico.dataAplicacao), versao: d.diagnostico.versao,
     };
+    entry.caderno = (d.caderno ?? []).filter(r => {
+      if (/^F/.test(r.codigo)) return has('matriz');
+      if (/^(CP|C\d|PR_|IM)/.test(r.codigo)) return has('cesta');
+      if (/^(ID|EV)/.test(r.codigo)) return has('identificacao');
+      return has('ieo') || has('parecer');
+    }).map(r => {
+      const item = ITENS_CADERNO.find(i => i.codigo === r.codigo);
+      const produto = d.produtos.find(p => p.id === r.contexto);
+      const valor = r.resposta.valor;
+      return { codigo: r.codigo, item: item?.texto ?? r.codigo, contexto: produto?.nome ?? r.contexto,
+        resposta: valor ? item?.opcoes?.find(o => o.valor === valor)?.descricao ?? valor : r.resposta.selecoes.join(', ') || 'Sem marcação',
+        relato: r.resposta.relato, fonte: r.resposta.fonte, respondentes: r.resposta.respondentes };
+    });
 
     if (has('matriz')) {
       const respostaPorFuncao = new Map(d.matriz.map(r => [r.funcaoId, r]));
@@ -226,9 +241,18 @@ export function exportDiagnosticoReportPdf(model: DiagnosticoReportModel) {
       }
     }
 
+    if (entry.caderno?.length) {
+      ensureSpace(80);
+      doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text('Caderno de Instrumentos CRIA - revisão 22/10/2026',marginX,y); y+=10;
+      autoTable(doc,{ startY:y,head:[['Código / contexto','Item','Resposta','Relato / justificativa','Fonte / respondentes']],
+        body:entry.caderno.map(r=>[`${r.codigo}${r.contexto?' / '+r.contexto:''}`,r.item,r.resposta,r.relato,`${r.fonte}\n${r.respondentes}`]),
+        theme:'grid',styles:{fontSize:7,cellPadding:3},headStyles:{fillColor:[37,99,235]},margin:{left:marginX,right:marginX} });
+      y=(doc as any).lastAutoTable.finalY+16;
+    }
+
     if (entry.ieo) {
       ensureSpace(80);
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('IEO', marginX, y); y += 4;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('IEO anterior - instrumento legado, sem conversão para Q01-Q25', marginX, y); y += 4;
       autoTable(doc, {
         startY: y + 6,
         head: [['Dimensão', 'Média']],
