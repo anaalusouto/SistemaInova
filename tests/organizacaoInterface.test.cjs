@@ -49,6 +49,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     }).outputText;
     new Function('require', 'module', 'exports', code)(request => {
       if (request.endsWith('.css')) return {};
+      if (request === '@tanstack/react-router') return { useRouter: () => ({ history: { back() {} } }), useCanGoBack: () => false };
       if (!request.startsWith('.')) return require(request);
       const base = path.basename(request);
       if (mocks[base]) return mocks[base];
@@ -241,7 +242,7 @@ test('ficha mantém um único H1 e isola mapeamento e documentos por organizaç�
     const html = renderToStaticMarkup(React.createElement(FichaOrganizacao, { rota: { orgId: id, secao: 'parecer', projetoId: null }, aoNavegar: () => {} }));
     assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
     const titulo = html.match(/<h1\b[^>]*>(.*?)<\/h1>/)?.[1] ?? '';
-    assert.ok(titulo.includes('Organizações'));
+    assert.ok(titulo.includes('Voltar'));
     assert.ok(titulo.includes(`>${id}</span>`));
     assert.ok(html.includes(`data-diagnostico-org="${id}"`));
     assert.ok(html.includes(`data-documentos-org="${id}"`));

@@ -9,6 +9,7 @@ import { useAudit } from '../audit/auditStore';
 import { useAuth } from '../auth/authStore';
 import { formatDateOnly } from '../lib/dateOnly';
 import { BotaoNovo } from './BotaoNovo';
+import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -58,9 +59,9 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-7 min-w-0">
       <div className="flex flex-col gap-3">
-        {!incorporado && <button onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
-          <ArrowLeft size={12} /> Visão Geral
-        </button>}
+        <button type="button" onClick={onBack} className="flex items-center gap-1 text-[12px] w-fit hover:text-blue-600" style={{ color: 'var(--ink-4)' }}>
+          <ArrowLeft size={12} /> Voltar
+        </button>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-soft)' }}>
@@ -111,9 +112,12 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                     </span>
                   </td>
                   <td data-label="Ação" className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-3">
                     <button onClick={() => onSelectDiagnostico(d.id)} className="text-[12px] font-medium hover:underline" style={{ color: 'var(--primary)' }}>
                       Visualizar
                     </button>
+                    <ExcluirDiagnosticoButton diagnostico={d} nomeOrganizacao={comunidade?.nome ?? 'Organização'} />
+                    </div>
                   </td>
                 </tr>
               ))}

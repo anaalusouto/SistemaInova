@@ -15,6 +15,7 @@ function ambiente({erro=false,carregando=false}={}) {
     '../auth/authStore':{useAuth:()=>({readOnly:true})},'../diagnosticos.server':{},'../../diagnosticos.server':{},
     './diagnostic/MatrizFuncionalTab':{MatrizFuncionalTab:vazio},'./diagnostic/IeoTab':{IeoTab:vazio},'./diagnostic/CestaProdutosTab':{CestaProdutosTab:vazio},
     './diagnostic/ParecerTecnicoTab':{ParecerTecnicoTab:()=>React.createElement('p',null,'Parecer separado')},
+    './diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:vazio},
     '../DocumentosRegistro':{DocumentosRegistro:p=>React.createElement('p',null,`Documentos ${p.area} ${p.organizacaoId}`)},
     '../organizacoes/useOrganizacoes':{useFichaOrganizacao:id=>({data:{id,nome:'Organização A',registros:[{id:'r1',data:'2026-10-21',assunto:'Visita',resumo:'Registro existente'}],notas:[{id:'n1',conteudo:'Nota existente'}],projetos:[{id:5,codigo:'P5',nome:'Projeto A'}]},refetch(){}})},
   };

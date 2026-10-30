@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { Download, ArrowLeft, Lock, CopyPlus } from 'lucide-react';
 import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
+import type { InstrumentoDiagnostico } from '../lib/navegacaoApp';
+import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
 import { MatrizCadernoTab } from './diagnostic/MatrizCadernoTab';
 import { QuestionarioCaderno } from './diagnostic/QuestionarioCaderno';
 import { CestaCaderno } from './diagnostic/CestaCaderno';
@@ -17,7 +19,7 @@ import './diagnostic/painel-diagnostico.css';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
-type TabId = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
+type TabId = InstrumentoDiagnostico;
 const TABS: { id: TabId; label: string }[] = [
   { id: 'matriz', label: 'Matriz' },
   { id: 'ieo', label: 'IEO' },
@@ -27,23 +29,29 @@ const TABS: { id: TabId; label: string }[] = [
 
 interface DiagnosticoEditorProps {
   diagnosticoId: string;
+  organizacaoId?: string;
   onBack: () => void;
   onNovaVersao: (novoDiagnosticoId: string) => void;
   incorporado?: boolean;
   instrumentoInicial?: TabId;
   onHistorico?: () => void;
   rotuloVoltar?: string;
+  instrumentoAtual?: TabId;
+  onMudarInstrumento?: (instrumento: TabId) => void;
+  onExcluido?: () => void;
 }
 
-export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Visão Geral' }: DiagnosticoEditorProps) {
-  const [tab, setTab] = useState<TabId>(instrumentoInicial);
+export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido }: DiagnosticoEditorProps) {
+  const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
+  const tab = instrumentoAtual ?? tabLocal;
+  const setTab = (instrumento: TabId) => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); };
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
   const queryClient = useQueryClient();
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const { data: diagnostico, isLoading, error, refetch } = useQuery({
-    queryKey: ['diagnostico', diagnosticoId],
-    queryFn: () => getDiagnostico({ data: { id: diagnosticoId } }),
+    queryKey: ['diagnostico', diagnosticoId, organizacaoId ?? null],
+    queryFn: () => getDiagnostico({ data: { id: diagnosticoId, comunidadeId: organizacaoId } }),
   });
 
   const concluir = useMutation({
@@ -107,6 +115,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
               >
                 {STATUS_LABEL[diagnostico.status]}
               </span>
+              {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} />}
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
                   onClick={() => { if (window.confirm('Concluir este mapeamento? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}

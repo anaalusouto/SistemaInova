@@ -24,6 +24,24 @@ test('URL valida contexto, descarta campos inválidos e não carrega formulário
   assert.deepEqual(buscaDaOrganizacao({ ...rota, secao: 'registros' }), { area: 'organizations', org: 'org-a', secao: 'registros', foco: 'atividade-a' });
 });
 
+test('histórico real restaura versão e instrumento do Mapeamento, inclusive após recarga', async () => {
+  const { createRouter, createRootRoute, createRoute, createMemoryHistory } = await import('@tanstack/react-router');
+  for (const base of [{area:'diagnostics'}, {area:'organizations',org:'org-a',secao:'mapeamento'}]) {
+    const root=createRootRoute();const index=createRoute({getParentRoute:()=>root,path:'/',validateSearch:validarBuscaApp});
+    const history=createMemoryHistory({initialEntries:['/']});const router=createRouter({routeTree:root.addChildren([index]),history,isServer:true});await router.load();
+    const estados=[{...base,org:'org-a',visaoDiagnostico:'versoes'}, {...base,org:'org-a',visaoDiagnostico:'editor',diagnostico:'v1',instrumento:'resumo'}, {...base,org:'org-a',visaoDiagnostico:'editor',diagnostico:'v1',instrumento:'matriz'}, {...base,org:'org-a',visaoDiagnostico:'editor',diagnostico:'v1',instrumento:'ieo'}];
+    const carregar=async()=>{router.updateLatestLocation();await router.load();};const ler=()=>router.state.matches.at(-1).search;
+    for(const search of estados){history.push(router.buildLocation({to:'/',search}).href);await carregar();}
+    assert.deepEqual(ler(),estados[3]);history.back();await carregar();assert.deepEqual(ler(),estados[2]);
+    history.back();await carregar();assert.deepEqual(ler(),estados[1]);history.forward();await carregar();assert.deepEqual(ler(),estados[2]);
+    const root2=createRootRoute();const index2=createRoute({getParentRoute:()=>root2,path:'/',validateSearch:validarBuscaApp});
+    const recarregado=createRouter({routeTree:root2.addChildren([index2]),history:createMemoryHistory({initialEntries:[history.location.href]}),isServer:true});await recarregado.load();
+    assert.deepEqual(recarregado.state.matches.at(-1).search,estados[2]);
+  }
+  assert.deepEqual(validarBuscaApp({area:'organizations',org:'org-a',secao:'dados',diagnostico:'v1',instrumento:'ieo'}),{area:'organizations',org:'org-a',secao:'dados'});
+  assert.deepEqual(validarBuscaApp({area:'diagnostics',org:'org-a',visaoDiagnostico:'invalida',instrumento:'segredo',rascunho:'texto'}),{area:'diagnostics',org:'org-a'});
+});
+
 test('histórico real do TanStack volta entre abas e organizações, avança e restaura após recarga', async () => {
   const { createRouter, createRootRoute, createRoute, createMemoryHistory } = await import('@tanstack/react-router');
   const criar = (href = '/') => {

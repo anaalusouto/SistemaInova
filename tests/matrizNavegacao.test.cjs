@@ -17,11 +17,12 @@ test('mapeamento atual respeita organização, aplicação e versão, sem confun
   assert.equal(helper.diagnosticoAtual(lista,'org-c'),null);
   assert.equal(helper.diagnosticoAtual([...lista].reverse(),'org-a').id,'v2');
 });
-function ambiente({data=[diag('v2',2),diag('v1',1)],isLoading=false,error=null}={}){
-  let estado;
+function ambiente({data=[diag('v2',2),diag('v1',1)],isLoading=false,error=null,busca={area:'diagnostics'}}={}){
+  const entradas=[busca];let indice=0;
   const VisaoGeral=()=>null, Historico=()=>null, Editor=()=>null;
   const api=carregar('src/app/components/DiagnosticoModule.tsx',{
-    react:{...React,useState(inicial){if(estado===undefined)estado=inicial;return[estado,n=>{estado=n;}];}},
+    react:React,
+    '@tanstack/react-router':{useSearch:()=>entradas[indice],useCanGoBack:()=>indice>0,useRouter:()=>({history:{back(){indice--;}}}),useNavigate:()=>({search,replace})=>{const nova=typeof search==='function'?search(entradas[indice]):search;if(replace)entradas[indice]=nova;else{entradas.splice(++indice);entradas.push(nova);}}},
     '@tanstack/react-query':{useQuery:()=>({data,isLoading,error,refetch(){}})},
     '../diagnosticos.server':{},'../diagnostic/navegacaoDiagnostico':helper,
     './DiagnosticoVisaoGeral':{DiagnosticoVisaoGeral:VisaoGeral},'./DiagnosticoOrganizacao':{DiagnosticoOrganizacao:Historico},'./DiagnosticoEditor':{DiagnosticoEditor:Editor},
@@ -55,9 +56,28 @@ test('página de versões identifica todas as versões, inclusive a primeira',()
   const {DiagnosticoOrganizacao}=carregar('src/app/components/DiagnosticoOrganizacao.tsx',{
     './responsive-tables.css':{},'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='comunidades'?[{id:'org-a',nome:'Organização A'}]:[diag('v2',2),diag('v1',1)]}),useMutation:()=>({}),useQueryClient:()=>({})},
     '../comunidades.server':{},'../diagnosticos.server':{},'../audit/auditStore':{useAudit:()=>({log(){}})},'../auth/authStore':{useAuth:()=>({readOnly:true})},'../lib/dateOnly':{formatDateOnly:d=>d},'./BotaoNovo':{BotaoNovo:()=>null},
+    './diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:()=>null},
   });
   const html=renderToStaticMarkup(React.createElement(DiagnosticoOrganizacao,{comunidadeId:'org-a',incorporado:true,onBack(){},onSelectDiagnostico(){}}));
   assert.match(html,/Versões do mapeamento/);assert.match(html,/Versão 1/);assert.match(html,/Versão 2/);assert.equal([...html.matchAll(/>\s*Visualizar\s*</g)].length,2);
+});
+
+test('voltar no editor restaura o instrumento anterior e depois a lista de versões',()=>{
+  const a=ambiente();const render=()=>a.DiagnosticoModule({});
+  render().props.onSelectOrganizacao('org-a');render().props.onSelectDiagnostico('v1');
+  render().props.onMudarInstrumento('matriz');assert.equal(render().props.instrumentoAtual,'matriz');
+  render().props.onMudarInstrumento('ieo');assert.equal(render().props.instrumentoAtual,'ieo');
+  render().props.onBack();assert.equal(render().props.instrumentoAtual,'matriz');
+  render().props.onBack();assert.equal(render().props.instrumentoAtual,'resumo');
+  render().props.onBack();assert.equal(render().type,a.Historico);
+});
+
+test('link direto e exclusão têm retorno interno, sem abrir aplicação arbitrária',()=>{
+  const a=ambiente({busca:{area:'organizations',org:'org-a',secao:'mapeamento',visaoDiagnostico:'editor',diagnostico:'v1',instrumento:'ieo'}});
+  const render=()=>a.DiagnosticoModule({comunidadeId:'org-a'});
+  assert.equal(render().props.diagnosticoId,'v1');assert.equal(render().props.instrumentoAtual,'ieo');
+  render().props.onBack();assert.equal(render().type,a.Historico);
+  render().props.onSelectDiagnostico('v2');render().props.onExcluido();assert.equal(render().type,a.Historico);
 });
 
 test('entrada sem mapeamento oferece histórico/criação, enquanto carregamento e erro não abrem registro arbitrário',()=>{

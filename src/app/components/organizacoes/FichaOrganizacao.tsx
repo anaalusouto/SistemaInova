@@ -8,6 +8,7 @@
  * gaveta, então a página também mostra a troca de seção logo abaixo do título.
  */
 import { type ReactNode } from 'react';
+import { useCanGoBack, useRouter } from '@tanstack/react-router';
 import {
   ArrowLeft, ExternalLink, Loader2, ChevronDown,
 } from 'lucide-react';
@@ -31,6 +32,8 @@ interface FichaOrganizacaoProps {
 }
 
 export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
+  const router = useRouter();
+  const podeVoltar = useCanGoBack();
   const { data: org, isLoading, error } = useFichaOrganizacao(rota.orgId);
   const ir = (parcial: Partial<RotaOrg>) => aoNavegar({ ...rota, projetoId: null, foco: null, ...parcial });
 
@@ -60,7 +63,12 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
-      <div className="shrink-0"><TituloNavegacao nome={org.nome} aoVoltar={() => aoNavegar(ROTA_INICIO)} /></div>
+      <div className="shrink-0"><TituloNavegacao nome={org.nome}
+        rotulo={rota.secao === 'mapeamento' || rota.secao === 'parecer' ? 'Voltar' : 'Organizações'}
+        aoVoltar={() => {
+          if ((rota.secao === 'mapeamento' || rota.secao === 'parecer') && podeVoltar) router.history.back();
+          else aoNavegar(ROTA_INICIO);
+        }} /></div>
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
       <div className="lg:hidden px-4 sm:px-7 pt-5 pb-3 flex flex-col gap-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-0)' }}>
 

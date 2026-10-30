@@ -109,10 +109,12 @@ export const listarDiagnosticosPorComunidade = createServerFn({ method: 'GET' })
   });
 
 export const getDiagnostico = createServerFn({ method: 'GET' })
-  .validator((d: { id: string }) => d)
-  .handler(async ({ data: { id } }): Promise<DiagnosticoResumo> => {
+  .validator((d: { id: string; comunidadeId?: string }) => d)
+  .handler(async ({ data: { id, comunidadeId } }): Promise<DiagnosticoResumo> => {
     const supabaseAdmin = await getAdmin();
-    const { data: row, error } = await supabaseAdmin.from('diagnosticos').select('*').eq('id', id).single();
+    let consulta = supabaseAdmin.from('diagnosticos').select('*').eq('id', id);
+    if (comunidadeId) consulta = consulta.eq('comunidade_id', comunidadeId);
+    const { data: row, error } = await consulta.single();
     if (error) throw new Error(mensagemMapeamento(error));
     return mapDiagnostico(row);
   });
@@ -141,6 +143,51 @@ export const concluirDiagnostico = createServerFn({ method: 'POST' })
       .update({ status: 'concluido', concluido_em: new Date().toISOString() })
       .eq('id', id);
     if (error) throw new Error(mensagemMapeamento(error));
+  });
+
+/** Exclui somente a aplicação confirmada. As filhas seguem as cascatas do banco. */
+export const excluirDiagnostico = createServerFn({ method: 'POST' })
+  .validator((d: { id: string; comunidadeId: string; atualizadoEm: string; confirmacao: string }) => {
+    const uuid = /^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
+    if (!d || !uuid.test(d.id) || !uuid.test(d.comunidadeId) || typeof d.atualizadoEm !== 'string' || !Number.isFinite(Date.parse(d.atualizadoEm)) || d.confirmacao !== 'EXCLUIR') {
+      throw new Error('Confirme o mapeamento e a organização antes de excluir.');
+    }
+    return d;
+  })
+  .handler(async ({ data }): Promise<{ arquivosPendentes: boolean }> => {
+    await exigirEscritaDiagnostico();
+    const db = await getAdmin();
+    const atual = await db.from('diagnosticos').select('id').eq('id', data.id).eq('comunidade_id', data.comunidadeId).maybeSingle();
+    if (atual.error) throw new Error(mensagemMapeamento(atual.error));
+    if (!atual.data) throw new Error('Mapeamento não encontrado nesta organização.');
+    const posteriores = await db.from('diagnosticos').select('id').eq('diagnostico_anterior_id', data.id).limit(1);
+    if (posteriores.error) throw new Error(mensagemMapeamento(posteriores.error));
+    if (posteriores.data?.length) throw new Error('Existe uma versão posterior vinculada a este mapeamento. Exclua as versões mais recentes primeiro.');
+    const anexos = await db.from('diagnostico_anexos').select('id,storage_path').eq('diagnostico_id', data.id);
+    if (anexos.error) throw new Error(mensagemMapeamento(anexos.error));
+    if (anexos.data?.length) {
+      const compartilhados = await db.from('diagnostico_checklist_itens').select('diagnostico_id').in('anexo_id', anexos.data.map(a => a.id)).neq('diagnostico_id', data.id).limit(1);
+      if (compartilhados.error) throw new Error(mensagemMapeamento(compartilhados.error));
+      if (compartilhados.data?.length) throw new Error('Há evidências deste mapeamento utilizadas em outra versão. A exclusão foi bloqueada para preservar esses vínculos.');
+    }
+    const removido = await db.from('diagnosticos').delete().eq('id', data.id).eq('comunidade_id', data.comunidadeId).eq('atualizado_em', data.atualizadoEm).select('id').maybeSingle();
+    if (removido.error) throw new Error(mensagemMapeamento(removido.error));
+    if (!removido.data) throw new Error('O mapeamento foi alterado ou excluído por outra pessoa. Recarregue a lista antes de tentar novamente.');
+    // Storage não participa da transação SQL. Uma falha de limpeza não desfaz a exclusão.
+    const caminhos = [...new Set((anexos.data ?? []).map(a => a.storage_path))];
+    if (caminhos.length) {
+      try {
+        const restantes = await db.from('diagnostico_anexos').select('storage_path').in('storage_path', caminhos);
+        if (restantes.error) return { arquivosPendentes: true };
+        const usados = new Set(restantes.data?.map(a => a.storage_path));
+        const livres = caminhos.filter(c => !usados.has(c));
+        if (livres.length) {
+          const limpeza = await db.storage.from('diagnostico-anexos').remove(livres);
+          if (limpeza.error) return { arquivosPendentes: true };
+        }
+      } catch { return { arquivosPendentes: true }; }
+    }
+    return { arquivosPendentes: false };
   });
 
 // ---------------------------------------------------------------------------
