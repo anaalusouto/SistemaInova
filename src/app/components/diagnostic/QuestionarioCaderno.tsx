@@ -14,7 +14,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
   const grupos = [...new Set(QUESTIONARIO_CADERNO.map(q => q.grupo))];
   if (consulta.isLoading) return <p role="status">Carregando IEO…</p>;
   if (consulta.error) return <p role="alert">Não foi possível carregar o IEO. <button type="button" className="underline" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>;
-  return <div className="space-y-6 min-w-0"><div><h3 className="text-2xl sm:text-3xl font-bold">Índice de Estruturação Organizacional — IEO</h3><p className="mt-2 text-sm text-muted-foreground">Questionário · Caderno CRIA · revisão {REVISAO_CADERNO} · 25 perguntas. N/A exige justificativa de não pertinência.</p></div>
+  return <div className="space-y-6 min-w-0"><p className="text-sm text-muted-foreground">Questionário · Caderno CRIA · revisão {REVISAO_CADERNO} · 25 perguntas. N/A exige justificativa de não pertinência.</p>
     <div className="flex flex-wrap gap-2" aria-label="Dimensões do IEO"><button type="button" className="diagnostico-filtro" data-active={dimensaoId === 'todas'} aria-pressed={dimensaoId === 'todas'} onClick={() => selecionar('todas')}>Todas as dimensões</button>{DIMENSOES_IEO_CADERNO.map(d => <button type="button" key={d.id} className="diagnostico-filtro" data-active={dimensaoId === d.id} aria-pressed={dimensaoId === d.id} onClick={() => selecionar(d.id)}>{d.titulo}</button>)}</div>
     <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
       <div className="min-w-0 space-y-5">

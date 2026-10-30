@@ -85,25 +85,32 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
 
   return (
     <div className={`diagnostico-painel diagnostico-editor ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
-      <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
-        <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
+      <div className={`flex min-w-0 flex-col flex-shrink-0 border-b ${incorporado ? '' : 'gap-3 px-3 sm:px-7 pt-4 pb-0'}`} style={{ borderColor: 'var(--border)' }}>
+        {!incorporado && <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={() => navegarSemPendencias(haPendencias, onBack)} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
           <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
           {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={() => navegarSemPendencias(haPendencias, onHistorico)}>Histórico de mapeamentos</button>}
-        </nav>
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
-          <div>
-            <p className="diagnostico-sobretitulo">Inova Sociobio · Diagnóstico organizacional</p>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.8rem', color: 'var(--ink-1)' }}>
-              {comunidades.find(c => c.id === diagnostico?.comunidadeId)?.nome ?? 'Mapeamento organizacional'}
-            </h2>
-            <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
-              Aplicação {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'} · Versão {diagnostico?.versao ?? '—'}
-              {diagnostico?.atualizadoEm && <> · Última alteração salva em {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>}
-            </p>
+        </nav>}
+        <div className={`flex flex-wrap items-center justify-between gap-3 ${incorporado ? 'diagnostico-contexto px-4 sm:px-6 py-4' : 'pb-3'}`}>
+          <div className={incorporado ? 'diagnostico-contexto-grid' : ''}>
+            {incorporado ? <>
+              <div><span>Aplicação</span><strong>{diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'}</strong></div>
+              <div><span>Versão</span><strong>{diagnostico?.versao ?? '—'}</strong></div>
+              <div><span>Última edição</span><strong>{diagnostico?.atualizadoEm ? new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR') : '—'}</strong></div>
+            </> : <>
+              <p className="diagnostico-sobretitulo">Inova Sociobio · Diagnóstico organizacional</p>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.8rem', color: 'var(--ink-1)' }}>
+                {comunidades.find(c => c.id === diagnostico?.comunidadeId)?.nome ?? 'Mapeamento organizacional'}
+              </h2>
+              <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
+                Aplicação {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'} · Versão {diagnostico?.versao ?? '—'}
+                {diagnostico?.atualizadoEm && <> · Última alteração salva em {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>}
+              </p>
+            </>}
           </div>
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
+              {incorporado && onHistorico && <button type="button" className="rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, onHistorico)}>Histórico</button>}
               <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {

@@ -256,7 +256,6 @@ export function ResumoDiagnostico({
     <div ref={raiz} className="diagnostico-resumo">
       <header>
         <p className="diagnostico-sobretitulo">Resumo do diagnóstico</p>
-        <h3>{org.nome}</h3>
         <p>Caderno CRIA · revisão do instrumento em 22/10/2026</p>
       </header>
       <section

@@ -32,7 +32,6 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
   const [aberta,setAberta]=useState<string|null>(importacao?.pendentes[0]??null);
   const [editando,setEditando]=useState(Boolean(importacao?.pendentes.length));
   const [draft,setDraft]=useState<Draft>(importadasIniciais[importacao?.pendentes[0]??'']??inicial(''));
-  const [iniciada,setIniciada]=useState(Boolean(importacao));
   const [entrada,setEntrada]=useState(false);
   const [importadas,setImportadas]=useState<Record<string,RascunhoMatriz>>(importadasIniciais);
   const origem=importacao?.origem.nomeArquivo??'';
@@ -52,7 +51,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     const importadas=Object.fromEntries((importacao?.pendentes??[]).map(id=>[id,importacao?.dados.respostas[id]??rascunhoVazio(FUNCOES_MATRIZ.find(f=>f.id===id)?.nome??id)]));
     setImportadas(importadas);
     if(importacao?.pendentes.length){
-      const id=importacao.pendentes[0];setIniciada(true);setEntrada(false);setAberta(id);setEditando(!readOnly);
+      const id=importacao.pendentes[0];setEntrada(false);setAberta(id);setEditando(!readOnly);
       setDraft(importadas[id]);setDecisoes({});setConfirmado(false);setErroConferencia('');
     }
   },[importacao,readOnly]);
@@ -114,7 +113,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
   if(consulta.error) return <div role="alert"><p>Não foi possível carregar a Matriz desta organização e aplicação.</p><button type="button" className="underline" onClick={()=>void consulta.refetch()}>Tentar novamente</button></div>;
   const temRespostas=FUNCOES_MATRIZ.some(f=>indice.has(f.id));
   const carregarEdicao=(id:string,base:Draft)=>{const edicao=edicoes[id];setDraft(edicao?.valores??base);setConfirmado(edicao?.confirmado??false);setDecisoes(edicao?.decisoes??{});setErroConferencia('');};
-  if(!readOnly&&(entrada||(!iniciada&&!temRespostas)))return <EntradaMatriz organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} temRespostas={temRespostas} onManual={()=>{setIniciada(true);setEntrada(false);}} onImportar={onRegistro} onCancelar={entrada?()=>setEntrada(false):undefined}/>;
+  if(!readOnly&&entrada)return <EntradaMatriz organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} temRespostas={temRespostas} onManual={()=>{setEntrada(false);setEdicaoTabela(true);}} onImportar={registro=>{onRegistro(registro);setEntrada(false);}} onCancelar={()=>setEntrada(false)}/>;
   const estados=new Map(FUNCOES_MATRIZ.map(f=>[f.id,estadoFuncaoMatriz({salva:indice.has(f.id),importada:importadas[f.id],conferencia:conferencia[f.id],edicao:edicoes[f.id],editando:aberta===f.id&&editando,readOnly})]));
   const statusCampo=(campo:CampoImportado)=>{
     if(!origem||!aberta||indice.has(aberta))return null;
@@ -131,16 +130,14 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     setAberta(id);setEditando(!readOnly&&(!indice.has(id)||Boolean(edicoes[id])));
   };
   return <div className="w-full space-y-4 min-w-0">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold text-2xl sm:text-3xl">Matriz Funcional</h3>
-    <p className="mt-2 text-sm text-muted-foreground">Leitura visual por criticidade atual e interesse em desenvolvimento.</p></div><span className="rounded-full border bg-muted px-3 py-2 text-xs text-muted-foreground">Criticidade × interesse</span></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Leitura visual por criticidade atual e interesse em desenvolvimento.</p><div className="flex flex-wrap items-center gap-2">
+      {!readOnly&&<><button type="button" aria-pressed={edicaoTabela} disabled={ocupado||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button><button type="button" disabled={ocupado||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button></>}
+      <span className="rounded-full border bg-muted px-3 py-2 text-xs text-muted-foreground">Criticidade × interesse</span>
+    </div></div>
     <section aria-label="Estados da Matriz" className="space-y-2">
       <ul className="flex flex-wrap gap-2 text-xs">{ESTADOS_MATRIZ.map(e=><li key={e.id} title={e.descricao} className="rounded-lg border bg-card px-3 py-2"><span>{e.rotulo}: </span><strong>{[...estados.values()].filter(estado=>estado===e.id).length}</strong></li>)}</ul>
       <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. As respostas do PDF pendente ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'As alterações só são gravadas ao salvar cada função. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
     </section>
-    {!readOnly&&<div className="flex flex-wrap items-center gap-3">
-      <button type="button" disabled={ocupado||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-1.5 text-xs disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button>
-      <button type="button" disabled={ocupado||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="underline text-primary text-sm disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button>
-    </div>}
     {!readOnly&&edicaoTabela&&<p role="status" className="text-sm">Edite as células e salve ou cancele cada linha. {pendentes>0?`${pendentes} linha(s) com alterações não salvas.`:''}</p>}
     {origem&&<div className="rounded-xl border p-4 space-y-2 text-sm" role="status"><p>PDF: {origem}. Funções ainda não salvas: {Object.keys(importadas).length}. Revisadas e prontas para salvar: {Object.keys(importadas).filter(id=>estados.get(id)==='revisada').length}.</p><p>Confira os campos reconhecidos, ausentes ou ambíguos. Corrija as respostas e confirme o salvamento de cada função. Nenhuma resposta é salva automaticamente.</p>
       {(Object.keys(conferencia).length<FUNCOES_MATRIZ.length||pendencias.length>0||Object.values(conferencia).some(f=>Object.values(f.campos).some(c=>c!=='reconhecido')))&&<p><strong>Importação parcial.</strong> Revise o que foi identificado e complete os campos ausentes manualmente. Respostas sem função correspondente não foram associadas automaticamente.</p>}

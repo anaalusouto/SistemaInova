@@ -134,8 +134,8 @@ export function CestaCaderno(props: ContextoCaderno & { bloqueado?: boolean }) {
   const produtoRealOuFalso = fichaSelecionada;
 
   return <div className="space-y-5" id="cestaPanel">
-    <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-5">
-      <div><h3 className="text-2xl font-bold">Cesta de Produtos</h3><p className="mt-1 max-w-3xl text-sm text-muted-foreground">Visualização construída somente com valores definidos no mapeamento. Lacunas permanecem como não informadas ou pendentes.</p></div>
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <p className="max-w-3xl text-sm text-muted-foreground">Visualização construída somente com valores definidos no mapeamento. Lacunas permanecem como não informadas ou pendentes.</p>
       <span className="rounded-full border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground">Sem nota geral por produto</span>
     </header>
 
