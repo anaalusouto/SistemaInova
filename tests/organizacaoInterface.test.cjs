@@ -22,6 +22,7 @@ function carregarInterface(arquivo, { readOnly = false, org, project, listaState
     AbaEncaminhamentos: { AbaEncaminhamentos: vazio },
     NotasDaOrganizacao: { NotasDaOrganizacao: vazio },
     DocumentosRegistro: { DocumentosRegistro: ({area,organizacaoId}) => React.createElement('section',{'data-documentos-area':area,'data-documentos-org':organizacaoId},'Documentos anexados') },
+    ParecerOrganizacao: { ParecerOrganizacao: ({organizacaoId,relatorioUrl}) => React.createElement('section',{'data-parecer-org':organizacaoId,'data-relatorio':relatorioUrl},'Pareceres da organização') },
     DiagnosticoModule: { DiagnosticoModule: ({comunidadeId,instrumentoInicial}) => React.createElement('section',{'data-diagnostico-org':comunidadeId,'data-instrumento':instrumentoInicial},'Instrumentos de mapeamento') },
     ResumoProjetoTopo: { ResumoProjetoTopo: vazio },
     TabDescricao: { TabDescricao: vazio },
@@ -235,7 +236,7 @@ test('página informativa abre relatório externo e não oferece escrita ao perf
   }
 });
 
-test('ficha mantém um único H1 e isola mapeamento e documentos por organização', () => {
+test('ficha mantém um único H1 e abre pareceres por organização sem formulário de mapeamento', () => {
   for (const id of ['org-a', 'org-b']) {
     const org = { id, nome: id, categoria: 'Indígena', tipo: 'Associação', projetos: [], registros: [], pendentes: 0, parecerRelatorioUrl: `https://example.org/${id}.pdf` };
     const { FichaOrganizacao } = carregarInterface('src/app/components/organizacoes/FichaOrganizacao.tsx', { org, readOnly: true });
@@ -244,9 +245,12 @@ test('ficha mantém um único H1 e isola mapeamento e documentos por organizaç�
     const titulo = html.match(/<h1\b[^>]*>(.*?)<\/h1>/)?.[1] ?? '';
     assert.ok(titulo.includes('Voltar'));
     assert.ok(titulo.includes(`>${id}</span>`));
-    assert.ok(html.includes(`data-diagnostico-org="${id}"`));
-    assert.ok(html.includes(`data-documentos-org="${id}"`));
-    assert.ok(html.includes('data-instrumento="parecer"'));
+    assert.ok(html.includes(`data-parecer-org="${id}"`));
+    assert.ok(html.includes(`data-relatorio="https://example.org/${id}.pdf"`));
+    assert.ok(!html.includes('data-diagnostico-org'));
+    const mapeamento = renderToStaticMarkup(React.createElement(FichaOrganizacao, { rota: { orgId: id, secao: 'mapeamento', projetoId: null }, aoNavegar: () => {} }));
+    assert.ok(mapeamento.includes(`data-diagnostico-org="${id}"`));
+    assert.ok(!mapeamento.includes('data-parecer-org'));
     assert.ok(!html.includes('Em construção'));
   }
 });

@@ -17,10 +17,12 @@ export default defineConfig({root:path.resolve('tests/caderno-ui'),resolve:{alia
    export const listarProdutos=async()=>structuredClone(produtos);
    export const criarProduto=async({data})=>{const p={...data,id:crypto.randomUUID(),respostas:{},statusPreenchimento:'em_preenchimento',atualizadoEm:new Date().toISOString()};produtos=[...produtos,p];return p;};
    export const listarRespostasIeo=async()=>[];
-   export const listarRespostasMatriz=async()=>[{funcaoId:'F01',nomeFuncao:'Representação e articulação institucional',atuacao:['Viabiliza e executa'],experiencia:'Recorrente',criticidade:'4',interesse:'4',observacoes:'Apoios recorrentes, com dependência de parceiros.',externo:'Parceiro sintético'}];
+   let matriz=[{funcaoId:'F01',nomeFuncao:'Representação e articulação institucional',atuacao:['Viabiliza e executa'],experiencia:'Recorrente',criticidade:'4',interesse:'4',observacoes:'Apoios recorrentes, com dependência de parceiros.',externo:'Parceiro sintético'}];
+   export const listarRespostasMatriz=async()=>structuredClone(matriz);
+   export const salvarMatrizPrototipo=async({data})=>{if(new URLSearchParams(location.search).has('consulta'))throw Error('Somente leitura');if(new URLSearchParams(location.search).has('falha'))throw Error('Falha sintética de salvamento');const resposta={...data,atuacao:data.atuacao?[data.atuacao]:[],atualizadoEm:new Date().toISOString()};matriz=[...matriz.filter(r=>r.funcaoId!==data.funcaoId),resposta];return structuredClone(resposta);};
    export const obterImportacaoMatrizPendente=async()=>null;
    const bloqueado=async()=>{throw Error('Ação fora do escopo deste teste isolado');};
-   export const salvarMatrizPrototipo=bloqueado,descartarImportacaoMatriz=bloqueado,registrarImportacaoMatriz=bloqueado,salvarRespostaIeo=bloqueado,salvarRespostasProduto=bloqueado,excluirProduto=bloqueado;
+   export const descartarImportacaoMatriz=bloqueado,registrarImportacaoMatriz=bloqueado,salvarRespostaIeo=bloqueado,salvarRespostasProduto=bloqueado,excluirProduto=bloqueado;
    `;
  }
 },tailwindcss(),react()]});

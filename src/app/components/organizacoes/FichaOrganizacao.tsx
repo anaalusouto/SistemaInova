@@ -18,7 +18,7 @@ import { AbaRegistrosContato } from './AbaRegistrosContato';
 import { AbaEncaminhamentos } from './AbaEncaminhamentos';
 import { NotasDaOrganizacao } from './NotasDaOrganizacao';
 import { DiagnosticoModule } from '../DiagnosticoModule';
-import { DocumentosRegistro } from '../DocumentosRegistro';
+import { ParecerOrganizacao } from './ParecerOrganizacao';
 import { ProjectView } from '../ProjectView';
 import { TituloNavegacao } from '../TituloNavegacao';
 import { useStore } from '../../store';
@@ -103,8 +103,12 @@ export function FichaOrganizacao({ rota, aoNavegar }: FichaOrganizacaoProps) {
         <div className="min-w-0">
           {(rota.secao === 'mapeamento' || rota.secao === 'parecer') && (
             <section key={`${org.id}-${rota.secao}`}>
-              <DiagnosticoModule comunidadeId={org.id} instrumentoInicial={rota.secao === 'parecer' ? 'parecer' : 'resumo'} />
-              {rota.secao === 'parecer' && <div className="px-4 sm:px-7 pb-7"><DocumentosRegistro area="parecer" organizacaoId={org.id} relatorioUrl={org.parecerRelatorioUrl} /></div>}
+              {rota.secao === 'mapeamento'
+                ? <DiagnosticoModule comunidadeId={org.id} instrumentoInicial="resumo" />
+                : <ParecerOrganizacao organizacaoId={org.id} relatorioUrl={org.parecerRelatorioUrl} aoVoltar={() => {
+                  if (podeVoltar) router.history.back();
+                  else aoNavegar(ROTA_INICIO);
+                }} />}
             </section>
           )}
           {rota.secao === 'dados' && (

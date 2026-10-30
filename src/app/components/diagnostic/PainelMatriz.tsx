@@ -1,16 +1,16 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
 import { FUNCOES_GUIA_CRIA } from '../../diagnostic/catalog/cadernoCriaDados';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
-interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; avaliacoes?: Record<string,string> }
+interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; avaliacoes?: Record<string,string>; renderEdicao?: (linha: Linha) => ReactNode; filtroBloqueado?: boolean }
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
 const grupos = [...new Set(FUNCOES_MATRIZ.map(f => f.grupo))];
 
-export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes }: Props) {
+export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes, renderEdicao, filtroBloqueado }: Props) {
   const [grupo, setGrupo] = useState('Todos');
   const indice = new Map(linhas.map(l => [l.id, l]));
   const visiveis = FUNCOES_MATRIZ.filter(f => grupo === 'Todos' || f.grupo === grupo);
@@ -20,18 +20,19 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes }:
   });
   return <div className="painel-matriz space-y-5">
     <div className="flex flex-wrap gap-2" aria-label="Filtrar funções por grupo">
-      {['Todos', ...grupos].map(g => <button key={g} type="button" aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
+      {['Todos', ...grupos].map(g => <button key={g} type="button" disabled={filtroBloqueado} aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
     </div>
     <section aria-label="Funções por grupo" className="space-y-3">
       <h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4>
       <div className="diagnostico-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
         <table className="diagnostico-tabela"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
+          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação', ...(renderEdicao ? ['Ações'] : [])].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
-            <tr className="diagnostico-grupo"><th colSpan={9} scope="rowgroup">{g}</th></tr>
+            <tr className="diagnostico-grupo"><th colSpan={renderEdicao ? 10 : 9} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;
               const v = linha.valores;
+              if (renderEdicao) return <tr key={f.id} data-inova-form="matriz-tabela" data-inova-field={f.id}>{renderEdicao(linha)}</tr>;
               const leitura = leituraMatriz(v.criticidade, v.experiencia);
               const cor = leitura === 'Lacuna crítica' ? '#b44747' : leitura === 'Lacuna relevante' ? '#c46b35' : leitura === 'Acompanhar' ? '#528363' : '#b27b24';
               return <tr key={f.id}>
@@ -49,7 +50,7 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, avaliacoes }:
           </tbody>)}
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">Clique no nome de uma função para consultar ou editar suas respostas.</p>
+      <p className="text-xs text-muted-foreground">{renderEdicao ? 'Edite as células e salve ou cancele cada linha. Tab percorre os campos; Enter salva a linha; Escape cancela. Em textos, Enter insere uma nova linha.' : 'Clique no nome de uma função para consultar ou editar suas respostas em pop-up.'}</p>
     </section>
     <section className="space-y-3" aria-label="Matriz de criticidade e interesse">
       <h4 className="font-semibold text-lg">Matriz de criticidade e interesse</h4>

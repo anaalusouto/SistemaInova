@@ -28,10 +28,11 @@ test('revisão não encobre ambiguidades sem decisão, e campos ausentes precisa
 test('consulta não apresenta rascunho local como revisado e mostra valores importados sem permitir edição',()=>{
   assert.equal(estado({...importar(completo),readOnly:true,edicao:{valores:completo.respostas.F01,decisoes:{},confirmado:true}}),'pre_preenchida');
   const importacao={id:'i1',dados:completo,origem:{nomeArquivo:'origem.pdf',sha256:'a'.repeat(64),tamanho:300},pendentes:['F01'],estado:'pendente'};
-  const mocks={'../../diagnosticos.server':{},'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='matriz-importacao'?importacao:[]}),useQueryClient:()=>({}),useMutation:()=>({isPending:false})}};
+  const mocks={'../PopupDetalhe':{PopupDetalhe:({children})=>React.createElement('section',{'data-popup':true},children)},'../../diagnosticos.server':{},'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='matriz-importacao'?importacao:[]}),useQueryClient:()=>({}),useMutation:()=>({isPending:false})}};
   const {MatrizFuncionalTab}=load('src/app/components/diagnostic/MatrizPrototipoTab.tsx',mocks);
   const html=renderToStaticMarkup(React.createElement(MatrizFuncionalTab,{organizacaoId:'org-a',diagnosticoId:'d1',readOnly:true}));
   assert.match(html,/Relato importado/);assert.match(html,/Parceiro importado/);assert.match(html,/Somente leitura/);assert.match(html,/ainda não confirmados/);
   assert.doesNotMatch(html,/<input|<select|<textarea|>Editar<|Confirmar e salvar|Descartar respostas/);
-  assert.equal([...html.matchAll(/data-inova-form="matriz"/g)].length,21);
+  assert.equal([...html.matchAll(/data-inova-form="matriz"/g)].length,1);
+  assert.match(html,/data-popup="true"/);
 });
