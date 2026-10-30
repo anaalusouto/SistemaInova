@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { PopupDetalhe } from '../PopupDetalhe';
+import { usePendenciaModulo } from '../PendenciasModulo';
 import { ConferenciaCampoMatriz, MatrizLinhaEdicao } from './MatrizLinhaEdicao';
 import { FUNCOES_MATRIZ, ATUACAO_MATRIZ, EXPERIENCIA_MATRIZ, NIVEIS_MATRIZ, leituraMatriz, type MatrizPrototipoInput } from '../../diagnostic/catalog/matrizPrototipo';
 import { listarRespostasMatriz, salvarMatrizPrototipo, obterImportacaoMatrizPendente, descartarImportacaoMatriz, type MatrizResposta } from '../../diagnosticos.server';
@@ -79,6 +80,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
   const grupos=[...new Set(FUNCOES_MATRIZ.map(f=>f.grupo))];
   const pendentes=Object.keys(edicoes).length;
   const ocupado=salvar.isPending||descartando;
+  usePendenciaModulo(!readOnly && (pendentes > 0 || ocupado));
   const gravarFuncao=(id:string,valores:Draft,escolhas:DecisoesImportacao,revisada:boolean)=>{
     if(readOnly||emCurso.current||descartando)return;
     try {

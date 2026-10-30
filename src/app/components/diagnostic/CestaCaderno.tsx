@@ -6,6 +6,8 @@ import type { RegistroCaderno } from '../../diagnostic/cadernoCria';
 import { CadernoItens, useCaderno, type ContextoCaderno } from './CadernoItens';
 import { CestaProdutosTab } from './CestaProdutosTab';
 import { DadosComerciaisCesta } from './DadosComerciaisCesta';
+import { usePendenciaModulo } from '../PendenciasModulo';
+import { navegarSemPendencias } from '../PendenciasModulo';
 
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const COLUNAS_CESTA = [
@@ -87,7 +89,7 @@ function dadosSimulados(diagnosticoId: string): RegistroCaderno[] {
   return rows;
 }
 
-export function CestaCaderno(props: ContextoCaderno) {
+export function CestaCaderno(props: ContextoCaderno & { bloqueado?: boolean }) {
   const client = useQueryClient();
   const consulta = useQuery({ queryKey: ['diagnostico-produtos', props.diagnosticoId], queryFn: () => listarProdutos({ data: { diagnosticoId: props.diagnosticoId } }) });
   const categoriasQuery = useQuery({ queryKey: ['cesta-categorias', props.diagnosticoId], queryFn: () => listarCategoriasProduto({ data: { diagnosticoId: props.diagnosticoId } }) });
@@ -99,6 +101,7 @@ export function CestaCaderno(props: ContextoCaderno) {
   const [simulacao, setSimulacao] = useState(false);
   const criar = useMutation({ mutationFn: () => criarProduto({ data: { diagnosticoId: props.diagnosticoId, nome: nome.trim(), cadeia: null } }), onSuccess: p => { void client.invalidateQueries({ queryKey: ['diagnostico-produtos', props.diagnosticoId] }); setSelecionado(p.id); setNome(''); } });
   const criarCategoria = useMutation({ mutationFn: () => criarCategoriaProduto({ data: { diagnosticoId: props.diagnosticoId, nome: novaCategoria } }), onSuccess: () => { void client.invalidateQueries({ queryKey: ['cesta-categorias', props.diagnosticoId] }); setNovaCategoria(''); } });
+  usePendenciaModulo(!props.readOnly && (Boolean(nome.trim()) || Boolean(novaCategoria.trim()) || criar.isPending || criarCategoria.isPending));
   if (consulta.isLoading || caderno.isLoading || categoriasQuery.isLoading) return <p role="status">Carregando Cesta de Produtos…</p>;
   if (consulta.error || caderno.error || categoriasQuery.error) return <p role="alert">{consulta.error?.message || caderno.error?.message || categoriasQuery.error?.message} <button className="underline" type="button" onClick={() => { void consulta.refetch(); void caderno.refetch(); void categoriasQuery.refetch(); }}>Tentar novamente</button></p>;
 
@@ -118,11 +121,13 @@ export function CestaCaderno(props: ContextoCaderno) {
     const operacao=valor('PR_OPERACAO',p.id);
     return [operacao||`produto:${p.id}`,{operacao,produtos:operacao?implantacao.filter(q=>valor('PR_OPERACAO',q.id)===operacao):[p]}] as const;
   })).values()];
-  const voltarDadosReais = () => { setSimulacao(false); setSelecionado(''); };
+  const voltarDadosReais = () => navegarSemPendencias(!!props.bloqueado, () => { setSimulacao(false); setSelecionado(''); });
   const selecionarProduto = (id: string) => {
     if (simulacao) return;
-    setSelecionado(id);
-    window.setTimeout(()=>document.getElementById('ficha-cesta-produto')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
+    navegarSemPendencias(!!props.bloqueado, () => {
+      setSelecionado(id);
+      window.setTimeout(()=>document.getElementById('ficha-cesta-produto')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
+    });
   };
   const legenda = (codigo: string) => AVALIACOES_OPERACAO.find(i=>i.codigo===codigo)?.opcoes?.filter(o=>/^[1-4]$/.test(o.valor)) ?? [];
   const valorIndicador = (codigo: string, id: string) => valor(codigo,id);
@@ -135,7 +140,7 @@ export function CestaCaderno(props: ContextoCaderno) {
     </header>
 
     <div className="flex flex-wrap items-center justify-between gap-3">
-    {!simulacao ? <button type="button" aria-pressed={false} onClick={()=>{setSimulacao(true);setSelecionado('');}} className="rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:bg-muted">Ver simulação com dados fictícios</button> : <button type="button" aria-pressed={true} onClick={voltarDadosReais} className="rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:bg-muted">Voltar aos dados reais</button>}
+    {!simulacao ? <button type="button" aria-pressed={false} onClick={()=>navegarSemPendencias(!!props.bloqueado,()=>{setSimulacao(true);setSelecionado('');})} className="rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:bg-muted">Ver simulação com dados fictícios</button> : <button type="button" aria-pressed={true} onClick={voltarDadosReais} className="rounded-lg border bg-card px-4 py-2 text-sm font-medium hover:bg-muted">Voltar aos dados reais</button>}
     </div>
     {simulacao&&<aside className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950" role="note"><strong>SIMULAÇÃO · DADOS FICTÍCIOS</strong><p className="mt-1">Produtos, notas, relatos, meses e valores abaixo são exemplos. Não pertencem à organização selecionada, não são salvos e não entram nos relatórios reais. Para editar ou exportar, volte aos dados reais.</p></aside>}
 
@@ -178,7 +183,7 @@ export function CestaCaderno(props: ContextoCaderno) {
       {implantacao.length===0&&futuros.length===0&&<p className="rounded-xl border p-6 text-sm text-muted-foreground">Nenhum produto em implantação ou de interesse futuro.</p>}
     </section>}
 
-    {produtoRealOuFalso&&<section id="ficha-cesta-produto" className="scroll-mt-4 space-y-4 rounded-xl border bg-card p-4" aria-label={`Ficha ${produtoRealOuFalso.nome}`}><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs text-muted-foreground">{categoriaNome(produtoRealOuFalso)} · Operação {valor('PR_OPERACAO',produtoRealOuFalso.id)||'não informada'}</p><h4 className="text-lg font-semibold">{valor('PR_CODIGO',produtoRealOuFalso.id)||'Produto'} · {produtoRealOuFalso.nome}</h4></div><button type="button" className="text-xs underline" onClick={()=>setSelecionado('')}>Fechar ficha</button></div><CadernoItens {...props} itens={PORTFOLIO_CESTA} contexto={produtoRealOuFalso.id}/><DadosComerciaisCesta key={produtoRealOuFalso.id} produto={produtoRealOuFalso} categorias={categorias} readOnly={props.readOnly}/>
+    {produtoRealOuFalso&&<section id="ficha-cesta-produto" className="scroll-mt-4 space-y-4 rounded-xl border bg-card p-4" aria-label={`Ficha ${produtoRealOuFalso.nome}`}><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs text-muted-foreground">{categoriaNome(produtoRealOuFalso)} · Operação {valor('PR_OPERACAO',produtoRealOuFalso.id)||'não informada'}</p><h4 className="text-lg font-semibold">{valor('PR_CODIGO',produtoRealOuFalso.id)||'Produto'} · {produtoRealOuFalso.nome}</h4></div><button type="button" className="text-xs underline" onClick={()=>navegarSemPendencias(!!props.bloqueado,()=>setSelecionado(''))}>Fechar ficha</button></div><CadernoItens {...props} itens={PORTFOLIO_CESTA} contexto={produtoRealOuFalso.id}/><DadosComerciaisCesta key={produtoRealOuFalso.id} produto={produtoRealOuFalso} categorias={categorias} readOnly={props.readOnly}/>
       {valor('PR_SITUACAO',produtoRealOuFalso.id)==='Funcionamento'?<><h5 className="text-lg font-semibold">Perfil e avaliação da operação atual</h5><p className="text-sm text-muted-foreground">Os níveis 1–4 se aplicam a cada indicador da operação, com critérios próprios no instrumento. Não há classificação da categoria nem cálculo de nota geral do produto.</p><CadernoItens {...props} itens={[...PERFIL_CESTA,...AVALIACOES_OPERACAO]} contexto={produtoRealOuFalso.id}/></>:valor('PR_SITUACAO',produtoRealOuFalso.id)==='Implantação'?<><h5 className="text-lg font-semibold">Preparação da implantação</h5>{valor('PR_OPERACAO',produtoRealOuFalso.id)?<CadernoItens {...props} itens={IMPLANTACAO_CADERNO} contexto={valor('PR_OPERACAO',produtoRealOuFalso.id)!}/>:<p className="text-sm text-muted-foreground">Informe o código OP para registrar a preparação pela operação responsável.</p>}</>:<p className="text-sm text-muted-foreground">Produto futuro ou ainda sem situação definida: registrar no portfólio, sem pontuar a operação.</p>}
     </section>}
     {!props.readOnly&&!simulacao&&<details className="rounded-xl border bg-card p-3"><summary className="cursor-pointer text-sm font-semibold">Cadastrar produto e categoria</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><form className="flex items-end gap-2" onSubmit={e=>{e.preventDefault();if(nome.trim()&&!criar.isPending)criar.mutate();}}><label className="min-w-0 flex-1 text-xs">Novo produto ou serviço<input aria-label="Novo produto ou serviço" required maxLength={500} value={nome} onChange={e=>setNome(e.target.value)} placeholder="Nome no portfólio" className="mt-1 w-full rounded-lg border bg-background p-2 text-sm"/></label><button disabled={criar.isPending} className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">Adicionar</button></form><form className="flex items-end gap-2" onSubmit={e=>{e.preventDefault();if(novaCategoria.trim()&&!criarCategoria.isPending)criarCategoria.mutate();}}><label className="min-w-0 flex-1 text-xs">Nova categoria<input maxLength={120} value={novaCategoria} onChange={e=>setNovaCategoria(e.target.value)} placeholder="Polpas de frutas, Frutas in natura, Farinhas, Hortaliças" className="mt-1 w-full rounded-lg border bg-background p-2 text-sm"/></label><button disabled={!novaCategoria.trim()||criarCategoria.isPending} className="rounded-lg border px-3 py-2 text-sm">Cadastrar categoria</button></form>{(criar.error||criarCategoria.error)&&<p role="alert" className="text-xs text-destructive sm:col-span-2">{criar.error?.message||criarCategoria.error?.message}</p>}</div></details>}

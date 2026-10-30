@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { interpretarTextoMatriz, type ImportacaoSalva } from '../../diagnostic/importarMatriz';
 import { registrarImportacaoMatriz } from '../../diagnosticos.server';
+import { usePendenciaModulo } from '../PendenciasModulo';
 
 interface Props { organizacaoId:string;diagnosticoId:string;onManual:()=>void; onImportar:(dados:ImportacaoSalva)=>void; onCancelar?:()=>void; temRespostas?:boolean }
 export function EntradaMatriz({organizacaoId,diagnosticoId,onManual,onImportar,onCancelar,temRespostas=false}:Props) {
   const [importando,setImportando]=useState(false),[erro,setErro]=useState('');
   const [semCorrespondencias,setSemCorrespondencias]=useState<string[]|null>(null);
   const controle=useRef<AbortController|null>(null),selecionando=useRef(false);
+  usePendenciaModulo(importando);
   useEffect(()=>()=>controle.current?.abort(),[]);
   async function importar(arquivo:File) {
     if(selecionando.current)return;selecionando.current=true;

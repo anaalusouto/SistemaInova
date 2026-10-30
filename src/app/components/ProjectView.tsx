@@ -10,8 +10,9 @@ import { TabOrcamento } from "./orcamento/TabOrcamento";
 import { TabFinanceiro } from "./project-tabs/TabFinanceiro";
 import type { AbaProjeto } from "../lib/navegacaoApp";
 import { DocumentosRegistro } from "./DocumentosRegistro";
+import { NavegacaoModulo } from './NavegacaoModulo';
+import { navegarSemPendencias } from './PendenciasModulo';
 import "./project-responsive.css";
-import { toast } from "sonner";
 
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
@@ -44,7 +45,7 @@ export function ProjectView({
   const activeTab = abaAtual ?? abaLocal;
   const mudarAba = (aba: AbaProjeto, foco?: string | null) => {
     if (haPendencias && aba !== activeTab) {
-      toast.error("Salve ou cancele as linhas alteradas antes de mudar de aba.");
+      navegarSemPendencias(true, () => {});
       return;
     }
     if (aoMudarAba) aoMudarAba(aba, foco);
@@ -55,7 +56,7 @@ export function ProjectView({
   return (
     <div className="project-shell min-w-0">
       {!dentroDaOrganizacao && (
-        <TituloNavegacao nome={(project as ProjectExt).organizacao?.nome ?? (project as ProjectExt).org ?? project.name} aoVoltar={onBack} rotulo={rotuloVoltar} />
+        <TituloNavegacao nome={(project as ProjectExt).organizacao?.nome ?? (project as ProjectExt).org ?? project.name} aoVoltar={() => navegarSemPendencias(haPendencias, onBack)} rotulo={rotuloVoltar} />
       )}
       <section className="relative border-b" aria-label="Resumo do projeto">
         <button
@@ -79,7 +80,7 @@ export function ProjectView({
             aoDescricao={() => mudarAba("descricao")}
             aoPlano={() => {
               if (haPendencias) {
-                toast.error("Salve ou cancele as linhas alteradas antes de navegar pelo resumo.");
+                navegarSemPendencias(true, () => {});
                 return;
               }
               mudarAba("plano");
@@ -89,7 +90,7 @@ export function ProjectView({
             bloqueado={haPendencias}
             aoRiscos={() => {
               if (haPendencias) {
-                toast.error("Salve ou cancele as linhas alteradas antes de navegar pelo resumo.");
+                navegarSemPendencias(true, () => {});
                 return;
               }
               mudarAba("plano");
@@ -98,10 +99,9 @@ export function ProjectView({
           />
         </div>
       </section>
-      <nav aria-label="Abas do projeto" className="project-tabs grid min-w-0 grid-cols-3 border-b px-2 sm:px-6" style={{ background: "var(--surface-0)" }}>
-        {tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.id} type="button" onClick={() => mudarAba(tab.id)} aria-current={activeTab === tab.id ? "page" : undefined} className="flex min-h-12 min-w-0 items-center justify-center gap-1.5 border-b-2 px-1 sm:px-3 py-2 text-xs sm:text-sm" style={{ borderColor: activeTab === tab.id ? "var(--primary)" : "transparent", color: activeTab === tab.id ? "var(--brand-text)" : "var(--ink-4)" }}><Icon size={14} />{tab.label}</button>; })}
-      </nav>
-      <div className="project-layout">
+      <div className="modulo-grupo">
+      <NavegacaoModulo abas={tabs.map(({ icon: Icon, ...tab }) => ({ ...tab, icone: <Icon size={14} aria-hidden /> }))} atual={activeTab} aoMudar={mudarAba} rotulo="Abas do projeto" bloqueado={haPendencias} />
+      <div className="project-layout modulo-bloco">
         <div className="project-main min-w-0">
           {activeTab === "descricao" && <TabDescricao project={project} />}
           {activeTab === "plano" && (
@@ -114,6 +114,7 @@ export function ProjectView({
           )}
           {activeTab === "orcamento" && <TabOrcamentoInterino project={project} />}
         </div>
+      </div>
       </div>
       <details open className="project-disclosure border-t">
         <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 sm:px-6 py-3 text-sm font-medium">Documentos do projeto<ChevronDown size={16} aria-hidden /></summary>

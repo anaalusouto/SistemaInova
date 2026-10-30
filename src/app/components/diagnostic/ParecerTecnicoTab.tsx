@@ -15,6 +15,7 @@ import { useAuth } from '../../auth/authStore';
 import { Chip } from './DiagnosticUI';
 import { visualizarDocumento } from '../../lib/visualizacaoDocumento';
 import { validarDocumento } from '../../lib/documentosRegistro';
+import { usePendenciaModulo } from '../PendenciasModulo';
 
 interface ParecerTecnicoTabProps {
   diagnosticoId: string;
@@ -46,6 +47,7 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
   const [analise, setAnalise] = useState({ sintese: '', capacidades: '', fragilidades: '', pontosPrioritarios: '', consideracoesTecnicas: '' });
   const [evidencias, setEvidencias] = useState<EvidenciaVinculada[]>([]);
   const [novaEvidencia, setNovaEvidencia] = useState<EvidenciaVinculada>({ tipo: '', referencia: '', nota: '' });
+  const [lendoArquivo, setLendoArquivo] = useState(false);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -105,11 +107,22 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
     try { validarDocumento(file.name,file.type,file.size); }
     catch(e) { toast.error(e instanceof Error ? e.message : 'Documento inválido.'); return; }
     const reader = new FileReader();
+    setLendoArquivo(true);
     reader.onload = () => {
       upload.mutate({ itemId, nomeArquivo: file.name, tipoMime: file.type, conteudoBase64: String(reader.result) });
+      setLendoArquivo(false);
     };
+    reader.onerror = () => { setLendoArquivo(false); toast.error('Não foi possível ler o arquivo.'); };
     reader.readAsDataURL(file);
   };
+
+  const estadoAtual = JSON.stringify([respostas, analise, evidencias, novaEvidencia]);
+  const estadoSalvo = JSON.stringify([parecer?.respostasComplementares ?? {}, {
+    sintese: parecer?.sintese ?? '', capacidades: parecer?.capacidades ?? '', fragilidades: parecer?.fragilidades ?? '',
+    pontosPrioritarios: parecer?.pontosPrioritarios ?? '', consideracoesTecnicas: parecer?.consideracoesTecnicas ?? '',
+  }, parecer?.evidenciasVinculadas ?? [], { tipo: '', referencia: '', nota: '' }]);
+  const haAlteracoes = hydrated.current && estadoAtual !== estadoSalvo;
+  usePendenciaModulo(!readOnly && (haAlteracoes || salvarMutation.isPending || upload.isPending || lendoArquivo));
 
   return (
     <div className="flex min-w-0 flex-col gap-6 max-w-4xl">
@@ -286,14 +299,22 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
       </div>
 
       {!readOnly && (
-        <button
-          onClick={() => salvarMutation.mutate()}
-          disabled={salvarMutation.isPending}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-60 w-fit"
-          style={{ background: 'var(--primary)' }}
-        >
-          <Check size={14} /> Salvar Parecer
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => {
+            setRespostas(parecer?.respostasComplementares ?? {});
+            setAnalise({ sintese: parecer?.sintese ?? '', capacidades: parecer?.capacidades ?? '', fragilidades: parecer?.fragilidades ?? '', pontosPrioritarios: parecer?.pontosPrioritarios ?? '', consideracoesTecnicas: parecer?.consideracoesTecnicas ?? '' });
+            setEvidencias(parecer?.evidenciasVinculadas ?? []);
+            setNovaEvidencia({ tipo: '', referencia: '', nota: '' });
+          }} disabled={!haAlteracoes || salvarMutation.isPending} className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-medium border disabled:opacity-60">Cancelar alterações</button>
+          <button
+            onClick={() => salvarMutation.mutate()}
+            disabled={salvarMutation.isPending || !haAlteracoes}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-medium text-white disabled:opacity-60 w-fit"
+            style={{ background: 'var(--primary)' }}
+          >
+            <Check size={14} /> Salvar Parecer
+          </button>
+        </div>
       )}
     </div>
   );

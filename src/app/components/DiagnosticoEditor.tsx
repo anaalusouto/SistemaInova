@@ -16,6 +16,8 @@ import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
 import { listarComunidades } from '../comunidades.server';
 import './diagnostic/painel-diagnostico.css';
+import { NavegacaoModulo } from './NavegacaoModulo';
+import { PendenciasModulo, navegarSemPendencias } from './PendenciasModulo';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -41,10 +43,15 @@ interface DiagnosticoEditorProps {
   onExcluido?: () => void;
 }
 
-export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido }: DiagnosticoEditorProps) {
+export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
+  const [haPendencias, setHaPendencias] = useState(false);
+  return <PendenciasModulo key={props.diagnosticoId} aoPendencias={setHaPendencias}><ConteudoDiagnosticoEditor {...props} haPendencias={haPendencias}/></PendenciasModulo>;
+}
+
+function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
-  const setTab = (instrumento: TabId) => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); };
+  const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
   const queryClient = useQueryClient();
@@ -80,9 +87,9 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
     <div className={`diagnostico-painel diagnostico-editor ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
       <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
-          <button onClick={onBack} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
+          <button onClick={() => navegarSemPendencias(haPendencias, onBack)} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
           <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
-          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={onHistorico}>Histórico de mapeamentos</button>}
+          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={() => navegarSemPendencias(haPendencias, onHistorico)}>Histórico de mapeamentos</button>}
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
           <div>
@@ -115,11 +122,11 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
               >
                 {STATUS_LABEL[diagnostico.status]}
               </span>
-              {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} />}
+              {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} bloqueado={haPendencias} />}
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
                   onClick={() => { if (window.confirm('Concluir este mapeamento? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
-                  disabled={concluir.isPending}
+                  disabled={concluir.isPending || haPendencias}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium text-white disabled:opacity-60"
                   style={{ background: 'var(--primary)' }}
                 >
@@ -128,7 +135,7 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
               ) : (
                 <button
                   onClick={() => { if (window.confirm('Criar uma nova versão? Uma cópia editável de Matriz, IEO, Cesta e Parecer será criada a partir desta versão concluída.')) novaVersao.mutate(); }}
-                  disabled={novaVersao.isPending}
+                  disabled={novaVersao.isPending || haPendencias}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-[12px] font-medium disabled:opacity-60"
                   style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
                 >
@@ -138,20 +145,11 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
             </div>
           )}
         </div>
-        {instrumentoInicial !== 'parecer' && <><label className="flex flex-col gap-1 pb-3 text-xs text-muted-foreground sm:hidden">Instrumento do mapeamento
-          <select aria-label="Instrumento do mapeamento" value={tab} onChange={e=>setTab(e.target.value as TabId)} className="min-h-11 w-full min-w-0 rounded-lg border bg-card px-2 text-sm text-foreground">
-            {TABS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
-        </label>
-        <div className="diagnostico-abas hidden min-w-0 flex-wrap items-stretch gap-1 sm:flex" aria-label="Módulos do diagnóstico">
-          {TABS.map((t, i) => {
-            const active = tab === t.id;
-            return <button key={t.id} type="button" aria-current={active ? 'page' : undefined} onClick={() => setTab(t.id)} className="diagnostico-aba flex min-w-0 items-center justify-center gap-2 px-4 py-3 text-center text-[13px] font-semibold transition-colors" data-active={active}><span className="diagnostico-numero">{i + 1}</span>{t.label}</button>;
-          })}
-        </div></>}
       </div>
       <div className={`diagnostico-editor-corpo ${incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}`}>
-        <div className="diagnostico-conteudo">
+        {instrumentoInicial !== 'parecer' && <NavegacaoModulo abas={TABS} atual={tab} aoMudar={setTab} rotulo="Módulos do diagnóstico" bloqueado={haPendencias}/>}
+        <div className={`diagnostico-conteudo${instrumentoInicial !== 'parecer' ? ' diagnostico-conteudo-com-menu modulo-bloco' : ''}`}>
+        {haPendencias && <p role="status" className="mb-4 rounded-lg border bg-muted px-3 py-2 text-sm">Alterações não salvas. Salve ou cancele antes de navegar.</p>}
         {isLoading && <p role="status">Carregando mapeamento…</p>}
         {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
         {tab === 'resumo' && diagnostico && <div className="space-y-6">
@@ -167,7 +165,7 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
           <QuestionarioCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'cesta' && diagnostico && (
-          <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} bloqueado={haPendencias} />
         )}
         {tab === 'parecer' && diagnostico && (
           <ParecerTecnicoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />

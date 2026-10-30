@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePendenciaModulo } from '../PendenciasModulo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { listarRespostasCaderno, salvarRespostaCaderno } from '../../caderno.server';
 import { validarRespostaCaderno, valoresVazios, type RegistroCaderno, type ValoresCaderno } from '../../diagnostic/cadernoCria';
@@ -29,6 +30,7 @@ function ItemCadernoFormulario({ item, registro, contexto, diagnosticoId, organi
       setVersao(r.versao); setValores(r.resposta); setSujo(false); setErro('');
       void client.invalidateQueries({ queryKey: ['diagnostico', diagnosticoId] });
     }, onError: (e: Error) => setErro(e.message + ' Suas alterações continuam neste formulário.') });
+  usePendenciaModulo(!readOnly && (sujo || salvar.isPending));
   const resposta = registro?.resposta;
   const exibicao = resposta?.valor ? item.opcoes?.find(o => o.valor === resposta.valor)?.descricao ?? resposta.valor : resposta?.selecoes.length ? resposta.selecoes.join(', ') : registro ? 'Registro sem resposta' : 'Não preenchido';
   return <details className="rounded-xl border bg-card" data-caderno-codigo={item.codigo}>
