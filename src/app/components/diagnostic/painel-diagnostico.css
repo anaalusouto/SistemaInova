@@ -11,9 +11,16 @@
 .diagnostico-filtro { border: 1px solid var(--border); border-radius: 999px; padding: 9px 13px; font-size: .75rem; color: var(--ink-3); background: var(--card, #fff); }
 .diagnostico-filtro[data-active="true"] { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
 .diagnostico-tabela-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
-.diagnostico-tabela { width: 100%; min-width: 1600px; border-collapse: collapse; font-size: .76rem; line-height: 1.6; text-align: left; }
+.diagnostico-tabela { width: 100%; min-width: 1850px; border-collapse: collapse; font-size: .76rem; line-height: 1.6; text-align: left; }
+.diagnostico-tabela.inova-table-cards { min-width: 1850px; }
 .diagnostico-tabela th, .diagnostico-tabela td { padding: 16px 14px; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .diagnostico-tabela thead th { background: var(--surface-1); color: var(--ink-4); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; border-right: 1px solid var(--border); }
+@container inova-table (max-width: 63.999rem) {
+  .diagnostico-tabela.inova-table-cards { min-width: 0; }
+  .diagnostico-tabela.inova-table-cards tr.diagnostico-grupo { display: block; background: var(--surface-1); }
+  .diagnostico-tabela.inova-table-cards tr.diagnostico-grupo th { display: block; padding: .65rem .8rem; }
+  .diagnostico-tabela.inova-table-cards tr:not(.diagnostico-grupo) > th[scope="row"] { display: block; grid-column: 1 / -1; }
+}
 .diagnostico-tabela th:first-child { width: 235px; }
 .diagnostico-tabela td:nth-child(2) { width: 190px; }
 .diagnostico-tabela td:nth-child(3) { width: 135px; }
@@ -21,8 +28,9 @@
 .diagnostico-tabela td:nth-child(5) { width: 130px; }
 .diagnostico-tabela td:nth-child(6) { min-width: 220px; }
 .diagnostico-tabela td:nth-child(7) { width: 170px; }
-.diagnostico-tabela td:nth-child(8) { min-width: 300px; }
-.diagnostico-tabela td:nth-child(9) { min-width: 180px; }
+.diagnostico-tabela td:nth-child(8) { min-width: 260px; }
+.diagnostico-tabela td:nth-child(9) { min-width: 300px; }
+.diagnostico-tabela td:nth-child(10) { min-width: 180px; }
 .diagnostico-tabela tbody tr:last-child > * { border-bottom: 0; }
 .diagnostico-tabela .diagnostico-grupo th { background: var(--surface-1); color: var(--ink-2); font-size: .86rem; padding-block: 15px; }
 .diagnostico-funcao { text-align: left; font-weight: 600; line-height: 1.7; }

@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
+import { FUNCOES_GUIA_CRIA } from '../../diagnostic/catalog/cadernoCriaDados';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
+import '../responsive-tables.css';
 
-interface Linha { id: string; valores: RascunhoMatriz; estado: string }
+interface Linha { id: string; valores: RascunhoMatriz; estado: string; descricao?: string; exemplo?: string }
 interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; filtroBloqueado?: boolean }
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
@@ -23,26 +25,28 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
     </div>
     <section aria-label="Funções por grupo" className="space-y-3">
       <h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4>
-      <div className="diagnostico-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
-        <table className="diagnostico-tabela"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Observação', ...(renderEdicao ? ['Ações'] : [])].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
+      <div className="inova-table-frame diagnostico-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
+        <table className="diagnostico-tabela inova-table-cards"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
+          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Exemplo de preenchimento', 'Observação', ...(renderEdicao ? ['Ações'] : [])].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
-            <tr className="diagnostico-grupo"><th colSpan={renderEdicao ? 9 : 8} scope="rowgroup">{g}</th></tr>
+            <tr className="diagnostico-grupo"><th colSpan={renderEdicao ? 10 : 9} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;
               const v = linha.valores;
-              if (renderEdicao) return <tr key={f.id} data-inova-form="matriz-tabela" data-inova-field={f.id}>{renderEdicao(linha)}</tr>;
+              const guia = FUNCOES_GUIA_CRIA.find(item => item.codigo === f.id);
+              if (renderEdicao) return <tr key={f.id} data-inova-form="matriz-tabela" data-inova-field={f.id}>{renderEdicao({ ...linha, descricao: guia?.descricao, exemplo: guia?.exemplo })}</tr>;
               const leitura = leituraMatriz(v.criticidade, v.experiencia);
               const cor = leitura === 'Lacuna crítica' ? '#b44747' : leitura === 'Lacuna relevante' ? '#c46b35' : leitura === 'Acompanhar' ? '#528363' : '#b27b24';
               return <tr key={f.id}>
-                <th scope="row"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small></th>
-                <td><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span></td>
-                <td className="whitespace-pre-wrap">{v.externo || '—'}</td>
-                <td>{v.experiencia || 'Não informado'}</td>
-                <td>{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
-                <td><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
-                <td><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
-                <td className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
+                <th scope="row" data-label="Função"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small>{guia?.descricao && <details className="mt-2 max-w-64 text-left text-xs font-normal text-muted-foreground"><summary className="cursor-pointer">Como preencher</summary><p className="mt-2">{guia.descricao}</p></details>}</th>
+                <td data-label="Atuação"><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span></td>
+                <td data-label="Externo" className="whitespace-pre-wrap">{v.externo || '—'}</td>
+                <td data-label="Experiência">{v.experiencia || 'Não informado'}</td>
+                <td data-label="Interesse">{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
+                <td data-label="Criticidade"><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
+                <td data-label="Leitura"><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
+                <td data-label="Exemplo de preenchimento" className="whitespace-pre-wrap">{guia?.exemplo || <span className="text-muted-foreground">Sem exemplo disponível.</span>}</td>
+                <td data-label="Observação" className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
             })}
           </tbody>)}
