@@ -42,3 +42,91 @@
 .diagnostico-painel button:focus-visible, .diagnostico-tabela-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .diagnostico-painel button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 640px) { .diagnostico-conteudo { border-radius: 14px; } .diagnostico-filtro { padding: 8px 10px; } }
+
+/* Resumo: hierarquia de leitura, estados explícitos e detalhes sob demanda. */
+.diagnostico-resumo { display: grid; gap: 28px; min-width: 0; color: var(--ink-1, #172b46); font-size: .9rem; line-height: 1.65; overflow-wrap: anywhere; }
+.diagnostico-resumo > section { display: grid; gap: 14px; min-width: 0; }
+.diagnostico-resumo h3 { font-size: clamp(1.25rem, 3vw, 1.7rem); font-weight: 700; line-height: 1.3; }
+.diagnostico-resumo h4 { font-size: 1.15rem; font-weight: 700; line-height: 1.4; color: var(--ink-1, #172b46); }
+.diagnostico-resumo h5 { font-size: .95rem; font-weight: 650; line-height: 1.5; }
+.diagnostico-resumo h4, .diagnostico-resumo h5 { display: flex; align-items: start; gap: 8px; }
+.diagnostico-resumo svg { flex-shrink: 0; margin-top: 2px; }
+.resumo-duas-colunas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.resumo-cartao { min-width: 0; padding: 20px; background: var(--card, #fff); border: 1px solid var(--border, #d5dce5); border-radius: 14px; display: grid; gap: 12px; }
+.resumo-situacao { border: 1px solid #bacbdb; border-left: 5px solid #244b70; border-radius: 12px; padding: 20px; background: #f1f6fa; color: #243c52; }
+.diagnostico-resumo .resumo-em-revisao { background: #fff7e9; border-color: #a56524; color: #603810; }
+.resumo-em-revisao h4 { color: #603810; }
+.resumo-potencial { border-top: 4px solid #356b53; }
+.resumo-potencial h5 { color: var(--ink-1, #172b46); }
+.resumo-fragilidade { border-top: 4px solid #9a5427; }
+.resumo-fragilidade h5 { color: var(--ink-1, #172b46); }
+.resumo-fonte { font-size: .78rem; color: var(--ink-3, #46576a); }
+.resumo-etiqueta { width: fit-content; max-width: 100%; border: 1px solid #b9c7d6; border-radius: 6px; padding: 4px 8px; background: #eef3f8; color: #294765; font-size: .78rem; font-weight: 600; }
+.resumo-historico .resumo-etiqueta { border-color: #aa7548; background: #fff5e9; color: #70451e; }
+.resumo-prioridade dl { display: grid; gap: 12px; }
+.resumo-prioridade dl > div { border-top: 1px solid var(--border, #d5dce5); padding-top: 10px; }
+.resumo-prioridade dt { font-weight: 650; font-size: .8rem; }
+.resumo-prioridade dd, .resumo-texto-integral { white-space: pre-wrap; overflow-wrap: anywhere; }
+.resumo-expansivel { min-width: 0; max-width: 100%; border: 1px solid var(--border, #d5dce5); border-radius: 10px; background: var(--card, #fff); color: var(--ink-1, #172b46); overflow-wrap: anywhere; }
+.resumo-expansivel > summary { cursor: pointer; min-height: 44px; padding: 12px 16px; font-size: .88rem; font-weight: 650; color: #244b70; background: #f1f5f9; border-radius: 10px; }
+.resumo-expansivel[open] > summary { border-bottom: 1px solid var(--border, #d5dce5); border-radius: 10px 10px 0 0; }
+.resumo-expansivel > div { padding: 16px; }
+.resumo-expansivel > div > * + * { margin-top: 14px; }
+.resumo-expansivel ul { list-style: disc; padding-left: 20px; }
+.resumo-acao { display: inline-flex; align-items: center; justify-content: center; width: fit-content; max-width: 100%; min-height: 44px; padding: 10px 16px; border: 1px solid #244b70; border-radius: 9px; background: #fff; color: #244b70; font-size: .85rem; font-weight: 650; cursor: pointer; white-space: normal; }
+.resumo-acao:hover { background: #edf3f9; }
+.diagnostico-resumo a { color: #244b70; text-decoration: underline; text-underline-offset: 3px; }
+.diagnostico-painel summary:focus-visible, .diagnostico-resumo a:focus-visible, .diagnostico-resumo button:focus-visible { outline: 3px solid #244b70; outline-offset: 3px; }
+.resumo-dimensoes { display: grid; gap: 18px; min-width: 0; }
+.resumo-grafico figcaption { display: grid; gap: 10px; }
+.resumo-barras { display: grid; gap: 18px; list-style: none; }
+.resumo-barra-rotulo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.resumo-barra-rotulo > strong { flex-shrink: 0; }
+.resumo-barra-trilho { height: 10px; background: #e5eaf0; border-radius: 4px; }
+.resumo-barra-trilho span { display: block; height: 100%; background: #315d84; border-radius: 4px; }
+.resumo-historico .resumo-barra-trilho span { background: #966539; }
+.resumo-tabela-container { max-width: 100%; }
+.resumo-tabela { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .85rem; }
+.resumo-tabela caption { text-align: left; font-weight: 650; color: var(--ink-1, #172b46); margin-bottom: 12px; }
+.resumo-tabela th, .resumo-tabela td { padding: 12px; border-bottom: 1px solid var(--border, #d5dce5); vertical-align: top; overflow-wrap: anywhere; }
+.resumo-tabela thead { background: #f1f5f9; color: #294765; }
+.resumo-tabela th:first-child { width: 48%; }
+.resumo-tabela th:last-child { width: 20%; }
+.resumo-apoio { display: grid; gap: 24px; }
+.resumo-apoio section { display: grid; gap: 12px; }
+@media screen and (max-width: 640px) {
+  .resumo-duas-colunas { grid-template-columns: minmax(0, 1fr); }
+  .resumo-cartao, .resumo-situacao { padding: 14px; }
+  .resumo-barra-rotulo { flex-direction: column; gap: 2px; }
+  .resumo-tabela, .resumo-tabela tbody { display: block; }
+  .resumo-tabela caption { display: block; }
+  .resumo-tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .resumo-tabela tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--border, #d5dce5); }
+  .resumo-tabela tbody th, .resumo-tabela td { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 10px; width: 100%; padding: 8px 0; border: 0; }
+  .resumo-tabela tbody th::before, .resumo-tabela td::before { content: attr(data-label); font-weight: 600; color: #46576a; }
+}
+@media print {
+  body:has(.diagnostico-resumo), body:has(.diagnostico-resumo) :is(div, main):has(.diagnostico-resumo) { display: block !important; height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; }
+  body:has(.diagnostico-resumo) .h-dvh > :not(:has(.diagnostico-resumo)), body:has(.diagnostico-resumo) .cria-app-header { display: none !important; }
+  .diagnostico-editor, .diagnostico-editor-corpo, .diagnostico-conteudo { display: block !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+  .diagnostico-editor-corpo, .diagnostico-conteudo { padding: 0 !important; border: 0 !important; box-shadow: none !important; }
+  .diagnostico-editor nav, .diagnostico-abas, .diagnostico-acoes, .diagnostico-editor label:has(select), .diagnostico-resumo button:not([aria-label^="Abrir documento"]), .diagnostico-resumo input, .diagnostico-resumo textarea { display: none !important; }
+  .diagnostico-resumo button[aria-label^="Abrir documento"] { display: block; color: inherit; padding: 0; border: 0; background: none; }
+  .diagnostico-resumo { display: block; font-size: 10pt; color: #172b46; }
+  .diagnostico-resumo :is(h3, h4, h5, caption, .resumo-fonte), .diagnostico-resumo .resumo-expansivel { color: #172b46; }
+  .diagnostico-resumo .resumo-cartao, .diagnostico-resumo .resumo-expansivel { background: #fff; }
+  .diagnostico-resumo > section { display: block; margin-top: 18pt; }
+  .diagnostico-resumo h3, .diagnostico-resumo h4, .diagnostico-resumo h5, .resumo-grafico figcaption, .resumo-tabela caption, .resumo-expansivel > summary { break-after: avoid; }
+  .resumo-duas-colunas, .resumo-dimensoes { display: block; }
+  .resumo-cartao, .resumo-situacao, .resumo-prioridade, .resumo-barras li { break-inside: avoid; margin-block: 10pt; box-shadow: none; }
+  .resumo-expansivel { border: 0; margin-block: 10pt; }
+  .resumo-expansivel > div { display: block !important; padding: 6pt 0; }
+  .resumo-expansivel::details-content { content-visibility: visible; display: block; }
+  .resumo-expansivel > summary { background: none; padding: 6pt 0; border: 0 !important; list-style: none; }
+  .resumo-tabela-container { overflow: visible; padding: 0; }
+  .resumo-tabela { display: table; width: 100%; min-width: 0; table-layout: fixed; }
+  .resumo-tabela thead { display: table-header-group; }
+  .resumo-tabela tr { break-inside: avoid; }
+  .resumo-tabela th, .resumo-tabela td { padding: 7pt; }
+  .resumo-barra-trilho, .resumo-barra-trilho span, .resumo-etiqueta { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

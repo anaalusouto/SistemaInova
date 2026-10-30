@@ -69,7 +69,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
   });
 
   return (
-    <div className={`diagnostico-painel ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
+    <div className={`diagnostico-painel diagnostico-editor ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
       <div className="flex min-w-0 flex-col gap-3 px-3 sm:px-7 pt-4 pb-0 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
         <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={onBack} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
@@ -88,7 +88,7 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
             </p>
           </div>
           {diagnostico && (
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
               <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {
@@ -153,11 +153,16 @@ export function DiagnosticoEditor({ diagnosticoId, onBack, onNovaVersao, incorpo
           })}
         </div></>}
       </div>
-      <div className={incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}>
+      <div className={`diagnostico-editor-corpo ${incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}`}>
         <div className="diagnostico-conteudo">
         {isLoading && <p role="status">Carregando mapeamento…</p>}
         {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
-        {tab === 'resumo' && diagnostico && <div className="space-y-6"><section className="space-y-3"><h3 className="font-semibold text-lg">Identificação · Caderno CRIA 22/10/2026</h3><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={IDENTIFICACAO_CADERNO}/></section><section className="space-y-3"><h3 className="font-semibold text-lg">Evidências e pendências</h3><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={EVIDENCIAS_CADERNO}/></section><ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} /></div>}
+        {tab === 'resumo' && diagnostico && <div className="space-y-6">
+          <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId}
+            readOnly={readOnly || diagnostico.status === 'concluido'} onConsultarIeo={() => setTab('ieo')} onConsultarParecer={() => setTab('parecer')} />
+          <details className="resumo-expansivel"><summary>Identificação · Caderno CRIA 22/10/2026</summary><div><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={IDENTIFICACAO_CADERNO}/></div></details>
+          <details className="resumo-expansivel"><summary>Evidências e pendências · consultar ou atualizar registros</summary><div><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={EVIDENCIAS_CADERNO}/></div></details>
+        </div>}
         {tab === 'matriz' && diagnostico && (
           <MatrizCadernoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
