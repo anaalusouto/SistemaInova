@@ -42,11 +42,15 @@ test('PDF usa as mesmas notas do IEO atual mesmo com respostas antigas presentes
  assert.equal(r.perguntas[1].nivel,'NS');assert.match(r.perguntas[1].descricaoNivel,/Não sabe/);
 });
 
-test('Matriz distingue código explícito de não avaliado de avaliação ainda não registrada',()=>{
- const arquivo=fs.readFileSync('src/app/components/diagnostic/MatrizCadernoTab.tsx','utf8');
- assert.match(arquivo,/valor \? 'Opção não reconhecida' : 'Sem avaliação registrada'/);
- assert.match(fs.readFileSync('src/app/components/diagnostic/PainelMatriz.tsx','utf8'),/Sem avaliação registrada/);
- assert.doesNotMatch(arquivo,/\?\? 'Não avaliado'/);
+test('entrada antiga da Matriz abre o instrumento sem consultar nem incluir avaliações do Caderno',()=>{
+ const props={organizacaoId:'org-a',diagnosticoId:'d1',readOnly:false};
+ let recebidas;
+ const {MatrizCadernoTab}=load('src/app/components/diagnostic/MatrizCadernoTab.tsx',{
+  './MatrizFuncionalTab':{MatrizFuncionalTab:p=>{recebidas=p;return React.createElement('p',null,'Matriz independente');}},
+  './CadernoItens':{useCaderno(){throw Error('A Matriz não deve consultar o Caderno');}},
+ });
+ const html=renderToStaticMarkup(React.createElement(MatrizCadernoTab,props));
+ assert.equal(html,'<p>Matriz independente</p>');assert.deepEqual(recebidas,props);
 });
 test('caderno contém os 25 códigos Q, públicos e escalas transcritos da revisão 22/10/2026',()=>{
  const q=catalogo.QUESTIONARIO_CADERNO;

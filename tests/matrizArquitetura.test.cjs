@@ -31,6 +31,7 @@ test('painel oferece quatro abas na ordem da referência, sem parecer adicional'
   const opcoes=[...html.matchAll(/<option[^>]*>([^<]+)<\/option>/g)].map(m=>m[1]);
   assert.deepEqual(opcoes,['Matriz','IEO','Cesta','Resumo']);
   assert.doesNotMatch(html,/Parecer Técnico|Parecer separado/);
+  assert.match(html,/<nav class="diagnostico-menu-conteudo"[\s\S]*?<\/nav><div class="diagnostico-conteudo diagnostico-conteudo-com-menu">/);
 });
 test('parecer legado continua acessível separadamente, sem alterar as quatro abas da matriz',()=>{
   const html=render(ambiente(),'parecer');assert.match(html,/Parecer separado/);assert.doesNotMatch(html,/<select|>Matriz Funcional</);

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { PopupDetalhe } from '../PopupDetalhe';
@@ -12,9 +11,9 @@ import { EntradaMatriz } from './EntradaMatriz';
 import { PainelMatriz } from './PainelMatriz';
 import { validarConferencia, rascunhoVazio, type CampoImportado, type ConferenciaFuncao, type ImportacaoSalva, type DecisoesImportacao, type RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
-interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean; caderno?: { avaliacoes: Record<string,string>; renderAvaliacao: (id:string)=>ReactNode } }
+interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean }
 type Draft = RascunhoMatriz;
-const inicial=(nome:string,r?:MatrizResposta):Draft=>({nomeFuncao:r?.nomeFuncao??nome,atuacao:r?.atuacao[0]??null,
+const inicial=(nome:string,r?:MatrizResposta):Draft=>({nomeFuncao:nome,atuacao:r?.atuacao[0]??null,
   experiencia:r?.experiencia??null,criticidade:r?.criticidade??null,interesse:r?.interesse??null,observacoes:r?.observacoes??null,externo:r?.externo??null});
 
 /** Rascunhos nunca acompanham a troca de organização ou aplicação. */
@@ -26,7 +25,7 @@ export function MatrizFuncionalTab(props:Props) {
   return <MatrizDaAplicacao key={`${props.organizacaoId}:${props.diagnosticoId}`} {...props} importacao={pendente.data??null}
     onRegistro={r=>client.setQueryData(key,r)} onImportacaoAlterada={()=>void client.invalidateQueries({queryKey:key})}/>;
 }
-function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
+function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
   const client=useQueryClient();
   const importadasIniciais=Object.fromEntries((importacao?.pendentes??[]).map(id=>[id,importacao?.dados.respostas[id]??rascunhoVazio(FUNCOES_MATRIZ.find(f=>f.id===id)?.nome??id)]));
   const [aberta,setAberta]=useState<string|null>(importacao?.pendentes[0]??null);
@@ -83,11 +82,13 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
   const gravarFuncao=(id:string,valores:Draft,escolhas:DecisoesImportacao,revisada:boolean)=>{
     if(readOnly||emCurso.current||descartando)return;
     try {
-      if(!valores.nomeFuncao.trim())throw new Error('Informe o nome da função.');
+      const funcao=FUNCOES_MATRIZ.find(f=>f.id===id);
+      if(!funcao)throw new Error('Função inválida.');
+      const resposta={...valores,nomeFuncao:funcao.nome};
       const revisao=importacao&&importadas[id]?{id:importacao.id,decisoes:escolhas,confirmado:revisada}:undefined;
-      if(revisao)validarConferencia(conferencia[id],valores,escolhas,revisada);
+      if(revisao)validarConferencia(conferencia[id],resposta,escolhas,revisada);
       setErroConferencia('');setErrosLinha(anteriores=>({...anteriores,[id]:''}));emCurso.current=true;
-      salvar.mutate({organizacaoId,diagnosticoId,funcaoId:id,...valores,importacao:revisao});
+      salvar.mutate({organizacaoId,diagnosticoId,funcaoId:id,...resposta,importacao:revisao});
     }catch(e){const mensagem=(e as Error).message;setErroConferencia(mensagem);setErrosLinha(anteriores=>({...anteriores,[id]:mensagem}));}
   };
   const cancelarLinha=(id:string)=>{
@@ -103,8 +104,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
     setDraft(valores);setDecisoes(escolhas);setConfirmado(revisada);setErroConferencia('');
     if(aberta)setEdicoes(anteriores=>({...anteriores,[aberta]:{valores,decisoes:escolhas,confirmado:revisada}}));
   };
-  const alterar=<K extends keyof Draft>(campo:K,valor:Draft[K])=>{
-    const novas={...decisoes};if(campo!=='nomeFuncao'){const chave=campo as CampoImportado;if(valor)novas[chave]='corrigido';else delete novas[chave];}
+  const alterar=<K extends CampoImportado>(campo:K,valor:Draft[K])=>{
+    const novas={...decisoes};if(valor)novas[campo]='corrigido';else delete novas[campo];
     atualizarEdicao({...draft,[campo]:valor},novas,false);
   };
   if(consulta.isLoading) return <p role="status">Carregando Matriz Funcional…</p>;
@@ -145,15 +146,14 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={ocupado||pendentes>0} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
-    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:(!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome)),estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} avaliacoes={caderno?.avaliacoes} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela} filtroBloqueado={pendentes>0||ocupado}
+    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:{...((!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome))),nomeFuncao:f.nome},estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela} filtroBloqueado={pendentes>0||ocupado}
       renderEdicao={!readOnly&&edicaoTabela?linha=>{
         const edicao=edicoes[linha.id];const escolhas=edicao?.decisoes??{};const revisada=edicao?.confirmado??false;
-        const alterarCampo=<K extends keyof Draft>(campo:K,valor:Draft[K])=>{
-          const novas={...escolhas};if(campo!=='nomeFuncao'){if(valor)novas[campo as CampoImportado]='corrigido';else delete novas[campo as CampoImportado];}
+        const alterarCampo=<K extends CampoImportado>(campo:K,valor:Draft[K])=>{
+          const novas={...escolhas};if(valor)novas[campo]='corrigido';else delete novas[campo];
           editarLinha(linha.id,{...linha.valores,[campo]:valor},novas);
         };
         return <MatrizLinhaEdicao id={linha.id} formularioId={`matriz-${organizacaoId}-${diagnosticoId}-${linha.id}`} valores={linha.valores} estado={linha.estado} bloqueado={ocupado} pendente={!!edicao} importada={!!importadas[linha.id]} conferencia={conferencia[linha.id]} decisoes={escolhas} confirmado={revisada} erro={errosLinha[linha.id]}
-          avaliacao={caderno?<details><summary className="cursor-pointer text-xs">{caderno.avaliacoes[linha.id]??'Sem avaliação registrada'}</summary>{caderno.renderAvaliacao(linha.id)}</details>:undefined}
           aoAlterar={alterarCampo} aoNaoIdentificado={campo=>editarLinha(linha.id,{...linha.valores,[campo]:null},{...escolhas,[campo]:'nao_identificado'})} aoConferir={valor=>editarLinha(linha.id,linha.valores,escolhas,valor)} aoSalvar={()=>gravarFuncao(linha.id,linha.valores,escolhas,revisada)} aoCancelar={()=>cancelarLinha(linha.id)}/>;
       }:undefined}/>
     {grupos.map(grupo=><section key={grupo} className="space-y-2"><h4 className="sr-only">{grupo}</h4>
@@ -163,7 +163,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
         const estado=ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!;
         const valoresConsulta=r?inicial(f.nome,r):importadas[f.id]??inicial(f.nome);
         const valoresLinha=(!readOnly?edicoes[f.id]?.valores:undefined)??valoresConsulta;
-        const nome=valoresLinha.nomeFuncao||f.nome;
+        const nome=f.nome;
         return <PopupDetalhe key={f.id} titulo={`${f.id} · ${nome}`} descricao={`${grupo} · Matriz Funcional`} bloqueado={ocupado} aoFechar={()=>{setAberta(null);setEditando(false);}}>
         <div id={`matriz-funcao-${f.id}`} data-inova-form="matriz" data-inova-field={f.id} data-estado-matriz={estado.id}>
           <div className="flex flex-wrap items-center gap-2 pb-3">
@@ -177,7 +177,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
             {editando&&!readOnly?<form className="grid gap-4 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();if(readOnly||emCurso.current)return;
               gravarFuncao(f.id,draft,decisoes,confirmado);}}>
               <fieldset disabled={salvar.isPending||descartando} className="contents">
-                <label className="sm:col-span-2 flex flex-col gap-1 text-sm">Função<input required maxLength={500} className="border rounded-lg bg-card p-2" value={draft.nomeFuncao} onChange={e=>alterar('nomeFuncao',e.target.value)}/></label>
+                <div className="sm:col-span-2 text-sm"><span className="block text-xs text-muted-foreground">Função</span><p className="mt-1 font-medium">{f.nome}</p></div>
                 {selecao('Atuação','atuacao',ATUACAO_MATRIZ)}{selecao('Experiência','experiencia',EXPERIENCIA_MATRIZ)}
                 {selecao('Criticidade atual','criticidade',NIVEIS_MATRIZ)}{selecao('Interesse em desenvolvimento','interesse',NIVEIS_MATRIZ)}
                 <label className="sm:col-span-2 flex flex-col gap-1 text-sm">Leitura orientativa<input readOnly className="border rounded-lg bg-muted p-2" value={leituraMatriz(draft.criticidade,draft.experiencia)}/><span className="text-xs text-muted-foreground">Calculada automaticamente. A prévia acompanha suas alterações. Clique em Salvar alterações para confirmar.</span></label>
@@ -196,7 +196,6 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,caderno,importa
               {!readOnly&&<button type="button" className="underline text-primary text-sm" onClick={()=>{carregarEdicao(f.id,reiniciar());setEditando(true);}}>Editar</button>}
             </div>}
           </div>}
-          {open&&caderno&&<div className="border-t p-4 space-y-3"><h4 className="font-semibold">Avaliação técnica independente da Leitura</h4>{caderno.renderAvaliacao(f.id)}</div>}
         </div></PopupDetalhe>;
       })}
     </section>)}

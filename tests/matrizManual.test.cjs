@@ -52,11 +52,12 @@ test('criar do zero apresenta exatamente 21 funções e todos os campos de respo
 });
 test('preencher, salvar, reabrir e editar restaura os dados confirmados na aplicação sem duplicar',()=>{
   const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);
-  for(const [label,value] of [['Função','Representação revisada'],['Atuação','Viabiliza'],['Experiência','Inicial'],['Criticidade atual','3'],['Interesse em desenvolvimento','4'],['Observação','Relato manual'],['Externo','Parceiro local']])preencher(e,label,value);
+  for(const [label,value] of [['Atuação','Viabiliza'],['Experiência','Inicial'],['Criticidade atual','3'],['Interesse em desenvolvimento','4'],['Observação','Relato manual'],['Externo','Parceiro local']])preencher(e,label,value);
   salvar(e);assert.equal(nodes(e.render(),n=>n.type==='form').length,0);
   const registro=a.banco.get('org-a:diag-a')[0];assert.equal(registro.observacoes,'Relato manual');assert.equal(registro.externo,'Parceiro local');
   const reaberto=a.abrir();funcao(reaberto);clicar(reaberto,'Editar');
-  assert.equal(one(reaberto.render(),n=>n.type==='input'&&!n.props.readOnly).props.value,'Representação revisada');
+  assert.equal(registro.nomeFuncao,'Representação e articulação institucional');
+  assert.equal(nodes(reaberto.render(),n=>n.type==='input'&&!n.props.readOnly).length,0);
   assert.equal(one(reaberto.render(),n=>n.type==='select'&&n.props.value==='Viabiliza').props.value,'Viabiliza');
   assert.equal(one(reaberto.render(),n=>n.type==='textarea'&&n.props.value==='Relato manual').props.value,'Relato manual');
   preencher(reaberto,'Observação','Relato atualizado');salvar(reaberto);
@@ -103,7 +104,8 @@ const fecharPopup=e=>one(e.render(),n=>typeof n.props?.aoFechar==='function'&&ty
 test('Editar libera células; gravação e cancelamento são por linha e preservam as demais',()=>{
   const a=ambiente(),e=a.abrir();e.render().props.onManual();clicar(e,'Editar');
   assert.equal(typeof painel(e).props.renderEdicao,'function');
-  assert.equal(nodes(tabela(e).linha(),n=>['input','select','textarea'].includes(n.type)).length,7);
+  assert.equal(nodes(tabela(e).linha(),n=>['input','select','textarea'].includes(n.type)).length,6);
+  assert.equal(nodes(tabela(e).linha(),n=>n.props?.['aria-label']==='Função F01').length,0);
   mudarCelula(e,'F01','Observação','Rascunho A');mudarCelula(e,'F02','Externo','Rascunho B');
   assert.equal(one(e.render(),n=>n.type==='button'&&n.props.children==='Fechar edição').props.disabled,true);
   assert.equal(painel(e).props.filtroBloqueado,true);
@@ -146,7 +148,7 @@ test('Enter salva por formulário, texto mantém quebras de linha e Escape cance
   const a=ambiente(),e=a.abrir();e.render().props.onManual();clicar(e,'Editar');mudarCelula(e,'F01','Observação','Rascunho');
   let pedidos=0,prevenidos=0;
   const evento=tag=>({key:'Enter',nativeEvent:{isComposing:false},preventDefault(){prevenidos++;},currentTarget:{tagName:tag,form:{requestSubmit(){pedidos++;}}}});
-  one(tabela(e).linha(),n=>n.props?.['aria-label']==='Função F01').props.onKeyDown(evento('INPUT'));
+  one(tabela(e).linha(),n=>n.props?.['aria-label']==='Atuação F01').props.onKeyDown(evento('SELECT'));
   assert.equal(pedidos,1);
   const observacao=one(tabela(e).linha(),n=>n.props?.['aria-label']==='Observação F01');
   observacao.props.onKeyDown(evento('TEXTAREA'));assert.equal(pedidos,1);assert.equal(prevenidos,1);

@@ -7,7 +7,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { nomeCurtoOrg } from './lib/navegacaoOrg';
 import { validarDocumento, LIMITE_DOCUMENTO } from './lib/documentosRegistro';
 import { diagnosticoAtual } from './diagnostic/navegacaoDiagnostico';
-import { validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
+import { FUNCOES_MATRIZ, validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
 import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type OrigemPdf } from './diagnostic/importarMatriz';
 import type { RegistroCaderno } from './diagnostic/cadernoCria';
 
@@ -233,8 +233,10 @@ export const listarRespostasMatriz = createServerFn({ method: 'GET' })
 
 export const salvarMatrizPrototipo = createServerFn({method:'POST'})
   .validator((d: MatrizPrototipoInput)=>d)
-  .handler(async({data}):Promise<MatrizResposta>=>{
-    await exigirEscritaDiagnostico(); validarMatrizPrototipo(data);
+  .handler(async({data:entrada}):Promise<MatrizResposta>=>{
+    await exigirEscritaDiagnostico(); validarMatrizPrototipo(entrada);
+    // O enunciado pertence ao catálogo, mesmo em requisições diretas ou importações.
+    const data={...entrada,nomeFuncao:FUNCOES_MATRIZ.find(f=>f.id===entrada.funcaoId)!.nome};
     const db=await getAdmin();
     if(data.importacao){
       const {data: registro,error:falha}=await db.from('diagnostico_matriz_importacoes').select('*').eq('id',data.importacao.id).eq('diagnostico_id',data.diagnosticoId).eq('estado','pendente').maybeSingle();

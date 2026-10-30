@@ -46,7 +46,8 @@ test('gravação envia organização e aplicação à operação atômica e cons
   const a=ambiente();const row=await a.load('src/app/diagnosticos.server.ts').salvarMatrizPrototipo({data:input});
   assert.equal(a.eventos.length,1);assert.equal(a.eventos[0].nome,'salvar_matriz_prototipo');
   assert.equal(a.eventos[0].args.p_organizacao,input.organizacaoId);assert.equal(a.eventos[0].args.p_diagnostico,input.diagnosticoId);
-  assert.equal(row.nomeFuncao,input.nomeFuncao);assert.equal(row.experiencia,input.experiencia);assert.equal(row.externo,input.externo);
+  assert.equal(row.nomeFuncao,'Representação e articulação institucional');assert.equal(row.experiencia,input.experiencia);assert.equal(row.externo,input.externo);
+  assert.equal(a.eventos[0].args.p_nome,'Representação e articulação institucional','Nome enviado pelo cliente não altera o enunciado oficial');
 });
 test('consulta não grava; falha do banco não se apresenta como sucesso',async()=>{
   const a=ambiente({consulta:true});await assert.rejects(a.load('src/app/diagnosticos.server.ts').salvarMatrizPrototipo({data:input}),/permissão/);assert.equal(a.eventos.length,0);

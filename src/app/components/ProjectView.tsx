@@ -98,30 +98,8 @@ export function ProjectView({
           />
         </div>
       </section>
-      <nav
-        aria-label="Abas do projeto"
-        className="project-tabs grid min-w-0 grid-cols-3 border-b px-2 sm:px-6"
-        style={{ background: "var(--surface-0)" }}
-      >
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => mudarAba(tab.id)}
-              aria-current={activeTab === tab.id ? "page" : undefined}
-              className="flex min-h-12 min-w-0 items-center justify-center gap-1.5 border-b-2 px-1 sm:px-3 py-2 text-xs sm:text-sm"
-              style={{
-                borderColor: activeTab === tab.id ? "var(--primary)" : "transparent",
-                color: activeTab === tab.id ? "var(--brand-text)" : "var(--ink-4)",
-              }}
-            >
-              <Icon size={14} />
-              {tab.label}
-            </button>
-          );
-        })}
+      <nav aria-label="Abas do projeto" className="project-tabs grid min-w-0 grid-cols-3 border-b px-2 sm:px-6" style={{ background: "var(--surface-0)" }}>
+        {tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.id} type="button" onClick={() => mudarAba(tab.id)} aria-current={activeTab === tab.id ? "page" : undefined} className="flex min-h-12 min-w-0 items-center justify-center gap-1.5 border-b-2 px-1 sm:px-3 py-2 text-xs sm:text-sm" style={{ borderColor: activeTab === tab.id ? "var(--primary)" : "transparent", color: activeTab === tab.id ? "var(--brand-text)" : "var(--ink-4)" }}><Icon size={14} />{tab.label}</button>; })}
       </nav>
       <div className="project-layout">
         <div className="project-main min-w-0">

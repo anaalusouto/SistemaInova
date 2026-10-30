@@ -33,6 +33,7 @@ test('quadro posiciona apenas funções com os dois eixos informados e preserva 
   assert.match(html, /Sem posição no quadro[^<]*F01/);
   assert.match(html, /Não informado/);
   assert.match(html, /Lacuna crítica/);
+  assert.doesNotMatch(html, /Descrição e exemplo|Sem avaliação registrada|>Avaliação<|Caderno CRIA/);
 });
 test('filtro de grupo atualiza tabela, contagem e seleção da função', () => {
   const p = painel();

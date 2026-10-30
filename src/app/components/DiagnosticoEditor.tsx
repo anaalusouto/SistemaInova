@@ -6,7 +6,7 @@ import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, cria
 import { formatDateOnly } from '../lib/dateOnly';
 import type { InstrumentoDiagnostico } from '../lib/navegacaoApp';
 import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
-import { MatrizCadernoTab } from './diagnostic/MatrizCadernoTab';
+import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
 import { QuestionarioCaderno } from './diagnostic/QuestionarioCaderno';
 import { CestaCaderno } from './diagnostic/CestaCaderno';
 import { CadernoItens } from './diagnostic/CadernoItens';
@@ -146,19 +146,7 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
         <div className="diagnostico-abas hidden min-w-0 flex-wrap items-stretch gap-1 sm:flex" aria-label="Módulos do diagnóstico">
           {TABS.map((t, i) => {
             const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                aria-current={active ? 'page' : undefined}
-                onClick={() => setTab(t.id)}
-                className="diagnostico-aba flex min-w-0 items-center justify-center gap-2 px-4 py-3 text-center text-[13px] font-semibold transition-colors"
-                data-active={active}
-              >
-                <span className="diagnostico-numero">{i + 1}</span>
-                {t.label}
-              </button>
-            );
+            return <button key={t.id} type="button" aria-current={active ? 'page' : undefined} onClick={() => setTab(t.id)} className="diagnostico-aba flex min-w-0 items-center justify-center gap-2 px-4 py-3 text-center text-[13px] font-semibold transition-colors" data-active={active}><span className="diagnostico-numero">{i + 1}</span>{t.label}</button>;
           })}
         </div></>}
       </div>
@@ -173,7 +161,7 @@ export function DiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNova
           <details className="resumo-expansivel"><summary>Evidências e pendências · consultar ou atualizar registros</summary><div><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={EVIDENCIAS_CADERNO}/></div></details>
         </div>}
         {tab === 'matriz' && diagnostico && (
-          <MatrizCadernoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
+          <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'ieo' && diagnostico && (
           <QuestionarioCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />

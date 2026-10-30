@@ -45,8 +45,9 @@ test('servidor reinterpreta texto oficial e usa autoria da sessão; registrar n�
 test('servidor impede gravação sem resolver a ambiguidade antes de chamar RPC e preserva origem na resposta',async()=>{
   const a=api(),dados={organizacaoId:org,diagnosticoId:diag,funcaoId:'F01',...a.registro.dados.respostas.F01,atuacao:'Executa',importacao:{id:a.registro.id,decisoes:{},confirmado:true}};
   await assert.rejects(a.api.salvarMatrizPrototipo({data:dados}),/ambiguidade/);assert.equal(a.eventos.filter(e=>e.nome).length,0);
-  dados.importacao.decisoes={atuacao:'corrigido'};const resposta=await a.api.salvarMatrizPrototipo({data:dados});assert.equal(resposta.origemPdf.nomeArquivo,'origem.pdf');
+  dados.importacao.decisoes={atuacao:'corrigido'};dados.nomeFuncao='Enunciado alterado pelo cliente';const resposta=await a.api.salvarMatrizPrototipo({data:dados});assert.equal(resposta.origemPdf.nomeArquivo,'origem.pdf');
   const evento=a.eventos.find(e=>e.nome);assert.equal(evento.nome,'confirmar_importacao_matriz');assert.equal(evento.args.p_autor,'autor-servidor');assert.equal(evento.args.p_organizacao,org);
+  assert.equal(evento.args.p_resposta.nomeFuncao,'Representação e articulação institucional');
 });
 test('retomada exige sessão e leitura de aplicação/organização; consulta não registra nem descarta',async()=>{
   const a=api();assert.equal((await a.api.obterImportacaoMatrizPendente({data:{organizacaoId:org,diagnosticoId:diag}})).origem.sha256,a.registro.origem.sha256);
