@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, Paperclip, Plus, Trash2 } from 'lucide-react';
+import { Check, Paperclip } from 'lucide-react';
 import { PARECER_GRUPOS, type ParecerCampo } from '../../diagnostic/catalog/parecerComplementar';
 import { CHECKLIST_DOCUMENTAL } from '../../diagnostic/catalog/checklistDocumental';
 import { FUNCOES_MATRIZ } from '../../diagnostic/catalog/matrizPrototipo';
@@ -46,7 +46,6 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
   const [respostas, setRespostas] = useState<RespostasComplementares>({});
   const [analise, setAnalise] = useState({ sintese: '', capacidades: '', fragilidades: '', pontosPrioritarios: '', consideracoesTecnicas: '' });
   const [evidencias, setEvidencias] = useState<EvidenciaVinculada[]>([]);
-  const [novaEvidencia, setNovaEvidencia] = useState<EvidenciaVinculada>({ tipo: '', referencia: '', nota: '' });
   const [lendoArquivo, setLendoArquivo] = useState(false);
   const hydrated = useRef(false);
 
@@ -116,11 +115,11 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
     reader.readAsDataURL(file);
   };
 
-  const estadoAtual = JSON.stringify([respostas, analise, evidencias, novaEvidencia]);
+  const estadoAtual = JSON.stringify([respostas, analise, evidencias]);
   const estadoSalvo = JSON.stringify([parecer?.respostasComplementares ?? {}, {
     sintese: parecer?.sintese ?? '', capacidades: parecer?.capacidades ?? '', fragilidades: parecer?.fragilidades ?? '',
     pontosPrioritarios: parecer?.pontosPrioritarios ?? '', consideracoesTecnicas: parecer?.consideracoesTecnicas ?? '',
-  }, parecer?.evidenciasVinculadas ?? [], { tipo: '', referencia: '', nota: '' }]);
+  }, parecer?.evidenciasVinculadas ?? []]);
   const haAlteracoes = hydrated.current && estadoAtual !== estadoSalvo;
   usePendenciaModulo(!readOnly && (haAlteracoes || salvarMutation.isPending || upload.isPending || lendoArquivo));
 
@@ -135,7 +134,7 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
         <div>
           <p style={{ fontSize: '0.7rem', color: 'var(--ink-5)', textTransform: 'uppercase' }}>IEO</p>
           <p style={{ fontSize: '0.9rem', color: 'var(--ink-1)' }}>
-            {caderno.isLoading ? 'Carregando IEO…' : caderno.error ? 'Não foi possível carregar o IEO.' : <>Geral {ieoResultado.geral?.toFixed(1) ?? '—'} · {ieoResultado.respondidas}/{ieoResultado.total} perguntas · CRIA 22/10/2026</>}
+            {caderno.isLoading ? 'Carregando IEO…' : caderno.error ? 'Não foi possível carregar o IEO.' : <>Geral {ieoResultado.geral?.toFixed(1) ?? '—'} · {ieoResultado.respondidas}/{ieoResultado.total} perguntas</>}
           </p>
         </div>
         <div>
@@ -252,59 +251,12 @@ export function ParecerTecnicoTab({ diagnosticoId, organizacaoId, readOnly }: Pa
         ))}
       </div>
 
-      {/* Evidências vinculadas */}
-      <div className="flex flex-col gap-3">
-        <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem', color: 'var(--ink-1)' }}>
-          Evidências vinculadas <span style={{ fontWeight: 400, fontSize: '0.75rem', color: 'var(--ink-5)' }}>(opcional)</span>
-        </h3>
-        <div className="flex flex-col gap-2">
-          {evidencias.map((ev, i) => (
-            <div key={i} className="flex items-center gap-3 bg-card rounded-lg border px-3 py-2" style={{ borderColor: 'var(--border)' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--ink-3)' }}>{ev.tipo}</span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--ink-2)' }}>{ev.referencia}</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--ink-5)', flex: 1 }}>{ev.nota}</span>
-              {!readOnly && (
-                <button onClick={() => setEvidencias(list => list.filter((_, idx) => idx !== i))} className="p-1 rounded hover:bg-red-50">
-                  <Trash2 size={12} color="var(--danger)" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        {!readOnly && (
-          <div className="flex items-center gap-2">
-            <select value={novaEvidencia.tipo} onChange={e => setNovaEvidencia(v => ({ ...v, tipo: e.target.value }))} className="border rounded-lg px-2 py-1.5 text-[12px]" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }}>
-              <option value="">Tipo...</option>
-              <option value="Matriz Funcional">Matriz Funcional</option>
-              <option value="IEO">IEO</option>
-              <option value="Cesta de Produtos">Cesta de Produtos</option>
-              <option value="Documento">Documento</option>
-              <option value="Observação de campo">Observação de campo</option>
-            </select>
-            <input value={novaEvidencia.referencia} onChange={e => setNovaEvidencia(v => ({ ...v, referencia: e.target.value }))} placeholder="Referência" className="border rounded-lg px-2 py-1.5 text-[12px]" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }} />
-            <input value={novaEvidencia.nota} onChange={e => setNovaEvidencia(v => ({ ...v, nota: e.target.value }))} placeholder="Nota" className="border rounded-lg px-2 py-1.5 text-[12px] flex-1" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }} />
-            <button
-              onClick={() => {
-                if (!novaEvidencia.tipo || !novaEvidencia.referencia) return;
-                setEvidencias(list => [...list, novaEvidencia]);
-                setNovaEvidencia({ tipo: '', referencia: '', nota: '' });
-              }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px]"
-              style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}
-            >
-              <Plus size={12} /> Vincular
-            </button>
-          </div>
-        )}
-      </div>
-
       {!readOnly && (
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => {
             setRespostas(parecer?.respostasComplementares ?? {});
             setAnalise({ sintese: parecer?.sintese ?? '', capacidades: parecer?.capacidades ?? '', fragilidades: parecer?.fragilidades ?? '', pontosPrioritarios: parecer?.pontosPrioritarios ?? '', consideracoesTecnicas: parecer?.consideracoesTecnicas ?? '' });
             setEvidencias(parecer?.evidenciasVinculadas ?? []);
-            setNovaEvidencia({ tipo: '', referencia: '', nota: '' });
           }} disabled={!haAlteracoes || salvarMutation.isPending} className="flex items-center gap-2 px-5 py-2 rounded-lg text-[13px] font-medium border disabled:opacity-60">Cancelar alterações</button>
           <button
             onClick={() => salvarMutation.mutate()}

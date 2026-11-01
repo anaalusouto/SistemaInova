@@ -3,7 +3,7 @@ import { CAMPOS_IMPORTACAO, validarConferencia, type ConferenciaFuncao, type Dec
 export const ESTADOS_MATRIZ = [
   {id:'vazia',rotulo:'Vazia',descricao:'Função oficial sem respostas.'},
   {id:'em_edicao',rotulo:'Em edição',descricao:'Valores em preenchimento ou alteração, ainda não salvos.'},
-  {id:'pre_preenchida',rotulo:'Pré-preenchida',descricao:'Respostas do PDF aguardando conferência.'},
+  {id:'pre_preenchida',rotulo:'Pré-preenchida',descricao:'Respostas importadas aguardando conferência.'},
   {id:'com_pendencias',rotulo:'Com pendências',descricao:'Campos ausentes, não reconhecidos ou ambíguos precisam de conferência.'},
   {id:'revisada',rotulo:'Revisada',descricao:'Valores confirmados. Confira se o salvamento já foi realizado.'},
 ] as const;

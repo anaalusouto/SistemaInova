@@ -30,6 +30,6 @@ export function ExcluirDiagnosticoButton({ diagnostico, nomeOrganizacao, onExclu
   if (readOnly) return null;
   return <button type="button" disabled={exclusao.isPending || bloqueado} aria-label={`Excluir versão ${diagnostico.versao} de ${nomeOrganizacao}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 focus-visible:outline-2 disabled:opacity-50" onClick={() => {
     if (exclusao.isPending || bloqueado) return;
-    if (window.confirm(`Excluir definitivamente o mapeamento de ${nomeOrganizacao}?\n\nVersão ${diagnostico.versao} · aplicação ${formatDateOnly(diagnostico.dataAplicacao)}.\n\nSerão excluídos Matriz, IEO, Cesta, Parecer, respostas do caderno e anexos exclusivos desta aplicação. A organização e os demais mapeamentos serão preservados.\n\nEsta ação não pode ser desfeita.`)) exclusao.mutate();
+    if (window.confirm(`Excluir definitivamente o mapeamento de ${nomeOrganizacao}?\n\nVersão ${diagnostico.versao} · aplicação ${formatDateOnly(diagnostico.dataAplicacao)}.\n\nSerão excluídos Matriz, IEO, Cesta, Parecer, respostas e anexos exclusivos desta aplicação. A organização e os demais mapeamentos serão preservados.\n\nEsta ação não pode ser desfeita.`)) exclusao.mutate();
   }}><Trash2 size={14} aria-hidden />{exclusao.isPending ? 'Excluindo…' : 'Excluir'}</button>;
 }

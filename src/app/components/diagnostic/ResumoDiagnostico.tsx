@@ -1,13 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Sprout } from "lucide-react";
-import { getParecer, listarRespostasMatriz, listarRespostasIeo } from "../../diagnosticos.server";
+import { getParecer, listarRespostasMatriz } from "../../diagnosticos.server";
 import { useFichaOrganizacao } from "../organizacoes/useOrganizacoes";
 import { DocumentosRegistro } from "../DocumentosRegistro";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { useCaderno } from "./CadernoItens";
 import { calcularIeoCaderno } from "../../diagnostic/ieoCaderno";
-import { calcularIeo } from "../../diagnostic/ieoCalculation";
 import {
   camposDaPrioridade,
   ordenarDimensoes,
@@ -150,10 +149,6 @@ export function ResumoDiagnostico({
     queryKey: ["diagnostico-matriz", diagnosticoId],
     queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }),
   });
-  const ieo = useQuery({
-    queryKey: ["diagnostico-ieo", diagnosticoId],
-    queryFn: () => listarRespostasIeo({ data: { diagnosticoId } }),
-  });
   const parecer = useQuery({
     queryKey: ["diagnostico-parecer", diagnosticoId],
     queryFn: () => getParecer({ data: { diagnosticoId } }),
@@ -187,7 +182,7 @@ export function ResumoDiagnostico({
       window.removeEventListener("afterprint", depois);
     };
   }, []);
-  const consultas = [ficha, matriz, ieo, caderno, parecer];
+  const consultas = [ficha, matriz, caderno, parecer];
   if (consultas.some((c) => c.isLoading)) return <p role="status">Carregando resumo…</p>;
   const org = ficha.data;
   if (consultas.some((c) => c.error) || !org)
@@ -209,7 +204,6 @@ export function ResumoDiagnostico({
     );
   const registros = caderno.data ?? [];
   const resultado = calcularIeoCaderno(registros);
-  const anterior = calcularIeo(ieo.data ?? []);
   const prioridades = prioridadesDoCaderno(registros);
   const pendencias = prioridades.filter((r) =>
     pendenciaDeRemapeamento(r.resposta.valor || r.resposta.relato),
@@ -221,9 +215,6 @@ export function ResumoDiagnostico({
   const capacidades = parecer.data?.capacidades || textoCaderno("E02");
   const fragilidades = parecer.data?.fragilidades || textoCaderno("D01");
   const sintese = parecer.data?.sintese;
-  const historicoRotulo = pendencias.length
-    ? "Histórico — remapeamento pendente"
-    : "Histórico — instrumento anterior";
   const observacoes = [
     ...(matriz.data ?? [])
       .filter((r) => r.observacoes?.trim())
@@ -236,15 +227,8 @@ export function ResumoDiagnostico({
       .filter((r) => r.resposta.relato.trim())
       .map((r) => ({
         id: `caderno-${r.codigo}-${r.contexto}`,
-        origem: `Caderno CRIA · ${r.codigo}${r.contexto ? ` · ${r.contexto}` : ""}`,
+        origem: `Resposta · ${r.codigo}${r.contexto ? ` · ${r.contexto}` : ""}`,
         texto: r.resposta.relato,
-      })),
-    ...(ieo.data ?? [])
-      .filter((r) => r.observacao?.trim())
-      .map((r) => ({
-        id: `ieo-${r.perguntaId}`,
-        origem: `Histórico IEO · pergunta ${r.perguntaId}`,
-        texto: r.observacao,
       })),
     ...(org.notas ?? []).map((n) => ({
       id: `nota-${n.id}`,
@@ -256,7 +240,6 @@ export function ResumoDiagnostico({
     <div ref={raiz} className="diagnostico-resumo">
       <header>
         <p className="diagnostico-sobretitulo">Resumo do diagnóstico</p>
-        <p>Caderno CRIA · revisão do instrumento em 22/10/2026</p>
       </header>
       <section
         className={`resumo-situacao ${emRevisao ? "resumo-em-revisao" : ""}`}
@@ -268,7 +251,7 @@ export function ResumoDiagnostico({
         </h4>
         <p>
           {resultado.geral === null ? (
-            "O IEO atual está sem nota calculável: não há respostas pontuáveis no caderno atual. Resultados do instrumento anterior são apresentados apenas como histórico."
+            "O IEO atual está sem nota calculável: não há respostas pontuáveis registradas."
           ) : (
             <>
               IEO atual: <strong>{nota(resultado.geral)} / 4</strong> · {resultado.respondidas}/
@@ -280,7 +263,7 @@ export function ResumoDiagnostico({
         {resultado.respondidas < resultado.total && (
           <p>
             <strong>Pendência:</strong> {resultado.total - resultado.respondidas} perguntas sem
-            resposta no caderno atual.
+            resposta registrada.
           </p>
         )}
         {pendencias.length > 0 && (
@@ -306,10 +289,6 @@ export function ResumoDiagnostico({
               {trechoExecutivo(capacidades) ||
                 "Nenhuma capacidade registrada no parecer ou no fechamento estratégico."}
             </p>
-            <p className="resumo-fonte">
-              Fonte:{" "}
-              {parecer.data?.capacidades ? "parecer técnico" : "fechamento estratégico · E02"}
-            </p>
           </article>
           <article className="resumo-cartao resumo-fragilidade">
             <h5>
@@ -319,9 +298,6 @@ export function ResumoDiagnostico({
               {trechoExecutivo(fragilidades) ||
                 "Nenhuma fragilidade registrada no parecer ou no relato da diretoria."}
             </p>
-            <p className="resumo-fonte">
-              Fonte: {parecer.data?.fragilidades ? "parecer técnico" : "relato da diretoria · D01"}
-            </p>
           </article>
         </div>
       </section>
@@ -330,7 +306,7 @@ export function ResumoDiagnostico({
         <p>
           {emRevisao
             ? "Aguardam confirmação após a revisão do diagnóstico."
-            : "Prioridades registradas no fechamento estratégico do caderno."}
+            : "Prioridades registradas no fechamento estratégico."}
         </p>
         <div className="resumo-duas-colunas">
           {estrategicas.map((r) => {
@@ -343,7 +319,7 @@ export function ResumoDiagnostico({
             return (
               <article key={r.codigo} className="resumo-cartao resumo-prioridade">
                 <p className="resumo-etiqueta">
-                  {r.codigo} · {emRevisao ? "Aguardando confirmação" : "Registro do caderno"}
+                  {r.codigo} · {emRevisao ? "Aguardando confirmação" : "Registro"}
                 </p>
                 <h5>{titulo}</h5>
                 <dl>
@@ -365,7 +341,6 @@ export function ResumoDiagnostico({
                     <p className="resumo-texto-integral">{r.resposta.valor}</p>
                     <p className="resumo-texto-integral">{r.resposta.relato}</p>
                     <p>
-                      <strong>Fonte:</strong> {r.resposta.fonte || "Não informada"}
                     </p>
                     <p>
                       <strong>Respondentes / responsável:</strong>{" "}
@@ -390,29 +365,13 @@ export function ResumoDiagnostico({
         <DimensoesResumo
           dimensoes={resultado.porDimensao}
           rotulo={
-            emRevisao ? "Caderno atual — em revisão" : "Caderno atual — síntese das respostas"
+            emRevisao ? "Em revisão" : "Síntese das respostas"
           }
         />
         {onConsultarIeo && (
           <button type="button" className="resumo-acao" onClick={onConsultarIeo}>
             Consultar respostas do IEO
           </button>
-        )}
-        {(ieo.data?.length ?? 0) > 0 && (
-          <details className="resumo-expansivel resumo-historico">
-            <summary>Consultar IEO histórico · instrumento anterior</summary>
-            <div>
-              <p>
-                Respostas anteriores preservadas para consulta. Elas não foram convertidas para o
-                caderno CRIA e não integram o IEO atual.
-              </p>
-              <DimensoesResumo
-                dimensoes={anterior.porDimensao}
-                historico
-                rotulo={historicoRotulo}
-              />
-            </div>
-          </details>
         )}
       </section>
       <section aria-label="Conclusão técnica completa">
@@ -460,7 +419,7 @@ export function ResumoDiagnostico({
             </p>
             <p>
               Prioridades estratégicas são pactuadas, não derivam automaticamente das notas.
-              Respostas do instrumento anterior não são convertidas.
+              Respostas anteriores não são convertidas.
             </p>
           </div>
         </details>
@@ -470,7 +429,7 @@ export function ResumoDiagnostico({
             pendencias.map((r) => (
               <div key={r.codigo}>
                 <p>
-                  <strong>Remapeamento dimensional pendente</strong> · referência do caderno:{" "}
+                  <strong>Remapeamento dimensional pendente</strong> · código:
                   {r.codigo}
                 </p>
                 <p className="resumo-texto-integral">{r.resposta.valor}</p>

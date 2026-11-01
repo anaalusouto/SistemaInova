@@ -7,9 +7,9 @@ export function ConferenciaCampoMatriz({ campo, conferencia, decisao, aoManterVa
 }) {
   const estado = conferencia?.campos[campo] ?? 'ausente';
   return <span className="block text-xs text-muted-foreground">
-    {estado === 'reconhecido' ? 'Reconhecido no PDF · confira antes de salvar' : estado === 'ambiguo' ? 'Ambíguo no PDF · escolha ou corrija este campo' : 'Ausente no PDF · preencha se conhecido'}
+    {estado === 'reconhecido' ? 'Identificado no arquivo · confira antes de salvar' : estado === 'ambiguo' ? 'Ambíguo no arquivo · escolha ou corrija este campo' : 'Não identificado no arquivo · preencha se conhecido'}
     {estado === 'ambiguo' && <>
-      <span className="block whitespace-pre-wrap">Valores no PDF: {(conferencia?.valores?.[campo] ?? []).join(' / ') || 'Função ou conteúdo não identificado com segurança'}</span>
+      <span className="block whitespace-pre-wrap">Valores encontrados: {(conferencia?.valores?.[campo] ?? []).join(' / ') || 'Função ou conteúdo não identificado com segurança'}</span>
       <button type="button" className="underline" onClick={aoManterVazio}>Manter como não identificado</button>
       {decisao && <span className="block">{decisao === 'corrigido' ? 'Resposta corrigida para conferência' : 'Decisão: dado não identificado'}</span>}
     </>}

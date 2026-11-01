@@ -37,7 +37,7 @@ export function DiagnosticoModule({ comunidadeId, instrumentoInicial = 'resumo' 
     onBack={voltar} onHistorico={() => historico()} onNovaVersao={abrir} onMudarInstrumento={mudarInstrumento} onExcluido={() => historico(true)} />;
   if (visao === 'editor' && busca.diagnostico) return <DiagnosticoEditor key={busca.diagnostico}
     diagnosticoId={busca.diagnostico} organizacaoId={organizacao} incorporado={!!comunidadeId} instrumentoInicial={instrumentoInicial === 'parecer' ? 'parecer' : 'resumo'} instrumentoAtual={instrumento}
-    onMudarInstrumento={mudarInstrumento} rotuloVoltar="Voltar" onBack={voltar} onHistorico={() => historico()} onNovaVersao={abrir} onExcluido={() => historico(true)} />;
+    onMudarInstrumento={mudarInstrumento} rotuloVoltar="Voltar" onBack={voltar} onNovaVersao={abrir} onExcluido={() => historico(true)} />;
   return <DiagnosticoOrganizacao comunidadeId={organizacao} incorporado={!!comunidadeId} onBack={voltar} onSelectDiagnostico={abrir} />;
 }
 
@@ -55,5 +55,5 @@ export function EntradaDiagnosticoAtual({ comunidadeId, incorporado, instrumento
   if(!atual) return <DiagnosticoOrganizacao comunidadeId={comunidadeId} incorporado={incorporado} onBack={onBack} onSelectDiagnostico={onNovaVersao} />;
   return <DiagnosticoEditor key={atual.id} diagnosticoId={atual.id} organizacaoId={comunidadeId} incorporado={incorporado} instrumentoInicial={instrumentoInicial}
     instrumentoAtual={instrumentoAtual} onMudarInstrumento={onMudarInstrumento} onExcluido={onExcluido}
-    rotuloVoltar="Voltar" onBack={onBack} onHistorico={onHistorico} onNovaVersao={onNovaVersao} />;
+    rotuloVoltar="Voltar" onBack={onBack} onNovaVersao={onNovaVersao} />;
 }

@@ -9,12 +9,16 @@ import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton'
 import { MatrizFuncionalTab } from './diagnostic/MatrizFuncionalTab';
 import { QuestionarioCaderno } from './diagnostic/QuestionarioCaderno';
 import { CestaCaderno } from './diagnostic/CestaCaderno';
-import { CadernoItens } from './diagnostic/CadernoItens';
-import { IDENTIFICACAO_CADERNO, EVIDENCIAS_CADERNO } from '../diagnostic/catalog/cadernoCria';
 import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
 import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
 import { listarComunidades } from '../comunidades.server';
+import { listarRespostasMatriz, listarProdutos, getParecer, listarChecklist } from '../diagnosticos.server';
+import { FUNCOES_MATRIZ } from '../diagnostic/catalog/matrizPrototipo';
+import { PARECER_GRUPOS } from '../diagnostic/catalog/parecerComplementar';
+import { CHECKLIST_DOCUMENTAL } from '../diagnostic/catalog/checklistDocumental';
+import { calcularIeoCaderno } from '../diagnostic/ieoCaderno';
+import { useCaderno } from './diagnostic/CadernoItens';
 import './diagnostic/painel-diagnostico.css';
 import { NavegacaoModulo } from './NavegacaoModulo';
 import { PendenciasModulo, navegarSemPendencias } from './PendenciasModulo';
@@ -36,7 +40,6 @@ interface DiagnosticoEditorProps {
   onNovaVersao: (novoDiagnosticoId: string) => void;
   incorporado?: boolean;
   instrumentoInicial?: TabId;
-  onHistorico?: () => void;
   rotuloVoltar?: string;
   instrumentoAtual?: TabId;
   onMudarInstrumento?: (instrumento: TabId) => void;
@@ -48,7 +51,7 @@ export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
   return <PendenciasModulo key={props.diagnosticoId} aoPendencias={setHaPendencias}><ConteudoDiagnosticoEditor {...props} haPendencias={haPendencias}/></PendenciasModulo>;
 }
 
-function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', onHistorico, rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
+function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
   const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
@@ -60,6 +63,32 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
     queryKey: ['diagnostico', diagnosticoId, organizacaoId ?? null],
     queryFn: () => getDiagnostico({ data: { id: diagnosticoId, comunidadeId: organizacaoId } }),
   });
+  const matrizProgresso = useQuery({ queryKey: ['diagnostico-matriz', diagnosticoId], queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }) });
+  const ieoProgresso = useCaderno({ diagnosticoId, organizacaoId: diagnostico?.comunidadeId ?? organizacaoId ?? '' });
+  const cestaProgresso = useQuery({ queryKey: ['diagnostico-produtos', diagnosticoId], queryFn: () => listarProdutos({ data: { diagnosticoId } }) });
+  const parecerProgresso = useQuery({ queryKey: ['diagnostico-parecer', diagnosticoId], queryFn: () => getParecer({ data: { diagnosticoId } }) });
+  const checklistProgresso = useQuery({ queryKey: ['diagnostico-checklist', diagnosticoId], queryFn: () => listarChecklist({ data: { diagnosticoId } }) });
+  const funcoesAvaliadas = FUNCOES_MATRIZ.filter(f => {
+    const r = matrizProgresso.data?.find(item => item.funcaoId === f.id);
+    return Boolean(r?.atuacao.length && r.experiencia && r.criticidade && r.interesse);
+  }).length;
+  const ieoResultado = calcularIeoCaderno(ieoProgresso.data ?? []);
+  const percentualMatriz = funcoesAvaliadas / FUNCOES_MATRIZ.length;
+  const percentualIeo = ieoResultado.total ? ieoResultado.respondidas / ieoResultado.total : 0;
+  const produtos = cestaProgresso.data ?? [];
+  const percentualCesta = produtos.length ? produtos.filter(p => p.statusPreenchimento === 'completo').length / produtos.length : 0;
+  const camposParecer = PARECER_GRUPOS.flatMap(g => g.campos);
+  const respostasParecer = parecerProgresso.data?.respostasComplementares ?? {};
+  const respondidasParecer = camposParecer.filter(c => {
+    const value = respostasParecer[c.id];
+    return Array.isArray(value) ? value.length > 0 : Boolean(value?.trim());
+  }).length;
+  const analiseParecer = ['sintese', 'capacidades', 'fragilidades', 'pontosPrioritarios', 'consideracoesTecnicas'] as const;
+  const analiseRespondida = analiseParecer.filter(c => Boolean(parecerProgresso.data?.[c]?.trim())).length;
+  const documentosRespondidos = (checklistProgresso.data ?? []).filter(item => item.disponivel !== null).length;
+  const totalParecer = camposParecer.length + analiseParecer.length + CHECKLIST_DOCUMENTAL.length;
+  const percentualParecer = totalParecer ? (respondidasParecer + analiseRespondida + documentosRespondidos) / totalParecer : 0;
+  const percentualProgresso = Math.round((percentualMatriz + percentualIeo + percentualCesta + percentualParecer) / 4 * 100);
 
   const concluir = useMutation({
     mutationFn: () => concluirDiagnostico({ data: { id: diagnosticoId } }),
@@ -89,7 +118,6 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         {!incorporado && <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={() => navegarSemPendencias(haPendencias, onBack)} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
           <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
-          {onHistorico && <button type="button" className="ml-auto underline text-primary" onClick={() => navegarSemPendencias(haPendencias, onHistorico)}>Histórico de mapeamentos</button>}
         </nav>}
         <div className={`flex flex-wrap items-center justify-between gap-3 ${incorporado ? 'diagnostico-contexto px-4 sm:px-6 py-4' : 'pb-3'}`}>
           <div className={incorporado ? 'diagnostico-contexto-grid' : ''}>
@@ -97,6 +125,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
               <div><span>Aplicação</span><strong>{diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'}</strong></div>
               <div><span>Versão</span><strong>{diagnostico?.versao ?? '—'}</strong></div>
               <div><span>Última edição</span><strong>{diagnostico?.atualizadoEm ? new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR') : '—'}</strong></div>
+              <div title="Média do preenchimento da Matriz, IEO, Cesta de Produtos e Parecer"><span>Andamento</span><strong className="inline-flex items-center gap-2"><span className="project-summary-progress" aria-hidden="true"><span style={{ width: `${percentualProgresso}%` }} /></span>{percentualProgresso}%</strong></div>
             </> : <>
               <p className="diagnostico-sobretitulo">Inova Sociobio · Diagnóstico organizacional</p>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.8rem', color: 'var(--ink-1)' }}>
@@ -106,11 +135,11 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
                 Aplicação {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'} · Versão {diagnostico?.versao ?? '—'}
                 {diagnostico?.atualizadoEm && <> · Última alteração salva em {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>}
               </p>
+              <p className="mt-2 flex items-center gap-2 text-xs font-semibold" title="Média do preenchimento da Matriz, IEO, Cesta de Produtos e Parecer" style={{ color: 'var(--ink-3)' }}><span>Andamento</span><span className="project-summary-progress" aria-hidden="true"><span style={{ width: `${percentualProgresso}%` }} /></span>{percentualProgresso}%</p>
             </>}
           </div>
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
-              {incorporado && onHistorico && <button type="button" className="rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, onHistorico)}>Histórico</button>}
               <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {
@@ -162,8 +191,6 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         {tab === 'resumo' && diagnostico && <div className="space-y-6">
           <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId}
             readOnly={readOnly || diagnostico.status === 'concluido'} onConsultarIeo={() => setTab('ieo')} onConsultarParecer={() => setTab('parecer')} />
-          <details className="resumo-expansivel"><summary>Identificação · Caderno CRIA 22/10/2026</summary><div><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={IDENTIFICACAO_CADERNO}/></div></details>
-          <details className="resumo-expansivel"><summary>Evidências e pendências · consultar ou atualizar registros</summary><div><CadernoItens diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} itens={EVIDENCIAS_CADERNO}/></div></details>
         </div>}
         {tab === 'matriz' && diagnostico && (
           <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />

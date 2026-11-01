@@ -136,12 +136,12 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     </div></div>
     <section aria-label="Estados da Matriz" className="space-y-2">
       <ul className="flex flex-wrap gap-2 text-xs">{ESTADOS_MATRIZ.map(e=><li key={e.id} title={e.descricao} className="rounded-lg border bg-card px-3 py-2"><span>{e.rotulo}: </span><strong>{[...estados.values()].filter(estado=>estado===e.id).length}</strong></li>)}</ul>
-      <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. As respostas do PDF pendente ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'As alterações só são gravadas ao salvar cada função. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
+      <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. Há respostas importadas que ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'As alterações só são gravadas ao salvar cada função. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
     </section>
     {!readOnly&&edicaoTabela&&<p role="status" className="text-sm">Edite as células e salve ou cancele cada linha. {pendentes>0?`${pendentes} linha(s) com alterações não salvas.`:''}</p>}
-    {origem&&<div className="rounded-xl border p-4 space-y-2 text-sm" role="status"><p>PDF: {origem}. Funções ainda não salvas: {Object.keys(importadas).length}. Revisadas e prontas para salvar: {Object.keys(importadas).filter(id=>estados.get(id)==='revisada').length}.</p><p>Confira os campos reconhecidos, ausentes ou ambíguos. Corrija as respostas e confirme o salvamento de cada função. Nenhuma resposta é salva automaticamente.</p>
+    {origem&&<div className="rounded-xl border p-4 space-y-2 text-sm" role="status"><p>Respostas importadas. Funções ainda não salvas: {Object.keys(importadas).length}. Revisadas e prontas para salvar: {Object.keys(importadas).filter(id=>estados.get(id)==='revisada').length}.</p><p>Confira os campos identificados, ausentes ou ambíguos. Corrija as respostas e confirme o salvamento de cada função. Nenhuma resposta é salva automaticamente.</p>
       {(Object.keys(conferencia).length<FUNCOES_MATRIZ.length||pendencias.length>0||Object.values(conferencia).some(f=>Object.values(f.campos).some(c=>c!=='reconhecido')))&&<p><strong>Importação parcial.</strong> Revise o que foi identificado e complete os campos ausentes manualmente. Respostas sem função correspondente não foram associadas automaticamente.</p>}
-      {pendencias.length>0&&<details><summary>Ocorrências identificadas no PDF ({pendencias.length})</summary><ul className="list-disc pl-5">{pendencias.map((p,i)=><li key={i}>{p}</li>)}</ul></details>}
+      {pendencias.length>0&&<details><summary>Ocorrências identificadas ({pendencias.length})</summary><ul className="list-disc pl-5">{pendencias.map((p,i)=><li key={i}>{p}</li>)}</ul></details>}
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={ocupado||pendentes>0} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
@@ -169,10 +169,10 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
             <span className="text-xs text-muted-foreground">{f.id}</span>
             <span className="flex-1 min-w-0 break-words font-medium text-sm">{nome}</span><span className="text-xs text-muted-foreground">{leituraMatriz(valoresLinha.criticidade,valoresLinha.experiencia)}</span>
             <span aria-label={`Estado da função ${f.id}: ${estado.rotulo}`} className="rounded border px-2 py-1 text-xs" title={estado.descricao}>{estado.rotulo}</span>
-            {origem&&<span className="text-xs font-medium">{r?'Salva nesta aplicação':!conferencia[f.id]?'Ausente no PDF':estado.id==='revisada'?'PDF conferido · ainda não salvo':estado.id==='com_pendencias'?'PDF · requer conferência':'Origem: PDF'}</span>}
+            {origem&&<span className="text-xs font-medium">{r?'Salva nesta aplicação':!conferencia[f.id]?'Não identificada':estado.id==='revisada'?'Conferida · ainda não salva':estado.id==='com_pendencias'?'Requer conferência':'Importada'}</span>}
           </div>
           {open&&<div className="border-t p-4">
-            <p role="status" className="mb-3 text-xs text-muted-foreground">{r&&!edicoes[f.id]&&!editando?'Respostas salvas nesta aplicação.':estado.id==='revisada'?'Valores revisados e prontos para salvar. Ainda não salvos.':readOnly&&importadas[f.id]?'Prévia do PDF pendente. Valores ainda não confirmados nem salvos na Matriz.':estado.descricao}</p>
+            <p role="status" className="mb-3 text-xs text-muted-foreground">{r&&!edicoes[f.id]&&!editando?'Respostas salvas nesta aplicação.':estado.id==='revisada'?'Valores revisados e prontos para salvar. Ainda não salvos.':readOnly&&importadas[f.id]?'Prévia de respostas importadas ainda não confirmadas nem salvas na Matriz.':estado.descricao}</p>
             {editando&&!readOnly?<form className="grid gap-4 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();if(readOnly||emCurso.current)return;
               gravarFuncao(f.id,draft,decisoes,confirmado);}}>
               <fieldset disabled={salvar.isPending||descartando} className="contents">
@@ -191,7 +191,6 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
               </fieldset>
             </form>:<div className="space-y-2">
               <LeituraFuncaoMatriz valores={valoresConsulta}/>
-              {r?.origemPdf&&<details className="text-xs"><summary>Origem e conferência do PDF</summary><p>{r.origemPdf.nomeArquivo} · conferida em {new Date(r.origemPdf.conferidoEm).toLocaleString('pt-BR')}</p><p className="break-all">SHA-256: {r.origemPdf.sha256}</p></details>}
               {!readOnly&&<button type="button" className="underline text-primary text-sm" onClick={()=>{carregarEdicao(f.id,reiniciar());setEditando(true);}}>Editar</button>}
             </div>}
           </div>}
