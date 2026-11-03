@@ -1,4 +1,5 @@
 .diagnostico-painel { background: var(--surface-1); color: var(--ink-1); }
+.diagnostico-editor-matriz-neutra { background: var(--card, #fff); }
 .diagnostico-sobretitulo { color: var(--brand); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 700; margin-bottom: .35rem; }
 .diagnostico-contexto { background: var(--surface-0); }
 .diagnostico-contexto-grid { display: grid; min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 24px; }

@@ -21,6 +21,20 @@ const nota = (valor: number | null) =>
   valor === null
     ? "Sem nota"
     : valor.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+const DIMENSOES_HISTORICAS_AGROMEL = [
+  { ordem: 1, prioridade: 'Crítica', dimensao: 'Organizacional e Governança', descricao: 'Decisões, responsabilidades, lideranças e acompanhamento do planejamento.', ieo: '1,2', matriz: '1,0', cesta: '—', consolidada: '1,1', formula: '(50% × IEO + 25% × Matriz) ÷ 75%' },
+  { ordem: 2, prioridade: 'Crítica', dimensao: 'Social e Território', descricao: 'Participação dos membros, comunicação, benefícios coletivos, cultura, parceiros e território.', ieo: '1,2', matriz: '2,0', cesta: '—', consolidada: '1,5', formula: '(50% × IEO + 25% × Matriz) ÷ 75%' },
+  { ordem: 3, prioridade: 'Média', dimensao: 'Produção e Negócio', descricao: 'Produção, recursos, logística, qualidade e atuação comercial.', ieo: '1,4', matriz: '1,9', cesta: '2,0', consolidada: '1,7', formula: '50% × IEO + 25% × Matriz + 25% × Cesta' },
+  { ordem: 4, prioridade: 'Média', dimensao: 'Gestão Econômico-financeira', descricao: 'Registros, planejamento e administração de recursos, prestação de contas e continuidade financeira.', ieo: '1,8', matriz: '2,0', cesta: '—', consolidada: '1,9', formula: 'Redistribuir os pesos entre os componentes disponíveis' },
+  { ordem: 5, prioridade: 'Média', dimensao: 'Regularidade e Gestão de Riscos', descricao: 'Exigências, prevenção e resposta a riscos, dependências e conflitos.', ieo: '1,7', matriz: '3,0', cesta: '2,5', consolidada: '2,2', formula: '50% × IEO + 25% × Matriz + 25% × Cesta' },
+];
+
+const PRIORIDADES_AGROMEL = [
+  { codigo: 'PRIO1', titulo: 'Engajamento dos cooperados', resultado: 'Ampliar participação, distribuir responsabilidades e fortalecer a capacidade de substituição, incluindo membros distantes e menos participativos.', obstaculo: 'Participação desigual, concentração de funções e barreiras territoriais/logísticas.', apoio: 'Capacitação em gestão, mecanismos de participação e comunicação, organização das responsabilidades.', publico: 'Cooperados, com atenção aos grupos menos participativos.', dimensoes: 'Organizacional e Governança; Social e Território.' },
+  { codigo: 'PRIO2', titulo: 'Capital de giro', resultado: 'Aumentar a capacidade de sustentar operações e absorver diferenças de prazo, reduzindo dependência de projetos e pagamentos específicos.', obstaculo: 'Ausência de reserva/capital de giro próprio e planejamento financeiro pouco estruturado; a necessidade de pagamento imediato aos cooperados favorece vendas a atravessadores e reduz insumos para processamento coletivo.', apoio: 'Estruturação de custos, planejamento financeiro e busca de alternativas de capital de giro.', publico: 'Organização e cooperados participantes das operações.', dimensoes: 'Organizacional e Governança; Gestão Econômico-financeira; Produção e Negócio.' },
+  { codigo: 'PRIO3', titulo: 'Comercialização Coletiva', resultado: 'Ampliar e diversificar mercados e canais coletivos, garantir certificação e qualidade padronizada, reduzir dependência da CONAB e melhorar acesso a compradores.', obstaculo: 'Dependência de canal específico, prospecção pouco estruturada, logística heterogênea, custos e margens pouco conhecidos e baixa visibilidade das vendas individuais.', apoio: 'Prospecção de mercados, formação de preços, logística, marca/apresentação de mel e frutas e organização da oferta.', publico: 'Cooperados e produtos das operações coletivas atuais e futuras.', dimensoes: 'Produção e Negócio.' },
+];
 type Dimensao = {
   dimensaoId: string;
   dimensaoTitulo: string;
@@ -135,6 +149,23 @@ function DimensoesResumo({
       </div>
     </div>
   );
+}
+
+function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsultarIeo?: () => void }) {
+  return <div className="space-y-3">
+    <p role="status" className="resumo-situacao resumo-em-revisao"><strong>Histórico/provisório — aguarda remapeamento e reavaliação do IEO.</strong> Estes valores não são resultados atuais validados.</p>
+    <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela min-w-[1050px]">
+      <caption>Prioridades dimensionais · valores históricos da referência</caption>
+      <thead><tr>{['Ordem','Prioridade','Dimensão','Nota IEO','Nota Matriz','Nota Cesta','Consolidada','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
+      <tbody>{DIMENSOES_HISTORICAS_AGROMEL.map(d => <tr key={d.ordem}>
+        <th scope="row" data-label="Ordem">{d.ordem}</th><td data-label="Prioridade">{d.prioridade}</td>
+        <td data-label="Dimensão"><strong>{d.dimensao}</strong><p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p></td>
+        <td data-label="Nota IEO">{d.ieo} · histórica</td><td data-label="Nota Matriz">{d.matriz}</td>
+        <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada} · histórica</td><td data-label="Fórmula">{d.formula}</td>
+      </tr>)}</tbody>
+    </table></div></div>
+    {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos usados</button>}
+  </div>;
 }
 
 /** Reúne registros existentes; não converte respostas nem cria prioridades. */
@@ -265,113 +296,60 @@ export function ResumoDiagnostico({
   ];
   return (
     <div ref={raiz} className="diagnostico-resumo">
-      <header>
+      <section aria-label="Conclusão geral do mapeamento">
         <p className="diagnostico-sobretitulo">Resumo do diagnóstico</p>
-      </header>
-      <section
-        className={`resumo-situacao ${emRevisao ? "resumo-em-revisao" : ""}`}
-        aria-label="Situação metodológica"
-      >
-        <h4>
-          <AlertTriangle size={20} aria-hidden="true" />{" "}
-          {emRevisao ? "Diagnóstico em revisão" : "Situação do diagnóstico"}
-        </h4>
-        <p>
-          {ieoPendente ? (
-            <>O IEO atual está <strong>sem nota calculável validada</strong>. A referência informa que as 25 perguntas aguardam reavaliação pelo Caderno CRIA rev. 22/10/2026. Hoje há 25/25 respostas registradas, 24 notas históricas e Q25 como N/A. As respostas e notas foram preservadas, sem apresentá-las como atuais.</>
-          ) : resultado.geral === null ? (
-            "O IEO atual está sem nota calculável: não há respostas pontuáveis registradas."
-          ) : (
-            <>
-              IEO atual: <strong>{nota(resultado.geral)} / 4</strong> · {resultado.respondidas}/
-              {resultado.total} perguntas respondidas · {resultado.pontuadas} com nota. A síntese
-              considera apenas as dimensões com nota.
-            </>
-          )}
-        </p>
-        {resultado.respondidas < resultado.total && (
-          <p>
-            <strong>Pendência:</strong> {resultado.total - resultado.respondidas} perguntas sem
-            resposta registrada.
-          </p>
-        )}
-        {pendencias.length > 0 && (
-          <p>
-            <strong>Pendência de atualização:</strong> remapeamento dimensional registrado como
-            pendente. As prioridades estratégicas aguardam confirmação.
-          </p>
-        )}
-        <p>Notas e cobertura de respostas não certificam a validação técnica do diagnóstico.</p>
+        <h4>Conclusão geral</h4>
+        <p className="resumo-sintese">{diagnosticoAgromel
+          ? 'A AGROMEL possui experiências produtivas e oportunidades de diversificação, mas seu fortalecimento depende, sobretudo, da consolidação da gestão coletiva, do engajamento dos cooperados e da capacidade de sustentar economicamente suas operações atuais e futuras.'
+          : sintese?.trim() || 'Não registrado no parecer técnico.'}</p>
       </section>
-      <section aria-label="Síntese executiva">
-        <h4>Conclusão geral do mapeamento</h4>
-        <p className="resumo-sintese">
-          {sintese?.trim() ||
-            "Não registrado no parecer técnico."}
-        </p>
+      <section aria-label="Destaque principal e principal fragilidade transversal">
         <div className="resumo-duas-colunas">
           <article className="resumo-cartao resumo-potencial">
-              <h5>
-              <Sprout size={20} aria-hidden="true" /> Destaque principal · capacidades
-            </h5>
-            <p>
-              {capacidades?.trim() ||
-                "Nenhuma capacidade registrada no parecer ou no fechamento estratégico."}
-            </p>
+            <h5><Sprout size={20} aria-hidden="true" /> Destaque Principal</h5>
+            <p>{diagnosticoAgromel
+              ? 'Experiência com o mel e existência de uma base produtiva de beneficiamento já operante. A cooperativa tem um trabalho histórico e recorrente de articulação institucional, que disponibiliza uma rede de parceiros para atuar em necessidades coletivas.'
+              : capacidades?.trim() || 'Não registrado no parecer técnico.'}</p>
           </article>
           <article className="resumo-cartao resumo-fragilidade">
-            <h5>
-              <AlertTriangle size={20} aria-hidden="true" /> Fragilidade principal
-            </h5>
-            <p>
-              {fragilidades?.trim() ||
-                "Nenhuma fragilidade registrada no parecer ou no relato da diretoria."}
-            </p>
+            <h5><AlertTriangle size={20} aria-hidden="true" /> Principal fragilidade transversal</h5>
+            <p>{diagnosticoAgromel
+              ? 'Dificuldade de converter iniciativas e esforços individuais em processos coletivos regulares, com responsabilidades, acompanhamento e participação.'
+              : fragilidades?.trim() || 'Não registrado no parecer técnico.'}</p>
           </article>
         </div>
       </section>
       <section aria-label="Conclusão técnica completa">
         <h4>Conclusão técnica completa</h4>
-        <details className="resumo-expansivel" open>
-          <summary>Ler conclusão completa</summary>
-          <div>
-            {[
-              ["Síntese geral", sintese],
-              ["Potencial e capacidades", capacidades],
-              ["Fragilidades", fragilidades],
-              ["Pontos prioritários", parecer.data?.pontosPrioritarios],
-              ["Considerações técnicas", parecer.data?.consideracoesTecnicas],
-            ].map(([titulo, texto]) => (
-              <section key={titulo}>
-                <h5>{titulo}</h5>
-                <p className="resumo-texto-integral">{texto || "Não registrado."}</p>
-              </section>
-            ))}
-            {parecer.data?.atualizadoEm && (
-              <p>Parecer atualizado em {formatDateOnly(parecer.data.atualizadoEm)}.</p>
-            )}
-          </div>
-        </details>
-        {onConsultarParecer && (
-          <button type="button" className="resumo-acao" onClick={onConsultarParecer}>
-            {readOnly ? "Consultar parecer técnico" : "Editar parecer técnico"}
-          </button>
-        )}
+        {diagnosticoAgromel ? <div className="resumo-cartao resumo-conclusao-tecnica">
+          <p>O diagnóstico da AGROMEL revela uma <strong>cooperativa com experiência produtiva, atividades econômicas em funcionamento e oportunidades de diversificação</strong>. Entretanto, seu fortalecimento ainda <strong>depende de avanços na organização dos processos de gestão, na participação dos cooperados e na estruturação das operações coletivas</strong>.</p>
+          <p>A produção e a comercialização de mel constituem a principal referência de atuação da cooperativa. A existência de um selo de produto artesanal, conforme informado no levantamento, também representa um elemento relevante de sua trajetória. Contudo, os impactos ambientais e a redução do volume produzido têm levado a AGROMEL a buscar alternativas para diversificar suas fontes de receita e reduzir a dependência dessa atividade.</p>
+          <p>Foram identificadas oportunidades relacionadas ao beneficiamento do mel, às frutas, à macaxeira e seus derivados, às hortaliças e ao turismo rural. Essas possibilidades apresentam diferentes níveis de maturidade e exigem avaliações específicas antes de serem incorporadas às operações da cooperativa.</p>
+          <p><strong>A implantação da agroindústria de frutas foi definida como prioridade</strong>, principalmente diante do desperdício da produção já existente entre os cooperados. A iniciativa está alinhada ao projeto aprovado pelo Inova Sociobio II e é uma oportunidade de agregar valor à produção local. Ainda há definições pendentes sobre o fornecimento de matéria-prima, a distribuição de responsabilidades, a gestão operacional e a comercialização.</p>
+          <p>A preparação dessa atividade evidencia uma fragilidade mais ampla: embora existam práticas de gestão e mecanismos de funcionamento, muitos processos ainda não estão suficientemente estruturados para garantir continuidade, acompanhamento e tomada de decisão. Isso aparece especialmente no planejamento da produção, na divisão de tarefas, no acompanhamento das decisões e na organização das informações dos cooperados.</p>
+          <p><strong>A ausência de controles produtivos regulares e centralizados constitui um desafio importante</strong>, tanto para a agroindústria quanto para avaliar outras oportunidades de negócio. As demais possibilidades de diversificação devem ser precedidas de estudos específicos de mercado e viabilidade, considerando disponibilidade de matéria-prima, capacidade de fornecimento, custos e demanda potencial.</p>
+          <p>Na dimensão social e organizacional, é necessário fortalecer o envolvimento dos cooperados nas decisões e nas atividades coletivas, considerando suas necessidades, capacidades e expectativas. Isso será especialmente importante para a operação da agroindústria, que dependerá da articulação entre produtores e de compromissos compartilhados.</p>
+          <p>Na gestão econômico-financeira, a AGROMEL possui práticas e conhecimentos que podem apoiar o aprimoramento dos controles. Ainda são desafios o planejamento dos recursos, a disponibilidade de capital de giro e o uso de informações financeiras para orientar decisões.</p>
+          <p>A Matriz Funcional identifica interesse elevado no desenvolvimento de diferentes funções. <strong>Esse interesse não significa que todas as atividades devam ser assumidas diretamente pela cooperativa.</strong> O fortalecimento pode combinar aprimoramento das funções existentes, parcerias e serviços compartilhados, considerando capacidades, necessidades dos cooperados e decisões coletivas.</p>
+          <p>O IEO foi atualizado para o Caderno CRIA rev. 22/10/2026. As 25 perguntas aguardam reavaliação pelos novos descritores. Os níveis anteriores devem ser preservados como histórico; o IEO atual está sem nota calculável. Os relatos antigos e as prioridades dimensionais do agrupamento anterior precisam ser conferidos e remapeados antes de serem apresentados como avaliação atual.</p>
+          <p>De forma integrada, o principal desafio da AGROMEL não está apenas em ampliar a produção ou acessar mercados, mas em desenvolver a capacidade de organizar, coordenar e sustentar coletivamente suas atividades econômicas. A agroindústria de frutas torna essa necessidade ainda mais evidente.</p>
+          <p>Engajamento dos cooperados, capital de giro e comercialização permanecem como temas relevantes do levantamento anterior, mas devem ser confirmados e pactuados considerando as condições atuais da cooperativa e as exigências da nova operação.</p>
+          <p>Conclui-se que a AGROMEL possui uma base produtiva e oportunidades concretas de fortalecimento, especialmente por meio da agregação de valor à produção dos cooperados. A consolidação desse potencial dependerá da capacidade de estruturar a gestão, mobilizar os cooperados e assegurar condições operacionais e financeiras para sustentar as iniciativas priorizadas.</p>
+        </div> : <details className="resumo-expansivel" open><summary>Ler conclusão completa</summary><div>
+          {[["Síntese geral", sintese], ["Potencial e capacidades", capacidades], ["Fragilidades", fragilidades], ["Pontos prioritários", parecer.data?.pontosPrioritarios], ["Considerações técnicas", parecer.data?.consideracoesTecnicas]].map(([titulo, texto]) => <section key={titulo}><h5>{titulo}</h5><p className="resumo-texto-integral">{texto || 'Não registrado.'}</p></section>)}
+          {parecer.data?.atualizadoEm && <p>Parecer atualizado em {formatDateOnly(parecer.data.atualizadoEm)}.</p>}
+        </div></details>}
+        {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer técnico' : 'Editar parecer técnico'}</button>}
       </section>
       <section aria-label="Prioridades por dimensão">
         <h4>Prioridades por dimensão</h4>
-        <DimensoesResumo
+        {diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo
           historico={ieoPendente}
-          dimensoes={resultado.porDimensao.map((d) => ({
-            ...d,
-            codigos: DIMENSOES_IEO_CADERNO.find((item) => item.id === d.dimensaoId)?.codigos,
-          }))}
+          dimensoes={resultado.porDimensao.map((d) => ({ ...d, codigos: DIMENSOES_IEO_CADERNO.find((item) => item.id === d.dimensaoId)?.codigos }))}
           onConsultarIeo={onConsultarIeo}
-          rotulo={
-            emRevisao ? "Em revisão" : "Síntese das respostas"
-          }
-        />
-        {onConsultarIeo && (
+          rotulo={emRevisao ? "Em revisão" : "Síntese das respostas"}
+        />}
+        {!diagnosticoAgromel && onConsultarIeo && (
           <button type="button" className="resumo-acao" onClick={onConsultarIeo}>
             Consultar respostas do IEO
           </button>
@@ -379,13 +357,13 @@ export function ResumoDiagnostico({
       </section>
       <section aria-label="Prioridades estratégicas">
         <h4>Prioridades estratégicas identificadas</h4>
-        <p>
-          {emRevisao
-            ? "Aguardam confirmação após a revisão do diagnóstico."
-            : "Prioridades registradas no fechamento estratégico."}
-        </p>
+        <p>{diagnosticoAgromel ? 'Referências do levantamento anterior; confirmar e pactuar após a revisão.' : emRevisao ? 'Aguardam confirmação após a revisão do diagnóstico.' : 'Prioridades registradas no fechamento estratégico.'}</p>
         <div className="resumo-duas-colunas">
-          {prioridadesExibidas.map((r) => {
+          {diagnosticoAgromel ? PRIORIDADES_AGROMEL.map(p => <article key={p.codigo} className="resumo-cartao resumo-prioridade">
+            <p className="resumo-etiqueta">{p.codigo} · Referência anterior · confirmar após remapeamento</p><h5>{p.titulo}</h5>
+            <dl>{[['resultado','Resultado desejado',p.resultado],['obstaculo','Obstáculo',p.obstaculo],['apoio','Apoio necessário',p.apoio],['publico','Público beneficiado',p.publico],['dimensoes','Dimensões vinculadas',p.dimensoes]].map(([key,label,value]) => <div key={key}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+            {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer e prioridades' : 'Consultar ou editar parecer'}</button>}
+          </article>) : prioridadesExibidas.map((r) => {
             const campos = camposDaPrioridade(
               [r.resposta.valor, r.resposta.relato].filter(Boolean).join("\n"),
             );
@@ -430,7 +408,7 @@ export function ResumoDiagnostico({
             );
           })}
         </div>
-        {!prioridadesExibidas.length && <p>Não registrado.</p>}
+        {!diagnosticoAgromel && !prioridadesExibidas.length && <p>Não registrado.</p>}
         {parecer.data?.pontosPrioritarios && (
           <details className="resumo-expansivel">
             <summary>Consultar pontos prioritários do parecer</summary>
@@ -440,6 +418,11 @@ export function ResumoDiagnostico({
       </section>
       <section aria-label="Metodologia, vínculos e pendências">
         <h4>Metodologia, vínculos e pendências</h4>
+        {ieoPendente && <article className="resumo-situacao resumo-em-revisao" role="status">
+          <h5>IEO atual sem nota calculável</h5>
+          <p>A referência informa que as 25 perguntas aguardam reavaliação pelos descritores do Caderno CRIA rev. 22/10/2026. Há {resultado.respondidas}/{resultado.total} respostas registradas, {resultado.pontuadas} notas históricas e Q25 como N/A. Respostas e níveis anteriores foram preservados; não são exibidos como avaliação atual.</p>
+          <p>Os relatos antigos e as prioridades dimensionais do agrupamento anterior precisam ser conferidos e remapeados.</p>
+        </article>}
         <details className="resumo-expansivel">
           <summary>Como a nota e a prioridade são calculadas</summary>
           <div>

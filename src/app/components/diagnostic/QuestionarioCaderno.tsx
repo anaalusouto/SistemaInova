@@ -57,7 +57,15 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
 
   const completo = avaliadasGerais === aplicaveisGerais && resultado.invalidas === 0;
 
-  return <div className="space-y-5 min-w-0">
+  const perguntasFoco = perguntasGrafico.map(q => ({
+    codigo: q.codigo,
+    texto: q.texto,
+    resposta: valorResposta(q.codigo),
+    relato: respostas.get(q.codigo)?.relato?.trim() ?? '',
+  }));
+
+  return <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <main className="min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3" aria-label="Filtros do IEO">
       <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Filtrar dimensão do IEO">
         <span className="mr-1 text-xs font-semibold text-muted-foreground">Dimensão:</span>
@@ -98,7 +106,6 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
       })}</div>
     </section>
 
-    <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-3 sm:p-5" aria-label="Detalhamento visual do IEO">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0"><p className="diagnostico-sobretitulo">{dimensaoId ? `Dimensão ${dimensaoId}` : 'Análise geral'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Respostas das cinco dimensões'}</h3><p className="text-sm text-muted-foreground">{fmtScore(mediaFoco)} / 4 · {avaliadasFoco}/{aplicaveisFoco} indicadores aplicáveis avaliados · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura</p></div>
@@ -129,17 +136,21 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
           {!perguntasGrafico.length && <p className="p-6 text-center text-sm text-muted-foreground">Não há perguntas para este público nesta dimensão.</p>}
         </div>
       </section>
+    </main>
 
-      <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5" aria-label="Painel de síntese do IEO">
-        <p className="diagnostico-sobretitulo">DIMENSÃO SELECIONADA</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Análise geral'}</h3>
+      <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto" aria-label="Painel de síntese do IEO">
+        <p className="diagnostico-sobretitulo">{dimensaoId ? 'DIMENSÃO SELECIONADA' : 'VISÃO GERAL DO IEO'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Análise geral'}</h3>
         <p className="mt-3 text-3xl font-bold">{fmtScore(dimensaoId ? resumoSelecionado?.media ?? null : resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p>
         <p className="text-xs text-muted-foreground">Média simples dos níveis válidos</p>
-        <p className="mt-3 text-xs text-muted-foreground">{avaliadasFoco}/{aplicaveisFoco} indicadores avaliados · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura · {resumoSelecionado?.naoAplicaveis ?? resultado.naoAplicaveis} N/A</p>
+        <p className="mt-3 text-xs text-muted-foreground">{avaliadasFoco} indicadores avaliados · {aplicaveisFoco} aplicáveis · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura · {resumoSelecionado?.naoAplicaveis ?? resultado.naoAplicaveis} N/A</p>
+        <section className="mt-5 space-y-2" aria-label="Resumo da dimensão">
+          <h4 className="font-semibold">Resumo da dimensão</h4>
+          {perguntasFoco.length ? <ul className="space-y-2">{perguntasFoco.map(item => <li key={item.codigo} className="rounded-lg border bg-muted/20 p-3"><details><summary className="cursor-pointer text-sm"><strong className="mr-1 text-primary">{item.codigo}</strong>{item.texto}</summary><div className="mt-2 border-t pt-2 text-sm"><p><strong>Resposta:</strong> {item.resposta || 'Sem resposta'}</p><p className="mt-1 whitespace-pre-wrap"><strong>Relato:</strong> {item.relato || 'Não registrado para esta pergunta.'}</p></div></details></li>)}</ul> : <p className="text-sm text-muted-foreground">Não há perguntas vinculadas a esta seleção.</p>}
+        </section>
         {dimensaoId && <button type="button" className="diagnostico-filtro mt-5 w-full" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
       </aside>
-    </div>
 
-    <section className="space-y-3" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
+    <section className="col-span-1 space-y-3 lg:col-span-2" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
       {DIMENSOES_IEO_CADERNO.map(d => {
         const resumo = resultado.porDimensao.find(r => r.dimensaoId === d.id)!;
         const aplicaveis = Math.max(0, resumo.total - resumo.naoAplicaveis);

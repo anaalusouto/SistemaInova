@@ -118,7 +118,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
   });
 
   return (
-    <div className={`diagnostico-painel diagnostico-editor ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
+    <div className={`diagnostico-painel diagnostico-editor ${tab === 'matriz' ? 'diagnostico-editor-matriz-neutra' : ''} ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
       <div className={`flex min-w-0 flex-col flex-shrink-0 ${incorporado ? '' : 'gap-3 px-3 sm:px-7 pt-4 pb-0'}`}>
         {!incorporado && <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={() => navegarSemPendencias(haPendencias, onBack)} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
@@ -194,7 +194,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         </div>
       </div>
       <div className={`diagnostico-editor-corpo ${incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}`}>
-        {instrumentoInicial !== 'parecer' && <NavegacaoModulo abas={TABS} atual={tab} aoMudar={setTab} rotulo="Módulos do diagnóstico" bloqueado={haPendencias}/>}
+        {instrumentoInicial !== 'parecer' && <NavegacaoModulo abas={TABS} atual={tab} aoMudar={setTab} rotulo="Módulos do diagnóstico" bloqueado={haPendencias} className={tab === 'matriz' ? 'modulo-abas-matriz-neutras' : ''}/>}
         <div className={`diagnostico-conteudo${instrumentoInicial !== 'parecer' ? ' diagnostico-conteudo-com-menu modulo-bloco' : ''}`}>
         {haPendencias && <p role="status" className="mb-4 rounded-lg border bg-muted px-3 py-2 text-sm">Alterações não salvas. Salve ou cancele antes de navegar.</p>}
         {isLoading && <p role="status">Carregando mapeamento…</p>}
