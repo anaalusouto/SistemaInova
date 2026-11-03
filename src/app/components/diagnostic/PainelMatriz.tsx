@@ -1,14 +1,13 @@
 import { useState, type ReactNode } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
-import { FUNCOES_GUIA_CRIA } from '../../diagnostic/catalog/cadernoCriaDados';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
 import '../responsive-tables.css';
 import { useLargurasTabela } from '../plano/useLargurasTabela';
 
-interface Linha { id: string; valores: RascunhoMatriz; estado: string; descricao?: string; exemplo?: string }
+interface Linha { id: string; valores: RascunhoMatriz; estado: string }
 interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
-const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Exemplo de preenchimento', 'Observação'];
-const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 300, 320, 220];
+const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'];
+const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 320, 220];
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
@@ -40,12 +39,11 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;
               const v = linha.valores;
-              const guia = FUNCOES_GUIA_CRIA.find(item => item.codigo === f.id);
-              if (renderEdicao) return <tr key={f.id} data-inova-form="matriz-tabela" data-inova-field={f.id}>{renderEdicao({ ...linha, descricao: guia?.descricao, exemplo: guia?.exemplo })}</tr>;
+              if (renderEdicao) return <tr key={f.id} data-inova-form="matriz-tabela" data-inova-field={f.id}>{renderEdicao(linha)}</tr>;
               const leitura = leituraMatriz(v.criticidade, v.experiencia);
               const cor = leitura === 'Lacuna crítica' ? '#b44747' : leitura === 'Lacuna relevante' ? '#c46b35' : leitura === 'Acompanhar' ? '#528363' : '#b27b24';
               return <tr key={f.id}>
-                <th scope="row" data-label="Função"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small>{guia?.descricao && <details className="mt-2 max-w-64 text-left text-xs font-normal text-muted-foreground"><summary className="cursor-pointer">Como preencher</summary><p className="mt-2">{guia.descricao}</p></details>}</th>
+                <th scope="row" data-label="Função"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small></th>
                 <td data-label="Atuação"><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span></td>
                 <td data-label="Externo" className="whitespace-pre-wrap">{v.externo || '—'}</td>
                 <td data-label="Experiência">{v.experiencia || 'Não informado'}</td>
@@ -53,7 +51,6 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
                 <td data-label="Criticidade"><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
                 <td data-label="Leitura"><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
                 <td data-label="Avaliação">{renderAvaliacao?.(f.id) ?? 'Não avaliado'}</td>
-                <td data-label="Exemplo de preenchimento" className="whitespace-pre-wrap">{guia?.exemplo || <span className="text-muted-foreground">Sem exemplo disponível.</span>}</td>
                 <td data-label="Observação" className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
             })}

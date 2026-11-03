@@ -156,7 +156,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
           const novas={...escolhas};if(valor)novas[campo]='corrigido';else delete novas[campo];
           editarLinha(linha.id,{...linha.valores,[campo]:valor},novas);
         };
-        return <MatrizLinhaEdicao id={linha.id} formularioId={`matriz-${organizacaoId}-${diagnosticoId}-${linha.id}`} valores={linha.valores} estado={linha.estado} descricao={linha.descricao} exemplo={linha.exemplo} bloqueado={ocupado} pendente={!!edicao} importada={!!importadas[linha.id]} conferencia={conferencia[linha.id]} decisoes={escolhas} confirmado={revisada} erro={errosLinha[linha.id]}
+        return <MatrizLinhaEdicao id={linha.id} formularioId={`matriz-${organizacaoId}-${diagnosticoId}-${linha.id}`} valores={linha.valores} estado={linha.estado} bloqueado={ocupado} pendente={!!edicao} importada={!!importadas[linha.id]} conferencia={conferencia[linha.id]} decisoes={escolhas} confirmado={revisada} erro={errosLinha[linha.id]}
           avaliacao={<AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${linha.id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={linha.id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={ocupado}/>}
           aoAlterar={alterarCampo} aoNaoIdentificado={campo=>editarLinha(linha.id,{...linha.valores,[campo]:null},{...escolhas,[campo]:'nao_identificado'})} aoConferir={valor=>editarLinha(linha.id,linha.valores,escolhas,valor)} aoSalvar={()=>gravarFuncao(linha.id,linha.valores,escolhas,revisada)} aoCancelar={()=>cancelarLinha(linha.id)}/>;
       }:undefined}/>

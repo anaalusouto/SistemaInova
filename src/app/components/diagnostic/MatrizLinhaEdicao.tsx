@@ -17,9 +17,9 @@ export function ConferenciaCampoMatriz({ campo, conferencia, decisao, aoManterVa
 }
 
 /** Células editáveis usam o mesmo rascunho e a mesma gravação do pop-up. */
-export function MatrizLinhaEdicao({ id, formularioId, valores, estado, descricao, exemplo, bloqueado, pendente, importada, conferencia, decisoes, confirmado,
+export function MatrizLinhaEdicao({ id, formularioId, valores, estado, bloqueado, pendente, importada, conferencia, decisoes, confirmado,
   erro, avaliacao, aoAlterar, aoNaoIdentificado, aoConferir, aoSalvar, aoCancelar }: {
-  id: string; formularioId: string; valores: RascunhoMatriz; estado: string; descricao?: string; exemplo?: string; bloqueado: boolean; pendente: boolean;
+  id: string; formularioId: string; valores: RascunhoMatriz; estado: string; bloqueado: boolean; pendente: boolean;
   importada: boolean; conferencia?: ConferenciaFuncao; decisoes: DecisoesImportacao; confirmado: boolean;
   erro?: string;
   avaliacao?: ReactNode;
@@ -43,7 +43,7 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, descricao
     <textarea aria-label={`${rotulo} ${id}`} form={formularioId} disabled={bloqueado} rows={3} maxLength={20000} className={`${classe} min-w-48`} value={valores[campo] ?? ''} onKeyDown={teclado} onChange={e => aoAlterar(campo, e.target.value || null)} />{status(campo)}
   </>;
   return <>
-    <th scope="row"><span className="block mb-2 text-xs text-muted-foreground">{id} · {estado}</span><span className="block min-w-60 font-medium">{valores.nomeFuncao}</span>{descricao && <details className="mt-2 max-w-64 text-xs font-normal text-muted-foreground"><summary className="cursor-pointer">Como preencher</summary><p className="mt-2">{descricao}</p></details>}{pendente && <span className="block mt-2 text-xs font-normal">Alterações não salvas</span>}</th>
+    <th scope="row"><span className="block mb-2 text-xs text-muted-foreground">{id} · {estado}</span><span className="block min-w-60 font-medium">{valores.nomeFuncao}</span>{pendente && <span className="block mt-2 text-xs font-normal">Alterações não salvas</span>}</th>
     <td data-label="Atuação">{selecao('Atuação', 'atuacao', ATUACAO_MATRIZ)}</td>
     <td data-label="Externo">{texto('Externo', 'externo')}</td>
     <td data-label="Experiência">{selecao('Experiência', 'experiencia', EXPERIENCIA_MATRIZ)}</td>
@@ -51,7 +51,6 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, descricao
     <td data-label="Criticidade">{selecao('Criticidade atual', 'criticidade', NIVEIS_MATRIZ)}</td>
     <td data-label="Leitura"><span className="diagnostico-leitura">{leituraMatriz(valores.criticidade, valores.experiencia)}</span></td>
     <td data-label="Avaliação">{avaliacao}</td>
-    <td data-label="Exemplo de preenchimento" className="whitespace-pre-wrap">{exemplo || <span className="text-muted-foreground">Sem exemplo disponível.</span>}</td>
     <td data-label="Observação">{texto('Observação', 'observacoes')}</td>
     <td data-label="Ações">
       <form id={formularioId} aria-label={`Salvar função ${id}`} onSubmit={e => { e.preventDefault(); if (!bloqueado) aoSalvar(); }} className="min-w-44 space-y-2">
