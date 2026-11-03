@@ -26,11 +26,13 @@ test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos d
 test('visualização atual mantém dimensões, termômetros, relatos e perguntas novas na consulta',()=>{
  const {DIMENSOES_IEO_CADERNO:dimensoes}=load('src/app/diagnostic/ieoCaderno.ts');
  const registro={codigo:'Q01',contexto:'',resposta:{...valoresVazios(),valor:'3',relato:'Decisões acompanhadas'},versao:1};
- const mocks={'./IeoTab':{IeoTab:()=>null},'../../caderno.server':{},'@tanstack/react-query':{useQuery:()=>({data:[registro]}),useMutation:()=>({}),useQueryClient:()=>({})}};
+ const registroNa={codigo:'Q25',contexto:'',resposta:{...valoresVazios(),valor:'NA',relato:'Pergunta não aplicável'},versao:1};
+ const mocks={'./IeoTab':{IeoTab:()=>null},'../../caderno.server':{},'@tanstack/react-query':{useQuery:()=>({data:[registro,registroNa]}),useMutation:()=>({}),useQueryClient:()=>({})}};
  const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
- assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Todas as dimensões/);
+ assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Filtrar dimensão do IEO/);assert.match(html,/>Todas</);
  assert.match(html,/Média da dimensão/);assert.match(html,/Pontuação registrada \(1–4\)/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.equal((html.match(/role="table"/g)||[]).length,1);assert.match(html,/<span>0<\/span><span>1<\/span>/);assert.match(html,/<span>4<\/span>/);assert.match(html,/Q25/);assert.match(html,/N\/A/);
  assert.ok(html.indexOf('Gráfico horizontal das perguntas do IEO') < html.indexOf('Painel de síntese do IEO'));
  assert.ok(html.indexOf('Painel de síntese do IEO') < html.indexOf('Detalhes por dimensão'));
  assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
