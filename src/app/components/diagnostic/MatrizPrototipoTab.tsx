@@ -10,6 +10,7 @@ import { LeituraFuncaoMatriz } from './LeituraFuncaoMatriz';
 import { ESTADOS_MATRIZ, estadoFuncaoMatriz, type EdicaoMatriz } from '../../diagnostic/estadoMatriz';
 import { EntradaMatriz } from './EntradaMatriz';
 import { PainelMatriz } from './PainelMatriz';
+import { AvaliacaoMatriz } from './AvaliacaoMatriz';
 import { validarConferencia, rascunhoVazio, type CampoImportado, type ConferenciaFuncao, type ImportacaoSalva, type DecisoesImportacao, type RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
 interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean }
@@ -42,6 +43,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
   const [descartando,setDescartando]=useState(false);
   const [edicoes,setEdicoes]=useState<Record<string,EdicaoMatriz>>({});
   const [edicaoTabela,setEdicaoTabela]=useState(false);
+  const [avaliacoesPendentes,setAvaliacoesPendentes]=useState<Record<string,boolean>>({});
+  const temAvaliacaoPendente=Object.values(avaliacoesPendentes).some(Boolean);
   const [errosLinha,setErrosLinha]=useState<Record<string,string>>({});
   const importacaoAnterior=useRef(importacao?.id);
   useEffect(()=>{
@@ -124,19 +127,19 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       <option value="">Não informado</option>{opcoes.map(o=><option key={o} value={o}>{o}</option>)}
     </select>{statusCampo(campo)}{(campo==='criticidade'||campo==='interesse')&&<span className="text-xs text-muted-foreground">Escala de 1 a 4.</span>}</label>;
   const selecionarFuncao=(id:string)=>{
-    if(ocupado||edicaoTabela)return;
+    if(ocupado||edicaoTabela||temAvaliacaoPendente)return;
     const f=FUNCOES_MATRIZ.find(item=>item.id===id)!;
     carregarEdicao(id,importadas[id]??inicial(f.nome,indice.get(id)));
     setAberta(id);setEditando(!readOnly&&(!indice.has(id)||Boolean(edicoes[id])));
   };
   return <div className="w-full space-y-4 min-w-0">
     <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Leitura visual por criticidade atual e interesse em desenvolvimento.</p><div className="flex flex-wrap items-center gap-2">
-      {!readOnly&&<><button type="button" aria-pressed={edicaoTabela} disabled={ocupado||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button><button type="button" disabled={ocupado||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button></>}
+      {!readOnly&&<><button type="button" aria-pressed={edicaoTabela} disabled={ocupado||temAvaliacaoPendente||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button><button type="button" disabled={ocupado||temAvaliacaoPendente||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button></>}
       <span className="rounded-full border bg-muted px-3 py-2 text-xs text-muted-foreground">Criticidade × interesse</span>
     </div></div>
     <section aria-label="Estados da Matriz" className="space-y-2">
       <ul className="flex flex-wrap gap-2 text-xs">{ESTADOS_MATRIZ.map(e=><li key={e.id} title={e.descricao} className="rounded-lg border bg-card px-3 py-2"><span>{e.rotulo}: </span><strong>{[...estados.values()].filter(estado=>estado===e.id).length}</strong></li>)}</ul>
-      <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. Há respostas importadas que ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'As alterações só são gravadas ao salvar cada função. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
+      <p className="text-xs text-muted-foreground">{readOnly?(importacao?'Somente leitura. Há respostas importadas que ainda não foram confirmadas.':'Somente leitura. Consulte as respostas salvas nesta aplicação.'):'Salve os campos da função por linha. A Avaliação tem salvamento próprio em “Salvar avaliação”. “Revisada” indica valores conferidos; os ainda não salvos são identificados abaixo.'}</p>
     </section>
     {!readOnly&&edicaoTabela&&<p role="status" className="text-sm">Edite as células e salve ou cancele cada linha. {pendentes>0?`${pendentes} linha(s) com alterações não salvas.`:''}</p>}
     {origem&&<div className="rounded-xl border p-4 space-y-2 text-sm" role="status"><p>Respostas importadas. Funções ainda não salvas: {Object.keys(importadas).length}. Revisadas e prontas para salvar: {Object.keys(importadas).filter(id=>estados.get(id)==='revisada').length}.</p><p>Confira os campos identificados, ausentes ou ambíguos. Corrija as respostas e confirme o salvamento de cada função. Nenhuma resposta é salva automaticamente.</p>
@@ -145,7 +148,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={ocupado||pendentes>0} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
-    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:{...((!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome))),nomeFuncao:f.nome},estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela} filtroBloqueado={pendentes>0||ocupado}
+    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:{...((!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome))),nomeFuncao:f.nome},estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela||temAvaliacaoPendente} filtroBloqueado={pendentes>0||ocupado||temAvaliacaoPendente}
+      renderAvaliacao={id=><AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={readOnly||!edicaoTabela||ocupado}/>}
       renderEdicao={!readOnly&&edicaoTabela?linha=>{
         const edicao=edicoes[linha.id];const escolhas=edicao?.decisoes??{};const revisada=edicao?.confirmado??false;
         const alterarCampo=<K extends CampoImportado>(campo:K,valor:Draft[K])=>{
@@ -153,6 +157,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
           editarLinha(linha.id,{...linha.valores,[campo]:valor},novas);
         };
         return <MatrizLinhaEdicao id={linha.id} formularioId={`matriz-${organizacaoId}-${diagnosticoId}-${linha.id}`} valores={linha.valores} estado={linha.estado} descricao={linha.descricao} exemplo={linha.exemplo} bloqueado={ocupado} pendente={!!edicao} importada={!!importadas[linha.id]} conferencia={conferencia[linha.id]} decisoes={escolhas} confirmado={revisada} erro={errosLinha[linha.id]}
+          avaliacao={<AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${linha.id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={linha.id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={ocupado}/>}
           aoAlterar={alterarCampo} aoNaoIdentificado={campo=>editarLinha(linha.id,{...linha.valores,[campo]:null},{...escolhas,[campo]:'nao_identificado'})} aoConferir={valor=>editarLinha(linha.id,linha.valores,escolhas,valor)} aoSalvar={()=>gravarFuncao(linha.id,linha.valores,escolhas,revisada)} aoCancelar={()=>cancelarLinha(linha.id)}/>;
       }:undefined}/>
     {grupos.map(grupo=><section key={grupo} className="space-y-2"><h4 className="sr-only">{grupo}</h4>
@@ -163,7 +168,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
         const valoresConsulta=r?inicial(f.nome,r):importadas[f.id]??inicial(f.nome);
         const valoresLinha=(!readOnly?edicoes[f.id]?.valores:undefined)??valoresConsulta;
         const nome=f.nome;
-        return <PopupDetalhe key={f.id} titulo={`${f.id} · ${nome}`} descricao={`${grupo} · Matriz Funcional`} bloqueado={ocupado} aoFechar={()=>{setAberta(null);setEditando(false);}}>
+        return <PopupDetalhe key={f.id} titulo={`${f.id} · ${nome}`} descricao={`${grupo} · Matriz Funcional`} bloqueado={ocupado||temAvaliacaoPendente} aoFechar={()=>{setAberta(null);setEditando(false);}}>
         <div id={`matriz-funcao-${f.id}`} data-inova-form="matriz" data-inova-field={f.id} data-estado-matriz={estado.id}>
           <div className="flex flex-wrap items-center gap-2 pb-3">
             <span className="text-xs text-muted-foreground">{f.id}</span>
@@ -193,6 +198,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
               <LeituraFuncaoMatriz valores={valoresConsulta}/>
               {!readOnly&&<button type="button" className="underline text-primary text-sm" onClick={()=>{carregarEdicao(f.id,reiniciar());setEditando(true);}}>Editar</button>}
             </div>}
+            <section className="mt-5 border-t pt-4 space-y-2" aria-label={`Avaliação da função ${f.id}`}><h5 className="font-semibold">Avaliação</h5><AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${f.id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={f.id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={readOnly||(!editando&&!temAvaliacaoPendente)||ocupado}/></section>
           </div>}
         </div></PopupDetalhe>;
       })}

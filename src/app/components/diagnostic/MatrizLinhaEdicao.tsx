@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { ATUACAO_MATRIZ, EXPERIENCIA_MATRIZ, NIVEIS_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import type { CampoImportado, ConferenciaFuncao, DecisoesImportacao, RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
@@ -18,10 +18,11 @@ export function ConferenciaCampoMatriz({ campo, conferencia, decisao, aoManterVa
 
 /** Células editáveis usam o mesmo rascunho e a mesma gravação do pop-up. */
 export function MatrizLinhaEdicao({ id, formularioId, valores, estado, descricao, exemplo, bloqueado, pendente, importada, conferencia, decisoes, confirmado,
-  erro, aoAlterar, aoNaoIdentificado, aoConferir, aoSalvar, aoCancelar }: {
+  erro, avaliacao, aoAlterar, aoNaoIdentificado, aoConferir, aoSalvar, aoCancelar }: {
   id: string; formularioId: string; valores: RascunhoMatriz; estado: string; descricao?: string; exemplo?: string; bloqueado: boolean; pendente: boolean;
   importada: boolean; conferencia?: ConferenciaFuncao; decisoes: DecisoesImportacao; confirmado: boolean;
   erro?: string;
+  avaliacao?: ReactNode;
   aoAlterar: <K extends CampoImportado>(campo: K, valor: RascunhoMatriz[K]) => void;
   aoNaoIdentificado: (campo: CampoImportado) => void; aoConferir: (valor: boolean) => void; aoSalvar: () => void; aoCancelar: () => void;
 }) {
@@ -49,6 +50,7 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, descricao
     <td data-label="Interesse">{selecao('Interesse em desenvolvimento', 'interesse', NIVEIS_MATRIZ)}</td>
     <td data-label="Criticidade">{selecao('Criticidade atual', 'criticidade', NIVEIS_MATRIZ)}</td>
     <td data-label="Leitura"><span className="diagnostico-leitura">{leituraMatriz(valores.criticidade, valores.experiencia)}</span></td>
+    <td data-label="Avaliação">{avaliacao}</td>
     <td data-label="Exemplo de preenchimento" className="whitespace-pre-wrap">{exemplo || <span className="text-muted-foreground">Sem exemplo disponível.</span>}</td>
     <td data-label="Observação">{texto('Observação', 'observacoes')}</td>
     <td data-label="Ações">

@@ -1,11 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),React=require('react');
 function load(file,mocks,cache=new Map()) {
-  file=path.resolve(file);if(!path.extname(file))file+=fs.existsSync(file+'.tsx')?'.tsx':'.ts';
+  file=path.resolve(file);if(file.endsWith('.css'))return {};if(!path.extname(file))file+=fs.existsSync(file+'.tsx')?'.tsx':'.ts';
   if(cache.has(file))return cache.get(file).exports;
   const m={exports:{}};cache.set(file,m);
   const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}}).outputText;
-  new Function('require','module','exports',code)(r=>r in mocks?mocks[r]:r.startsWith('.')?load(path.resolve(path.dirname(file),r),mocks,cache):require(r),m,m.exports);return m.exports;
+  new Function('require','module','exports',code)(r=>r==='../PendenciasModulo'?{usePendenciaModulo(){}}:r in mocks?mocks[r]:r.startsWith('.')?load(path.resolve(path.dirname(file),r),mocks,cache):require(r),m,m.exports);return m.exports;
 }
 function nodes(node,predicate) {
   if(!node||typeof node!=='object')return [];
@@ -18,7 +18,7 @@ function ambiente(importacao=null) {
     const contexto=`${organizacaoId}:${diagnosticoId}`;let cursor=0;const estados=[];
     const react={...React,useEffect(){},useState(initial){const i=cursor++;if(!(i in estados))estados[i]=initial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];},useRef(initial){const i=cursor++;return estados[i]??(estados[i]={current:initial});},useMemo:f=>f()};
     const client={invalidateQueries(){},setQueryData(key,update){assert.deepEqual(key,['diagnostico-matriz',diagnosticoId,organizacaoId]);banco.set(contexto,update(banco.get(contexto)));}};
-    const mocks={react,sonner:{toast:{success(){},error(){}}},'../PopupDetalhe':{PopupDetalhe:({children})=>children},'../../diagnosticos.server':{},'@tanstack/react-query':{
+    const mocks={react,sonner:{toast:{success(){},error(){}}},'../PopupDetalhe':{PopupDetalhe:({children})=>children},'./AvaliacaoMatriz':{AvaliacaoMatriz:()=>null},'../../diagnosticos.server':{},'@tanstack/react-query':{
       useQuery(options){consultas.push(options.queryKey);return {data:options.queryKey[0]==='matriz-importacao'?importacao:banco.get(contexto)??[]};},useQueryClient:()=>client,
       useMutation(options){return {isPending:false,mutate(d){gravacoes.push(d);if(falha)options.onError(new Error('Falha ao salvar'),d);else options.onSuccess({...d,atuacao:d.atuacao?[d.atuacao]:[],quemExecuta:null,abrangencia:null,atualizadoEm:'2026-10-21T20:00:00Z'},d);options.onSettled();}};},
     }};
@@ -39,7 +39,7 @@ const clicar=(editor,nome)=>{const tree=editor.render();const modal=nodes(tree,n
 const salvar=editor=>one(editor.render(),n=>n.type==='form').props.onSubmit({preventDefault(){}});
 
 test('criar do zero apresenta exatamente 21 funções e todos os campos de resposta vazios',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();
+  const a=ambiente(),e=a.abrir();e.render();
   const linhas=one(e.render(),n=>typeof n.props?.onSelecionar==='function').props.linhas;
   assert.equal(linhas.length,21);
   assert.deepEqual(linhas.map(n=>n.id),['F01','F02','F03','F04','F05','F07','F08','F06','F20','F21','F09','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19']);
@@ -51,7 +51,7 @@ test('criar do zero apresenta exatamente 21 funções e todos os campos de respo
   assert.equal(a.gravacoes.length,0);
 });
 test('preencher, salvar, reabrir e editar restaura os dados confirmados na aplicação sem duplicar',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);
   for(const [label,value] of [['Atuação','Viabiliza'],['Experiência','Inicial'],['Criticidade atual','3'],['Interesse em desenvolvimento','4'],['Observação','Relato manual'],['Externo','Parceiro local']])preencher(e,label,value);
   salvar(e);assert.equal(nodes(e.render(),n=>n.type==='form').length,0);
   const registro=a.banco.get('org-a:diag-a')[0];assert.equal(registro.observacoes,'Relato manual');assert.equal(registro.externo,'Parceiro local');
@@ -64,24 +64,24 @@ test('preencher, salvar, reabrir e editar restaura os dados confirmados na aplic
   assert.equal(a.banco.get('org-a:diag-a').length,1);assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Relato atualizado');
 });
 test('falha mantém o formulário preenchido; cancelar não grava; outra aplicação começa vazia',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);preencher(e,'Observação','Rascunho ainda não salvo');
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);preencher(e,'Observação','Rascunho ainda não salvo');
   a.simularFalha(true);salvar(e);assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho ainda não salvo').props.value,'Rascunho ainda não salvo');assert.equal(a.banco.size,0);
   assert.match(one(e.render(),n=>n.props?.role==='alert').props.children,/Suas alterações continuam visíveis/);
   a.simularFalha(false);salvar(e);assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Rascunho ainda não salvo');assert.equal(nodes(e.render(),n=>n.props?.role==='alert').length,0);
   clicar(e,'Editar');preencher(e,'Observação','Alteração cancelada');
   clicar(e,'Cancelar');assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Rascunho ainda não salvo');assert.equal(nodes(e.render(),n=>n.type==='form').length,0);
   const outra=a.abrir('org-a','diag-b'),outraOrg=a.abrir('org-b','diag-c');assert.notEqual(e.key,outra.key);assert.notEqual(e.key,outraOrg.key);
-  for(const entrada of [outra,outraOrg]){entrada.render().props.onManual();funcao(entrada);assert.equal(nodes(entrada.render(),n=>n.type==='textarea'&&n.props.value!=='').length,0);}
+  for(const entrada of [outra,outraOrg]){entrada.render();funcao(entrada);assert.equal(nodes(entrada.render(),n=>n.type==='textarea'&&n.props.value!=='').length,0);}
 });
 test('estado Revisada existe antes do salvamento e volta para Em edição quando um valor muda',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();
+  const a=ambiente(),e=a.abrir();e.render();
   const estado=()=>one(e.render(),n=>typeof n.props?.onSelecionar==='function').props.linhas.find(l=>l.id==='F01').estado;
-  assert.equal(estado(),'Vazia');funcao(e);assert.equal(estado(),'Em edição');preencher(e,'Atuação','Executa');clicar(e,'Revisar valores');
+  assert.equal(estado(),'A preencher');funcao(e);assert.equal(estado(),'Em edição');preencher(e,'Atuação','Executa');clicar(e,'Revisar valores');
   assert.equal(estado(),'Revisada');assert.equal(a.gravacoes.length,0);assert.ok(one(e.render(),n=>n.props?.['aria-label']==='Valores revisados da função F01'));
   preencher(e,'Observação','Valor alterado após revisar');assert.equal(estado(),'Em edição');clicar(e,'Revisar valores');salvar(e);assert.equal(estado(),'Revisada');
 });
 test('rascunhos e revisão permanecem ao alternar funções; cancelar descarta somente a edição atual',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);preencher(e,'Observação','Rascunho F01');clicar(e,'Revisar valores');
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);preencher(e,'Observação','Rascunho F01');clicar(e,'Revisar valores');
   funcao(e,'F02');preencher(e,'Observação','Rascunho F02');funcao(e);
   assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho F01').props.value,'Rascunho F01');
   assert.equal(one(e.render(),n=>n.props?.['data-inova-field']==='F01').props['data-estado-matriz'],'revisada');
@@ -102,7 +102,7 @@ const cancelarLinha=(e,id='F01')=>one(tabela(e).linha(id),n=>n.type==='button'&&
 const fecharPopup=e=>one(e.render(),n=>typeof n.props?.aoFechar==='function'&&typeof n.props?.titulo==='string').props.aoFechar();
 
 test('Editar libera células; gravação e cancelamento são por linha e preservam as demais',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();clicar(e,'Editar');
+  const a=ambiente(),e=a.abrir();e.render();clicar(e,'Editar');
   assert.equal(typeof painel(e).props.renderEdicao,'function');
   assert.equal(nodes(tabela(e).linha(),n=>['input','select','textarea'].includes(n.type)).length,6);
   assert.equal(nodes(tabela(e).linha(),n=>n.props?.['aria-label']==='Função F01').length,0);
@@ -121,7 +121,7 @@ test('Editar libera células; gravação e cancelamento são por linha e preserv
 });
 
 test('pop-up e tabela compartilham o rascunho; fechar o pop-up mantém alterações visíveis',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();funcao(e);
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);
   preencher(e,'Observação','Rascunho do pop-up');fecharPopup(e);
   assert.equal(nodes(e.render(),n=>n.props?.['data-inova-form']==='matriz').length,0);
   assert.equal(painel(e).props.linhas[0].valores.observacoes,'Rascunho do pop-up');
@@ -133,7 +133,7 @@ test('pop-up e tabela compartilham o rascunho; fechar o pop-up mantém alteraç�
 });
 
 test('falha de gravação da tabela mantém a linha, permite tentar novamente e não apaga outro rascunho',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();clicar(e,'Editar');
+  const a=ambiente(),e=a.abrir();e.render();clicar(e,'Editar');
   mudarCelula(e,'F01','Observação','Primeira');mudarCelula(e,'F02','Observação','Segunda');
   a.simularFalha(true);salvarLinha(e);
   assert.match(one(tabela(e).linha(),n=>n.props?.role==='alert').props.children,/Suas alterações continuam visíveis/);
@@ -145,7 +145,7 @@ test('falha de gravação da tabela mantém a linha, permite tentar novamente e 
 });
 
 test('Enter salva por formulário, texto mantém quebras de linha e Escape cancela a linha',()=>{
-  const a=ambiente(),e=a.abrir();e.render().props.onManual();clicar(e,'Editar');mudarCelula(e,'F01','Observação','Rascunho');
+  const a=ambiente(),e=a.abrir();e.render();clicar(e,'Editar');mudarCelula(e,'F01','Observação','Rascunho');
   let pedidos=0,prevenidos=0;
   const evento=tag=>({key:'Enter',nativeEvent:{isComposing:false},preventDefault(){prevenidos++;},currentTarget:{tagName:tag,form:{requestSubmit(){pedidos++;}}}});
   one(tabela(e).linha(),n=>n.props?.['aria-label']==='Atuação F01').props.onKeyDown(evento('SELECT'));

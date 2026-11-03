@@ -7,7 +7,7 @@ const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 
 function carregar(arquivo, mocks = {}, cache = new Map()) {
-  arquivo = path.resolve(arquivo);
+  arquivo = path.resolve(arquivo);if(arquivo.endsWith('.css'))return {};
   if (!path.extname(arquivo)) arquivo += fs.existsSync(arquivo + '.tsx') ? '.tsx' : '.ts';
   if (cache.has(arquivo)) return cache.get(arquivo).exports;
   const m = { exports: {} }; cache.set(arquivo, m);
@@ -22,7 +22,7 @@ function elementos(no) {
 function painel() {
   let filtro = 'Todos';
   const { FUNCOES_MATRIZ } = carregar('src/app/diagnostic/catalog/matrizPrototipo.ts');
-  const { PainelMatriz } = carregar('src/app/components/diagnostic/PainelMatriz.tsx', { react: { ...React, useState: () => [filtro, valor => { filtro = valor; }] } });
+  const { PainelMatriz } = carregar('src/app/components/diagnostic/PainelMatriz.tsx', { '../plano/useLargurasTabela': {useLargurasTabela:()=>({tabelaRef:null,larguras:null,controles:()=>({}),restaurar(){}})}, react: { ...React, useState: () => [filtro, valor => { filtro = valor; }] } });
   const linhas = FUNCOES_MATRIZ.map(f => ({ id: f.id, estado: 'Revisada', valores: { nomeFuncao: f.nome, atuacao: null, experiencia: 'Inicial', criticidade: f.id === 'F01' ? null : '4', interesse: '4', observacoes: null, externo: null } }));
   let selecionada;
   return { render: () => PainelMatriz({ linhas, desabilitado: false, onSelecionar: id => { selecionada = id; } }), selecionada: () => selecionada };
@@ -33,7 +33,8 @@ test('quadro posiciona apenas funções com os dois eixos informados e preserva 
   assert.match(html, /Sem posição no quadro[^<]*F01/);
   assert.match(html, /Não informado/);
   assert.match(html, /Lacuna crítica/);
-  assert.doesNotMatch(html, /Descrição e exemplo|Sem avaliação registrada|>Avaliação<|Caderno CRIA/);
+  assert.match(html, /data-label="Avaliação"/);
+  assert.doesNotMatch(html, /Como a leitura da Matriz é calculada/);
 });
 test('filtro de grupo atualiza tabela, contagem e seleção da função', () => {
   const p = painel();

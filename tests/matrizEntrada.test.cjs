@@ -2,11 +2,11 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),React=require('react');
 const {renderToStaticMarkup}=require('react-dom/server');
 function load(file,mocks={},cache=new Map()) {
-  file=path.resolve(file);if(!path.extname(file))file+=fs.existsSync(file+'.tsx')?'.tsx':'.ts';
+  file=path.resolve(file);if(file.endsWith('.css'))return {};if(!path.extname(file))file+=fs.existsSync(file+'.tsx')?'.tsx':'.ts';
   if(cache.has(file))return cache.get(file).exports;
   const m={exports:{}};cache.set(file,m);
   const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}}).outputText;
-  new Function('require','module','exports',code)(r=>r in mocks?mocks[r]:r.startsWith('.')?load(path.resolve(path.dirname(file),r),mocks,cache):require(r),m,m.exports);return m.exports;
+  new Function('require','module','exports',code)(r=>r==='../PendenciasModulo'?{usePendenciaModulo(){}}:r in mocks?mocks[r]:r.startsWith('.')?load(path.resolve(path.dirname(file),r),mocks,cache):require(r),m,m.exports);return m.exports;
 }
 const interpretar=()=>load('src/app/diagnostic/importarMatriz.ts').interpretarTextoMatriz;
 const texto='F01 Representação e articulação institucional\nAtuação: Viabiliza e executa\nExperiência: Inicial\nCriticidade atual: 3\nInteresse em desenvolvimento: 4\nObservação: Relato da organização\nContinuação do relato\nExterno: Parceiro local';
@@ -39,12 +39,12 @@ test('importações independentes não reutilizam dados de outro arquivo ou orga
   assert.equal(segunda.respostas.F01,undefined);assert.equal(segunda.respostas.F03.atuacao,'Não realiza');assert.equal(JSON.stringify(primeira),snapshot);
 });
 function matriz({respostas=[],readOnly=false}={}) {
-  const mocks={'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='matriz-importacao'?null:respostas}),useMutation:()=>({isPending:false}),useQueryClient:()=>({})},'../../diagnosticos.server':{}};
+  const mocks={'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='matriz-importacao'?null:respostas}),useMutation:()=>({isPending:false}),useQueryClient:()=>({})},'./AvaliacaoMatriz':{AvaliacaoMatriz:()=>null},'../../diagnosticos.server':{}};
   const {MatrizFuncionalTab}=load('src/app/components/diagnostic/MatrizPrototipoTab.tsx',mocks);
   return renderToStaticMarkup(React.createElement(MatrizFuncionalTab,{diagnosticoId:'diag-a',organizacaoId:'org-a',readOnly}));
 }
-test('entrada vazia oferece duas opções e não abre formulário antes da escolha',()=>{
-  const html=matriz();assert.match(html,/Iniciar mapeamento/);assert.match(html,/Criar do zero/);assert.match(html,/Importar PDF/);assert.match(html,/type="file"/);assert.doesNotMatch(html,/Salvar alterações/);
+test('matriz vazia apresenta funções a preencher e permite editar ou importar',()=>{
+  const html=matriz();assert.match(html,/A preencher/);assert.match(html,/>Editar</);assert.match(html,/Importar PDF/);assert.match(html,/Todas as funções/);assert.doesNotMatch(html,/Salvar alterações/);
 });
 test('respostas salvas abrem Matriz atual; consulta não oferece iniciar ou importar',()=>{
   const html=matriz({respostas:[{funcaoId:'F01',atuacao:['Executa'],experiencia:'Inicial',criticidade:'3',interesse:'2'}]});

@@ -3,16 +3,22 @@ import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPr
 import { FUNCOES_GUIA_CRIA } from '../../diagnostic/catalog/cadernoCriaDados';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
 import '../responsive-tables.css';
+import { useLargurasTabela } from '../plano/useLargurasTabela';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string; descricao?: string; exemplo?: string }
-interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; filtroBloqueado?: boolean }
+interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
+const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Exemplo de preenchimento', 'Observação'];
+const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 300, 320, 220];
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
 const grupos = [...new Set(FUNCOES_MATRIZ.map(f => f.grupo))];
 
-export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao, filtroBloqueado }: Props) {
+export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao, renderAvaliacao, filtroBloqueado }: Props) {
   const [grupo, setGrupo] = useState('Todos');
+  const colunas = renderEdicao ? [...COLUNAS, 'Ações'] : COLUNAS;
+  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunas);
+  const largura = larguraTotal ?? colunas.reduce((s, _, i) => s + LARGURAS[i], 0);
   const indice = new Map(linhas.map(l => [l.id, l]));
   const visiveis = FUNCOES_MATRIZ.filter(f => grupo === 'Todos' || f.grupo === grupo);
   const semPosicao = visiveis.filter(f => {
@@ -24,12 +30,13 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
       {['Todos', ...grupos].map(g => <button key={g} type="button" disabled={filtroBloqueado} aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
     </div>
     <section aria-label="Funções por grupo" className="space-y-3">
-      <h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4>
-      <div className="inova-table-frame diagnostico-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
-        <table className="diagnostico-tabela inova-table-cards"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <thead><tr>{['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Exemplo de preenchimento', 'Observação', ...(renderEdicao ? ['Ações'] : [])].map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4><button type="button" className="text-xs underline" onClick={restaurar}>Restaurar larguras das colunas</button></div>
+      <div className="inova-table-frame diagnostico-tabela-scroll matriz-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
+        <table ref={tabelaRef} style={{ width: largura, minWidth: largura }} className="diagnostico-tabela inova-table-cards"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
+          <colgroup>{colunas.map((c, i) => <col key={c} style={{ width: larguras?.[c] ?? LARGURAS[i] }}/>)}</colgroup>
+          <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}<div {...controles(t)} className="plano-resize-handle"/></th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
-            <tr className="diagnostico-grupo"><th colSpan={renderEdicao ? 10 : 9} scope="rowgroup">{g}</th></tr>
+            <tr className="diagnostico-grupo"><th colSpan={colunas.length} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;
               const v = linha.valores;
@@ -45,6 +52,7 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
                 <td data-label="Interesse">{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
                 <td data-label="Criticidade"><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
                 <td data-label="Leitura"><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
+                <td data-label="Avaliação">{renderAvaliacao?.(f.id) ?? 'Não avaliado'}</td>
                 <td data-label="Exemplo de preenchimento" className="whitespace-pre-wrap">{guia?.exemplo || <span className="text-muted-foreground">Sem exemplo disponível.</span>}</td>
                 <td data-label="Observação" className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
@@ -69,7 +77,6 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
         </table>
       </div>
       {semPosicao.length > 0 && <p className="text-xs text-muted-foreground">Sem posição no quadro (criticidade ou interesse não informado): {semPosicao.map(f => f.id).join(', ')}.</p>}
-      <details className="rounded-xl border p-4 text-sm"><summary className="cursor-pointer font-medium">Como a leitura da Matriz é calculada</summary><p className="mt-3 text-muted-foreground">Experiência recorrente: acompanhar. Experiência inicial: criticidade 1–2, melhoria pontual; 3, lacuna relevante; 4, lacuna crítica. Não está acontecendo: criticidade 1, acompanhar; 2, melhoria pontual; 3–4, lacuna crítica. O interesse define a posição no quadro e não altera a leitura. Campos ausentes permanecem pendentes.</p></details>
     </section>
   </div>;
 }
