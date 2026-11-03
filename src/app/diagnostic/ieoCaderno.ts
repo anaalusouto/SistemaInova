@@ -9,7 +9,12 @@ export const DIMENSOES_IEO_CADERNO = [
   { id: '3', titulo: 'Gestão Econômica-Financeira', codigos: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q19'] },
   { id: '4', titulo: 'Geração de Valor e Articulação', codigos: ['Q09', 'Q10', 'Q16', 'Q17', 'Q18'] },
   { id: '5', titulo: 'Regularidade e Gestão de Riscos', codigos: ['Q21', 'Q23', 'Q24'] },
-].map(d => ({ ...d, perguntas: d.codigos.map(c => QUESTIONARIO_CADERNO.find(q => q.codigo === c)!) }));
+].map(d => ({
+  ...d,
+  perguntas: d.codigos
+    .map(c => QUESTIONARIO_CADERNO.find(q => q.codigo === c)!)
+    .sort((a, b) => Number(a.codigo.slice(1)) - Number(b.codigo.slice(1))),
+}));
 
 export function calcularIeoCaderno(registros: Pick<RegistroCaderno, 'codigo' | 'contexto' | 'resposta'>[]) {
   const respostas = new Map(registros.filter(r => r.contexto === '').map(r => [r.codigo, r.resposta]));

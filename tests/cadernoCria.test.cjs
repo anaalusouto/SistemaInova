@@ -14,6 +14,7 @@ test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos d
  const {DIMENSOES_IEO_CADERNO:dimensoes,calcularIeoCaderno:calcular}=load('src/app/diagnostic/ieoCaderno.ts');
  const codigos=dimensoes.flatMap(d=>d.codigos);
  assert.equal(new Set(codigos).size,25);assert.equal(codigos.length,25);
+ for(const d of dimensoes)assert.deepEqual(d.perguntas.map(q=>Number(q.codigo.slice(1))),[...d.perguntas.map(q=>Number(q.codigo.slice(1)))].sort((a,b)=>a-b));
  assert.deepEqual([...codigos].sort(),catalogo.QUESTIONARIO_CADERNO.map(q=>q.codigo).sort());
  const r=(codigo,valor,contexto='')=>({codigo,contexto,resposta:{...valoresVazios(),valor}});
  const resultado=calcular([r('Q01','4'),r('Q03','2'),r('Q02','1'),r('Q06','NS'),r('Q07','NC'),r('Q08','NA'),r('Q25','D'),r('Q11','4','OP01'),r('1.1.1','4')]);
@@ -23,6 +24,7 @@ test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos d
 });
 
 test('visualização atual mantém dimensões, termômetros, relatos e perguntas novas na consulta',()=>{
+ const {DIMENSOES_IEO_CADERNO:dimensoes}=load('src/app/diagnostic/ieoCaderno.ts');
  const registro={codigo:'Q01',contexto:'',resposta:{...valoresVazios(),valor:'3',relato:'Decisões acompanhadas'},versao:1};
  const mocks={'./IeoTab':{IeoTab:()=>null},'../../caderno.server':{},'@tanstack/react-query':{useQuery:()=>({data:[registro]}),useMutation:()=>({}),useQueryClient:()=>({})}};
  const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
@@ -31,6 +33,8 @@ test('visualização atual mantém dimensões, termômetros, relatos e perguntas
  assert.match(html,/diagnostico-termometro/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
  assert.ok(html.indexOf('Perguntas por dimensão') < html.indexOf('Resumo geral de análise'));
  assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
+ assert.deepEqual([...html.matchAll(/data-caderno-codigo="(Q\d\d)"/g)].map(m=>m[1]),dimensoes.flatMap(d=>d.perguntas.map(q=>q.codigo)));
+ for(let i=1;i<=5;i++)assert.match(html,new RegExp(`Dimensão ${i} ·`));
  assert.doesNotMatch(html,/<input|<textarea|Salvar resposta/);
 });
 
