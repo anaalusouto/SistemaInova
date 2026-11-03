@@ -27,25 +27,28 @@ function painel() {
   let selecionada;
   return { render: () => PainelMatriz({ linhas, desabilitado: false, onSelecionar: id => { selecionada = id; } }), selecionada: () => selecionada };
 }
-test('aba de implantação mostra registros da aplicação sem incluir funcionamento ou interesse futuro', () => {
+test('aba de implantação na Cesta mostra as condições e os produtos de interesse futuro da aplicação', () => {
   const produto = (id, nome) => ({ id, nome, respostas: {}, categoriaId: null, safra: { estado: 'nao_informada', intervalos: [] } });
   const produtos = [produto('p1', 'Mel'), produto('p2', 'Polpa'), produto('p3', 'Turismo')];
   const registro = (contexto, codigo, valor, relato = '') => ({ contexto, codigo, resposta: { valor, relato, selecoes: [], fonte: '', respondentes: '' } });
   const registros = [registro('p1','PR_SITUACAO','Funcionamento'), registro('p2','PR_SITUACAO','Implantação'), registro('p3','PR_SITUACAO','Futuro'), registro('p2','PR_CODIGO','PR02'), registro('p2','PR_OPERACAO','OP02'), registro('OP02','IM01','Em andamento','O que existe: Estrutura registrada')];
+  let indiceEstado = 0;
   const { CestaCaderno } = carregar('src/app/components/diagnostic/CestaCaderno.tsx', {
-    react: { ...React, useState: inicial => [typeof inicial === 'function' ? inicial() : inicial, () => {}] },
+    react: { ...React, useState: inicial => [indiceEstado++ === 3 ? 'implantacao' : typeof inicial === 'function' ? inicial() : inicial, () => {}] },
     '@tanstack/react-query': { useQuery: ({queryKey}) => ({ data: queryKey[0] === 'diagnostico-produtos' ? produtos : [] }), useMutation: () => ({}), useQueryClient: () => ({}) },
     '../../diagnosticos.server': {},
     './CadernoItens': { useCaderno: () => ({data: registros}), CadernoItens: () => null },
     './DadosComerciaisCesta': { DadosComerciaisCesta: () => null },
     '../PendenciasModulo': { usePendenciaModulo() {}, navegarSemPendencias: (_, fn) => fn() },
   });
-  const html = renderToStaticMarkup(CestaCaderno({ diagnosticoId: 'd1', organizacaoId: 'o1', readOnly: true, somenteImplantacao: true }));
+  const html = renderToStaticMarkup(CestaCaderno({ diagnosticoId: 'd1', organizacaoId: 'o1', readOnly: true }));
   assert.match(html, /PR02 · Polpa/);
   assert.match(html, /OP02/);
-  assert.match(html, /IM01/);
+  for (let i=1;i<=7;i++) assert.match(html, new RegExp(`IM0${i}`));
   assert.match(html, /Estrutura registrada/);
-  assert.doesNotMatch(html, /Turismo|>Mel</);
+  assert.match(html, /Interesse futuro/);
+  assert.match(html, /Turismo/);
+  assert.doesNotMatch(html, />Mel</);
 });
 test('gráfico agrupa funções por leitura e preserva campos ausentes', () => {
   const p = painel(); const html = renderToStaticMarkup(p.render());

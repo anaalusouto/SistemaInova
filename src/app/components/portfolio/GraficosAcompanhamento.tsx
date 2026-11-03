@@ -22,33 +22,33 @@ const criticidadeRisco = (severity: number) => {
   return faixa === '—' ? 'Não informado' : faixa;
 };
 
-function dadosAvanco(projects: ProjectExt[]) {
-  const grupos = new Map<string, { id: string; organizacao: string; projetos: number; etapasConcluidas: number; etapasTotal: number; etapasCompleto: boolean; aprovado: number; executado: number; financeiroCompleto: boolean }>();
+export function dadosAvanco(projects: ProjectExt[]) {
+  const grupos = new Map<string, { id: string; organizacao: string; projetos: number; etapasConcluidas: number; etapasTotal: number; projetosEtapas: number; aprovado: number; executado: number; projetosFinanceiro: number }>();
   for (const p of projects) {
     const id = p.organizacao?.id;
     if (!id) continue;
-    const grupo = grupos.get(id) ?? { id, organizacao: orgNome(p), projetos: 0, etapasConcluidas: 0, etapasTotal: 0, etapasCompleto: true, aprovado: 0, executado: 0, financeiroCompleto: true };
+    const grupo = grupos.get(id) ?? { id, organizacao: orgNome(p), projetos: 0, etapasConcluidas: 0, etapasTotal: 0, projetosEtapas: 0, aprovado: 0, executado: 0, projetosFinanceiro: 0 };
     grupo.projetos++;
     const etapas = conclusaoEtapas(p);
-    if (etapas.total > 0) { grupo.etapasConcluidas += etapas.concluidas; grupo.etapasTotal += etapas.total; }
-    else grupo.etapasCompleto = false;
+    if (etapas.total > 0) { grupo.etapasConcluidas += etapas.concluidas; grupo.etapasTotal += etapas.total; grupo.projetosEtapas++; }
     if (projectFinanceKnown(p, 'budgetApprovedInformado') && projectFinanceKnown(p, 'budgetExecutedInformado') && Number.isFinite(p.budgetApproved) && Number.isFinite(p.budgetExecuted) && p.budgetApproved >= 0 && p.budgetExecuted >= 0) {
-      grupo.aprovado += p.budgetApproved; grupo.executado += p.budgetExecuted;
-    } else grupo.financeiroCompleto = false;
+      grupo.aprovado += p.budgetApproved; grupo.executado += p.budgetExecuted; grupo.projetosFinanceiro++;
+    }
     grupos.set(id, grupo);
   }
   return [...grupos.values()].flatMap(g => {
-    if (!g.etapasCompleto || !g.financeiroCompleto || !g.etapasTotal || g.aprovado <= 0) return [];
-    const percentualEtapas = g.etapasConcluidas / g.etapasTotal * 100;
-    const percentualFinanceiro = g.executado / g.aprovado * 100;
-    const diferenca = percentualEtapas - percentualFinanceiro;
+    const percentualEtapas = g.etapasTotal > 0 ? g.etapasConcluidas / g.etapasTotal * 100 : null;
+    const percentualFinanceiro = g.projetosFinanceiro > 0 && g.aprovado > 0 ? g.executado / g.aprovado * 100 : null;
+    if (percentualEtapas === null && percentualFinanceiro === null) return [];
+    const diferenca = percentualEtapas !== null && percentualFinanceiro !== null ? percentualEtapas - percentualFinanceiro : null;
     return [{
       id: g.id, nome: g.organizacao, organizacao: g.organizacao, organizacaoId: g.id,
       projetos: g.projetos, etapasConcluidas: g.etapasConcluidas, etapasTotal: g.etapasTotal,
-      percentualEtapas, percentualFinanceiro, diferenca, magnitude: Math.abs(diferenca),
-      aFrente: diferenca > 0 ? 'Avanço de Etapas' : diferenca < 0 ? 'Execução financeira' : 'Mesmo percentual',
+      projetosEtapas: g.projetosEtapas, projetosFinanceiro: g.projetosFinanceiro,
+      percentualEtapas, percentualFinanceiro, diferenca, magnitude: diferenca === null ? null : Math.abs(diferenca),
+      aFrente: diferenca === null ? null : diferenca > 0 ? 'Avanço de Etapas' : diferenca < 0 ? 'Execução financeira' : 'Mesmo percentual',
     }];
-  }).sort((a, b) => b.magnitude - a.magnitude || a.organizacao.localeCompare(b.organizacao, 'pt-BR'));
+  }).sort((a, b) => (b.magnitude ?? -1) - (a.magnitude ?? -1) || a.organizacao.localeCompare(b.organizacao, 'pt-BR'));
 }
 
 const FAIXAS_PRAZO = ['Vencidas', 'Até 30 dias', 'De 31 a 60 dias', 'De 61 a 90 dias', 'Após 90 dias', 'Sem prazo'];
@@ -121,7 +121,7 @@ function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
   return { anos, acumulados, notasSemData };
 }
 
-function dadosOrcamentoOrganizacao(projects: ProjectExt[]) {
+export function dadosOrcamentoOrganizacao(projects: ProjectExt[]) {
   const grupos = new Map<string, { id: string; nome: string; aprovados: number; executados: number; aprovadosN: number; executadosN: number; projetos: number }>();
   let semOrganizacaoId = 0;
   for (const p of projects) {
@@ -133,10 +133,12 @@ function dadosOrcamentoOrganizacao(projects: ProjectExt[]) {
     if (projectFinanceKnown(p, 'budgetExecutedInformado') && Number.isFinite(p.budgetExecuted)) { atual.executados += p.budgetExecuted; atual.executadosN++; }
     grupos.set(id, atual);
   }
-  const linhas = [...grupos.values()].filter(g => g.aprovadosN === g.projetos).sort((a, b) => b.aprovados - a.aprovados || a.nome.localeCompare(b.nome, 'pt-BR'))
-    .map(g => ({ ...g, aprovados: g.aprovadosN === g.projetos ? g.aprovados : null, executados: g.executadosN === g.projetos ? g.executados : null,
-      percentualExecutado: g.aprovados > 0 && g.executadosN === g.projetos ? g.executados / g.aprovados * 100 : null }));
-  return { linhas, semOrganizacaoId };
+  const todos = [...grupos.values()];
+  const linhas = todos.filter(g => g.aprovadosN > 0 && g.aprovados !== 0).sort((a, b) => b.aprovados - a.aprovados || a.nome.localeCompare(b.nome, 'pt-BR'))
+    .map(g => ({ ...g, aprovadoCompleto: g.aprovadosN === g.projetos, executadoCompleto: g.executadosN === g.projetos,
+      aprovados: g.aprovadosN ? g.aprovados : null, executados: g.executadosN ? g.executados : null,
+      percentualExecutado: g.aprovados > 0 && g.aprovadosN === g.projetos && g.executadosN === g.projetos ? g.executados / g.aprovados * 100 : null }));
+  return { linhas, semOrganizacaoId, semOrcamento: todos.filter(g => g.aprovadosN === 0).length, orcamentoZero: todos.filter(g => g.aprovadosN > 0 && g.aprovados === 0).length };
 }
 
 function dadosRiscos(projects: ProjectExt[]) {
@@ -164,36 +166,31 @@ function dadosRiscos(projects: ProjectExt[]) {
   return { organizacoes, categorias, porOrganizacao, porCategoria, porCriticidade, semOrganizacaoId };
 }
 
-function primeirasComSelecao<T extends {id:string}>(linhas:T[], id:string|null):T[] {
-  const primeiras=linhas.slice(0,8); const selecionada=id ? linhas.find(l=>l.id===id) : undefined;
-  return selecionada && !primeiras.some(l=>l.id===id) ? [...primeiras.slice(0,7),selecionada] : primeiras;
-}
-
 export function GraficosAcompanhamento({ projects, demonstrativo = false, organizacaoAtiva, onSelecionarOrganizacao }: { projects: ProjectExt[]; demonstrativo?: boolean; organizacaoAtiva: string | null; onSelecionarOrganizacao: (id: string) => void }) {
   const projetosAtivos = useMemo(() => organizacaoAtiva ? projects.filter(p=>p.organizacao?.id===organizacaoAtiva) : projects, [projects,organizacaoAtiva]);
   const avancoTodos = useMemo(() => dadosAvanco(projects), [projects]);
-  const avanco = primeirasComSelecao(avancoTodos, organizacaoAtiva);
+  const avanco = avancoTodos;
   const mensal = useMemo(() => dadosMensais(projetosAtivos, demonstrativo), [projetosAtivos, demonstrativo]);
   const orcamentoTodos = useMemo(() => dadosOrcamentoOrganizacao(projects), [projects]);
-  const orcamento = {...orcamentoTodos, linhas:primeirasComSelecao(orcamentoTodos.linhas,organizacaoAtiva)};
+  const orcamento = orcamentoTodos;
   const riscos = useMemo(() => dadosRiscos(projects), [projects]);
   const riscosAtivos = useMemo(() => dadosRiscos(projetosAtivos), [projetosAtivos]);
   const prazos = useMemo(() => dadosPrazos(projetosAtivos, new Date()), [projetosAtivos]);
   const semVinculo = projects.filter(p => !p.organizacao?.id).length;
   const gruposAvanco = new Map<string, ProjectExt[]>();
   for (const p of projects) if (p.organizacao?.id) gruposAvanco.set(p.organizacao.id, [...(gruposAvanco.get(p.organizacao.id) ?? []), p]);
-  const excluidosAvanco = [...gruposAvanco.values()].filter(grupo => grupo.some(p => !conclusaoEtapas(p).total || !projectFinanceKnown(p, 'budgetApprovedInformado') || !projectFinanceKnown(p, 'budgetExecutedInformado') || !Number.isFinite(p.budgetApproved) || !Number.isFinite(p.budgetExecuted) || p.budgetApproved < 0 || p.budgetExecuted < 0) || grupo.reduce((s,p)=>s+p.budgetApproved,0)<=0);
+  const excluidosAvanco = [...gruposAvanco.values()].filter(grupo => !avancoTodos.some(l => l.id === grupo[0].organizacao?.id));
   return <section className="space-y-5" aria-labelledby="graficos-acompanhamento-titulo">
     <div><h2 id="graficos-acompanhamento-titulo" className="text-lg font-semibold">Gráficos de acompanhamento</h2><p className="mt-1 text-xs text-muted-foreground">Os filtros de exercício, organização e status acima se aplicam a estes gráficos. Valores ausentes ficam “Não informado” e não entram em somas ou percentuais.</p></div>
 
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Avanço de etapas comparado à execução financeira">
-      <div><h3 className="font-semibold">Avanço de Etapas × execução financeira</h3><p className="text-xs text-muted-foreground">Barras agrupadas por organização. O avanço é etapas concluídas / total; são exibidas as oito maiores diferenças absolutas. A diferença, sozinha, não indica ineficiência.</p></div>
-      {organizacaoAtiva && <p className="text-xs text-muted-foreground">A organização selecionada é incluída quando seus dados permitem o cálculo.</p>}
-      {avanco.length ? <><div className="h-[310px] min-w-0 overflow-x-auto"><div className="h-full min-w-[540px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={avanco} layout="vertical" margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" domain={[0, 'dataMax']} tickFormatter={v => `${Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0})}%`} tick={{ fontSize: 10 }}/><YAxis type="category" dataKey="nome" width={180} tick={{ fontSize: 9 }}/><Tooltip content={({ active, payload }) => { const d = payload?.[0]?.payload; return active && d ? <div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{d.organizacao}</strong><p>ID da organização: {d.organizacaoId}</p><p>Projetos considerados: {d.projetos}</p><p>Etapas concluídas: {d.etapasConcluidas}/{d.etapasTotal}</p><p>Avanço de Etapas: {pct(d.percentualEtapas)}</p><p>Execução financeira: {pct(d.percentualFinanceiro)}</p><p>Diferença: {Math.abs(d.diferenca).toLocaleString('pt-BR',{maximumFractionDigits:1})} p.p. · {d.aFrente} à frente</p></div> : null; }}/><Legend verticalAlign="bottom"/><Bar dataKey="percentualEtapas" name="Avanço de Etapas" fill="#4e7558">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="percentualFinanceiro" name="Orçamento executado" fill="#3b5687">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar>
+      <div><h3 className="font-semibold">Avanço de Etapas × execução financeira</h3><p className="text-xs text-muted-foreground">Barras agrupadas por organização. Mostra todas as organizações com ao menos uma medida calculável; eixo percentual fixo de 0% a 100%. A diferença, quando calculável, não indica ineficiência por si só.</p></div>
+      {organizacaoAtiva && <p className="text-xs text-muted-foreground">A seleção destaca a organização nos gráficos sem ocultar as demais.</p>}
+      {avanco.length ? <><div className="min-w-0 overflow-x-auto"><div style={{height:Math.max(310,avanco.length*38+75)}} className="min-w-[540px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={avanco} layout="vertical" margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" domain={[0, 100]} ticks={[0,20,40,60,80,100]} tickFormatter={v => `${Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0})}%`} tick={{ fontSize: 10 }}/><YAxis type="category" dataKey="nome" width={180} tick={{ fontSize: 9 }}/><Tooltip content={({ active, payload }) => { const d = payload?.[0]?.payload; return active && d ? <div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{d.organizacao}</strong><p>ID da organização: {d.organizacaoId}</p><p>Projetos no grupo: {d.projetos}</p><p>Projetos com etapas registradas: {d.projetosEtapas}/{d.projetos}</p><p>Etapas concluídas: {d.etapasTotal ? `${d.etapasConcluidas}/${d.etapasTotal}` : 'Não informado'}</p><p>Avanço de Etapas: {pct(d.percentualEtapas)}</p><p>Projetos com orçamento e execução: {d.projetosFinanceiro}/{d.projetos}</p><p>Execução financeira: {pct(d.percentualFinanceiro)}</p><p>Diferença: {d.diferenca === null ? 'Não calculável · falta uma das medidas' : `${Math.abs(d.diferenca).toLocaleString('pt-BR',{maximumFractionDigits:1})} p.p. · ${d.aFrente} à frente`}</p></div> : null; }}/><Legend verticalAlign="bottom"/><Bar dataKey="percentualEtapas" name="Avanço de Etapas" fill="#4e7558">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="percentualFinanceiro" name="Execução financeira" fill="#3b5687">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar>
       </BarChart></ResponsiveContainer></div></div></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há projetos com total de etapas e percentual financeiro calculáveis neste recorte.</p>}
-      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Ver organizações sem comparação ({excluidosAvanco.length})</summary><p className="mt-2">A comparação exige etapas e valores financeiros informados em todos os projetos considerados e orçamento aprovado positivo. {semVinculo} projeto(s) sem vínculo por ID não foram agrupados.</p><ul className="mt-2 list-disc pl-4">{excluidosAvanco.map(g=><li key={g[0].organizacao!.id}>{orgNome(g[0])}: {g.some(p=>!conclusaoEtapas(p).total)?'etapas ausentes; ':''}{g.some(p=>!projectFinanceKnown(p,'budgetApprovedInformado')||!projectFinanceKnown(p,'budgetExecutedInformado')||!Number.isFinite(p.budgetApproved)||!Number.isFinite(p.budgetExecuted))?'orçamento ou execução não informado; ':''}{g.reduce((s,p)=>s+p.budgetApproved,0)<=0?'orçamento aprovado sem valor positivo.':''}</li>)}</ul></details>
+      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Ver organizações sem medidas calculáveis ({excluidosAvanco.length})</summary><p className="mt-2">Organizações com apenas uma medida aparecem no gráfico; a outra é “Não informado”. Diferenças são ordenadas pela magnitude apenas quando ambas as medidas existem. {semVinculo} projeto(s) sem vínculo por ID não foram agrupados.</p><ul className="mt-2 list-disc pl-4">{excluidosAvanco.map(g=><li key={g[0].organizacao!.id}>{orgNome(g[0])}: sem etapas concluídas/total e sem par orçamento aprovado + executado calculável.</li>)}</ul></details>
     </article>
 
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Prazos e atraso das etapas não concluídas">
@@ -209,9 +206,9 @@ export function GraficosAcompanhamento({ projects, demonstrativo = false, organi
     </article>
 
     <article className="order-1 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Orçamento aprovado e executado por organização">
-      <div><h3 className="font-semibold">Orçamento por organização · oito maiores dotações</h3><p className="text-xs text-muted-foreground">Valores em reais, agrupados pelo identificador da organização. Só organizações com orçamento aprovado informado aparecem ordenadas pela maior dotação.</p></div>
+      <div><h3 className="font-semibold">Orçamento por organização</h3><p className="text-xs text-muted-foreground">Todas as organizações com orçamento aprovado não nulo, agrupadas pelo identificador e ordenadas pelo valor registrado. Barras sobrepostas na mesma linha.</p></div>
       {organizacaoAtiva && <p className="text-xs text-muted-foreground">A organização selecionada é incluída quando o orçamento aprovado está disponível.</p>}
-      {orcamento.linhas.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[560px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={orcamento.linhas} layout="vertical" margin={{top:8,right:16,bottom:8,left:105}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" tickFormatter={v=>Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} tick={{fontSize:9}}/><YAxis type="category" dataKey="nome" width={102} tick={{fontSize:9}}/><Tooltip content={({active,payload})=>{const g=payload?.[0]?.payload;return active&&g?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{g.nome} · ID {g.id}</strong><p>Orçamento aprovado: {dinheiro(g.aprovados)}</p><p>Valor executado: {dinheiro(g.executados)}</p><p>Percentual executado: {pct(g.percentualExecutado)}</p></div>:null}}/><Legend verticalAlign="bottom"/><Bar dataKey="aprovados" name="Orçamento" fill="#b8c7df">{orcamento.linhas.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="executados" name="Executado" fill="#3b5687">{orcamento.linhas.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar></BarChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">{orcamento.semOrganizacaoId ? `${orcamento.semOrganizacaoId} projeto(s) sem ID de organização não foram agrupados.` : ''} Oito maiores dotações aprovadas, por ID. Valores executados incompletos permanecem “Não informado”.</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Orçamento aprovado: Não informado neste recorte.</p>}
+      {orcamento.linhas.length ? <><div className="min-w-0 overflow-x-auto"><div style={{height:Math.max(320,orcamento.linhas.length*38+75)}} className="min-w-[560px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={orcamento.linhas} layout="vertical" barGap={-18} margin={{top:8,right:16,bottom:8,left:105}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" tickFormatter={v=>Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} tick={{fontSize:9}}/><YAxis type="category" dataKey="nome" width={102} tick={{fontSize:9}}/><Tooltip content={({active,payload})=>{const g=payload?.[0]?.payload;return active&&g?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{g.nome} · ID {g.id}</strong><p>Orçamento aprovado{g.aprovadoCompleto?'':' · parcial'}: {dinheiro(g.aprovados)}</p><p>Valor executado{g.executadoCompleto?'':' · parcial'}: {dinheiro(g.executados)}</p><p>Percentual executado: {pct(g.percentualExecutado)}</p></div>:null}}/><Legend verticalAlign="bottom"/><Bar dataKey="aprovados" name="Orçamento aprovado" fill="#b8c7df" barSize={16}>{orcamento.linhas.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="executados" name="Valor executado" fill="#3b5687" barSize={16}>{orcamento.linhas.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar></BarChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">{orcamento.semOrganizacaoId ? `${orcamento.semOrganizacaoId} projeto(s) sem ID de organização não foram agrupados. ` : ''}{orcamento.semOrcamento ? `${orcamento.semOrcamento} organização(ões) sem orçamento registrado; ` : ''}{orcamento.orcamentoZero ? `${orcamento.orcamentoZero} organização(ões) com orçamento registrado igual a R$ 0; ` : ''}Executados sem registro aparecem como “Não informado”; valores parciais são identificados no detalhe.</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Orçamento aprovado: Não informado neste recorte.</p>}
     </article>
 
     </div>

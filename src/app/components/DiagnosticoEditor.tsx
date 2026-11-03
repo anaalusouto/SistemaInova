@@ -55,11 +55,11 @@ export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
 
 function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
-  const [abaMatriz, setAbaMatriz] = useState<'funcoes' | 'implantacao'>('funcoes');
   const tab = instrumentoAtual ?? tabLocal;
   const [evidenciasAberto, setEvidenciasAberto] = useState(false);
   const [editorAberto, setEditorAberto] = useState(false);
-  const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências'>('Dados gerais');
+  const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências' | 'Implantação'>('Dados gerais');
+  const [registroEditor, setRegistroEditor] = useState<string | undefined>();
   const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
@@ -204,17 +204,12 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
           <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId}
             readOnly={readOnly || diagnostico.status === 'concluido'} onConsultarIeo={() => setTab('ieo')} onConsultarParecer={() => setTab('parecer')} />
         </div>}
-        {tab === 'matriz' && diagnostico && <div className="space-y-4">
-          <nav className="flex flex-wrap gap-2" role="tablist" aria-label="Áreas da Matriz">
-            {([['funcoes','Matriz Funcional'],['implantacao','Implantação']] as const).map(([id,label])=><button key={id} type="button" role="tab" aria-selected={abaMatriz===id} onClick={()=>{if(abaMatriz!==id)navegarSemPendencias(haPendencias,()=>setAbaMatriz(id));}} className={`rounded-lg border px-4 py-2 text-sm ${abaMatriz===id?'border-primary font-semibold text-primary':'bg-card text-muted-foreground'}`}>{label}</button>)}
-          </nav>
-          {abaMatriz === 'funcoes' ? <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} /> : <CestaCaderno somenteImplantacao diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} bloqueado={haPendencias} />}
-        </div>}
+        {tab === 'matriz' && diagnostico && <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />}
         {tab === 'ieo' && diagnostico && (
           <QuestionarioCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         {tab === 'cesta' && diagnostico && (
-          <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} bloqueado={haPendencias} />
+          <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} bloqueado={haPendencias} aoEditarImplantacao={(operacao,codigo)=>{setRegistroEditor(`${operacao}:${codigo}`);setSecaoEditor('Implantação');setEditorAberto(true);}} />
         )}
         {tab === 'parecer' && diagnostico && (
           <ParecerTecnicoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
@@ -222,7 +217,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         </div>
       </div>
       {diagnostico && evidenciasAberto && <EvidenciasDiagnosticoPanel diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} aoFechar={() => setEvidenciasAberto(false)} aoGerenciar={() => { setEvidenciasAberto(false); setSecaoEditor('Evidências'); setEditorAberto(true); }} />}
-      {diagnostico && editorAberto && <EditorInformacoesDiagnostico diagnostico={diagnostico} diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} haPendencias={haPendencias} secaoInicial={secaoEditor} aoFechar={() => setEditorAberto(false)} aoGerenciarEvidencias={() => { setEditorAberto(false); setEvidenciasAberto(true); }} />}
+      {diagnostico && editorAberto && <EditorInformacoesDiagnostico diagnostico={diagnostico} diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} haPendencias={haPendencias} secaoInicial={secaoEditor} registroInicial={secaoEditor==='Implantação'?registroEditor:undefined} aoFechar={() => setEditorAberto(false)} aoGerenciarEvidencias={() => { setEditorAberto(false); setEvidenciasAberto(true); }} />}
     </div>
   );
 }

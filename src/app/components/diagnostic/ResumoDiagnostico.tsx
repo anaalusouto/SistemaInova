@@ -194,7 +194,8 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
       <div className="flex flex-wrap gap-4 text-xs"><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Crítica}}/>Prioridade crítica</span><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Média}}/>Prioridade média</span></div>
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
     </figure>
-    <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela min-w-[1050px]">
+    <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
+      <colgroup><col style={{width:56}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:125}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
       <caption>Prioridades dimensionais · valores históricos da referência</caption>
       <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota atual','Nota IEO · histórica','Nota Matriz · histórica','Nota Cesta · histórica','Consolidada · histórica','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
       <tbody>{DIMENSOES_HISTORICAS_AGROMEL.map(d => <tr key={d.ordem}>
@@ -336,14 +337,14 @@ export function ResumoDiagnostico({
   ];
   return (
     <div ref={raiz} className="diagnostico-resumo">
-      <section aria-label="Conclusão geral do mapeamento">
+      <section className="resumo-secao-conclusao-geral" aria-label="Conclusão geral do mapeamento">
         <p className="diagnostico-sobretitulo">Resumo do diagnóstico</p>
         <h4>Conclusão geral</h4>
         <p className="resumo-sintese">{diagnosticoAgromel
           ? 'A AGROMEL possui experiências produtivas e oportunidades de diversificação, mas seu fortalecimento depende, sobretudo, da consolidação da gestão coletiva, do engajamento dos cooperados e da capacidade de sustentar economicamente suas operações atuais e futuras.'
           : sintese?.trim() || 'Não registrado no parecer técnico.'}</p>
       </section>
-      <section aria-label="Destaque principal e principal fragilidade transversal">
+      <section className="resumo-secao-destaques" aria-label="Destaque principal e principal fragilidade transversal">
         <div className="resumo-duas-colunas">
           <article className="resumo-cartao resumo-potencial">
             <h5><Sprout size={20} aria-hidden="true" /> Destaque Principal</h5>
@@ -359,29 +360,7 @@ export function ResumoDiagnostico({
           </article>
         </div>
       </section>
-      <section aria-label="Conclusão técnica completa">
-        <h4>Conclusão técnica completa</h4>
-        {diagnosticoAgromel ? <div className="resumo-cartao resumo-conclusao-tecnica">
-          <p>O diagnóstico da AGROMEL revela uma <strong>cooperativa com experiência produtiva, atividades econômicas em funcionamento e oportunidades de diversificação</strong>. Entretanto, seu fortalecimento ainda <strong>depende de avanços na organização dos processos de gestão, na participação dos cooperados e na estruturação das operações coletivas</strong>.</p>
-          <p>A produção e a comercialização de mel constituem a principal referência de atuação da cooperativa. A existência de um selo de produto artesanal, conforme informado no levantamento, também representa um elemento relevante de sua trajetória. Contudo, os impactos ambientais e a redução do volume produzido têm levado a AGROMEL a buscar alternativas para diversificar suas fontes de receita e reduzir a dependência dessa atividade.</p>
-          <p>Foram identificadas oportunidades relacionadas ao beneficiamento do mel, às frutas, à macaxeira e seus derivados, às hortaliças e ao turismo rural. Essas possibilidades apresentam diferentes níveis de maturidade e exigem avaliações específicas antes de serem incorporadas às operações da cooperativa.</p>
-          <p><strong>A implantação da agroindústria de frutas foi definida como prioridade</strong>, principalmente diante do desperdício da produção já existente entre os cooperados. A iniciativa está alinhada ao projeto aprovado pelo Inova Sociobio II e é uma oportunidade de agregar valor à produção local. Ainda há definições pendentes sobre o fornecimento de matéria-prima, a distribuição de responsabilidades, a gestão operacional e a comercialização.</p>
-          <p>A preparação dessa atividade evidencia uma fragilidade mais ampla: embora existam práticas de gestão e mecanismos de funcionamento, muitos processos ainda não estão suficientemente estruturados para garantir continuidade, acompanhamento e tomada de decisão. Isso aparece especialmente no planejamento da produção, na divisão de tarefas, no acompanhamento das decisões e na organização das informações dos cooperados.</p>
-          <p><strong>A ausência de controles produtivos regulares e centralizados constitui um desafio importante</strong>, tanto para a agroindústria quanto para avaliar outras oportunidades de negócio. As demais possibilidades de diversificação devem ser precedidas de estudos específicos de mercado e viabilidade, considerando disponibilidade de matéria-prima, capacidade de fornecimento, custos e demanda potencial.</p>
-          <p>Na dimensão social e organizacional, é necessário fortalecer o envolvimento dos cooperados nas decisões e nas atividades coletivas, considerando suas necessidades, capacidades e expectativas. Isso será especialmente importante para a operação da agroindústria, que dependerá da articulação entre produtores e de compromissos compartilhados.</p>
-          <p>Na gestão econômico-financeira, a AGROMEL possui práticas e conhecimentos que podem apoiar o aprimoramento dos controles. Ainda são desafios o planejamento dos recursos, a disponibilidade de capital de giro e o uso de informações financeiras para orientar decisões.</p>
-          <p>A Matriz Funcional identifica interesse elevado no desenvolvimento de diferentes funções. <strong>Esse interesse não significa que todas as atividades devam ser assumidas diretamente pela cooperativa.</strong> O fortalecimento pode combinar aprimoramento das funções existentes, parcerias e serviços compartilhados, considerando capacidades, necessidades dos cooperados e decisões coletivas.</p>
-          <p>O IEO foi atualizado para o Caderno CRIA rev. 22/10/2026. As 25 perguntas aguardam reavaliação pelos novos descritores. Os níveis anteriores devem ser preservados como histórico; o IEO atual está sem nota calculável. Os relatos antigos e as prioridades dimensionais do agrupamento anterior precisam ser conferidos e remapeados antes de serem apresentados como avaliação atual.</p>
-          <p>De forma integrada, o principal desafio da AGROMEL não está apenas em ampliar a produção ou acessar mercados, mas em desenvolver a capacidade de organizar, coordenar e sustentar coletivamente suas atividades econômicas. A agroindústria de frutas torna essa necessidade ainda mais evidente.</p>
-          <p>Engajamento dos cooperados, capital de giro e comercialização permanecem como temas relevantes do levantamento anterior, mas devem ser confirmados e pactuados considerando as condições atuais da cooperativa e as exigências da nova operação.</p>
-          <p>Conclui-se que a AGROMEL possui uma base produtiva e oportunidades concretas de fortalecimento, especialmente por meio da agregação de valor à produção dos cooperados. A consolidação desse potencial dependerá da capacidade de estruturar a gestão, mobilizar os cooperados e assegurar condições operacionais e financeiras para sustentar as iniciativas priorizadas.</p>
-        </div> : <details className="resumo-expansivel" open><summary>Ler conclusão completa</summary><div>
-          {[["Síntese geral", sintese], ["Potencial e capacidades", capacidades], ["Fragilidades", fragilidades], ["Pontos prioritários", parecer.data?.pontosPrioritarios], ["Considerações técnicas", parecer.data?.consideracoesTecnicas]].map(([titulo, texto]) => <section key={titulo}><h5>{titulo}</h5><p className="resumo-texto-integral">{texto || 'Não registrado.'}</p></section>)}
-          {parecer.data?.atualizadoEm && <p>Parecer atualizado em {formatDateOnly(parecer.data.atualizadoEm)}.</p>}
-        </div></details>}
-        {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer técnico' : 'Editar parecer técnico'}</button>}
-      </section>
-      <section aria-label="Prioridades por dimensão">
+      <section className="resumo-secao-prioridades-dimensionais" aria-label="Prioridades por dimensão">
         <h4>Prioridades de dimensão e ordem de atuação</h4>
         {diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo
           historico={ieoPendente}
@@ -395,7 +374,7 @@ export function ResumoDiagnostico({
           </button>
         )}
       </section>
-      <section aria-label="Prioridades estratégicas">
+      <section className="resumo-secao-prioridades-estrategicas" aria-label="Prioridades estratégicas">
         <h4>Prioridades estratégicas identificadas</h4>
         <p>{diagnosticoAgromel ? 'Referências do levantamento anterior; confirmar e pactuar após a revisão.' : emRevisao ? 'Aguardam confirmação após a revisão do diagnóstico.' : 'Prioridades registradas no fechamento estratégico.'}</p>
         <div className="resumo-duas-colunas">
@@ -456,7 +435,7 @@ export function ResumoDiagnostico({
           </details>
         )}
       </section>
-      <section aria-label="Metodologia, vínculos e pendências">
+      <section className="resumo-secao-metodologia" aria-label="Metodologia, vínculos e pendências">
         <h4>Metodologia, vínculos e pendências</h4>
         {ieoPendente && <article className="resumo-situacao resumo-em-revisao" role="status">
           <h5>IEO atual sem nota calculável</h5>
@@ -573,6 +552,28 @@ export function ResumoDiagnostico({
             </section>
           </div>
         </details>
+      </section>
+      <section className="resumo-secao-conclusao-tecnica" aria-label="Conclusão técnica completa">
+        <h4>Conclusão técnica completa</h4>
+        {diagnosticoAgromel ? <div className="resumo-cartao resumo-conclusao-tecnica">
+          <p>O diagnóstico da AGROMEL revela uma <strong>cooperativa com experiência produtiva, atividades econômicas em funcionamento e oportunidades de diversificação</strong>. Entretanto, seu fortalecimento ainda <strong>depende de avanços na organização dos processos de gestão, na participação dos cooperados e na estruturação das operações coletivas</strong>.</p>
+          <p>A produção e a comercialização de mel constituem a principal referência de atuação da cooperativa. A existência de um selo de produto artesanal, conforme informado no levantamento, também representa um elemento relevante de sua trajetória. Contudo, os impactos ambientais e a redução do volume produzido têm levado a AGROMEL a buscar alternativas para diversificar suas fontes de receita e reduzir a dependência dessa atividade.</p>
+          <p>Foram identificadas oportunidades relacionadas ao beneficiamento do mel, às frutas, à macaxeira e seus derivados, às hortaliças e ao turismo rural. Essas possibilidades apresentam diferentes níveis de maturidade e exigem avaliações específicas antes de serem incorporadas às operações da cooperativa.</p>
+          <p><strong>A implantação da agroindústria de frutas foi definida como prioridade</strong>, principalmente diante do desperdício da produção já existente entre os cooperados. A iniciativa está alinhada ao projeto aprovado pelo Inova Sociobio II e é uma oportunidade de agregar valor à produção local. Ainda há definições pendentes sobre o fornecimento de matéria-prima, a distribuição de responsabilidades, a gestão operacional e a comercialização.</p>
+          <p>A preparação dessa atividade evidencia uma fragilidade mais ampla: embora existam práticas de gestão e mecanismos de funcionamento, muitos processos ainda não estão suficientemente estruturados para garantir continuidade, acompanhamento e tomada de decisão. Isso aparece especialmente no planejamento da produção, na divisão de tarefas, no acompanhamento das decisões e na organização das informações dos cooperados.</p>
+          <p><strong>A ausência de controles produtivos regulares e centralizados constitui um desafio importante</strong>, tanto para a agroindústria quanto para avaliar outras oportunidades de negócio. As demais possibilidades de diversificação devem ser precedidas de estudos específicos de mercado e viabilidade, considerando disponibilidade de matéria-prima, capacidade de fornecimento, custos e demanda potencial.</p>
+          <p>Na dimensão social e organizacional, é necessário fortalecer o envolvimento dos cooperados nas decisões e nas atividades coletivas, considerando suas necessidades, capacidades e expectativas. Isso será especialmente importante para a operação da agroindústria, que dependerá da articulação entre produtores e de compromissos compartilhados.</p>
+          <p>Na gestão econômico-financeira, a AGROMEL possui práticas e conhecimentos que podem apoiar o aprimoramento dos controles. Ainda são desafios o planejamento dos recursos, a disponibilidade de capital de giro e o uso de informações financeiras para orientar decisões.</p>
+          <p>A Matriz Funcional identifica interesse elevado no desenvolvimento de diferentes funções. <strong>Esse interesse não significa que todas as atividades devam ser assumidas diretamente pela cooperativa.</strong> O fortalecimento pode combinar aprimoramento das funções existentes, parcerias e serviços compartilhados, considerando capacidades, necessidades dos cooperados e decisões coletivas.</p>
+          <p>O IEO foi atualizado para o Caderno CRIA rev. 22/10/2026. As 25 perguntas aguardam reavaliação pelos novos descritores. Os níveis anteriores devem ser preservados como histórico; o IEO atual está sem nota calculável. Os relatos antigos e as prioridades dimensionais do agrupamento anterior precisam ser conferidos e remapeados antes de serem apresentados como avaliação atual.</p>
+          <p>De forma integrada, o principal desafio da AGROMEL não está apenas em ampliar a produção ou acessar mercados, mas em desenvolver a capacidade de organizar, coordenar e sustentar coletivamente suas atividades econômicas. A agroindústria de frutas torna essa necessidade ainda mais evidente.</p>
+          <p>Engajamento dos cooperados, capital de giro e comercialização permanecem como temas relevantes do levantamento anterior, mas devem ser confirmados e pactuados considerando as condições atuais da cooperativa e as exigências da nova operação.</p>
+          <p>Conclui-se que a AGROMEL possui uma base produtiva e oportunidades concretas de fortalecimento, especialmente por meio da agregação de valor à produção dos cooperados. A consolidação desse potencial dependerá da capacidade de estruturar a gestão, mobilizar os cooperados e assegurar condições operacionais e financeiras para sustentar as iniciativas priorizadas.</p>
+        </div> : <details className="resumo-expansivel" open><summary>Ler conclusão completa</summary><div>
+          {[["Síntese geral", sintese], ["Potencial e capacidades", capacidades], ["Fragilidades", fragilidades], ["Pontos prioritários", parecer.data?.pontosPrioritarios], ["Considerações técnicas", parecer.data?.consideracoesTecnicas]].map(([titulo, texto]) => <section key={titulo}><h5>{titulo}</h5><p className="resumo-texto-integral">{texto || 'Não registrado.'}</p></section>)}
+          {parecer.data?.atualizadoEm && <p>Parecer atualizado em {formatDateOnly(parecer.data.atualizadoEm)}.</p>}
+        </div></details>}
+        {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer técnico' : 'Editar parecer técnico'}</button>}
       </section>
     </div>
   );

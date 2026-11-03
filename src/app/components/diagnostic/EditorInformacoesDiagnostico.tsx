@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { atualizarInformacoesGeraisDiagnostico, getInformacoesGeraisDiagnostico, getParecer, listarProdutos, listarRespostasMatriz, type DiagnosticoResumo, type Produto } from '../../diagnosticos.server';
@@ -15,13 +15,14 @@ type Secao = typeof SECOES[number];
 type RegistroEditor = { id: string; titulo: string; detalhe?: string; tipo: 'geral'|'caderno'|'dimensao'|'matriz'|'cesta'|'parecer'|'evidencia'|'static'; item?: ItemCaderno; contexto?: string; produto?: Produto };
 const vazioGeral = { nomeOrganizacao:'', classificacao:'', dataAplicacao:'', versao:0, arquivoReferencia:'', estagioRegistrado:'' };
 
-export function EditorInformacoesDiagnostico({ diagnostico, organizacaoId, readOnly, secaoInicial='Dados gerais', haPendencias, aoFechar, aoGerenciarEvidencias }: ContextoCaderno & {
-  diagnostico: DiagnosticoResumo; secaoInicial?: Secao; haPendencias: boolean; aoFechar:()=>void; aoGerenciarEvidencias:()=>void;
+export function EditorInformacoesDiagnostico({ diagnostico, organizacaoId, readOnly, secaoInicial='Dados gerais', registroInicial, haPendencias, aoFechar, aoGerenciarEvidencias }: ContextoCaderno & {
+  diagnostico: DiagnosticoResumo; secaoInicial?: Secao; registroInicial?: string; haPendencias: boolean; aoFechar:()=>void; aoGerenciarEvidencias:()=>void;
 }) {
   const client = useQueryClient();
   const [secao, setSecao] = useState<Secao>(secaoInicial);
   const [busca, setBusca] = useState('');
-  const [selecionado, setSelecionado] = useState('');
+  const [selecionado, setSelecionado] = useState(registroInicial ?? '');
+  const primeiraSecao = useRef(true);
   const [geral, setGeral] = useState(vazioGeral);
   const [geralSalvo, setGeralSalvo] = useState(JSON.stringify(vazioGeral));
   const [busy, setBusy] = useState(false);
@@ -32,9 +33,9 @@ export function EditorInformacoesDiagnostico({ diagnostico, organizacaoId, readO
   const parecerQuery = useQuery({queryKey:['diagnostico-parecer',diagnostico.id],queryFn:()=>getParecer({data:{diagnosticoId:diagnostico.id}})});
   const resultadoIeo = calcularIeoCaderno(caderno.data??[]);
   const produtos = produtosQuery.data??[];
-  const operacoes = [...new Set((caderno.data??[]).map(r=>r.contexto).filter(v=>/^OP\d{2,}$/.test(v)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  const operacoes = [...new Set((caderno.data??[]).flatMap(r=>[r.contexto, r.codigo==='PR_OPERACAO' ? r.resposta.valor ?? '' : '']).filter(v=>/^OP\d{2,}$/.test(v)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
   const records = useMemo<RegistroEditor[]>(()=>{
-    const catalog = (items:ItemCaderno[], context='') => items.map(item=>({id:`${context}:${item.codigo}`,titulo:item.codigo,detalhe:item.texto,tipo:'caderno' as const,item,contexto:context}));
+    const catalog = (items:ItemCaderno[], context='') => items.map(item=>({id:`${context}:${item.codigo}`,titulo:context ? `${context} · ${item.codigo}` : item.codigo,detalhe:item.texto,tipo:'caderno' as const,item,contexto:context}));
     switch(secao){
       case 'Dados gerais': return [{id:'geral',titulo:'Organização, aplicação e situação',tipo:'geral'}];
       case 'Identificação': return catalog(IDENTIFICACAO_CADERNO);
@@ -56,7 +57,7 @@ export function EditorInformacoesDiagnostico({ diagnostico, organizacaoId, readO
   const atual = records.find(r=>r.id===selecionado)??filtrados[0]??null;
   const dirtyGeral = JSON.stringify(geral)!==geralSalvo;
   useEffect(()=>{if(geralQuery.data){setGeral(geralQuery.data);setGeralSalvo(JSON.stringify(geralQuery.data));}},[geralQuery.data]);
-  useEffect(()=>{setBusca('');setSelecionado('');},[secao]);
+  useEffect(()=>{if(primeiraSecao.current){primeiraSecao.current=false;return;}setBusca('');setSelecionado('');},[secao]);
   useEffect(()=>{if(!selecionado&&filtrados[0])setSelecionado(filtrados[0].id);},[filtrados,selecionado]);
   const fechar=()=>{if((dirtyGeral||haPendencias)&&!window.confirm('Há alterações pendentes. Feche somente depois de salvar ou cancelar os formulários abertos.'))return;aoFechar();};
   const mudarSecao=(nova:Secao)=>{if(dirtyGeral||haPendencias){toast.error('Salve ou cancele as alterações pendentes antes de trocar de seção.');return;}setSecao(nova);};
@@ -95,7 +96,7 @@ export function EditorInformacoesDiagnostico({ diagnostico, organizacaoId, readO
             <div className="grid gap-3 sm:grid-cols-2"><Calculated label="IEO geral calculado" value={`${resultadoIeo.geral?.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})??'—'} / 4`}/><Calculated label="Situação do IEO calculada" value={resultadoIeo.pontuadas>0&&resultadoIeo.pontuadas+resultadoIeo.naoAplicaveis===resultadoIeo.total?'Completo':'Parcial ou pendente'}/></div>
             <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">O IEO e sua situação são calculados a partir das questões. O estágio registrado é uma classificação descritiva e pode ser revisado. Os campos calculados não são editáveis.</p>
             {!readOnly&&<ActionBar dirty={dirtyGeral} busy={busy} onCancel={()=>{if(geralQuery.data){setGeral(geralQuery.data);setGeralSalvo(JSON.stringify(geralQuery.data));}}} onSave={()=>void salvarGeral()}/>}</>}</section>}
-          {atual?.tipo==='caderno'&&atual.item&&<section className="mx-auto max-w-3xl space-y-3"><h3 className="text-lg font-semibold">{atual.titulo} · {atual.item.texto}</h3><p className="text-xs text-muted-foreground">A gravação e o cancelamento usam o formulário próprio do registro. Campos vazios permanecem sem preenchimento.</p><CadernoItens {...{diagnosticoId:diagnostico.id,organizacaoId,readOnly}} itens={[atual.item]} contexto={atual.contexto}/></section>}
+          {atual?.tipo==='caderno'&&atual.item&&<section className="mx-auto max-w-3xl space-y-3"><h3 className="text-lg font-semibold">{atual.titulo} · {atual.item.texto}</h3><p className="text-xs text-muted-foreground">A gravação e o cancelamento usam o formulário próprio do registro. Campos vazios permanecem sem preenchimento.</p><CadernoItens {...{diagnosticoId:diagnostico.id,organizacaoId,readOnly}} itens={[atual.item]} contexto={atual.contexto} abertoInicial={secao==='Implantação'}/></section>}
           {atual?.tipo==='matriz'&&<section className="space-y-3"><h3 className="text-lg font-semibold">Matriz Funcional</h3><p className="text-sm text-muted-foreground">Use a busca e a seleção de função no formulário da Matriz. Avaliação, leitura orientativa e observações mantêm seus salvamentos explícitos.</p><MatrizFuncionalTab diagnosticoId={diagnostico.id} organizacaoId={organizacaoId} readOnly={readOnly}/></section>}
           {atual?.tipo==='cesta'&&<section className="space-y-3"><h3 className="text-lg font-semibold">Produtos e serviços</h3><p className="text-sm text-muted-foreground">Use os registros da Cesta para editar identificação, contexto produtivo, avaliação, canais e implantação.</p><CestaCaderno diagnosticoId={diagnostico.id} organizacaoId={organizacaoId} readOnly={readOnly}/></section>}
           {atual?.tipo==='parecer'&&<section className="space-y-3"><h3 className="text-lg font-semibold">Conclusão e direcionamentos</h3><ParecerTecnicoTab diagnosticoId={diagnostico.id} organizacaoId={organizacaoId} readOnly={readOnly}/></section>}

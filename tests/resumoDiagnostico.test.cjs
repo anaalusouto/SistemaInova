@@ -68,6 +68,20 @@ function resumo({ registros = [], historico = [], parecer = {}, falha = false, r
   );
 }
 
+test("Resumo apresenta conclusão, gráfico/tabela de prioridades, prioridades estratégicas, metodologia e conclusão técnica nessa ordem", () => {
+  const html = resumo();
+  const secoes = [
+    'aria-label="Conclusão geral do mapeamento"',
+    'aria-label="Prioridades por dimensão"',
+    'Prioridades dimensionais',
+    'aria-label="Prioridades estratégicas"',
+    'aria-label="Metodologia, vínculos e pendências"',
+    'aria-label="Conclusão técnica completa"',
+  ].map(texto => html.indexOf(texto));
+  assert.ok(secoes.every((indice) => indice >= 0));
+  assert.deepEqual(secoes, [...secoes].sort((a, b) => a - b));
+});
+
 test("IEO anterior com nota não é apresentado como resultado atual", () => {
   const html = resumo({ historico: [{ perguntaId: "1.1.1", nivel: 4 }] });
   assert.match(html, /Diagnóstico em revisão/);
