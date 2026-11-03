@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowLeft, Lock, CopyPlus } from 'lucide-react';
+import { Download, ArrowLeft, Lock, CopyPlus, FileCheck2, PencilLine } from 'lucide-react';
 import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import type { InstrumentoDiagnostico } from '../lib/navegacaoApp';
@@ -22,6 +22,8 @@ import { useCaderno } from './diagnostic/CadernoItens';
 import './diagnostic/painel-diagnostico.css';
 import { NavegacaoModulo } from './NavegacaoModulo';
 import { PendenciasModulo, navegarSemPendencias } from './PendenciasModulo';
+import { EvidenciasDiagnosticoPanel } from './diagnostic/EvidenciasDiagnosticoPanel';
+import { EditorInformacoesDiagnostico } from './diagnostic/EditorInformacoesDiagnostico';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -54,6 +56,9 @@ export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
 function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
+  const [evidenciasAberto, setEvidenciasAberto] = useState(false);
+  const [editorAberto, setEditorAberto] = useState(false);
+  const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências'>('Dados gerais');
   const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
   const { readOnly } = useAuth();
   const [baixando,setBaixando] = useState(false);
@@ -140,6 +145,12 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
           </div>
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
+              <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => setEvidenciasAberto(true))}>
+                <FileCheck2 size={14} aria-hidden /> Evidências
+              </button>
+              <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => { setSecaoEditor('Dados gerais'); setEditorAberto(true); })}>
+                <PencilLine size={14} aria-hidden /> Editar informações
+              </button>
               <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
                 setBaixando(true);
                 try {
@@ -206,6 +217,8 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         )}
         </div>
       </div>
+      {diagnostico && evidenciasAberto && <EvidenciasDiagnosticoPanel diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} aoFechar={() => setEvidenciasAberto(false)} aoGerenciar={() => { setEvidenciasAberto(false); setSecaoEditor('Evidências'); setEditorAberto(true); }} />}
+      {diagnostico && editorAberto && <EditorInformacoesDiagnostico diagnostico={diagnostico} diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} haPendencias={haPendencias} secaoInicial={secaoEditor} aoFechar={() => setEditorAberto(false)} aoGerenciarEvidencias={() => { setEditorAberto(false); setEvidenciasAberto(true); }} />}
     </div>
   );
 }

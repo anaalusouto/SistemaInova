@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { QUESTIONARIO_CADERNO, COMPLEMENTARES_CADERNO } from '../../diagnostic/catalog/cadernoCria';
+import { QUESTIONARIO_CADERNO } from '../../diagnostic/catalog/cadernoCria';
 import { CadernoItens, useCaderno, type ContextoCaderno } from './CadernoItens';
 import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from '../../diagnostic/ieoCaderno';
 import { CORES_ESCALA } from '../../theme/coresInstitucionais';
@@ -55,35 +55,9 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
   if (consulta.isLoading) return <p role="status">Carregando IEO…</p>;
   if (consulta.error) return <p role="alert">Não foi possível carregar o IEO. <button type="button" className="underline" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>;
 
-  const niveis = [
-    { chave: '1', rotulo: 'Nível 1' }, { chave: '2', rotulo: 'Nível 2' },
-    { chave: '3', rotulo: 'Nível 3' }, { chave: '4', rotulo: 'Nível 4' },
-    { chave: 'NA', rotulo: 'N/A' }, { chave: 'NS', rotulo: 'NS' },
-    { chave: 'NC', rotulo: 'NC' }, { chave: 'D', rotulo: 'Divergência' },
-    { chave: 'vazia', rotulo: 'Sem resposta' }, { chave: 'outro', rotulo: 'A conferir' },
-  ];
-  const perguntasDoPainel = dimensaoId
-    ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.perguntas ?? []
-    : DIMENSOES_IEO_CADERNO.flatMap(d => d.perguntas);
-  const distribuicao = niveis.map(n => ({
-    ...n,
-    quantidade: perguntasDoPainel.filter(q => {
-      const v = valorResposta(q.codigo);
-      if (n.chave === 'vazia') return !v;
-      if (n.chave === 'outro') return typeof v === 'string' && v.length > 0 && !/^(?:[1-4]|NA|NS|NC|D)$/.test(v);
-      return v === n.chave;
-    }).length,
-  }));
-  const relatos = perguntasDoPainel.flatMap(q => {
-    const relato = respostas.get(q.codigo)?.relato?.trim();
-    const d = DIMENSOES_IEO_CADERNO.find(dim => dim.codigos.includes(q.codigo));
-    return relato ? [{ codigo: q.codigo, dimensaoId: d?.id, dimensao: d?.titulo, relato }] : [];
-  });
   const completo = avaliadasGerais === aplicaveisGerais && resultado.invalidas === 0;
 
   return <div className="space-y-5 min-w-0">
-    <p className="text-sm text-muted-foreground">Índice de Estruturação Organizacional — IEO · 25 perguntas. N/A exige justificativa de não pertinência.</p>
-
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3" aria-label="Filtros do IEO">
       <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Filtrar dimensão do IEO">
         <span className="mr-1 text-xs font-semibold text-muted-foreground">Dimensão:</span>
@@ -122,7 +96,6 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
           <p className="mt-2 text-xs text-muted-foreground">{d.pontuadas}/{aplicaveis} indicadores avaliados · {fmtPercentual(d.pontuadas, aplicaveis)}% de cobertura</p>
         </button>;
       })}</div>
-      <p className="text-xs text-muted-foreground" role="status">Cobertura: {resultado.respondidas}/{resultado.total} respostas válidas · {resultado.pontuadas} com nota · {resultado.semNota} sem nota · {resultado.divergencias} divergências · {resultado.naoAplicaveis} não aplicáveis · {resultado.ausentes} ausentes{resultado.invalidas > 0 ? ` · ${resultado.invalidas} valores inválidos a conferir` : ''}.</p>
     </section>
 
     <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -162,14 +135,11 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
         <p className="mt-3 text-3xl font-bold">{fmtScore(dimensaoId ? resumoSelecionado?.media ?? null : resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p>
         <p className="text-xs text-muted-foreground">Média simples dos níveis válidos</p>
         <p className="mt-3 text-xs text-muted-foreground">{avaliadasFoco}/{aplicaveisFoco} indicadores avaliados · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura · {resumoSelecionado?.naoAplicaveis ?? resultado.naoAplicaveis} N/A</p>
-        <div className="mt-5 space-y-2"><h4 className="text-sm font-semibold">Resumo da dimensão</h4>{distribuicao.map(n => <div key={n.chave} className="grid grid-cols-[minmax(0,1fr)_minmax(40px,1fr)_22px] items-center gap-2 text-xs"><span>{n.rotulo}</span><span className="h-2 overflow-hidden rounded bg-muted"><i className="block h-full rounded bg-primary" style={{ width: `${perguntasDoPainel.length ? n.quantidade / perguntasDoPainel.length * 100 : 0}%` }} /></span><strong className="text-right">{n.quantidade}</strong></div>)}</div>
-        <div className="mt-5 space-y-2"><h4 className="text-sm font-semibold">Relatos associados</h4>{relatos.length ? <ul className="max-h-64 space-y-3 overflow-y-auto">{relatos.map(r => <li key={r.codigo} className="break-words border-t pt-2 text-xs"><strong>{r.codigo}</strong>{!dimensaoId && <span> · dimensão {r.dimensaoId}</span>}<p className="mt-1 whitespace-pre-wrap text-muted-foreground">{r.relato}</p></li>)}</ul> : <p className="text-xs text-muted-foreground">Sem relatos registrados para {dimensaoId ? 'esta dimensão' : 'as perguntas do IEO'}.</p>}</div>
         {dimensaoId && <button type="button" className="diagnostico-filtro mt-5 w-full" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
-        <p className="mt-5 border-t pt-3 text-[11px] leading-relaxed text-muted-foreground">O IEO é apresentado como média simples dos níveis válidos de 1 a 4. A normalização por pergunta é usada somente no cálculo final de priorização do Resumo.</p>
       </aside>
     </div>
 
-    <section className="space-y-3" aria-label="Perguntas e respostas do IEO"><div><p className="diagnostico-sobretitulo">Perguntas e relatos</p><h3 className="text-lg font-semibold">Detalhes por dimensão</h3><p className="text-xs text-muted-foreground">Abra uma dimensão e, em seguida, uma pergunta. Os códigos oficiais Q01–Q25 permanecem associados aos enunciados.</p></div>
+    <section className="space-y-3" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
       {DIMENSOES_IEO_CADERNO.map(d => {
         const resumo = resultado.porDimensao.find(r => r.dimensaoId === d.id)!;
         const aplicaveis = Math.max(0, resumo.total - resumo.naoAplicaveis);
@@ -182,6 +152,5 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
       })}
     </section>
 
-    <section className="space-y-3"><h3 className="text-lg font-semibold">Informações complementares e fechamento estratégico</h3><p className="text-sm text-muted-foreground">Não repetir relatos: indicar o código onde a resposta pode ser encontrada. Ouvir gestão e membros. Prioridades são pactuadas e não derivam automaticamente de notas.</p><CadernoItens {...props} itens={COMPLEMENTARES_CADERNO}/></section>
   </div>;
 }

@@ -146,6 +146,46 @@ export const getDiagnostico = createServerFn({ method: 'GET' })
     return mapDiagnostico(row);
   });
 
+export const atualizarInformacoesGeraisDiagnostico = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; organizacaoId: string; nomeOrganizacao: string; classificacao: string; dataAplicacao: string; arquivoReferencia: string; estagioRegistrado: string }) => d)
+  .handler(async ({ data }): Promise<DiagnosticoResumo> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    if (!/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(data.organizacaoId) || !/^\d{4}-\d{2}-\d{2}$/.test(data.dataAplicacao)) throw new Error('Organização ou data de aplicação inválida.');
+    for (const [rotulo, valor, max] of [['Organização', data.nomeOrganizacao, 500], ['Classificação', data.classificacao, 200], ['Arquivo de referência', data.arquivoReferencia, 2000], ['Estágio registrado', data.estagioRegistrado, 500]] as const) {
+      if (typeof valor !== 'string' || valor.length > max) throw new Error(`${rotulo} excede o limite permitido.`);
+    }
+    const db = await getAdmin();
+    const atual = await db.from('diagnosticos').select('comunidade_id').eq('id', data.diagnosticoId).maybeSingle();
+    if (atual.error || atual.data?.comunidade_id !== data.organizacaoId) throw new Error('O mapeamento não pertence à organização selecionada.');
+    const organizacao = await db.from('comunidades').update({ nome: data.nomeOrganizacao.trim(), segmento_social: data.classificacao.trim() || null }).eq('id', data.organizacaoId).select('id').maybeSingle();
+    if (organizacao.error || !organizacao.data) throw new Error(organizacao.error ? mensagemMapeamento(organizacao.error) : 'A organização não foi encontrada.');
+    const diagnostico = await db.from('diagnosticos').update({ data_aplicacao: data.dataAplicacao }).eq('id', data.diagnosticoId).select('*').single();
+    if (diagnostico.error) throw new Error(mensagemMapeamento(diagnostico.error));
+    const parecer = await db.from('diagnostico_parecer').select('respostas_complementares').eq('diagnostico_id', data.diagnosticoId).maybeSingle();
+    if (parecer.error) throw new Error(mensagemMapeamento(parecer.error));
+    const respostas = { ...(parecer.data?.respostas_complementares ?? {}), __arquivoReferencia: data.arquivoReferencia || null, __estagioRegistrado: data.estagioRegistrado || null };
+    const metadata = parecer.data
+      ? await db.from('diagnostico_parecer').update({ respostas_complementares: respostas, atualizado_em: new Date().toISOString() }).eq('diagnostico_id', data.diagnosticoId)
+      : await db.from('diagnostico_parecer').insert({ diagnostico_id: data.diagnosticoId, respostas_complementares: respostas });
+    if (metadata.error) throw new Error(mensagemMapeamento(metadata.error));
+    return mapDiagnostico(diagnostico.data);
+  });
+
+export const getInformacoesGeraisDiagnostico = createServerFn({ method: 'GET' })
+  .validator((d: { diagnosticoId: string }) => d)
+  .handler(async ({ data }): Promise<{ nomeOrganizacao: string; classificacao: string; dataAplicacao: string; versao: number; arquivoReferencia: string; estagioRegistrado: string }> => {
+    const db = await getAdmin();
+    const [diag, parecer] = await Promise.all([
+      db.from('diagnosticos').select('id,comunidade_id,data_aplicacao,versao,comunidades(nome,segmento_social)').eq('id', data.diagnosticoId).maybeSingle(),
+      db.from('diagnostico_parecer').select('respostas_complementares').eq('diagnostico_id', data.diagnosticoId).maybeSingle(),
+    ]);
+    if (diag.error || !diag.data) throw new Error(diag.error ? mensagemMapeamento(diag.error) : 'Mapeamento não encontrado.');
+    if (parecer.error) throw new Error(mensagemMapeamento(parecer.error));
+    const comunidade: any = diag.data.comunidades ?? {};
+    const respostas = parecer.data?.respostas_complementares ?? {};
+    return { nomeOrganizacao: comunidade.nome ?? '', classificacao: comunidade.segmento_social ?? '', dataAplicacao: diag.data.data_aplicacao, versao: diag.data.versao, arquivoReferencia: respostas.__arquivoReferencia ?? '', estagioRegistrado: respostas.__estagioRegistrado ?? '' };
+  });
+
 export const criarDiagnostico = createServerFn({ method: 'POST' })
   .validator((d: { comunidadeId: string; dataAplicacao: string }) => d)
   .handler(async ({ data: { comunidadeId, dataAplicacao } }): Promise<DiagnosticoResumo> => {
@@ -522,7 +562,18 @@ export const excluirProduto = createServerFn({ method: 'POST' })
 // ---------------------------------------------------------------------------
 // Parecer Técnico (RF-02.D)
 // ---------------------------------------------------------------------------
-export interface EvidenciaVinculada { tipo: string; referencia: string; nota: string; }
+export type SituacaoEvidenciaDiagnostico = 'Consultado' | 'Não apresentado' | 'Relatado' | 'Pendente de conferência';
+export interface DocumentoEvidenciaDiagnostico {
+  id: string; nomeArquivo: string; tipoMime: string | null; tamanhoBytes: number | null; criadoEm: string;
+}
+export interface EvidenciaVinculada {
+  id?: string; codigo?: string; codigosRelacionados?: string; titulo?: string;
+  situacao?: SituacaoEvidenciaDiagnostico | string; referencia?: string;
+  oQueComprova?: string; limiteDuvida?: string; pendencia?: string; responsavel?: string;
+  fontePagina?: string; documentos?: DocumentoEvidenciaDiagnostico[];
+  /** Campos antigos preservados ao editar registros anteriores. */
+  tipo?: string; nota?: string;
+}
 
 export interface Parecer {
   diagnosticoId: string;
@@ -584,6 +635,113 @@ export const salvarParecer = createServerFn({ method: 'POST' })
       .single();
     if (error) throw new Error(mensagemMapeamento(error));
     return mapParecer(row, data.diagnosticoId);
+  });
+
+const SITUACOES_EVIDENCIA: SituacaoEvidenciaDiagnostico[] = ['Consultado', 'Não apresentado', 'Relatado', 'Pendente de conferência'];
+const TAMANHO_MAXIMO_EVIDENCIA = 20 * 1024 * 1024;
+const TIPOS_EVIDENCIA_ACEITOS = [
+  'image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf', 'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text',
+  'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain',
+];
+
+function validarEvidenciasDiagnostico(evidencias: EvidenciaVinculada[]) {
+  if (!Array.isArray(evidencias) || evidencias.length > 500) throw new Error('Lista de evidências inválida ou extensa demais.');
+  const codigos = new Set<string>();
+  for (const e of evidencias) {
+    if (!e || typeof e.codigo !== 'string' || !/^EV\d{3,}$/.test(e.codigo) || codigos.has(e.codigo)) throw new Error('Cada evidência precisa ter um código EV único, como EV001.');
+    codigos.add(e.codigo);
+    for (const campo of ['codigosRelacionados', 'titulo', 'referencia', 'oQueComprova', 'limiteDuvida', 'pendencia', 'responsavel', 'fontePagina'] as const) {
+      const valor = e[campo];
+      if (valor != null && (typeof valor !== 'string' || valor.length > 20000)) throw new Error(`Revise o campo ${campo} da evidência ${e.codigo}.`);
+    }
+    if (e.situacao && !SITUACOES_EVIDENCIA.includes(e.situacao as SituacaoEvidenciaDiagnostico)) throw new Error(`Situação inválida na evidência ${e.codigo}.`);
+    if (e.documentos && !Array.isArray(e.documentos)) throw new Error(`Lista de documentos inválida na evidência ${e.codigo}.`);
+  }
+}
+
+/** Atualiza somente a lista de evidências, sem sobrescrever campos do Parecer. */
+export const salvarEvidenciasDiagnostico = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; evidencias: EvidenciaVinculada[] }) => d)
+  .handler(async ({ data }): Promise<EvidenciaVinculada[]> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    validarEvidenciasDiagnostico(data.evidencias);
+    const db = await getAdmin();
+    const atuais = await db.from('diagnostico_parecer').select('evidencias_vinculadas').eq('diagnostico_id', data.diagnosticoId).maybeSingle();
+    if (atuais.error) throw new Error(mensagemMapeamento(atuais.error));
+    const antigas = (atuais.data?.evidencias_vinculadas ?? []) as EvidenciaVinculada[];
+    const vinculacoesAntigas = new Map<string, string>();
+    for (const e of antigas) for (const doc of e.documentos ?? []) vinculacoesAntigas.set(doc.id, e.codigo ?? e.id ?? '');
+    const vinculacoesNovas = new Map<string, string>();
+    for (const e of data.evidencias) for (const doc of e.documentos ?? []) {
+      if (!doc?.id || vinculacoesNovas.has(doc.id)) throw new Error('Um documento não pode aparecer em mais de uma evidência.');
+      vinculacoesNovas.set(doc.id, e.codigo!);
+      if (vinculacoesAntigas.has(doc.id) && vinculacoesAntigas.get(doc.id) !== e.codigo) throw new Error('Um documento existente não pode ser transferido para outra evidência.');
+      if (!vinculacoesAntigas.has(doc.id)) throw new Error('Use a ação de anexar documento para criar um novo vínculo.');
+    }
+    for (const id of vinculacoesAntigas.keys()) if (!vinculacoesNovas.has(id)) throw new Error('Remova documentos pela ação própria para preservar o vínculo do arquivo.');
+    if (vinculacoesNovas.size) {
+      const arquivos = await db.from('diagnostico_anexos').select('id,diagnostico_id').in('id', [...vinculacoesNovas.keys()]);
+      if (arquivos.error || (arquivos.data ?? []).length !== vinculacoesNovas.size || arquivos.data?.some(a => a.diagnostico_id !== data.diagnosticoId)) throw new Error('Um documento não pertence a este mapeamento.');
+    }
+    const payload = { diagnostico_id: data.diagnosticoId, evidencias_vinculadas: data.evidencias, atualizado_em: new Date().toISOString() };
+    const gravacao = atuais.data
+      ? await db.from('diagnostico_parecer').update({ evidencias_vinculadas: payload.evidencias_vinculadas, atualizado_em: payload.atualizado_em }).eq('diagnostico_id', data.diagnosticoId)
+      : await db.from('diagnostico_parecer').insert(payload);
+    if (gravacao.error) throw new Error(mensagemMapeamento(gravacao.error));
+    return data.evidencias;
+  });
+
+export const prepararUploadAnexoEvidencia = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; codigo: string; nomeArquivo: string; tipoMime: string; tamanhoBytes: number }) => d)
+  .handler(async ({ data }): Promise<{ storagePath: string; token: string }> => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    if (!/^EV\d{3,}$/.test(data.codigo) || typeof data.nomeArquivo !== 'string' || !data.nomeArquivo.trim() || data.nomeArquivo.length > 255 || [...data.nomeArquivo].some(c => c.charCodeAt(0) < 32)) throw new Error('Revise o código e o nome do documento.');
+    if (!TIPOS_EVIDENCIA_ACEITOS.includes(data.tipoMime) || !Number.isSafeInteger(data.tamanhoBytes) || data.tamanhoBytes <= 0 || data.tamanhoBytes > TAMANHO_MAXIMO_EVIDENCIA) throw new Error('Use PDF, documento, planilha, texto ou imagem de até 20 MB.');
+    const db = await getAdmin();
+    const { data: parecer, error } = await db.from('diagnostico_parecer').select('evidencias_vinculadas').eq('diagnostico_id', data.diagnosticoId).maybeSingle();
+    if (error) throw new Error(mensagemMapeamento(error));
+    const evidencia = ((parecer?.evidencias_vinculadas ?? []) as EvidenciaVinculada[]).find(e => e.codigo === data.codigo);
+    if (!evidencia) throw new Error('Salve a evidência antes de anexar um documento.');
+    const seguro = data.nomeArquivo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.\-]/g, '_').slice(-90);
+    const { randomUUID } = await import('node:crypto');
+    const storagePath = `${data.diagnosticoId}/evidencias/${data.codigo}/${randomUUID()}-${seguro}`;
+    const { data: signed, error: uploadError } = await db.storage.from('diagnostico-anexos').createSignedUploadUrl(storagePath);
+    if (uploadError || !signed?.token) throw new Error(uploadError?.message ?? 'Não foi possível preparar o envio do documento.');
+    return { storagePath, token: signed.token };
+  });
+
+/** Registra no banco o arquivo já enviado pela URL assinada e o vincula ao EV. */
+export const registrarAnexoEvidencia = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; codigo: string; storagePath: string; nomeArquivo: string; tipoMime: string; tamanhoBytes: number }) => d)
+  .handler(async ({ data }): Promise<EvidenciaVinculada[]> => {
+    const usuario = await exigirDiagnosticoEditavel(data.diagnosticoId);
+    const prefixoEsperado = `${data.diagnosticoId}/evidencias/${data.codigo}/`;
+    const nomeStorage = typeof data.storagePath === 'string' ? data.storagePath.slice(prefixoEsperado.length) : '';
+    if (!/^EV\d{3,}$/.test(data.codigo) || !data.storagePath.startsWith(prefixoEsperado) || !/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}-[\w.-]{1,90}$/i.test(nomeStorage) || typeof data.nomeArquivo !== 'string' || !data.nomeArquivo.trim() || data.nomeArquivo.length > 255 || [...data.nomeArquivo].some(c => c.charCodeAt(0) < 32) || !TIPOS_EVIDENCIA_ACEITOS.includes(data.tipoMime) || !Number.isSafeInteger(data.tamanhoBytes) || data.tamanhoBytes <= 0 || data.tamanhoBytes > TAMANHO_MAXIMO_EVIDENCIA) throw new Error('Vínculo ou dados do documento inválidos.');
+    const db = await getAdmin();
+    const registro = await db.from('diagnostico_parecer').select('evidencias_vinculadas').eq('diagnostico_id', data.diagnosticoId).maybeSingle();
+    if (registro.error || !registro.data) throw new Error('Salve a evidência antes de anexar um documento.');
+    const evidencias = (registro.data.evidencias_vinculadas ?? []) as EvidenciaVinculada[];
+    const index = evidencias.findIndex(e => e.codigo === data.codigo);
+    if (index < 0) throw new Error('A evidência selecionada não pertence a este mapeamento.');
+    const arquivoStorage = await db.storage.from('diagnostico-anexos').createSignedUrl(data.storagePath, 60);
+    if (arquivoStorage.error) throw new Error('O arquivo não foi encontrado no armazenamento privado.');
+    const { data: anexo, error: insertError } = await db.from('diagnostico_anexos').insert({
+      diagnostico_id: data.diagnosticoId, checklist_item_id: null, storage_path: data.storagePath,
+      nome_arquivo: data.nomeArquivo, tipo_mime: data.tipoMime || null, tamanho_bytes: data.tamanhoBytes, enviado_por: usuario.displayName,
+    }).select('*').single();
+    if (insertError) { await db.storage.from('diagnostico-anexos').remove([data.storagePath]); throw new Error(mensagemMapeamento(insertError)); }
+    const atualizado = [...evidencias];
+    const atual = atualizado[index];
+    atualizado[index] = { ...atual, documentos: [...(atual.documentos ?? []), { id: anexo.id, nomeArquivo: anexo.nome_arquivo, tipoMime: anexo.tipo_mime, tamanhoBytes: anexo.tamanho_bytes, criadoEm: anexo.criado_em }] };
+    const save = await db.from('diagnostico_parecer').update({ evidencias_vinculadas: atualizado, atualizado_em: new Date().toISOString() }).eq('diagnostico_id', data.diagnosticoId);
+    if (save.error) {
+      await db.from('diagnostico_anexos').delete().eq('id', anexo.id);
+      await db.storage.from('diagnostico-anexos').remove([data.storagePath]);
+      throw new Error(mensagemMapeamento(save.error));
+    }
+    return atualizado;
   });
 
 // ---------------------------------------------------------------------------
