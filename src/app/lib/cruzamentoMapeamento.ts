@@ -8,7 +8,7 @@ export function pontosMapeamento(projetos: ProjectExt[], notas: NotaMapeamentoGr
   return projetos.flatMap(p => {
     const nota = p.organizacao?.id ? porOrganizacao.get(p.organizacao.id) : undefined;
     const conclusao = conclusaoEtapas(p);
-    const percentualFinanceiro = p.budgetApprovedInformado !== false && p.budgetExecutedInformado !== false && p.budgetApproved > 0 && Number.isFinite(p.budgetExecuted) ? p.budgetExecuted / p.budgetApproved * 100 : null;
+    const percentualFinanceiro = p.budgetApprovedInformado !== false && p.budgetExecutedInformado !== false && Number.isFinite(p.budgetApproved) && p.budgetApproved > 0 && Number.isFinite(p.budgetExecuted) ? p.budgetExecuted / p.budgetApproved * 100 : null;
     const y = eixo === 'etapas' ? conclusao.percentual : percentualFinanceiro;
     if (nota?.nota == null || !Number.isFinite(nota.nota) || nota.nota < 1 || nota.nota > 4 || y === null) return [];
     return [{
@@ -26,8 +26,8 @@ export function pontosMapeamento(projetos: ProjectExt[], notas: NotaMapeamentoGr
       etapasConcluidas: conclusao.concluidas,
       etapasTotal: conclusao.total,
       percentualEtapas: conclusao.percentual,
-      valorAprovado: p.budgetApprovedInformado === false ? null : p.budgetApproved,
-      valorExecutado: p.budgetExecutedInformado === false ? null : p.budgetExecuted,
+      valorAprovado: p.budgetApprovedInformado === false || !Number.isFinite(p.budgetApproved) ? null : p.budgetApproved,
+      valorExecutado: p.budgetExecutedInformado === false || !Number.isFinite(p.budgetExecuted) ? null : p.budgetExecuted,
       percentualFinanceiro,
     }];
   });

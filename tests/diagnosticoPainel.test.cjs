@@ -27,10 +27,31 @@ function painel() {
   let selecionada;
   return { render: () => PainelMatriz({ linhas, desabilitado: false, onSelecionar: id => { selecionada = id; } }), selecionada: () => selecionada };
 }
-test('quadro posiciona apenas funções com os dois eixos informados e preserva campos ausentes', () => {
+test('aba de implantação mostra registros da aplicação sem incluir funcionamento ou interesse futuro', () => {
+  const produto = (id, nome) => ({ id, nome, respostas: {}, categoriaId: null, safra: { estado: 'nao_informada', intervalos: [] } });
+  const produtos = [produto('p1', 'Mel'), produto('p2', 'Polpa'), produto('p3', 'Turismo')];
+  const registro = (contexto, codigo, valor, relato = '') => ({ contexto, codigo, resposta: { valor, relato, selecoes: [], fonte: '', respondentes: '' } });
+  const registros = [registro('p1','PR_SITUACAO','Funcionamento'), registro('p2','PR_SITUACAO','Implantação'), registro('p3','PR_SITUACAO','Futuro'), registro('p2','PR_CODIGO','PR02'), registro('p2','PR_OPERACAO','OP02'), registro('OP02','IM01','Em andamento','O que existe: Estrutura registrada')];
+  const { CestaCaderno } = carregar('src/app/components/diagnostic/CestaCaderno.tsx', {
+    react: { ...React, useState: inicial => [typeof inicial === 'function' ? inicial() : inicial, () => {}] },
+    '@tanstack/react-query': { useQuery: ({queryKey}) => ({ data: queryKey[0] === 'diagnostico-produtos' ? produtos : [] }), useMutation: () => ({}), useQueryClient: () => ({}) },
+    '../../diagnosticos.server': {},
+    './CadernoItens': { useCaderno: () => ({data: registros}), CadernoItens: () => null },
+    './DadosComerciaisCesta': { DadosComerciaisCesta: () => null },
+    '../PendenciasModulo': { usePendenciaModulo() {}, navegarSemPendencias: (_, fn) => fn() },
+  });
+  const html = renderToStaticMarkup(CestaCaderno({ diagnosticoId: 'd1', organizacaoId: 'o1', readOnly: true, somenteImplantacao: true }));
+  assert.match(html, /PR02 · Polpa/);
+  assert.match(html, /OP02/);
+  assert.match(html, /IM01/);
+  assert.match(html, /Estrutura registrada/);
+  assert.doesNotMatch(html, /Turismo|>Mel</);
+});
+test('gráfico agrupa funções por leitura e preserva campos ausentes', () => {
   const p = painel(); const html = renderToStaticMarkup(p.render());
-  assert.match(html, /Criticidade 4, interesse 4: 20 funções/);
-  assert.match(html, /Sem posição no quadro[^<]*F01/);
+  assert.match(html, /Lacuna crítica: 20 funções/);
+  assert.match(html, /Completar avaliação: 1 funções/);
+  assert.doesNotMatch(html, /Criticidade × Interesse/);
   assert.match(html, /Não informado/);
   assert.match(html, /Lacuna crítica/);
   assert.match(html, /data-label="Avaliação"/);
@@ -40,9 +61,9 @@ test('filtro de grupo atualiza tabela, contagem e seleção da função', () => 
   const p = painel();
   elementos(p.render()).find(e => e.type === 'button' && e.props.children === 'Mercado').props.onClick();
   const filtrado = p.render(); const html = renderToStaticMarkup(filtrado);
-  assert.match(html, /Criticidade 4, interesse 4: 6 funções/);
+  assert.match(html, /Lacuna crítica: 20 funções/);
   assert.doesNotMatch(html, /Representação e articulação institucional|Sem posição no quadro/);
-  elementos(filtrado).find(e => e.props['aria-label']?.startsWith('F14 ·')).props.onClick();
+  elementos(filtrado).find(e => e.type === 'button' && e.props.className === 'diagnostico-funcao' && React.Children.toArray(e.props.children).some(c => c.props?.children === 'F14')).props.onClick();
   assert.equal(p.selecionada(), 'F14');
 });
 test('IEO apresenta visão geral sem atribuir zero a dimensões ainda não respondidas', () => {

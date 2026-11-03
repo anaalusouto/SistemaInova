@@ -64,7 +64,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
     relato: respostas.get(q.codigo)?.relato?.trim() ?? '',
   }));
 
-  return <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+  return <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
     <main className="min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3" aria-label="Filtros do IEO">
       <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Filtrar dimensão do IEO">
@@ -138,7 +138,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
       </section>
     </main>
 
-      <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto" aria-label="Painel de síntese do IEO">
+      <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto" aria-label="Painel de síntese do IEO">
         <p className="diagnostico-sobretitulo">{dimensaoId ? 'DIMENSÃO SELECIONADA' : 'VISÃO GERAL DO IEO'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Análise geral'}</h3>
         <p className="mt-3 text-3xl font-bold">{fmtScore(dimensaoId ? resumoSelecionado?.media ?? null : resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p>
         <p className="text-xs text-muted-foreground">Média simples dos níveis válidos</p>
@@ -150,7 +150,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
         {dimensaoId && <button type="button" className="diagnostico-filtro mt-5 w-full" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
       </aside>
 
-    <section className="col-span-1 space-y-3 lg:col-span-2" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
+    <section className="col-span-1 space-y-3 xl:col-span-2" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
       {DIMENSOES_IEO_CADERNO.map(d => {
         const resumo = resultado.porDimensao.find(r => r.dimensaoId === d.id)!;
         const aplicaveis = Math.max(0, resumo.total - resumo.naoAplicaveis);

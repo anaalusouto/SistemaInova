@@ -179,20 +179,26 @@ export function agruparVisualizacao(projetos: ProjectExt[], c: ConfigGrafico) {
   const series: SerieGrafico[] = [];
   const seriePorNome = new Map<string, string>();
   const grupos = new Map<string, Map<string, { soma: number; n: number }>>();
+  const nomesGrupos = new Map<string, string>();
+  const idsGrupos = new Map<string, string>();
   let ausentes = 0;
   for (const p of projetos) {
     const nome = valorDimensao(p, c.dimensao);
-    const grupo = grupos.get(nome) ?? new Map();
-    grupos.set(nome, grupo);
+    const chaveGrupo = c.dimensao === 'organizacao' ? p.organizacao?.id ? `org:${p.organizacao.id}` : `projeto:${p.id}` : nome;
+    const grupo = grupos.get(chaveGrupo) ?? new Map();
+    grupos.set(chaveGrupo, grupo);
+    nomesGrupos.set(chaveGrupo, nome);
+    if (c.dimensao === 'organizacao' && p.organizacao?.id) idsGrupos.set(chaveGrupo, p.organizacao.id);
     const serie = separar
       ? valorDimensao(p, c.cruzamento as Dimensao)
       : METRICAS.find((m) => m.id === c.metrica)!.nome;
-    if (!seriePorNome.has(serie)) {
+    const identidadeSerie = separar && c.cruzamento === 'organizacao' ? p.organizacao?.id ? `org:${p.organizacao.id}` : `projeto:${p.id}` : serie;
+    if (!seriePorNome.has(identidadeSerie)) {
       const chave = `serie${series.length}`;
-      seriePorNome.set(serie, chave);
+      seriePorNome.set(identidadeSerie, chave);
       series.push({ chave, nome: serie });
     }
-    const chave = seriePorNome.get(serie)!;
+    const chave = seriePorNome.get(identidadeSerie)!;
     const valor = valorMetrica(p, c.metrica);
     if (valor === null) {
       ausentes++;
@@ -204,8 +210,9 @@ export function agruparVisualizacao(projetos: ProjectExt[], c: ConfigGrafico) {
     grupo.set(chave, atual);
   }
   const media = usaMedia(c);
-  const linhas: LinhaGrafico[] = [...grupos].map(([name, valores]) => {
-    const linha: LinhaGrafico = { name };
+  const linhas: LinhaGrafico[] = [...grupos].map(([grupoId, valores]) => {
+    const linha: LinhaGrafico = { name: nomesGrupos.get(grupoId)! };
+    if (idsGrupos.has(grupoId)) linha.organizacaoId = idsGrupos.get(grupoId)!;
     for (const s of series) {
       const v = valores.get(s.chave);
       linha[s.chave] = v !== undefined ? (media ? v.soma / v.n : v.soma) : null;

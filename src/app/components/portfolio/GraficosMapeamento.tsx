@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ProjectExt } from '../../store';
 import { listarNotasMapeamentos } from '../../diagnosticos.server';
 import { pontosMapeamento, type NotaMapeamentoGrafico } from '../../lib/cruzamentoMapeamento';
@@ -11,7 +11,7 @@ const formatar = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigit
 const moeda = (n: number | null) => n == null ? 'Não informado' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const percentual = (n: number | null) => n == null ? 'Não informado' : `${formatar(n)}%`;
 
-export function GraficosMapeamento({ projects, demonstrativo = false }: { projects: ProjectExt[]; demonstrativo?: boolean }) {
+export function GraficosMapeamento({ projects, demonstrativo = false, organizacaoAtiva, onSelecionarOrganizacao }: { projects: ProjectExt[]; demonstrativo?: boolean; organizacaoAtiva: string | null; onSelecionarOrganizacao: (id: string) => void }) {
   const organizacaoIds = [...new Set(projects.flatMap(p => p.organizacao?.id ? [p.organizacao.id] : []))].sort();
   const consulta = useQuery<NotaMapeamentoGrafico[]>({
     queryKey: ['portfolio-notas-mapeamento', demonstrativo, organizacaoIds],
@@ -51,7 +51,7 @@ export function GraficosMapeamento({ projects, demonstrativo = false }: { projec
               <p>Aplicação {formatDateOnly(p.dataAplicacao)} · versão {p.versao}</p>
             </div> : null;
           }}/>
-          <Scatter name="Projetos vinculados à organização" data={pontos} fill="var(--brand)"/>
+          <Scatter name="Projetos vinculados à organização" data={pontos} fill="var(--brand)">{pontos.map(p=><Cell key={p.id} fillOpacity={organizacaoAtiva && p.organizacaoId !== organizacaoAtiva ? 0.18 : 1} onClick={()=>p.organizacaoId && onSelecionarOrganizacao(p.organizacaoId)} style={{cursor:'pointer'}}/>)}</Scatter>
         </ScatterChart></ResponsiveContainer>
         <details className="mt-3 text-xs"><summary className="cursor-pointer">Consultar detalhes e valores usados</summary><div className="overflow-x-auto"><table className="mt-3 min-w-[1100px] w-full text-left"><thead><tr>{['Projeto','Organização · ID','Nota / 4','Etapas concluídas','Avanço de etapas','Orçamento aprovado','Valor executado','Execução financeira','Aplicação'].map(t=><th scope="col" key={t} className="p-2">{t}</th>)}</tr></thead><tbody>{pontos.map(p=><tr key={p.id} className="border-t"><th scope="row" className="p-2 font-medium">{p.projeto}</th><td className="p-2">{p.organizacao} · {p.organizacaoId ?? 'Não informado'}</td><td className="p-2">{formatar(p.x)}{p.parcial ? ' · parcial' : ''}</td><td className="p-2">{p.etapasConcluidas}/{p.etapasTotal}</td><td className="p-2">{percentual(p.percentualEtapas)}</td><td className="p-2">{moeda(p.valorAprovado)}</td><td className="p-2">{moeda(p.valorExecutado)}</td><td className="p-2">{percentual(p.percentualFinanceiro)}</td><td className="p-2">{formatDateOnly(p.dataAplicacao)} · v{p.versao}</td></tr>)}</tbody></table></div></details>
       </>}

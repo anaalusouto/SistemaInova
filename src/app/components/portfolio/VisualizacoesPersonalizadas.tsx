@@ -61,10 +61,12 @@ export function VisualizacoesPersonalizadas({
   projects,
   login,
   onOpenProject,
+  onSelecionarOrganizacao,
 }: {
   projects: ProjectExt[];
   login?: string;
   onOpenProject?: (id: number) => void;
+  onSelecionarOrganizacao?: (id: string) => void;
 }) {
   const [preferencias, setPreferencias] = useState<PreferenciasVisualizacao>(preferenciasPadrao);
   const [editando, setEditando] = useState(false);
@@ -148,6 +150,7 @@ export function VisualizacoesPersonalizadas({
             projects={projects}
             editando={editando}
             onOpenProject={onOpenProject}
+            onSelecionarOrganizacao={onSelecionarOrganizacao}
             onChange={(config) =>
               salvar({
                 versao: 1,
@@ -190,6 +193,7 @@ function GraficoPersonalizado({
   onChange,
   onRemove,
   onOpenProject,
+  onSelecionarOrganizacao,
 }: {
   config: ConfigGrafico;
   numero: number;
@@ -198,9 +202,15 @@ function GraficoPersonalizado({
   onChange: (c: ConfigGrafico) => void;
   onRemove: () => void;
   onOpenProject?: (id: number) => void;
+  onSelecionarOrganizacao?: (id: string) => void;
 }) {
   const dados = useMemo(() => agruparVisualizacao(projects, c), [projects, c]);
   const pontos = useMemo(() => pontosDispersao(projects, c), [projects, c]);
+  const selecionarNome = (nome: string) => {
+    if (c.dimensao !== 'organizacao') return;
+    const ids = [...new Set(projects.filter(p => (p.org || p.organizacao?.nome || 'Não informado') === nome).flatMap(p => p.organizacao?.id ? [p.organizacao.id] : []))];
+    if (ids.length === 1) onSelecionarOrganizacao?.(ids[0]);
+  };
   const dispersao = c.tipo === "dispersao";
   const metrica = METRICAS.find((m) => m.id === c.metrica)!;
   const metricaX = METRICAS.find((m) => m.id === c.metricaX)!;
@@ -442,7 +452,7 @@ function GraficoPersonalizado({
                       ) : null
                     }
                   />
-                  <Scatter name="Projetos" data={pontos} fill={CORES[0]} />
+                  <Scatter name="Projetos" data={pontos} fill={CORES[0]}>{pontos.map(p=><Cell key={p.id} onClick={()=>{const org=projects.find(projeto=>projeto.id===p.id)?.organizacao?.id;if(org)onSelecionarOrganizacao?.(org);}} style={{cursor:'pointer'}}/>)}</Scatter>
                 </ScatterChart>
               ) : c.tipo === "rosca" ? (
                 <PieChart>
@@ -455,7 +465,7 @@ function GraficoPersonalizado({
                     paddingAngle={2}
                   >
                     {dados.linhas.map((l, i) => (
-                      <Cell key={l.name} fill={CORES[i % CORES.length]} />
+                      <Cell key={`${l.name}-${i}`} fill={CORES[i % CORES.length]} onClick={()=>typeof l.organizacaoId==='string'?onSelecionarOrganizacao?.(l.organizacaoId):selecionarNome(l.name)} style={{cursor:c.dimensao==='organizacao'?'pointer':'default'}} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -465,7 +475,7 @@ function GraficoPersonalizado({
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               ) : c.tipo === "linhas" ? (
-                <LineChart data={dados.linhas} margin={{ top: 12, right: 20, left: 0, bottom: 0 }}>
+                <LineChart data={dados.linhas} margin={{ top: 12, right: 20, left: 0, bottom: 0 }} onClick={e=>{const id=(e as any)?.activePayload?.[0]?.payload?.organizacaoId;if(typeof id==='string')onSelecionarOrganizacao?.(id);else if(e?.activeLabel!=null)selecionarNome(String(e.activeLabel));}}>
                   {eixos}
                   {dados.series.map((s, i) => (
                     <Line
@@ -480,7 +490,7 @@ function GraficoPersonalizado({
                   ))}
                 </LineChart>
               ) : c.tipo === "area" ? (
-                <AreaChart data={dados.linhas} margin={{ top: 12, right: 20, left: 0, bottom: 0 }}>
+                <AreaChart data={dados.linhas} margin={{ top: 12, right: 20, left: 0, bottom: 0 }} onClick={e=>{const id=(e as any)?.activePayload?.[0]?.payload?.organizacaoId;if(typeof id==='string')onSelecionarOrganizacao?.(id);else if(e?.activeLabel!=null)selecionarNome(String(e.activeLabel));}}>
                   {eixos}
                   {dados.series.map((s, i) => (
                     <Area
@@ -504,7 +514,7 @@ function GraficoPersonalizado({
                       name={s.nome}
                       fill={CORES[i % CORES.length]}
                       radius={[4, 4, 0, 0]}
-                    />
+                    >{dados.linhas.map((l,i)=><Cell key={`${l.name}-${i}`} onClick={()=>typeof l.organizacaoId==='string'?onSelecionarOrganizacao?.(l.organizacaoId):selecionarNome(l.name)} style={{cursor:c.dimensao==='organizacao'?'pointer':'default'}}/>)}</Bar>
                   ))}
                 </BarChart>
               )}

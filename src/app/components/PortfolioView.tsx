@@ -25,6 +25,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const [source, setSource] = useState<DataSource>('real');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
+  const [organizacaoAtiva, setOrganizacaoAtiva] = useState<string | null>(null);
 
   const exercicios = useMemo(() => getExercicios(projects), [projects]);
   const orgOptions = useMemo(() => getOrgOptions(projects), [projects]);
@@ -33,14 +34,18 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const changeSource = (next: DataSource) => {
     setSource(next);
     setFilters(emptyPortfolioFilters());
+    setOrganizacaoAtiva(null);
   };
 
   const clearFilters = () => {
     setFilters(emptyPortfolioFilters());
+    setOrganizacaoAtiva(null);
   };
 
   const filteredProjects = useMemo(() => applyPortfolioFilters(projects, filters), [projects, filters]);
-  const resumoPlano = useMemo(() => resumoPlanoPortfolio(filteredProjects), [filteredProjects]);
+  const selecionados = useMemo(() => organizacaoAtiva ? filteredProjects.filter(p => p.organizacao?.id === organizacaoAtiva) : filteredProjects, [filteredProjects, organizacaoAtiva]);
+  const resumoPlano = useMemo(() => resumoPlanoPortfolio(selecionados), [selecionados]);
+  const selecionarOrganizacao = (id: string) => setOrganizacaoAtiva(atual => atual === id ? null : id);
 
   const selectedExercicio = exercicios.find(e => e.key === filters.exercicioKey);
 
@@ -78,9 +83,11 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         orgOptions={orgOptions}
         classificacaoOptions={classificacaoOptions}
         filters={filters}
-        onChange={setFilters}
+        onChange={f=>{setFilters(f);setOrganizacaoAtiva(null);}}
         onClear={clearFilters}
       />
+      <div className="flex flex-wrap items-center gap-3 text-sm"><label htmlFor="destaque-organizacao">Destacar organização</label><select id="destaque-organizacao" className="rounded-md border bg-card px-2 py-1" value={organizacaoAtiva ?? ''} onChange={e=>setOrganizacaoAtiva(e.target.value || null)}><option value="">Todas as organizações</option>{[...new Map(filteredProjects.flatMap(p=>p.organizacao?.id?[[p.organizacao.id,p.organizacao.nome] as const]:[])).entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR')).map(([id,nome])=><option key={id} value={id}>{nome}</option>)}</select>{organizacaoAtiva && <button type="button" className="underline" onClick={()=>setOrganizacaoAtiva(null)}>Limpar destaque</button>}</div>
+      {organizacaoAtiva && <p role="status" className="text-xs text-muted-foreground">Organização selecionada: os gráficos agregados e os indicadores mostram seu recorte; as barras e os pontos comparam e destacam a seleção.</p>}
 
       {source === 'real' && projectsLoading ? (
         <p className="py-10 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Carregando dados reais…</p>
@@ -95,11 +102,11 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       </div>
 
       <div className="space-y-5">
-        <GraficosAcompanhamento projects={filteredProjects} demonstrativo={source === 'demo'}/>
-        <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'}/>
+        <GraficosAcompanhamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>
+        <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>
       </div>
 
-      <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={filteredProjects} login={user?.login}
+      <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={selecionados} login={user?.login} onSelecionarOrganizacao={selecionarOrganizacao}
         onOpenProject={source === 'real' ? onOpenProject : undefined}/>
 
       </>}

@@ -30,6 +30,7 @@ const projeto = (id, extra = {}) => ({
   code: `P${id}`,
   name: `Projeto ${id}`,
   org: "Org A",
+  organizacao: { id: extra.org || "Org A", nome: extra.org || "Org A" },
   segmento: "Tradicional",
   status: "Em andamento",
   progress: 50,
@@ -38,6 +39,26 @@ const projeto = (id, extra = {}) => ({
   risks: [],
   goals: [{deliverables:[{activities:[{status:'Concluído'}]},{activities:[{status:'A iniciar'}]}]}],
   ...extra,
+});
+
+test('organizações homônimas e projetos sem vínculo não são misturados', () => {
+  const dados = agruparVisualizacao([
+    projeto(1, { organizacao: { id: 'id-a', nome: 'Org A' } }),
+    projeto(2, { organizacao: { id: 'id-b', nome: 'Org A' } }),
+    projeto(3, { organizacao: null }),
+    projeto(4, { organizacao: null }),
+  ], config());
+  assert.equal(dados.linhas.length, 4);
+  assert.deepEqual(dados.linhas.map(l => l.serie0), [100, 100, 100, 100]);
+  assert.deepEqual(dados.linhas.map(l => l.organizacaoId ?? null), ['id-a', 'id-b', null, null]);
+});
+
+test('cruzamento financeiro ignora orçamento inválido e mantém projeto com dados válidos', () => {
+  const { pontosMapeamento } = carregarTs('src/app/lib/cruzamentoMapeamento.ts');
+  const notas = [{ organizacaoId: 'Org A', diagnosticoId: 'diag', nota: 2, parcial: false, dataAplicacao: '2026-01-01', versao: 1 }];
+  const pontos = pontosMapeamento([projeto(1, { budgetApproved: Infinity }), projeto(2)], notas, 'orcamento');
+  assert.deepEqual(pontos.map(p => p.id), [2]);
+  assert.equal(pontos[0].percentualFinanceiro, 20);
 });
 
 test("agrupa valores por organização e cruza status sem perder projetos nem alterar a origem", () => {
@@ -53,8 +74,8 @@ test("agrupa valores por organização e cruza status sem perder projetos nem al
     { chave: "serie1", nome: "Concluído" },
   ]);
   assert.deepEqual(dados.linhas, [
-    { name: "Org A", serie0: 100, serie1: 200 },
-    { name: "Org B", serie0: 300, serie1: null },
+    { name: "Org A", organizacaoId: "Org A", serie0: 100, serie1: 200 },
+    { name: "Org B", organizacaoId: "Org B", serie0: 300, serie1: null },
   ]);
   assert.deepEqual(projetos, antes);
 });
@@ -124,5 +145,5 @@ test("rosca não mistura séries e categorias com nome especial não viram propr
     { ...config(), tipo: "rosca", cruzamento: "status" },
   );
   assert.equal(dados.series.length, 1);
-  assert.deepEqual(dados.linhas, [{ name: "__proto__", serie0: 200 }]);
+  assert.deepEqual(dados.linhas, [{ name: "__proto__", organizacaoId: "__proto__", serie0: 200 }]);
 });
