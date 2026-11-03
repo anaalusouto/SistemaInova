@@ -13,7 +13,8 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
   const grupos = [...new Set(QUESTIONARIO_CADERNO.map(q => q.grupo))];
   if (consulta.isLoading) return <p role="status">Carregando IEO…</p>;
   if (consulta.error) return <p role="alert">Não foi possível carregar o IEO. <button type="button" className="underline" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>;
-  return <div className="space-y-6 min-w-0"><p className="text-sm text-muted-foreground">Questionário · 25 perguntas. N/A exige justificativa de não pertinência.</p>
+  return <div className="space-y-6 min-w-0"><p className="text-sm text-muted-foreground">Índice de Estruturação Organizacional — IEO · 25 perguntas. N/A exige justificativa de não pertinência.</p>
+    <p className="text-xs text-muted-foreground" role="status">Cobertura: {resultado.respondidas}/{resultado.total} respostas válidas · {resultado.pontuadas} com nota · {resultado.semNota} sem nota · {resultado.divergencias} divergências · {resultado.naoAplicaveis} não aplicáveis · {resultado.ausentes} ausentes{resultado.invalidas > 0 ? ` · ${resultado.invalidas} valores inválidos a conferir` : ''}.</p>
     <div className="flex flex-wrap gap-2" aria-label="Dimensões do IEO"><button type="button" className="diagnostico-filtro" data-active={dimensaoId === 'todas'} aria-pressed={dimensaoId === 'todas'} onClick={() => selecionar('todas')}>Todas as dimensões</button>{DIMENSOES_IEO_CADERNO.map(d => <button type="button" key={d.id} className="diagnostico-filtro" data-active={dimensaoId === d.id} aria-pressed={dimensaoId === d.id} onClick={() => selecionar(d.id)}>{d.titulo}</button>)}</div>
     <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
       <div className="min-w-0 space-y-5">
@@ -24,16 +25,18 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
           <p className="text-xs text-muted-foreground mt-3">{d.respondidas}/{d.total} perguntas respondidas · {d.pontuadas} com nota</p>
         </button>)}</div>
         <p className="text-xs text-muted-foreground">Síntese do sistema: média das notas 1–4 por dimensão; IEO geral é a média das dimensões com nota. NS, NC, N/A, divergência e perguntas vazias ficam fora da pontuação. Dimensões organizam a análise; públicos e descritores seguem os critérios do instrumento. Prioridades são pactuadas e não derivam automaticamente das notas.</p>
+        <section className="space-y-4 min-w-0" aria-label="Perguntas por dimensão">
+          <h4 className="font-semibold text-lg">{dimensaoId === 'todas' ? 'Perguntas por dimensão' : DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo}</h4>
+          <div className="flex flex-wrap gap-2" aria-label="Filtrar questionário por público">{['Todos', ...grupos].map(g => <button key={g} type="button" className="diagnostico-filtro" data-active={publico === g} aria-pressed={publico === g} onClick={() => setPublico(g)}>{g}</button>)}</div>
+          {DIMENSOES_IEO_CADERNO.map(d => <section key={d.id} hidden={(dimensaoId !== 'todas' && dimensaoId !== d.id) || !d.perguntas.some(q => publico === 'Todos' || q.grupo === publico)} className="space-y-3 min-w-0"><h5 className="font-semibold">{d.titulo}</h5>{d.perguntas.map(q => <div key={q.codigo} hidden={publico !== 'Todos' && q.grupo !== publico}><p className="text-xs text-muted-foreground mb-1">{q.grupo}</p><CadernoItens {...props} itens={[q]}/></div>)}</section>)}
+          {!DIMENSOES_IEO_CADERNO.some(d => (dimensaoId === 'todas' || dimensaoId === d.id) && d.perguntas.some(q => publico === 'Todos' || q.grupo === publico)) && <p className="text-sm text-muted-foreground">Não há perguntas deste público na dimensão selecionada.</p>}
+        </section>
       </div>
       <aside className="min-w-0 rounded-xl border bg-muted/30 p-5 space-y-5"><div><p className="diagnostico-sobretitulo">Visão geral</p><h4 className="font-semibold">Resumo geral de análise</h4><p className="text-sm text-muted-foreground mt-3">{resultado.respondidas} de {resultado.total} perguntas respondidas · {resultado.pontuadas} com nota.</p></div><h5 className="font-semibold text-sm">Relatos por dimensão</h5>{DIMENSOES_IEO_CADERNO.map(d => {
         const relatos = d.perguntas.filter(q => respostas.get(q.codigo)?.relato.trim());
         return <section key={d.id} className="border-t pt-4"><h5 className="text-sm font-semibold">{d.titulo}</h5>{relatos.length ? relatos.map(q => <p key={q.codigo} className="text-xs text-muted-foreground whitespace-pre-wrap break-words mt-2"><strong>{q.codigo}</strong> · {respostas.get(q.codigo)?.relato}</p>) : <p className="text-xs text-muted-foreground mt-2">Sem observações registradas.</p>}</section>;
       })}</aside>
     </div>
-    <h4 className="font-semibold text-lg">{dimensaoId === 'todas' ? 'Perguntas por dimensão' : DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo}</h4>
-    <div className="flex flex-wrap gap-2" aria-label="Filtrar questionário por público">{['Todos', ...grupos].map(g => <button key={g} type="button" className="diagnostico-filtro" data-active={publico === g} aria-pressed={publico === g} onClick={() => setPublico(g)}>{g}</button>)}</div>
-    {DIMENSOES_IEO_CADERNO.map(d => <section key={d.id} hidden={(dimensaoId !== 'todas' && dimensaoId !== d.id) || !d.perguntas.some(q => publico === 'Todos' || q.grupo === publico)} className="space-y-3 min-w-0"><h5 className="font-semibold">{d.titulo}</h5>{d.perguntas.map(q => <div key={q.codigo} hidden={publico !== 'Todos' && q.grupo !== publico}><p className="text-xs text-muted-foreground mb-1">{q.grupo}</p><CadernoItens {...props} itens={[q]}/></div>)}</section>)}
-    {!DIMENSOES_IEO_CADERNO.some(d => (dimensaoId === 'todas' || dimensaoId === d.id) && d.perguntas.some(q => publico === 'Todos' || q.grupo === publico)) && <p className="text-sm text-muted-foreground">Não há perguntas deste público na dimensão selecionada.</p>}
     <section className="space-y-3"><h4 className="font-semibold text-lg">Informações complementares e fechamento estratégico</h4><p className="text-sm text-muted-foreground">Não repetir relatos: indicar o código onde a resposta pode ser encontrada. Ouvir gestão e membros. Prioridades são pactuadas e não derivam automaticamente de notas.</p><CadernoItens {...props} itens={COMPLEMENTARES_CADERNO}/></section>
   </div>;
 }

@@ -29,6 +29,7 @@ function ItemCadernoFormulario({ item, registro, contexto, diagnosticoId, organi
       client.setQueryData<RegistroCaderno[]>(['caderno-cria', diagnosticoId, organizacaoId], antes => [...(antes ?? []).filter(a => a.codigo !== item.codigo || a.contexto !== contexto), r]);
       setVersao(r.versao); setValores(r.resposta); setSujo(false); setErro('');
       void client.invalidateQueries({ queryKey: ['diagnostico', diagnosticoId] });
+      void client.invalidateQueries({ queryKey: ['portfolio-notas-mapeamento'] });
     }, onError: (e: Error) => setErro(e.message + ' Suas alterações continuam neste formulário.') });
   usePendenciaModulo(!readOnly && (sujo || salvar.isPending));
   const resposta = registro?.resposta;
@@ -38,7 +39,7 @@ function ItemCadernoFormulario({ item, registro, contexto, diagnosticoId, organi
     <div className="border-t p-4 space-y-3">
       {item.orientacao && <p className="text-sm text-muted-foreground">{item.orientacao}</p>}
       {item.aprofundar && <p className="text-sm text-muted-foreground">Aprofundar se necessário: {item.aprofundar}</p>}
-      {readOnly ? <dl className="space-y-3 text-sm">{[['Resposta', exibicao], ['Relato / justificativa / Observação', resposta?.relato], ['Respondentes / responsável', resposta?.respondentes]].map(([rotulo, texto]) => <div key={rotulo}><dt className="font-semibold">{rotulo}</dt><dd className="whitespace-pre-wrap break-words">{texto || 'Não informado'}</dd></div>)}</dl>
+      {readOnly ? <dl className="space-y-3 text-sm">{[['Resposta', exibicao], ['Relato / justificativa / Observação', resposta?.relato], ['Respondentes / responsável', resposta?.respondentes], ['Fonte / evid\u00eancia', resposta?.fonte]].map(([rotulo, texto]) => <div key={rotulo}><dt className="font-semibold">{rotulo}</dt><dd className="whitespace-pre-wrap break-words">{texto || 'Não informado'}</dd></div>)}</dl>
         : <form className="space-y-4" onSubmit={e => { e.preventDefault(); if (salvar.isPending) return; try { validarRespostaCaderno(item.codigo, contexto, valores); setErro(''); salvar.mutate(); } catch (e) { setErro((e as Error).message); } }}>
           <fieldset disabled={salvar.isPending} className="space-y-4">
             {item.tipo === 'texto' ? <label className="block text-sm">Resposta<textarea aria-label={`Resposta ${item.codigo}`} className={`${campo} min-h-24 mt-1`} maxLength={20000} value={valores.valor ?? ''} onChange={e => alterar('valor', e.target.value || null)}/></label>

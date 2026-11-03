@@ -33,6 +33,7 @@ import { buildDecisionCharts } from '../lib/portfolioDecisions';
 import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
 import { VisualizacoesPersonalizadas } from './portfolio/VisualizacoesPersonalizadas';
 import { useAuth } from '../auth/authStore';
+import { GraficosMapeamento } from './portfolio/GraficosMapeamento';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
@@ -211,6 +212,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </div>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {source === 'real' && <GraficosMapeamento projects={filteredProjects}/>}
         <ChartCard title="Orçamento por organização" description="As 8 maiores dotações. Compare o gasto realizado com o orçamento total para planejar recursos.">
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={decisions.budgets} layout="vertical" margin={{ left: 5, right: 20 }}>
@@ -224,7 +226,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Avanço físico × execução financeira" description="As 8 maiores diferenças em pontos percentuais. Investigue gastos à frente das entregas; a diferença sozinha não indica ineficiência.">
+        <ChartCard title="Avanço de Etapas × execução financeira" description="Etapas concluídas ÷ total de etapas × 100. A conclusão da etapa segue o status de suas atividades. As 8 maiores diferenças em pontos percentuais; projetos sem etapas ficam fora da comparação.">
           {decisions.progress.length === 0 ? <ChartEmpty /> : <ResponsiveContainer width="100%" height={320}>
             <BarChart data={decisions.progress} layout="vertical" margin={{ left: 5, right: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
@@ -232,13 +234,13 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
               <YAxis type="category" dataKey="name" width={110} tick={axisTick} />
               <Tooltip formatter={(value: number) => `${value}%`} contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Avanço físico" dataKey="fisico" fill="var(--success)" radius={[0, 4, 4, 0]} />
+              <Bar name="Avanço de Etapas" dataKey="etapas" fill="var(--success)" radius={[0, 4, 4, 0]} />
               <Bar name="Orçamento executado" dataKey="financeiro" fill="var(--brand)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>}
         </ChartCard>
-        <ChartCard title="Riscos em aberto por categoria" description="Priorize planos de resposta nas categorias com mais riscos altos e críticos. Riscos encerrados ficam fora da contagem.">
-          {decisions.risks.length === 0 ? <ChartEmpty text="Nenhum risco em aberto neste recorte." /> : <ResponsiveContainer width="100%" height={300}>
+        <ChartCard title="Riscos em aberto por organização" description="Organizações em ordem alfabética, com quantidade de riscos e distribuição por criticidade. Riscos encerrados ficam fora da contagem.">
+          {decisions.risks.length === 0 ? <ChartEmpty text="Nenhum risco em aberto neste recorte." /> : <ResponsiveContainer width="100%" height={Math.max(300, decisions.risks.length * 45)}>
             <BarChart data={decisions.risks} layout="vertical" margin={{ left: 5, right: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis type="number" allowDecimals={false} tick={axisTick} />
@@ -252,6 +254,13 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
               {decisions.risks.some(r => r.semNivel > 0) && <Bar name="Sem classificação" dataKey="semNivel" stackId="risks" fill="var(--ink-5)" />}
             </BarChart>
           </ResponsiveContainer>}
+          {decisions.risks.length > 0 && <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-xs"><caption className="sr-only">Quantidade de riscos por organização e criticidade</caption><thead><tr>{['Organização','Baixo','Médio','Alto','Crítico','Sem classificação','Total'].map(t=><th key={t} className="p-2" scope="col">{t}</th>)}</tr></thead><tbody>{decisions.risks.map(r=><tr key={r.name} className="border-t"><th scope="row" className="p-2">{r.name}</th>{[r.baixo,r.medio,r.alto,r.critico,r.semNivel,r.total].map((n,i)=><td key={i} className="p-2">{n}</td>)}</tr>)}</tbody></table></div>}
+        </ChartCard>
+        <ChartCard title="Categorias dos riscos em aberto" description="A mesma quantidade de riscos do quadro por organização, distribuída por categoria.">
+          {decisions.riskCategories.length === 0 ? <ChartEmpty text="Nenhum risco em aberto neste recorte."/> : <>
+            <ResponsiveContainer width="100%" height={300}><PieChart><Pie data={decisions.riskCategories} dataKey="value" nameKey="name" innerRadius={65} outerRadius={100} strokeWidth={0}>{decisions.riskCategories.map((r,i)=><Cell key={r.name} fill={['var(--brand)','var(--success)','var(--warning)','var(--alert)','var(--ink-5)'][i%5]}/>)}</Pie><Tooltip contentStyle={tooltipStyle}/><Legend wrapperStyle={{fontSize:12}}/></PieChart></ResponsiveContainer>
+            <ul className="flex flex-wrap gap-3 text-xs">{decisions.riskCategories.map(r=><li key={r.name}>{r.name}: <strong>{r.value}</strong></li>)}</ul>
+          </>}
         </ChartCard>
         <ChartCard title="Prazos dos projetos não concluídos" description="Organize a agenda de acompanhamento pelos vencimentos. Prazos informados só com mês e ano usam o último dia do mês.">
           <ResponsiveContainer width="100%" height={300}>

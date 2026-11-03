@@ -10,6 +10,7 @@ import { diagnosticoAtual } from './diagnostic/navegacaoDiagnostico';
 import { FUNCOES_MATRIZ, validarMatrizPrototipo, type MatrizPrototipoInput } from './diagnostic/catalog/matrizPrototipo';
 import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type OrigemPdf } from './diagnostic/importarMatriz';
 import type { RegistroCaderno } from './diagnostic/cadernoCria';
+import { calcularNotaConsolidada } from './diagnostic/notaConsolidada';
 
 const mensagemMapeamento=(erro:{message:string})=>erro.message.replace(/diagnóstico/gi,termo=>termo[0]==='D'?'Mapeamento':'mapeamento');
 
@@ -68,6 +69,32 @@ function mapDiagnostico(row: any): DiagnosticoResumo {
     concluidoEm: row.concluido_em ?? null, criadoEm: row.criado_em, atualizadoEm: row.atualizado_em,
   };
 }
+
+/** Uma única aplicação atual por organização; nunca completa lacunas com versões anteriores. */
+export const listarNotasMapeamentos = createServerFn({ method: 'GET' })
+  .validator((d: { organizacaoIds: string[] }) => {
+    if (!Array.isArray(d?.organizacaoIds) || d.organizacaoIds.length > 500 || d.organizacaoIds.some(id => !/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(id))) throw new Error('Organizações inválidas para os gráficos de mapeamento.');
+    return { organizacaoIds: [...new Set(d.organizacaoIds)] };
+  })
+  .handler(async ({ data }) => {
+    if (!data.organizacaoIds.length) return [];
+    const db = await getAdmin();
+    const aplicacoes = await db.from('diagnosticos').select('*').in('comunidade_id', data.organizacaoIds);
+    if (aplicacoes.error) throw new Error(mensagemMapeamento(aplicacoes.error));
+    const diagnosticos = (aplicacoes.data ?? []).map(mapDiagnostico);
+    const atuais = data.organizacaoIds.flatMap(id => { const d = diagnosticoAtual(diagnosticos, id); return d ? [d] : []; });
+    if (!atuais.length) return [];
+    const ids = atuais.map(d => d.id);
+    const [caderno, produtos] = await Promise.all([
+      db.from('diagnostico_caderno_respostas').select('*').in('diagnostico_id', ids),
+      db.from('diagnostico_produtos').select('id,diagnostico_id').in('diagnostico_id', ids),
+    ]);
+    if (caderno.error || produtos.error) throw new Error(mensagemMapeamento(caderno.error ?? produtos.error!));
+    return atuais.map(d => ({
+      organizacaoId: d.comunidadeId, diagnosticoId: d.id, dataAplicacao: d.dataAplicacao, versao: d.versao,
+      ...calcularNotaConsolidada((caderno.data ?? []).filter(r => r.diagnostico_id === d.id), (produtos.data ?? []).filter(p => p.diagnostico_id === d.id)),
+    }));
+  });
 
 /** Visão Geral: uma linha por Organização, com o resumo do mapeamento mais recente. */
 export const listarVisaoGeralDiagnosticos = createServerFn({ method: 'GET' }).handler(

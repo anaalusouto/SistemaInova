@@ -29,6 +29,7 @@ test('visualização atual mantém dimensões, termômetros, relatos e perguntas
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
  assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Todas as dimensões/);
  assert.match(html,/diagnostico-termometro/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.ok(html.indexOf('Perguntas por dimensão') < html.indexOf('Resumo geral de análise'));
  assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
  assert.doesNotMatch(html,/<input|<textarea|Salvar resposta/);
 });

@@ -72,7 +72,7 @@ test("IEO anterior com nota não é apresentado como resultado atual", () => {
   const html = resumo({ historico: [{ perguntaId: "1.1.1", nivel: 4 }] });
   assert.match(html, /Diagnóstico em revisão/);
   assert.match(html, /IEO atual está sem nota calculável/);
-  assert.match(html, /Histórico — instrumento anterior/);
+  assert.doesNotMatch(html, /Histórico — instrumento anterior/);
   const atual = html.split("Consultar IEO histórico")[0];
   assert.doesNotMatch(atual, /4,0/);
   assert.match(atual, /Sem nota calculável/);
@@ -93,8 +93,7 @@ test("pendência de remapeamento sai das prioridades e acompanha resultados hist
   assert.match(prioridades, /Capital de giro/);
   assert.doesNotMatch(prioridades, /R93bb0b3b/);
   assert.match(prioridades, /Aguardando confirmação/);
-  assert.match(html, /Histórico — remapeamento pendente/);
-  assert.match(html, /referência do caderno: PRIO1/);
+  assert.match(html, /código:PRIO1/);
   assert.match(html, /R93bb0b3b/);
 });
 

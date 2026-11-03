@@ -91,6 +91,7 @@ test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de 
     return React.createElement('div', null, children);
   }]));
   const { PortfolioView } = carregar('src/app/components/PortfolioView.tsx', {
+    './portfolio/GraficosMapeamento': { GraficosMapeamento: () => null },
     '../store': { useStore: () => ({ projects: reais, projectsLoading: false }) }, recharts,
     '../auth/authStore': { useAuth: () => ({ readOnly: true }) },
   });
@@ -101,11 +102,11 @@ test('dashboard abre com dados reais e mostra a conclusão atual sem recorte de 
   assert.match(html, /Minhas visualizações/); assert.match(html, /Personalizar visualizações/);
   assert.doesNotMatch(html, /Acompanhamento dos projetos/);
   assert.match(html, /Metas concluídas/); assert.match(html, /Etapas concluídas/); assert.match(html, /Atividades concluídas/);
-  assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.fisico === 50));
+  assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.etapas === 0));
   reais[0].goals[0].deliverables[0].activities[1].status = 'Concluído'; reais[0].progress = 100;
   graficos.length = 0;
   html = renderToStaticMarkup(React.createElement(PortfolioView));
-  assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.fisico === 100));
+  assert.ok(graficos.flat().some(row => row.name === 'Comunidade Real' && row.etapas === 50));
   assert.match(html, /Atividades concluídas[\s\S]*?>2 /);
   reais[0].status = 'Suspenso';
   graficos.length = 0;

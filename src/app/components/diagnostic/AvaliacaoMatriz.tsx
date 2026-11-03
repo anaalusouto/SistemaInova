@@ -26,6 +26,7 @@ export function AvaliacaoMatriz({ funcaoId, aoPendencias, ...props }: ContextoCa
       client.setQueryData<typeof consulta.data>(['caderno-cria', props.diagnosticoId, props.organizacaoId], antes => [...(antes ?? []).filter(a => a.codigo !== funcaoId || a.contexto !== ''), r]);
       setValores(r.resposta); setVersao(r.versao); setSujo(false); setErro('');
       void client.invalidateQueries({ queryKey: ['diagnostico', props.diagnosticoId] });
+      void client.invalidateQueries({ queryKey: ['portfolio-notas-mapeamento'] });
     },
     onError: (e: Error) => setErro(e.message + ' Suas alterações continuam neste formulário.'),
   });

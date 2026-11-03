@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Sprout } from "lucide-react";
-import { getParecer, listarRespostasMatriz } from "../../diagnosticos.server";
+import { getParecer, listarProdutos, listarRespostasMatriz } from "../../diagnosticos.server";
 import { useFichaOrganizacao } from "../organizacoes/useOrganizacoes";
 import { DocumentosRegistro } from "../DocumentosRegistro";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { useCaderno } from "./CadernoItens";
 import { calcularIeoCaderno } from "../../diagnostic/ieoCaderno";
+import { calcularNotaConsolidada } from '../../diagnostic/notaConsolidada';
 import {
   camposDaPrioridade,
   ordenarDimensoes,
@@ -97,6 +98,8 @@ function DimensoesResumo({
                       ? "Histórica"
                       : d.respondidas < d.total
                         ? "Parcial"
+                        : (d.pontuadas ?? d.respondidas) < d.respondidas
+                          ? "Com respostas sem nota"
                         : "Com respostas registradas"}
                 </td>
                 <td data-label="Nota / 4">
@@ -153,6 +156,10 @@ export function ResumoDiagnostico({
     queryKey: ["diagnostico-parecer", diagnosticoId],
     queryFn: () => getParecer({ data: { diagnosticoId } }),
   });
+  const produtos = useQuery({
+    queryKey: ['diagnostico-produtos', diagnosticoId],
+    queryFn: () => listarProdutos({ data: { diagnosticoId } }),
+  });
   // Inclui áreas fechadas na impressão e restaura a leitura escolhida depois.
   useEffect(() => {
     let fechados: HTMLDetailsElement[] = [];
@@ -182,7 +189,7 @@ export function ResumoDiagnostico({
       window.removeEventListener("afterprint", depois);
     };
   }, []);
-  const consultas = [ficha, matriz, caderno, parecer];
+  const consultas = [ficha, matriz, caderno, parecer, produtos];
   if (consultas.some((c) => c.isLoading)) return <p role="status">Carregando resumo…</p>;
   const org = ficha.data;
   if (consultas.some((c) => c.error) || !org)
@@ -204,6 +211,7 @@ export function ResumoDiagnostico({
     );
   const registros = caderno.data ?? [];
   const resultado = calcularIeoCaderno(registros);
+  const consolidada = calcularNotaConsolidada(registros, produtos.data ?? []);
   const prioridades = prioridadesDoCaderno(registros);
   const pendencias = prioridades.filter((r) =>
     pendenciaDeRemapeamento(r.resposta.valor || r.resposta.relato),
@@ -273,6 +281,12 @@ export function ResumoDiagnostico({
           </p>
         )}
         <p>Notas e cobertura de respostas não certificam a validação técnica do diagnóstico.</p>
+      </section>
+      <section aria-label="Nota consolidada do mapeamento">
+        <h4>Nota consolidada do mapeamento</h4>
+        <p><strong>{nota(consolidada.nota)}{consolidada.nota !== null && ' / 4'}</strong>{consolidada.nota !== null && consolidada.parcial && ' · parcial'}</p>
+        <ul>{consolidada.componentes.map(c => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota</li>)}</ul>
+        <p>50% IEO + 25% Matriz + 25% Cesta. Os pesos dos componentes ausentes são redistribuídos entre os que possuem nota. Leitura e criticidade da Matriz não são convertidas em avaliação. Na Cesta entram somente os indicadores C01–C12 dos produtos em funcionamento desta aplicação.</p>
       </section>
       <section aria-label="Síntese executiva">
         <h4>Síntese executiva</h4>

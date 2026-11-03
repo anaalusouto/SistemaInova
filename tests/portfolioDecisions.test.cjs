@@ -117,9 +117,9 @@ test('projeto da organização exige vínculo único e rejeita ID de outra organ
   assert.equal(JSON.stringify(projetos), antes);
 });
 
-test('Gestão Interna preserva ordem Projeto, Diagnóstico e Relatórios', () => {
+test('Gestão Interna preserva ordem Projeto, Mapeamento e Relatórios', () => {
   const { SUBAREAS_GESTAO } = loadTs('src/app/lib/gestaoInterna');
-  assert.deepEqual(SUBAREAS_GESTAO.map(s => s.label), ['Projeto', 'Diagnóstico', 'Relatórios']);
+  assert.deepEqual(SUBAREAS_GESTAO.map(s => s.label), ['Projeto', 'Mapeamento', 'Relatórios']);
   assert.equal(new Set(SUBAREAS_GESTAO.map(s => s.id)).size, 3);
 });
 
@@ -193,17 +193,19 @@ test('dados demonstrativos têm um projeto por organização e totais financeiro
 });
 
 test('orçamento e percentuais não contam organizações duas vezes nem dividem por zero', () => {
-  const result = buildDecisionCharts([project(), project({ budgetApproved: 0, budgetExecuted: 0 })], reference);
+  const goals = [{ deliverables: [{ activities: [{ status: 'Concluído' }] }, { activities: [{ status: 'Em andamento' }] }] }];
+  const result = buildDecisionCharts([project({goals}), project({ budgetApproved: 0, budgetExecuted: 0 })], reference);
   assert.deepEqual(result.budgets, [{ name: 'Organização A', previsto: 100, executado: 60, saldo: 40 }]);
   assert.equal(result.progress.length, 1);
-  assert.deepEqual(result.progress[0], { name: 'Organização A', fisico: 30, financeiro: 60, diferenca: 30 });
+  assert.deepEqual(result.progress[0], { name: 'Organização A', etapas: 50, financeiro: 60, diferenca: 10 });
 });
 
 test('riscos seguem as faixas do projeto e excluem encerrados', () => {
   const risks = [0, 3, 4, 8, 9, 14, 15, 25].map(severity => ({ category: 'Financeiro', severity, status: 'Aberto' }));
   risks.push({ category: 'Financeiro', severity: 25, status: 'Encerrado' });
   const result = buildDecisionCharts([project({ risks })], reference);
-  assert.deepEqual(result.risks, [{ name: 'Financeiro', baixo: 1, medio: 2, alto: 2, critico: 2, semNivel: 1 }]);
+  assert.deepEqual(result.risks, [{ name: 'Organização A', baixo: 1, medio: 2, alto: 2, critico: 2, semNivel: 1, total: 8 }]);
+  assert.deepEqual(result.riskCategories, [{name:'Financeiro',value:8}]);
 });
 
 test('prazos respeitam limites, mês sem dia, datas inválidas e projetos concluídos', () => {

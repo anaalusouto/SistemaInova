@@ -2,12 +2,20 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const ts = require("typescript");
+const path = require('node:path');
+function carregarTs(arquivo) {
+  if (!path.extname(arquivo)) arquivo += '.ts';
+  const mod = {exports:{}};
+  const codigo = ts.transpileModule(fs.readFileSync(arquivo,'utf8'), {fileName:arquivo,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+  new Function('require','module','exports',codigo)(r=>r.startsWith('.')?carregarTs(path.resolve(path.dirname(arquivo),r)):require(r),mod,mod.exports);
+  return mod.exports;
+}
 const mod = { exports: {} };
 const codigo = ts.transpileModule(
   fs.readFileSync("src/app/lib/visualizacoesPortfolio.ts", "utf8"),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
 ).outputText;
-new Function("require", "module", "exports", codigo)(require, mod, mod.exports);
+new Function("require", "module", "exports", codigo)(r=>r.startsWith('.')?carregarTs(path.resolve('src/app/lib',r)):require(r), mod, mod.exports);
 const {
   preferenciasPadrao,
   lerPreferencias,
@@ -28,7 +36,7 @@ const projeto = (id, extra = {}) => ({
   budgetApproved: 100,
   budgetExecuted: 20,
   risks: [],
-  goals: [],
+  goals: [{deliverables:[{activities:[{status:'Concluído'}]},{activities:[{status:'A iniciar'}]}]}],
   ...extra,
 });
 
@@ -64,8 +72,8 @@ test("percentuais usam média por projeto e excluem orçamento zero, ausentes e 
   });
   assert.equal(dados.linhas[0].serie0, 60);
   assert.equal(dados.ausentes, 2);
-  assert.equal(valorMetrica(projeto(1, { progress: null }), "avanco"), null);
-  assert.equal(valorMetrica(projeto(1, { progress: 0 }), "avanco"), 0);
+  assert.equal(valorMetrica(projeto(1, { goals: [] }), "avanco"), null);
+  assert.equal(valorMetrica(projeto(1, { progress: 0 }), "avanco"), 50);
   assert.equal(
     agruparVisualizacao(projetos.slice(0, 2), { ...config(), agregacao: "media" }).linhas[0].serie0,
     150,
@@ -74,7 +82,7 @@ test("percentuais usam média por projeto e excluem orçamento zero, ausentes e 
 test("dispersão mantém identidade dos projetos e exclui pontos sem um dos eixos", () => {
   const c = { ...config(), metricaX: "avanco", metrica: "execucao", tipo: "dispersao" };
   const pontos = pontosDispersao(
-    [projeto(1), projeto(2, { budgetApproved: 0 }), projeto(3, { progress: null })],
+    [projeto(1), projeto(2, { budgetApproved: 0 }), projeto(3, { goals: [] })],
     c,
   );
   assert.deepEqual(pontos, [{ id: 1, name: "P1 · Projeto 1", x: 50, y: 20 }]);

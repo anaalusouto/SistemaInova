@@ -1,6 +1,13 @@
 import type { Project } from '../data/mockData';
 import { resumirConclusao } from './conclusaoPlano';
 
+/** A etapa é concluída quando todas as suas atividades estão com status Concluído. */
+export function conclusaoEtapas(projeto: Pick<Project, 'goals'>) {
+  const etapas = (projeto.goals ?? []).flatMap(m => m.deliverables);
+  const concluidas = etapas.filter(e => resumirConclusao(e.activities).concluido).length;
+  return { total: etapas.length, concluidas, percentual: etapas.length ? concluidas / etapas.length * 100 : null };
+}
+
 /** Mesma conclusão derivada do plano: um grupo vazio nunca conta como concluído. */
 export function resumoPlanoPortfolio(projetos: Pick<Project, 'goals'>[]) {
   const metas = projetos.flatMap(p => p.goals);

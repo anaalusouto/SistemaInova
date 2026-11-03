@@ -1,5 +1,6 @@
 import type { ProjectExt } from '../store';
 import { faixaRisco } from './planoTrabalho';
+import { conclusaoEtapas } from './resumoPlanoPortfolio';
 
 /** Datas mensais representam o último dia do mês; datas inválidas ficam sem prazo. */
 function deadline(value: string): number | null {
@@ -19,6 +20,7 @@ function deadline(value: string): number | null {
 export function buildDecisionCharts(projects: ProjectExt[], referenceDate: Date) {
   const organizations = new Map<string, { name: string; previsto: number; executado: number; saldo: number }>();
   const categories = new Map<string, { name: string; baixo: number; medio: number; alto: number; critico: number; semNivel: number }>();
+  const riscosPorOrganizacao = new Map<string, { name: string; baixo: number; medio: number; alto: number; critico: number; semNivel: number; total: number }>();
   const deadlines = ['Vencidos', 'Até 30 dias', '31–60 dias', '61–90 dias', 'Após 90 dias', 'Sem prazo']
     .map(name => ({ name, projetos: 0 }));
   const today = Date.UTC(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
@@ -37,6 +39,10 @@ export function buildDecisionCharts(projects: ProjectExt[], referenceDate: Date)
       const level = faixa === 'Crítico' ? 'critico' : faixa === 'Alto' ? 'alto' : faixa === 'Médio' ? 'medio' : faixa === 'Baixo' ? 'baixo' : 'semNivel';
       riskRow[level] += 1;
       categories.set(category, riskRow);
+      const orgRow = riscosPorOrganizacao.get(name) ?? { name, baixo: 0, medio: 0, alto: 0, critico: 0, semNivel: 0, total: 0 };
+      orgRow[level] += 1;
+      orgRow.total += 1;
+      riscosPorOrganizacao.set(name, orgRow);
     }
     if (p.status === 'Concluído') continue;
     const end = deadline(p.endDate);
@@ -44,14 +50,17 @@ export function buildDecisionCharts(projects: ProjectExt[], referenceDate: Date)
     const bucket = days === null ? 5 : days < 0 ? 0 : days <= 30 ? 1 : days <= 60 ? 2 : days <= 90 ? 3 : 4;
     deadlines[bucket].projetos += 1;
   }
-  const progress = projects.filter(p => p.budgetApproved > 0).map(p => {
+  const progress = projects.filter(p => p.budgetApproved > 0).flatMap(p => {
+    const etapas = conclusaoEtapas(p).percentual;
+    if (etapas === null) return [];
     const financeiro = Math.round(p.budgetExecuted / p.budgetApproved * 100);
-    return { name: p.org || p.code, fisico: p.progress, financeiro, diferenca: Math.abs(financeiro - p.progress) };
+    return [{ name: p.org || p.code, etapas, financeiro, diferenca: Math.abs(financeiro - etapas) }];
   }).sort((a, b) => b.diferenca - a.diferenca).slice(0, 8);
   return {
     budgets: [...organizations.values()].sort((a, b) => b.previsto - a.previsto).slice(0, 8),
     progress,
-    risks: [...categories.values()].sort((a, b) => (b.alto + b.critico) - (a.alto + a.critico)),
+    risks: [...riscosPorOrganizacao.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    riskCategories: [...categories.values()].map(r => ({ name: r.name, value: r.baixo + r.medio + r.alto + r.critico + r.semNivel })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
     deadlines,
   };
 }

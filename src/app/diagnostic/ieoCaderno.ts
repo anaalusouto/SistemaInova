@@ -16,9 +16,14 @@ export function calcularIeoCaderno(registros: Pick<RegistroCaderno, 'codigo' | '
   const porDimensao = DIMENSOES_IEO_CADERNO.map(d => {
     const valores = d.codigos.map(c => respostas.get(c)?.valor);
     const notas = valores.filter((v): v is string => typeof v === 'string' && /^[1-4]$/.test(v)).map(Number);
+    const respondidas = valores.filter(v => v != null && /^(?:[1-4]|NS|NC|NA|D)$/.test(v)).length;
     return {
       dimensaoId: d.id, dimensaoTitulo: d.titulo, total: d.codigos.length,
-      respondidas: valores.filter(v => v != null).length, pontuadas: notas.length,
+      respondidas, pontuadas: notas.length, semNota: respondidas - notas.length,
+      divergencias: valores.filter(v => v === 'D').length,
+      naoAplicaveis: valores.filter(v => v === 'NA').length,
+      ausentes: valores.filter(v => v == null || v === '').length,
+      invalidas: valores.filter(v => v != null && v !== '' && !/^(?:[1-4]|NS|NC|NA|D)$/.test(v)).length,
       media: notas.length ? notas.reduce((s, n) => s + n, 0) / notas.length : null,
     };
   });
@@ -28,6 +33,11 @@ export function calcularIeoCaderno(registros: Pick<RegistroCaderno, 'codigo' | '
     porDimensao,
     respondidas: porDimensao.reduce((s, d) => s + d.respondidas, 0),
     pontuadas: porDimensao.reduce((s, d) => s + d.pontuadas, 0),
+    semNota: porDimensao.reduce((s, d) => s + d.semNota, 0),
+    divergencias: porDimensao.reduce((s, d) => s + d.divergencias, 0),
+    naoAplicaveis: porDimensao.reduce((s, d) => s + d.naoAplicaveis, 0),
+    ausentes: porDimensao.reduce((s, d) => s + d.ausentes, 0),
+    invalidas: porDimensao.reduce((s, d) => s + d.invalidas, 0),
     total: QUESTIONARIO_CADERNO.length,
   };
 }

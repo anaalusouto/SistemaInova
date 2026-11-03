@@ -1,4 +1,5 @@
 import type { ProjectExt } from "../store";
+import { conclusaoEtapas } from './resumoPlanoPortfolio';
 
 export const TIPOS_GRAFICO = [
   { id: "barras", nome: "Barras" },
@@ -20,7 +21,7 @@ export const METRICAS = [
   { id: "orcamento", nome: "Orçamento aprovado", unidade: "moeda" },
   { id: "executado", nome: "Valor executado", unidade: "moeda" },
   { id: "saldo", nome: "Saldo orçamentário", unidade: "moeda" },
-  { id: "avanco", nome: "Avanço físico", unidade: "percentual" },
+  { id: "avanco", nome: "Avanço de Etapas", unidade: "percentual" },
   { id: "execucao", nome: "Execução financeira", unidade: "percentual" },
   { id: "riscos", nome: "Riscos em aberto", unidade: "numero" },
   { id: "atividades", nome: "Atividades concluídas", unidade: "numero" },
@@ -118,7 +119,7 @@ export function valorMetrica(p: ProjectExt, m: Metrica): number | null {
         ? p.budgetApproved - p.budgetExecuted
         : null;
     case "avanco":
-      return numero(p.progress);
+      return conclusaoEtapas(p).percentual;
     case "execucao":
       return numero(p.budgetApproved) !== null &&
         p.budgetApproved > 0 &&
