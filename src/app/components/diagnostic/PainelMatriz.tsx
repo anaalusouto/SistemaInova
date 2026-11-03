@@ -35,7 +35,7 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
     <section aria-label="Funções por grupo" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4><button type="button" className="text-xs underline" onClick={restaurar}>Restaurar larguras das colunas</button></div>
       <div className="inova-table-frame diagnostico-tabela-scroll matriz-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
-        <table ref={tabelaRef} style={{ width: largura, minWidth: largura }} className="diagnostico-tabela inova-table-cards"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
+        <table ref={tabelaRef} style={{ width: largura, minWidth: largura }} className="diagnostico-tabela"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
           <colgroup>{colunas.map((c, i) => <col key={c} style={{ width: larguras?.[c] ?? LARGURAS[i] }}/>)}</colgroup>
           <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}<div {...controles(t)} className="plano-resize-handle"/></th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>

@@ -43,7 +43,7 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, bloqueado
     <textarea aria-label={`${rotulo} ${id}`} form={formularioId} disabled={bloqueado} rows={3} maxLength={20000} className={`${classe} min-w-48`} value={valores[campo] ?? ''} onKeyDown={teclado} onChange={e => aoAlterar(campo, e.target.value || null)} />{status(campo)}
   </>;
   return <>
-    <th scope="row"><span className="block mb-2 text-xs text-muted-foreground">{id} · {estado}</span><span className="block min-w-60 font-medium">{valores.nomeFuncao}</span>{pendente && <span className="block mt-2 text-xs font-normal">Alterações não salvas</span>}</th>
+    <th scope="row" className="sticky left-0 z-10 bg-card"><span className="block mb-2 text-xs text-muted-foreground">{id} · {estado}</span><span className="block min-w-60 font-medium">{valores.nomeFuncao}</span>{pendente && <span className="block mt-2 text-xs font-normal">Alterações não salvas</span>}</th>
     <td data-label="Atuação">{selecao('Atuação', 'atuacao', ATUACAO_MATRIZ)}</td>
     <td data-label="Externo">{texto('Externo', 'externo')}</td>
     <td data-label="Experiência">{selecao('Experiência', 'experiencia', EXPERIENCIA_MATRIZ)}</td>
