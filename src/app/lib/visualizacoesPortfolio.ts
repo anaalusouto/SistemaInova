@@ -111,17 +111,17 @@ export function valorMetrica(p: ProjectExt, m: Metrica): number | null {
     case "projetos":
       return 1;
     case "orcamento":
-      return numero(p.budgetApproved);
+      return p.budgetApprovedInformado === false ? null : numero(p.budgetApproved);
     case "executado":
-      return numero(p.budgetExecuted);
+      return p.budgetExecutedInformado === false ? null : numero(p.budgetExecuted);
     case "saldo":
-      return numero(p.budgetApproved) !== null && numero(p.budgetExecuted) !== null
+      return p.budgetApprovedInformado !== false && p.budgetExecutedInformado !== false && numero(p.budgetApproved) !== null && numero(p.budgetExecuted) !== null
         ? p.budgetApproved - p.budgetExecuted
         : null;
     case "avanco":
       return conclusaoEtapas(p).percentual;
     case "execucao":
-      return numero(p.budgetApproved) !== null &&
+      return p.budgetApprovedInformado !== false && p.budgetExecutedInformado !== false && numero(p.budgetApproved) !== null &&
         p.budgetApproved > 0 &&
         numero(p.budgetExecuted) !== null
         ? (p.budgetExecuted / p.budgetApproved) * 100
@@ -208,7 +208,7 @@ export function agruparVisualizacao(projetos: ProjectExt[], c: ConfigGrafico) {
     const linha: LinhaGrafico = { name };
     for (const s of series) {
       const v = valores.get(s.chave);
-      linha[s.chave] = v ? (media ? v.soma / v.n : v.soma) : null;
+      linha[s.chave] = v !== undefined ? (media ? v.soma / v.n : v.soma) : null;
     }
     return linha;
   });

@@ -7,6 +7,7 @@ import { DocumentosRegistro } from "../DocumentosRegistro";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { useCaderno } from "./CadernoItens";
 import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from "../../diagnostic/ieoCaderno";
+import { AGROMEL_ID_REAVALIACAO_IEO, ieoAguardandoReavaliacao } from "../../diagnostic/validadeIeoCaderno";
 import { calcularNotaConsolidada } from '../../diagnostic/notaConsolidada';
 import {
   camposDaPrioridade,
@@ -221,9 +222,9 @@ export function ResumoDiagnostico({
   const pendencias = prioridades.filter((r) =>
     pendenciaDeRemapeamento(r.resposta.valor || r.resposta.relato),
   );
-  const diagnosticoAgromel = org.id === "c82c2ac0-56cd-4a88-9d67-f7d2ddb8e061";
+  const diagnosticoAgromel = org.id === AGROMEL_ID_REAVALIACAO_IEO;
   // A referência da AGROMEL informa que as 25 questões aguardam reavaliação pela revisão CRIA de 22/10/2026.
-  const ieoAguardandoReavaliacao = diagnosticoAgromel && resultado.total === 25 && resultado.respondidas === 25;
+  const ieoPendente = ieoAguardandoReavaliacao(org.id, registros);
   const referenciasPrioridades = diagnosticoAgromel
     ? ["Engajamento dos cooperados", "Capital de giro", "Comercialização Coletiva"].map((titulo, i) => ({
         codigo: `PRIO${i + 1}`,
@@ -235,7 +236,7 @@ export function ResumoDiagnostico({
   const prioridadesExibidas = estrategicas.length
     ? estrategicas.map((r) => ({ ...r, referencia: false }))
     : referenciasPrioridades;
-  const emRevisao = ieoAguardandoReavaliacao || resultado.geral === null || pendencias.length > 0;
+  const emRevisao = ieoPendente || resultado.geral === null || pendencias.length > 0;
   const textoCaderno = (codigo: string) =>
     registros.find((r) => r.contexto === "" && r.codigo === codigo)?.resposta.valor;
   const capacidades = parecer.data?.capacidades || textoCaderno("E02");
@@ -276,7 +277,7 @@ export function ResumoDiagnostico({
           {emRevisao ? "Diagnóstico em revisão" : "Situação do diagnóstico"}
         </h4>
         <p>
-          {ieoAguardandoReavaliacao ? (
+          {ieoPendente ? (
             <>O IEO atual está <strong>sem nota calculável validada</strong>. A referência informa que as 25 perguntas aguardam reavaliação pelo Caderno CRIA rev. 22/10/2026. Hoje há 25/25 respostas registradas, 24 notas históricas e Q25 como N/A. As respostas e notas foram preservadas, sem apresentá-las como atuais.</>
           ) : resultado.geral === null ? (
             "O IEO atual está sem nota calculável: não há respostas pontuáveis registradas."
@@ -360,7 +361,7 @@ export function ResumoDiagnostico({
       <section aria-label="Prioridades por dimensão">
         <h4>Prioridades por dimensão</h4>
         <DimensoesResumo
-          historico={ieoAguardandoReavaliacao}
+          historico={ieoPendente}
           dimensoes={resultado.porDimensao.map((d) => ({
             ...d,
             codigos: DIMENSOES_IEO_CADERNO.find((item) => item.id === d.dimensaoId)?.codigos,
@@ -460,8 +461,8 @@ export function ResumoDiagnostico({
         </details>
         <article className="resumo-cartao">
           <h5>Nota consolidada do mapeamento</h5>
-          <p><strong>{ieoAguardandoReavaliacao ? "Não calculável como resultado atual" : `${nota(consolidada.nota)}${consolidada.nota !== null ? " / 4" : ""}`}</strong>{ieoAguardandoReavaliacao && consolidada.nota !== null && <> · cálculo anterior preservado como histórico: {nota(consolidada.nota)} / 4</>}</p>
-          <ul>{consolidada.componentes.map((c) => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota{ieoAguardandoReavaliacao && c.id === "ieo" ? " · histórico, aguarda reavaliação" : ""}</li>)}</ul>
+          <p><strong>{ieoPendente ? "Não calculável como resultado atual" : `${nota(consolidada.nota)}${consolidada.nota !== null ? " / 4" : ""}`}</strong>{ieoPendente && consolidada.nota !== null && <> · cálculo anterior preservado como histórico: {nota(consolidada.nota)} / 4</>}</p>
+          <ul>{consolidada.componentes.map((c) => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota{ieoPendente && c.id === "ieo" ? " · histórico, aguarda reavaliação" : ""}</li>)}</ul>
           <p>Fórmula geral: 50% IEO + 25% Matriz + 25% Cesta, com redistribuição dos pesos dos componentes sem nota. A fórmula não define uma composição por dimensão; notas dimensionais de Matriz e Cesta e a nota consolidada dimensional estão como “Não registrado / Não calculável”.</p>
         </article>
         <div className="resumo-cartao">

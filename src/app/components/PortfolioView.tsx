@@ -13,6 +13,8 @@ import {
 import { portfolioDemo } from '../data/portfolioDemo';
 import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
 import { VisualizacoesPersonalizadas } from './portfolio/VisualizacoesPersonalizadas';
+import { GraficosAcompanhamento } from './portfolio/GraficosAcompanhamento';
+import { GraficosMapeamento } from './portfolio/GraficosMapeamento';
 import { useAuth } from '../auth/authStore';
 
 type DataSource = 'demo' | 'real';
@@ -90,6 +92,11 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
           <h2 className="text-sm" style={{ color: 'var(--ink-4)' }}>{resumo.rotulo}</h2>
           <p className="mt-1 text-2xl font-semibold" style={{ color: 'var(--success)' }}>{resumo.concluidas} <span className="text-sm font-normal" style={{ color: 'var(--ink-4)' }}>de {resumo.total}</span></p>
         </section>)}
+      </div>
+
+      <div className="space-y-5">
+        <GraficosAcompanhamento projects={filteredProjects}/>
+        <GraficosMapeamento projects={filteredProjects}/>
       </div>
 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={filteredProjects} login={user?.login}

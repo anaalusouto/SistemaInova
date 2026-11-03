@@ -133,9 +133,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     setAberta(id);setEditando(!readOnly&&(!indice.has(id)||Boolean(edicoes[id])));
   };
   return <div className="w-full space-y-4 min-w-0">
-    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Leitura visual por criticidade atual e interesse em desenvolvimento.</p><div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Distribuição das funções pela categoria da coluna Leitura. Criticidade e Interesse continuam disponíveis na tabela e no preenchimento.</p><div className="flex flex-wrap items-center gap-2">
       {!readOnly&&<><button type="button" aria-pressed={edicaoTabela} disabled={ocupado||temAvaliacaoPendente||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button><button type="button" disabled={ocupado||temAvaliacaoPendente||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button></>}
-      <span className="rounded-full border bg-muted px-3 py-2 text-xs text-muted-foreground">Criticidade × interesse</span>
     </div></div>
     <section aria-label="Estados da Matriz" className="space-y-2">
       <ul className="flex flex-wrap gap-2 text-xs">{ESTADOS_MATRIZ.map(e=><li key={e.id} title={e.descricao} className="rounded-lg border bg-card px-3 py-2"><span>{e.rotulo}: </span><strong>{[...estados.values()].filter(estado=>estado===e.id).length}</strong></li>)}</ul>

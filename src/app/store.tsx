@@ -79,6 +79,9 @@ export interface PlanoTrabalho {
 }
 
 export type ProjectExt = Project & {
+  /** Quando false, o total numérico é um fallback legado e não deve virar zero nos gráficos. */
+  budgetApprovedInformado?: boolean;
+  budgetExecutedInformado?: boolean;
   communityId?: number | null;
   /** Sigla padronizada da instituição executora (ex.: ARQMO, COOPAFS). */
   org?: string;

@@ -11,6 +11,7 @@ import { FUNCOES_MATRIZ, validarMatrizPrototipo, type MatrizPrototipoInput } fro
 import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type OrigemPdf } from './diagnostic/importarMatriz';
 import type { RegistroCaderno } from './diagnostic/cadernoCria';
 import { calcularNotaConsolidada } from './diagnostic/notaConsolidada';
+import { ieoAguardandoReavaliacao } from './diagnostic/validadeIeoCaderno';
 
 const mensagemMapeamento=(erro:{message:string})=>erro.message.replace(/diagnóstico/gi,termo=>termo[0]==='D'?'Mapeamento':'mapeamento');
 
@@ -90,10 +91,19 @@ export const listarNotasMapeamentos = createServerFn({ method: 'GET' })
       db.from('diagnostico_produtos').select('id,diagnostico_id').in('diagnostico_id', ids),
     ]);
     if (caderno.error || produtos.error) throw new Error(mensagemMapeamento(caderno.error ?? produtos.error!));
-    return atuais.map(d => ({
-      organizacaoId: d.comunidadeId, diagnosticoId: d.id, dataAplicacao: d.dataAplicacao, versao: d.versao,
-      ...calcularNotaConsolidada((caderno.data ?? []).filter(r => r.diagnostico_id === d.id), (produtos.data ?? []).filter(p => p.diagnostico_id === d.id)),
-    }));
+    return atuais.map(d => {
+      const registros = (caderno.data ?? []).filter(r => r.diagnostico_id === d.id);
+      const calculo = calcularNotaConsolidada(registros, (produtos.data ?? []).filter(p => p.diagnostico_id === d.id));
+      const ieoPendente = ieoAguardandoReavaliacao(d.comunidadeId, registros);
+      return {
+        organizacaoId: d.comunidadeId, diagnosticoId: d.id, dataAplicacao: d.dataAplicacao, versao: d.versao,
+        ...calculo,
+        nota: ieoPendente ? null : calculo.nota,
+        parcial: ieoPendente || calculo.parcial,
+        componentes: ieoPendente ? calculo.componentes.map(c => c.id === 'ieo' ? { ...c, nota: null } : c) : calculo.componentes,
+        ieoAguardandoReavaliacao: ieoPendente,
+      };
+    });
   });
 
 /** Visão Geral: uma linha por Organização, com o resumo do mapeamento mais recente. */

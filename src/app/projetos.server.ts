@@ -218,6 +218,8 @@ function mapProjeto(row: any): ProjectExt {
     // Mesmo sem itens vigentes, não reutilizar o total antigo do projeto.
     ? itensOrcamento.filter(i => i.situacao === 'Ativo').reduce((a, i) => a + n2(i.valor_proposto), 0)
     : n2(row.orcamento_aprovado);
+  const budgetApprovedInformado = itensOrcamento.length > 0 || n2(row.orcamento_aprovado) > 0;
+  const budgetExecutedInformado = notas.length > 0 || itensOrcamento.some((i: any) => i.valor_executado !== null && i.valor_executado !== undefined) || n2(row.orcamento_executado) > 0;
 
   const plano: PlanoTrabalho = {
     problematica: row.problematica ?? undefined, justificativa: row.justificativa ?? undefined,
@@ -243,8 +245,8 @@ function mapProjeto(row: any): ProjectExt {
     id: row.id, name: row.nome, code: row.code, coordinator: row.coordenador ?? '',
     team: (row.projeto_equipe ?? []).map((e: any) => e.nome),
     financier: row.financiador ?? '', objective: row.objetivo ?? '', startDate: row.data_inicio ?? '',
-    endDate: row.data_fim ?? '', status: row.status, progress, budgetApproved,
-    budgetExecuted, riskLevel: row.nivel_risco,
+    endDate: row.data_fim ?? '', status: row.status, progress, budgetApproved, budgetApprovedInformado,
+    budgetExecuted, budgetExecutedInformado, riskLevel: row.nivel_risco,
     goals: metas, financialItems: financeiro,
     contrapartidas: (row.orcamento_contrapartidas ?? []).map(mapContrapartida),
     risks: (row.plano_riscos ?? []).map(mapRisco),
