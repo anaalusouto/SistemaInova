@@ -30,8 +30,9 @@ test('visualização atual mantém dimensões, termômetros, relatos e perguntas
  const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
  assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Todas as dimensões/);
- assert.match(html,/diagnostico-termometro/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
- assert.ok(html.indexOf('Perguntas por dimensão') < html.indexOf('Resumo geral de análise'));
+ assert.match(html,/Média da dimensão/);assert.match(html,/Pontuação registrada \(1–4\)/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.ok(html.indexOf('Gráfico horizontal das perguntas do IEO') < html.indexOf('Painel de síntese do IEO'));
+ assert.ok(html.indexOf('Painel de síntese do IEO') < html.indexOf('Detalhes por dimensão'));
  assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
  assert.deepEqual([...html.matchAll(/data-caderno-codigo="(Q\d\d)"/g)].map(m=>m[1]),dimensoes.flatMap(d=>d.perguntas.map(q=>q.codigo)));
  for(let i=1;i<=5;i++)assert.match(html,new RegExp(`Dimensão ${i} ·`));
