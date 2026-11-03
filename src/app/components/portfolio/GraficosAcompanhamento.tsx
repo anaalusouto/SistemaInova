@@ -131,24 +131,17 @@ export function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
     adicionar(executadoPorAno, ano, mes, nota.valor);
   }
   const anos = [...new Set([...previstoPorAno.keys(), ...executadoPorAno.keys()])].sort((a, b) => a - b);
-  let acumulados: Record<string, string | number | null>[] = [];
-  const totalExecutado = new Map(anos.map(ano => [ano, 0]));
-  const totalPrevisto = new Map(anos.map(ano => [ano, 0]));
-  const inicioExecutado = new Set<number>();
-  const inicioPrevisto = new Set<number>();
-  for (let mes = 1; mes <= 12; mes++) {
-    for (const ano of anos) {
+  const acumulados: { mes: string; previsto: number | null; executado: number | null }[] = [];
+  let totalPrevisto = 0, totalExecutado = 0;
+  let inicioPrevisto = false, inicioExecutado = false;
+  for (let ano = anos[0]; ano <= anos[anos.length - 1]; ano++) {
+    for (let mes = 1; mes <= 12; mes++) {
       const previstoMes = previstoPorAno.get(ano)?.get(mes);
-      if (previstoMes !== undefined) { totalPrevisto.set(ano, (totalPrevisto.get(ano) ?? 0) + previstoMes); inicioPrevisto.add(ano); }
       const executadoMes = executadoPorAno.get(ano)?.get(mes);
-      if (executadoMes !== undefined) { totalExecutado.set(ano, (totalExecutado.get(ano) ?? 0) + executadoMes); inicioExecutado.add(ano); }
+      if (previstoMes !== undefined) { totalPrevisto += previstoMes; inicioPrevisto = true; }
+      if (executadoMes !== undefined) { totalExecutado += executadoMes; inicioExecutado = true; }
+      acumulados.push({ mes: `${MESES[mes - 1]}/${ano}`, previsto: inicioPrevisto ? totalPrevisto : null, executado: inicioExecutado ? totalExecutado : null });
     }
-    const linha: Record<string, string | number | null> = { mes: MESES[mes - 1] };
-    for (const ano of anos) {
-      linha[`previsto_${ano}`] = inicioPrevisto.has(ano) ? totalPrevisto.get(ano)! : null;
-      linha[`executado_${ano}`] = inicioExecutado.has(ano) ? totalExecutado.get(ano)! : null;
-    }
-    acumulados.push(linha);
   }
   return { anos, acumulados, notasSemData, previstosAlocados, previstosSemVinculo, previstosSemPrazo };
 }
@@ -233,8 +226,8 @@ export function GraficosAcompanhamento({ projects, demonstrativo = false, organi
 
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">
     <article className="order-2 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Execução financeira acumulada por mês">
-      <div><h3 className="font-semibold">Execução financeira acumulada · janeiro a dezembro</h3><p className="text-xs text-muted-foreground">O período está identificado por ano na legenda. A previsão mensal é exibida quando registrada no conjunto selecionado.</p></div>
-      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong>{mensal.anos.map(ano=><div key={ano}><p>Previsto · {ano}: {typeof linha[`previsto_${ano}`]==='number'?dinheiro(linha[`previsto_${ano}`] as number):'Não informado'}</p><p>Executado · {ano}: {typeof linha[`executado_${ano}`]==='number'?dinheiro(linha[`executado_${ano}`] as number):'Não informado'}</p></div>)}</div>:null}}/><Legend/>{mensal.anos.map(ano=><Area key={`previsto-${ano}`} type="monotone" dataKey={`previsto_${ano}`} name={`Previsto · ${ano}`} stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.3} connectNulls={false} dot={false}/>) }{mensal.anos.map((ano,i)=><Area key={`executado-${ano}`} type="monotone" dataKey={`executado_${ano}`} name={`Executado · ${ano}`} stroke={i===0?'#294d7a':PALETA[i%PALETA.length]} fill={i===0?'#294d7a':PALETA[i%PALETA.length]} fillOpacity={0.12} connectNulls={false} dot={{r:3}} activeDot={{r:5}}/>)}</AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">Nos dados reais, o previsto soma o total calculado da linha orçamentária (Qtd × unidades × valor unitário), ligado a uma meta, no mês de término previsto da meta ou da última etapa. O executado soma notas pela data de emissão. {mensal.previstosSemVinculo ? `${mensal.previstosSemVinculo} item(ns) previsto(s) sem meta vinculada não entraram; ` : ''}{mensal.previstosSemPrazo ? `${mensal.previstosSemPrazo} item(ns) sem data prevista não entraram; ` : ''}{mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) executado(s) sem data válida não entraram.` : ''}{demonstrativo ? ' No demonstrativo, ambas as séries são fictícias e estão claramente identificadas como simulação.' : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Previsto mensal: Não informado para metas sem itens orçamentários vinculados e datados. Executado mensal: não informado neste recorte.</p>}
+      <div><h3 className="font-semibold">Execução financeira acumulada</h3><p className="text-xs text-muted-foreground">Os valores acumulados seguem a sequência dos meses e anos.</p></div>
+      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong><p>Previsto: {linha.previsto !== null ? dinheiro(linha.previsto) : 'Não informado'}</p><p>Executado: {linha.executado !== null ? dinheiro(linha.executado) : 'Não informado'}</p></div>:null}}/><Legend/><Area type="monotone" dataKey="previsto" name="Previsto" stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.3} dot={false}/><Area type="monotone" dataKey="executado" name="Executado" stroke="#294d7a" fill="#294d7a" fillOpacity={0.12} dot={{r:3}} activeDot={{r:5}}/></AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">Nos dados reais, o previsto soma o total calculado da linha orçamentária (Qtd × unidades × valor unitário), ligado a uma meta, no mês de término previsto da meta ou da última etapa. O executado soma notas pela data de emissão. {mensal.previstosSemVinculo ? `${mensal.previstosSemVinculo} item(ns) previsto(s) sem meta vinculada não entraram; ` : ''}{mensal.previstosSemPrazo ? `${mensal.previstosSemPrazo} item(ns) sem data prevista não entraram; ` : ''}{mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) executado(s) sem data válida não entraram.` : ''}{demonstrativo ? ' No demonstrativo, ambas as séries são fictícias e estão claramente identificadas como simulação.' : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Previsto mensal: Não informado para metas sem itens orçamentários vinculados e datados. Executado mensal: não informado neste recorte.</p>}
     </article>
 
     <article className="order-1 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Orçamento aprovado e executado por organização">

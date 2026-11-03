@@ -342,6 +342,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                                 return indice >= 0 ? `Meta ${indice + 1} — ${p.goals[indice].name}` : 'Meta não vinculada';
                               })()}
                             </span>
+                            {!readOnly && !excluido && <button type="button" onClick={() => setPlanejado(item)} className="text-xs underline mt-1" aria-label={`${item.metaId ? 'Alterar meta' : 'Vincular meta'} de ${item.descricao}`}>{item.metaId ? 'Alterar meta' : 'Vincular meta'}</button>}
                           </td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtd}</td>
                           <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{item.unidade || '—'}</td>

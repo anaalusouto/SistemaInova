@@ -84,11 +84,21 @@ test('previsto mensal vem do item orçamentário vinculado ao prazo da meta, e e
   };
   const serie = graficos.dadosMensais([projeto], false);
   assert.deepEqual(serie.anos, [2026]);
-  assert.equal(serie.acumulados[0].previsto_2026, null);
-  assert.equal(serie.acumulados[1].executado_2026, 250);
-  assert.equal(serie.acumulados[2].previsto_2026, null);
-  assert.equal(serie.acumulados[3].previsto_2026, 1000);
-  assert.equal(serie.acumulados[11].previsto_2026, 1000);
+  assert.equal(serie.acumulados[0].previsto, null);
+  assert.equal(serie.acumulados[1].executado, 250);
+  assert.equal(serie.acumulados[2].previsto, null);
+  assert.equal(serie.acumulados[3].previsto, 1000);
+  assert.equal(serie.acumulados[11].previsto, 1000);
   assert.equal(serie.previstosAlocados, 1);
   assert.equal(serie.previstosSemVinculo, 2);
+});
+
+test('acumula valores em ordem cronológica entre anos', () => {
+  const serie = graficos.dadosMensais([{ goals: [], orcamentoItens: [], orcamentoNotas: [
+    { dataEmissao: '2025-12-01', valor: 100 },
+    { dataEmissao: '2026-01-01', valor: 50 },
+  ] }], false);
+  assert.equal(serie.acumulados[11].executado, 100);
+  assert.equal(serie.acumulados[12].executado, 150);
+  assert.match(serie.acumulados[12].mes, /2026/);
 });
