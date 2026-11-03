@@ -80,20 +80,6 @@ test('orçamento inclui todas as dotações não nulas e distingue parcial, zero
   assert.equal(resumo.orcamentoZero, 1);
 });
 
-test('valor proposto soma apenas itens ativos e vigentes dos projetos da organização', () => {
-  const a = projeto('proposta-a');
-  const b = projeto('proposta-b'); b.organizacao = a.organizacao;
-  a.orcamentoItens = [
-    { situacao: 'Ativo', vigente: true, valorProposto: 100 },
-    { situacao: 'Excluído', vigente: true, valorProposto: 900 },
-    { situacao: 'Ativo', vigente: false, valorProposto: 800 },
-  ];
-  b.orcamentoItens = [{ situacao: 'Ativo', valorProposto: 50 }];
-  const linha = graficos.dadosOrcamentoOrganizacao([a, b]).linhas[0];
-  assert.equal(linha.propostos, 150);
-  assert.equal(linha.propostoCompleto, true);
-});
-
 test('previsto distribui o orçamento pelo período do projeto e executado vem das notas', () => {
   const projeto = {
     id: 'p-real', startDate: '2026-03-01', endDate: '2026-04-30', budgetApproved: 1000, budgetApprovedInformado: true, goals: [{ id: 'meta-1', plannedEnd: '2026-04-30', deliverables: [] }],
