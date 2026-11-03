@@ -138,6 +138,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
       </section>
     </main>
 
+      <div className="min-w-0 self-stretch">
       <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto" aria-label="Painel de síntese do IEO">
         <p className="diagnostico-sobretitulo">{dimensaoId ? 'DIMENSÃO SELECIONADA' : 'VISÃO GERAL DO IEO'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Análise geral'}</h3>
         <p className="mt-3 text-3xl font-bold">{fmtScore(dimensaoId ? resumoSelecionado?.media ?? null : resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p>
@@ -149,6 +150,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
         </section>
         {dimensaoId && <button type="button" className="diagnostico-filtro mt-5 w-full" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
       </aside>
+      </div>
 
     <section className="col-span-1 space-y-3 xl:col-span-2" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
       {DIMENSOES_IEO_CADERNO.map(d => {

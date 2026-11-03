@@ -51,13 +51,13 @@ test('avanço inclui todas as organizações com ao menos uma medida, sem zeros 
   assert.equal(linhas.find(l => l.id === 'org-financeiro').percentualFinanceiro, 50);
 });
 
-test('usa o proposto como estimativa apenas quando falta execução', () => {
+test('mostra execução indisponível quando faltam dados em algum projeto', () => {
   const estimado = projeto('estimado', { approved: 200, executed: 0, executedKnown: false });
   const real = projeto('real', { approved: 100, executed: 0, executedKnown: true });
   real.organizacao = estimado.organizacao;
   const linha = graficos.dadosAvanco([estimado, real])[0];
   assert.equal(linha.projetosEstimados, 1);
-  assert.equal(linha.percentualFinanceiro, 200 / 300 * 100);
+  assert.equal(linha.percentualFinanceiro, null);
   assert.equal(linha.percentualAtividades, 50);
 });
 
@@ -78,6 +78,20 @@ test('orçamento inclui todas as dotações não nulas e distingue parcial, zero
   assert.equal(parcial.executados, null);
   assert.equal(resumo.semOrcamento, 1);
   assert.equal(resumo.orcamentoZero, 1);
+});
+
+test('valor proposto soma apenas itens ativos e vigentes dos projetos da organização', () => {
+  const a = projeto('proposta-a');
+  const b = projeto('proposta-b'); b.organizacao = a.organizacao;
+  a.orcamentoItens = [
+    { situacao: 'Ativo', vigente: true, valorProposto: 100 },
+    { situacao: 'Excluído', vigente: true, valorProposto: 900 },
+    { situacao: 'Ativo', vigente: false, valorProposto: 800 },
+  ];
+  b.orcamentoItens = [{ situacao: 'Ativo', valorProposto: 50 }];
+  const linha = graficos.dadosOrcamentoOrganizacao([a, b]).linhas[0];
+  assert.equal(linha.propostos, 150);
+  assert.equal(linha.propostoCompleto, true);
 });
 
 test('previsto distribui o orçamento pelo período do projeto e executado vem das notas', () => {
@@ -111,4 +125,18 @@ test('acumula valores em ordem cronológica entre anos', () => {
   assert.equal(serie.acumulados[11].executado, 100);
   assert.equal(serie.acumulados[12].executado, 150);
   assert.match(serie.acumulados[12].mes, /2026/);
+});
+
+test('prazos incluem nomes das etapas apenas no recorte de um projeto', () => {
+  const p = { goals: [{ deliverables: [
+    { name: 'Compra de equipamentos', plannedEnd: '2026-11-10', activities: [] },
+    { name: 'Capacitação', plannedEnd: null, activities: [] },
+  ] }] };
+  const data = new Date(2026, 10, 3);
+  const unico = graficos.dadosPrazos([p], data);
+  assert.deepEqual(unico.data.find(f => f.faixa === 'Até 30 dias').etapas, ['Compra de equipamentos']);
+  assert.deepEqual(unico.data.find(f => f.faixa === 'Sem prazo').etapas, ['Capacitação']);
+  const varios = graficos.dadosPrazos([p, p], data);
+  assert.equal(varios.data.find(f => f.faixa === 'Até 30 dias').quantidade, 2);
+  assert.deepEqual(varios.data.find(f => f.faixa === 'Até 30 dias').etapas, []);
 });

@@ -13,8 +13,8 @@ export function pontosMapeamento(projetos: ProjectExt[], notas: NotaMapeamentoGr
     if (nota?.nota == null || !Number.isFinite(nota.nota) || nota.nota < 1 || nota.nota > 4 || y === null) return [];
     return [{
       id: p.id,
-      name: `${p.code} · ${p.name}`,
-      projeto: `${p.code} · ${p.name}`,
+      name: p.name,
+      projeto: p.name,
       organizacao: p.organizacao?.nome || p.org || 'Não informado',
       organizacaoId: p.organizacao?.id ?? null,
       x: nota.nota,
