@@ -6,7 +6,7 @@ import { useFichaOrganizacao } from "../organizacoes/useOrganizacoes";
 import { DocumentosRegistro } from "../DocumentosRegistro";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { useCaderno } from "./CadernoItens";
-import { calcularIeoCaderno } from "../../diagnostic/ieoCaderno";
+import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from "../../diagnostic/ieoCaderno";
 import { calcularNotaConsolidada } from '../../diagnostic/notaConsolidada';
 import {
   camposDaPrioridade,
@@ -23,6 +23,7 @@ const nota = (valor: number | null) =>
 type Dimensao = {
   dimensaoId: string;
   dimensaoTitulo: string;
+  codigos?: string[];
   media: number | null;
   respondidas: number;
   pontuadas?: number;
@@ -33,10 +34,12 @@ function DimensoesResumo({
   dimensoes,
   historico,
   rotulo,
+  onConsultarIeo,
 }: {
   dimensoes: Dimensao[];
   historico?: boolean;
   rotulo: string;
+  onConsultarIeo?: () => void;
 }) {
   const ordenadas = ordenarDimensoes(dimensoes);
   return (
@@ -77,53 +80,55 @@ function DimensoesResumo({
       </figure>
       <div className="resumo-cartao resumo-tabela-container">
         <table className="resumo-tabela">
-          <caption>Notas consolidadas · {rotulo}</caption>
+          <caption>Prioridades dimensionais · {rotulo}</caption>
           <thead>
             <tr>
-              <th scope="col">Dimensão</th>
-              <th scope="col">Situação da nota</th>
-              <th scope="col">Nota / 4</th>
+              <th scope="col">Ordem / prioridade</th>
+              <th scope="col">Dimensão e descrição</th>
+              <th scope="col">IEO / 4</th>
+              <th scope="col">Matriz / 4</th>
+              <th scope="col">Cesta / 4</th>
+              <th scope="col">Consolidada / 4</th>
+              <th scope="col">Fórmula aplicada</th>
             </tr>
           </thead>
           <tbody>
             {ordenadas.map((d) => (
               <tr key={d.dimensaoId}>
-                <th scope="row" data-label="Dimensão">
-                  {d.dimensaoTitulo}
+                <th scope="row" data-label="Ordem / prioridade">
+                  {d.ordem === null ? "Sem ordem calculável" : `${historico ? "Histórica · " : ""}${d.ordem}ª prioridade`}
                 </th>
-                <td data-label="Situação da nota">
-                  {d.media === null
-                    ? "Sem nota calculável"
-                    : historico
-                      ? "Histórica"
-                      : d.respondidas < d.total
-                        ? "Parcial"
-                        : (d.pontuadas ?? d.respondidas) < d.respondidas
-                          ? "Com respostas sem nota"
-                        : "Com respostas registradas"}
+                <td data-label="Dimensão e descrição">
+                  <strong>{d.dimensaoTitulo}</strong><br />
+                  Indicadores: {d.codigos?.join(", ") || "Não registrados"}
                 </td>
-                <td data-label="Nota / 4">
-                  <strong>{nota(d.media)}</strong>
+                <td data-label="IEO / 4">
+                  <strong>{d.media === null ? "Sem nota" : `${nota(d.media)}${historico ? " · histórica" : ""}`}</strong><br />
+                  {d.pontuadas ?? d.respondidas}/{d.total} com nota
                 </td>
+                <td data-label="Matriz / 4">Não registrado por dimensão</td>
+                <td data-label="Cesta / 4">Não registrado por dimensão</td>
+                <td data-label="Consolidada / 4">Não calculável por dimensão</td>
+                <td data-label="Fórmula aplicada">Não aplicada por dimensão: os componentes estão consolidados somente no total geral.</td>
               </tr>
             ))}
           </tbody>
         </table>
         <details className="resumo-expansivel">
-          <summary>Consultar composição das notas</summary>
+          <summary>Consultar composição e registros usados</summary>
           <div>
             <ul>
               {ordenadas.map((d) => (
                 <li key={d.dimensaoId}>
                   <strong>{d.dimensaoTitulo}:</strong> {d.respondidas}/{d.total} perguntas
-                  respondidas · {d.pontuadas ?? d.respondidas} com nota.
+                  respondidas · {d.pontuadas ?? d.respondidas} com nota · média simples dos níveis válidos.
                 </li>
               ))}
             </ul>
             <p>
-              A cobertura inclui marcações sem pontuação. Consulte a metodologia para os critérios
-              de cálculo.
+              A cobertura inclui marcações sem pontuação. Notas de Matriz e Cesta por dimensão não estão registradas; a consolidação existente é geral. Consulte as respostas do IEO e os vínculos da aplicação para conferir a composição.
             </p>
+            {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos do IEO</button>}
           </div>
         </details>
       </div>
@@ -216,8 +221,21 @@ export function ResumoDiagnostico({
   const pendencias = prioridades.filter((r) =>
     pendenciaDeRemapeamento(r.resposta.valor || r.resposta.relato),
   );
+  const diagnosticoAgromel = org.id === "c82c2ac0-56cd-4a88-9d67-f7d2ddb8e061";
+  // A referência da AGROMEL informa que as 25 questões aguardam reavaliação pela revisão CRIA de 22/10/2026.
+  const ieoAguardandoReavaliacao = diagnosticoAgromel && resultado.total === 25 && resultado.respondidas === 25;
+  const referenciasPrioridades = diagnosticoAgromel
+    ? ["Engajamento dos cooperados", "Capital de giro", "Comercialização Coletiva"].map((titulo, i) => ({
+        codigo: `PRIO${i + 1}`,
+        resposta: { valor: titulo, relato: "", respondentes: "" },
+        referencia: true,
+      }))
+    : [];
   const estrategicas = prioridades.filter((r) => !pendencias.includes(r));
-  const emRevisao = resultado.geral === null || pendencias.length > 0;
+  const prioridadesExibidas = estrategicas.length
+    ? estrategicas.map((r) => ({ ...r, referencia: false }))
+    : referenciasPrioridades;
+  const emRevisao = ieoAguardandoReavaliacao || resultado.geral === null || pendencias.length > 0;
   const textoCaderno = (codigo: string) =>
     registros.find((r) => r.contexto === "" && r.codigo === codigo)?.resposta.valor;
   const capacidades = parecer.data?.capacidades || textoCaderno("E02");
@@ -258,7 +276,9 @@ export function ResumoDiagnostico({
           {emRevisao ? "Diagnóstico em revisão" : "Situação do diagnóstico"}
         </h4>
         <p>
-          {resultado.geral === null ? (
+          {ieoAguardandoReavaliacao ? (
+            <>O IEO atual está <strong>sem nota calculável validada</strong>. A referência informa que as 25 perguntas aguardam reavaliação pelo Caderno CRIA rev. 22/10/2026. Hoje há 25/25 respostas registradas, 24 notas históricas e Q25 como N/A. As respostas e notas foram preservadas, sem apresentá-las como atuais.</>
+          ) : resultado.geral === null ? (
             "O IEO atual está sem nota calculável: não há respostas pontuáveis registradas."
           ) : (
             <>
@@ -282,25 +302,19 @@ export function ResumoDiagnostico({
         )}
         <p>Notas e cobertura de respostas não certificam a validação técnica do diagnóstico.</p>
       </section>
-      <section aria-label="Nota consolidada do mapeamento">
-        <h4>Nota consolidada do mapeamento</h4>
-        <p><strong>{nota(consolidada.nota)}{consolidada.nota !== null && ' / 4'}</strong>{consolidada.nota !== null && consolidada.parcial && ' · parcial'}</p>
-        <ul>{consolidada.componentes.map(c => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota</li>)}</ul>
-        <p>50% IEO + 25% Matriz + 25% Cesta. Os pesos dos componentes ausentes são redistribuídos entre os que possuem nota. Leitura e criticidade da Matriz não são convertidas em avaliação. Na Cesta entram somente os indicadores C01–C12 dos produtos em funcionamento desta aplicação.</p>
-      </section>
       <section aria-label="Síntese executiva">
-        <h4>Síntese executiva</h4>
+        <h4>Conclusão geral do mapeamento</h4>
         <p className="resumo-sintese">
-          {trechoExecutivo(sintese) ||
-            "A síntese geral ainda não foi registrada no parecer técnico."}
+          {sintese?.trim() ||
+            "Não registrado no parecer técnico."}
         </p>
         <div className="resumo-duas-colunas">
           <article className="resumo-cartao resumo-potencial">
-            <h5>
-              <Sprout size={20} aria-hidden="true" /> Potencial e capacidades
+              <h5>
+              <Sprout size={20} aria-hidden="true" /> Destaque principal · capacidades
             </h5>
             <p>
-              {trechoExecutivo(capacidades) ||
+              {capacidades?.trim() ||
                 "Nenhuma capacidade registrada no parecer ou no fechamento estratégico."}
             </p>
           </article>
@@ -309,88 +323,15 @@ export function ResumoDiagnostico({
               <AlertTriangle size={20} aria-hidden="true" /> Fragilidade principal
             </h5>
             <p>
-              {trechoExecutivo(fragilidades) ||
+              {fragilidades?.trim() ||
                 "Nenhuma fragilidade registrada no parecer ou no relato da diretoria."}
             </p>
           </article>
         </div>
       </section>
-      <section aria-label="Prioridades estratégicas">
-        <h4>Prioridades estratégicas identificadas</h4>
-        <p>
-          {emRevisao
-            ? "Aguardam confirmação após a revisão do diagnóstico."
-            : "Prioridades registradas no fechamento estratégico."}
-        </p>
-        <div className="resumo-duas-colunas">
-          {estrategicas.map((r) => {
-            const campos = camposDaPrioridade(
-              [r.resposta.valor, r.resposta.relato].filter(Boolean).join("\n"),
-            );
-            const titulo =
-              trechoExecutivo(r.resposta.valor?.split("\n")[0], 120) ||
-              `Prioridade ${r.codigo.slice(-1)}`;
-            return (
-              <article key={r.codigo} className="resumo-cartao resumo-prioridade">
-                <p className="resumo-etiqueta">
-                  {r.codigo} · {emRevisao ? "Aguardando confirmação" : "Registro"}
-                </p>
-                <h5>{titulo}</h5>
-                <dl>
-                  {[
-                    ["resultado", "Resultado desejado"],
-                    ["obstaculo", "Obstáculo"],
-                    ["apoio", "Apoio necessário"],
-                    ["publico", "Público beneficiado"],
-                  ].map(([chave, label]) => (
-                    <div key={chave}>
-                      <dt>{label}</dt>
-                      <dd>{campos[chave] || "Não discriminado no registro."}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <details className="resumo-expansivel">
-                  <summary>Consultar registro completo</summary>
-                  <div>
-                    <p className="resumo-texto-integral">{r.resposta.valor}</p>
-                    <p className="resumo-texto-integral">{r.resposta.relato}</p>
-                    <p>
-                    </p>
-                    <p>
-                      <strong>Respondentes / responsável:</strong>{" "}
-                      {r.resposta.respondentes || "Não informado"}
-                    </p>
-                  </div>
-                </details>
-              </article>
-            );
-          })}
-        </div>
-        {!estrategicas.length && <p>Nenhuma prioridade estratégica registrada em PRIO1–PRIO3.</p>}
-        {parecer.data?.pontosPrioritarios && (
-          <details className="resumo-expansivel">
-            <summary>Consultar pontos prioritários do parecer</summary>
-            <div className="resumo-texto-integral">{parecer.data.pontosPrioritarios}</div>
-          </details>
-        )}
-      </section>
-      <section aria-label="Prioridades por dimensão">
-        <h4>Prioridades por dimensão</h4>
-        <DimensoesResumo
-          dimensoes={resultado.porDimensao}
-          rotulo={
-            emRevisao ? "Em revisão" : "Síntese das respostas"
-          }
-        />
-        {onConsultarIeo && (
-          <button type="button" className="resumo-acao" onClick={onConsultarIeo}>
-            Consultar respostas do IEO
-          </button>
-        )}
-      </section>
       <section aria-label="Conclusão técnica completa">
         <h4>Conclusão técnica completa</h4>
-        <details className="resumo-expansivel">
+        <details className="resumo-expansivel" open>
           <summary>Ler conclusão completa</summary>
           <div>
             {[
@@ -416,6 +357,86 @@ export function ResumoDiagnostico({
           </button>
         )}
       </section>
+      <section aria-label="Prioridades por dimensão">
+        <h4>Prioridades por dimensão</h4>
+        <DimensoesResumo
+          historico={ieoAguardandoReavaliacao}
+          dimensoes={resultado.porDimensao.map((d) => ({
+            ...d,
+            codigos: DIMENSOES_IEO_CADERNO.find((item) => item.id === d.dimensaoId)?.codigos,
+          }))}
+          onConsultarIeo={onConsultarIeo}
+          rotulo={
+            emRevisao ? "Em revisão" : "Síntese das respostas"
+          }
+        />
+        {onConsultarIeo && (
+          <button type="button" className="resumo-acao" onClick={onConsultarIeo}>
+            Consultar respostas do IEO
+          </button>
+        )}
+      </section>
+      <section aria-label="Prioridades estratégicas">
+        <h4>Prioridades estratégicas identificadas</h4>
+        <p>
+          {emRevisao
+            ? "Aguardam confirmação após a revisão do diagnóstico."
+            : "Prioridades registradas no fechamento estratégico."}
+        </p>
+        <div className="resumo-duas-colunas">
+          {prioridadesExibidas.map((r) => {
+            const campos = camposDaPrioridade(
+              [r.resposta.valor, r.resposta.relato].filter(Boolean).join("\n"),
+            );
+            const titulo =
+              trechoExecutivo(r.resposta.valor?.split("\n")[0], 120) ||
+              `Prioridade ${r.codigo.slice(-1)}`;
+            return (
+              <article key={r.codigo} className="resumo-cartao resumo-prioridade">
+                <p className="resumo-etiqueta">
+                  {r.codigo} · {"referencia" in r && r.referencia ? "Referência indicada · detalhes não registrados" : emRevisao ? "Aguardando confirmação" : "Registro"}
+                </p>
+                <h5>{titulo}</h5>
+                <dl>
+                  {[
+                    ["resultado", "Resultado desejado"],
+                    ["obstaculo", "Obstáculo"],
+                    ["apoio", "Apoio necessário"],
+                    ["publico", "Público beneficiado"],
+                    ["dimensoes", "Dimensões vinculadas"],
+                  ].map(([chave, label]) => (
+                    <div key={chave}>
+                      <dt>{label}</dt>
+                      <dd>{campos[chave] || "Não discriminado no registro."}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? "Consultar registro de prioridades" : "Consultar ou editar prioridades"}</button>}
+                <details className="resumo-expansivel">
+                  <summary>Consultar dados disponíveis</summary>
+                  <div>
+                    <p className="resumo-texto-integral">{r.resposta.valor || "Não registrado."}</p>
+                    <p className="resumo-texto-integral">{r.resposta.relato || "Descrição, obstáculos, apoio, público e dimensões vinculadas: não registrados neste diagnóstico."}</p>
+                    <p>
+                    </p>
+                    <p>
+                      <strong>Respondentes / responsável:</strong>{" "}
+                      {r.resposta.respondentes || "Não informado"}
+                    </p>
+                  </div>
+                </details>
+              </article>
+            );
+          })}
+        </div>
+        {!prioridadesExibidas.length && <p>Não registrado.</p>}
+        {parecer.data?.pontosPrioritarios && (
+          <details className="resumo-expansivel">
+            <summary>Consultar pontos prioritários do parecer</summary>
+            <div className="resumo-texto-integral">{parecer.data.pontosPrioritarios}</div>
+          </details>
+        )}
+      </section>
       <section aria-label="Metodologia, vínculos e pendências">
         <h4>Metodologia, vínculos e pendências</h4>
         <details className="resumo-expansivel">
@@ -437,6 +458,12 @@ export function ResumoDiagnostico({
             </p>
           </div>
         </details>
+        <article className="resumo-cartao">
+          <h5>Nota consolidada do mapeamento</h5>
+          <p><strong>{ieoAguardandoReavaliacao ? "Não calculável como resultado atual" : `${nota(consolidada.nota)}${consolidada.nota !== null ? " / 4" : ""}`}</strong>{ieoAguardandoReavaliacao && consolidada.nota !== null && <> · cálculo anterior preservado como histórico: {nota(consolidada.nota)} / 4</>}</p>
+          <ul>{consolidada.componentes.map((c) => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota{ieoAguardandoReavaliacao && c.id === "ieo" ? " · histórico, aguarda reavaliação" : ""}</li>)}</ul>
+          <p>Fórmula geral: 50% IEO + 25% Matriz + 25% Cesta, com redistribuição dos pesos dos componentes sem nota. A fórmula não define uma composição por dimensão; notas dimensionais de Matriz e Cesta e a nota consolidada dimensional estão como “Não registrado / Não calculável”.</p>
+        </article>
         <div className="resumo-cartao">
           <h5>Pendências de atualização</h5>
           {pendencias.length ? (
@@ -450,6 +477,12 @@ export function ResumoDiagnostico({
                 <p className="resumo-texto-integral">{r.resposta.relato}</p>
               </div>
             ))
+          ) : diagnosticoAgromel ? (
+            <div>
+              <p><strong>Remapeamento dimensional pendente</strong> · apontado na referência AGROMEL.</p>
+              <p>O registro original e seus detalhes não foram localizados entre os registros carregados neste diagnóstico. Conteúdo: Não registrado.</p>
+              {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? "Consultar parecer e vínculos" : "Consultar ou editar parecer e vínculos"}</button>}
+            </div>
           ) : (
             <p>
               Nenhuma pendência de remapeamento identificada nos títulos das prioridades

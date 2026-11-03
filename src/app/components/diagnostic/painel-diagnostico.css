@@ -16,6 +16,7 @@
 .diagnostico-conteudo.diagnostico-conteudo-com-menu { border-top-left-radius: 0; border-top-right-radius: 0; }
 .diagnostico-filtro { border: 1px solid var(--border); border-radius: 999px; padding: 9px 13px; font-size: .75rem; color: var(--ink-3); background: var(--card, #fff); }
 .diagnostico-filtro[data-active="true"] { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+.painel-matriz .diagnostico-filtro[data-active="true"] { background: var(--card, #fff); border-color: var(--primary); color: var(--primary); }
 .diagnostico-tabela-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
 .diagnostico-tabela { width: 100%; min-width: 1850px; border-collapse: collapse; font-size: .76rem; line-height: 1.6; text-align: left; }
 .diagnostico-tabela.inova-table-cards { min-width: 1850px; }
@@ -113,13 +114,14 @@
 .resumo-barra-trilho { height: 10px; background: #e5eaf0; border-radius: 4px; }
 .resumo-barra-trilho span { display: block; height: 100%; background: #315d84; border-radius: 4px; }
 .resumo-historico .resumo-barra-trilho span { background: #966539; }
-.resumo-tabela-container { max-width: 100%; }
-.resumo-tabela { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .85rem; }
+.resumo-tabela-container { max-width: 100%; overflow-x: auto; }
+.resumo-tabela { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .85rem; }
 .resumo-tabela caption { text-align: left; font-weight: 650; color: var(--ink-1, #172b46); margin-bottom: 12px; }
 .resumo-tabela th, .resumo-tabela td { padding: 12px; border-bottom: 1px solid var(--border, #d5dce5); vertical-align: top; overflow-wrap: anywhere; }
 .resumo-tabela thead { background: #f1f5f9; color: #294765; }
-.resumo-tabela th:first-child { width: 48%; }
-.resumo-tabela th:last-child { width: 20%; }
+.resumo-tabela th:first-child { width: 13%; }
+.resumo-tabela th:nth-child(2) { width: 19%; }
+.resumo-tabela th:last-child { width: 23%; }
 .resumo-apoio { display: grid; gap: 24px; }
 .resumo-apoio section { display: grid; gap: 12px; }
 @media screen and (max-width: 640px) {
@@ -127,6 +129,7 @@
   .resumo-cartao, .resumo-situacao { padding: 14px; }
   .resumo-barra-rotulo { flex-direction: column; gap: 2px; }
   .resumo-tabela, .resumo-tabela tbody { display: block; }
+  .resumo-tabela { min-width: 0; }
   .resumo-tabela caption { display: block; }
   .resumo-tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .resumo-tabela tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--border, #d5dce5); }

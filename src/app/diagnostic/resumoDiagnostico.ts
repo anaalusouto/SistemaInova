@@ -16,7 +16,7 @@ export function prioridadesDoCaderno(registros: RegistroCaderno[]) {
 export function camposDaPrioridade(texto: string) {
   const campos: Record<string, string> = {};
   const rotulos =
-    /^(resultado desejado|mudança desejada|obstáculo(?: inicial)?|apoio(?: necessário)?|público(?: beneficiado)?|responsável|prazo)\s*:\s*/gim;
+    /^(resultado desejado|mudança desejada|obstáculo(?: inicial)?|apoio(?: necessário)?|público(?: beneficiado)?|dimensões? vinculadas|responsável|prazo)\s*:\s*/gim;
   const ocorrencias = [...texto.matchAll(rotulos)];
   for (let i = 0; i < ocorrencias.length; i++) {
     const atual = ocorrencias[i];
@@ -31,6 +31,8 @@ export function camposDaPrioridade(texto: string) {
           ? "apoio"
           : /^público/i.test(atual[1])
             ? "publico"
+            : /^dimens/i.test(atual[1])
+              ? "dimensoes"
             : atual[1].toLowerCase();
     campos[chave] = [campos[chave], valor].filter(Boolean).join("\n");
   }
