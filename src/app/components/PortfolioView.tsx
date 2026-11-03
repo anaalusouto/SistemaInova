@@ -1,21 +1,4 @@
 import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  Legend,
-} from 'recharts';
-import { buildKpi } from '../data/mockData';
 import { useStore } from '../store';
 import { PortfolioFilters } from './portfolio/PortfolioFilters';
 import {
@@ -27,16 +10,10 @@ import {
   STATUS_OPTIONS,
   type PortfolioFilterValues,
 } from '../lib/portfolioFilters';
-import { buildFinancialTimeline } from '../lib/financialTimeline';
-import { portfolioDemo, DEMO_REFERENCE_DATE } from '../data/portfolioDemo';
-import { buildDecisionCharts } from '../lib/portfolioDecisions';
+import { portfolioDemo } from '../data/portfolioDemo';
 import { resumoPlanoPortfolio } from '../lib/resumoPlanoPortfolio';
 import { VisualizacoesPersonalizadas } from './portfolio/VisualizacoesPersonalizadas';
 import { useAuth } from '../auth/authStore';
-import { GraficosMapeamento } from './portfolio/GraficosMapeamento';
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
 type DataSource = 'demo' | 'real';
 
@@ -61,23 +38,9 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   };
 
   const filteredProjects = useMemo(() => applyPortfolioFilters(projects, filters), [projects, filters]);
-  const kpiData = buildKpi(filteredProjects);
   const resumoPlano = useMemo(() => resumoPlanoPortfolio(filteredProjects), [filteredProjects]);
-  const timeline = useMemo(() => buildFinancialTimeline(filteredProjects, null), [filteredProjects]);
-
-  const suspended = filteredProjects.filter(p => p.status === 'Suspenso').length;
-  const pieData = [
-    { name: 'Em andamento', value: kpiData.inProgress, color: 'var(--brand)' },
-    { name: 'Concluído',    value: kpiData.concluded,  color: 'var(--success)' },
-    { name: 'Atrasado',     value: kpiData.delayed,    color: 'var(--alert)' },
-    { name: 'Não iniciado', value: kpiData.notStarted, color: 'var(--ink-5)' },
-    ...(suspended > 0 ? [{ name: 'Suspenso', value: suspended, color: 'var(--warning)' }] : []),
-  ];
 
   const selectedExercicio = exercicios.find(e => e.key === filters.exercicioKey);
-  const decisions = useMemo(() => buildDecisionCharts(
-    filteredProjects, source === 'demo' ? new Date(`${DEMO_REFERENCE_DATE}T12:00:00`) : new Date(),
-  ), [filteredProjects, source]);
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-7">
@@ -132,168 +95,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={filteredProjects} login={user?.login}
         onOpenProject={source === 'real' ? onOpenProject : undefined}/>
 
-      <details className="space-y-4 rounded-xl border p-4 sm:p-5 bg-card">
-        <summary className="cursor-pointer font-semibold text-sm">Gráficos de referência</summary>
-      {/* Gráficos predefinidos disponíveis para comparação durante o teste. */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-7 bg-card rounded-xl p-5 border" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <div>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)' }}>
-                Execução Financeira Acumulada
-              </h3>
-              <p style={{ fontSize: '0.73rem', color: 'var(--ink-5)', marginTop: 2 }}>Previsto vs. Realizado</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--ink-5)' }}>
-                <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: 'var(--brand-soft-border)' }} /> Previsto
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--ink-5)' }}>
-                <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: 'var(--brand)' }} /> Executado
-              </span>
-            </div>
-          </div>
-          {timeline.length === 0 ? (
-            <div className="flex items-center justify-center" style={{ height: 180, color: 'var(--ink-5)', fontSize: '0.8rem' }}>
-              Sem itens de orçamento com data reconhecível.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={timeline} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="previsto" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--brand-soft-border)" stopOpacity={0.6} />
-                    <stop offset="95%" stopColor="var(--brand-soft-border)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="executado" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--brand)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="var(--brand)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-2)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--ink-5)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: 'var(--ink-5)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000000).toFixed(1)}M`} />
-                <Tooltip formatter={(v: number) => fmt(v)} contentStyle={{ borderRadius: 8, border: '1px solid var(--line-1)', fontSize: 12 }} />
-                <Area name="Previsto" type="monotone" dataKey="previsto" stroke="var(--brand-soft-border)" strokeWidth={1.5} fill="url(#previsto)" dot={false} />
-                <Area name="Executado" type="monotone" dataKey="executado" stroke="var(--brand)" strokeWidth={2} fill="url(#executado)" dot={{ fill: 'var(--brand)', r: 3 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="bg-card rounded-xl p-5 border flex-1" style={{ borderColor: 'var(--border)' }}>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink-1)', marginBottom: 12 }}>
-              Status dos Projetos
-            </h3>
-            <p className="text-xs mb-3" style={{ color: 'var(--ink-5)' }}>Situação registrada no cadastro de cada projeto.</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <PieChart width={170} height={170}>
-                <Pie data={pieData} cx={80} cy={80} innerRadius={48} outerRadius={75} dataKey="value" strokeWidth={0}>
-                  {pieData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-              <div className="flex flex-col gap-1.5 flex-1">
-                {pieData.map(d => (
-                  <div key={d.name} className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--ink-3)' }}>
-                      <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                      {d.name}
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-1)' }}>{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {source === 'real' && <GraficosMapeamento projects={filteredProjects}/>}
-        <ChartCard title="Orçamento por organização" description="As 8 maiores dotações. Compare o gasto realizado com o orçamento total para planejar recursos.">
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={decisions.budgets} layout="vertical" margin={{ left: 5, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" tickFormatter={moneyAxis} tick={axisTick} />
-              <YAxis type="category" dataKey="name" width={110} tick={axisTick} />
-              <Tooltip formatter={(value: number) => fmt(value)} contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Orçamento" dataKey="previsto" fill="var(--brand-soft-border)" radius={[0, 4, 4, 0]} />
-              <Bar name="Executado" dataKey="executado" fill="var(--brand)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-        <ChartCard title="Avanço de Etapas × execução financeira" description="Etapas concluídas ÷ total de etapas × 100. A conclusão da etapa segue o status de suas atividades. As 8 maiores diferenças em pontos percentuais; projetos sem etapas ficam fora da comparação.">
-          {decisions.progress.length === 0 ? <ChartEmpty /> : <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={decisions.progress} layout="vertical" margin={{ left: 5, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" domain={[0, 'dataMax']} tickFormatter={v => `${v}%`} tick={axisTick} />
-              <YAxis type="category" dataKey="name" width={110} tick={axisTick} />
-              <Tooltip formatter={(value: number) => `${value}%`} contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Avanço de Etapas" dataKey="etapas" fill="var(--success)" radius={[0, 4, 4, 0]} />
-              <Bar name="Orçamento executado" dataKey="financeiro" fill="var(--brand)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>}
-        </ChartCard>
-        <ChartCard title="Riscos em aberto por organização" description="Organizações em ordem alfabética, com quantidade de riscos e distribuição por criticidade. Riscos encerrados ficam fora da contagem.">
-          {decisions.risks.length === 0 ? <ChartEmpty text="Nenhum risco em aberto neste recorte." /> : <ResponsiveContainer width="100%" height={Math.max(300, decisions.risks.length * 45)}>
-            <BarChart data={decisions.risks} layout="vertical" margin={{ left: 5, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-              <XAxis type="number" allowDecimals={false} tick={axisTick} />
-              <YAxis type="category" dataKey="name" width={110} tick={axisTick} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar name="Baixo" dataKey="baixo" stackId="risks" fill="var(--success)" />
-              <Bar name="Médio" dataKey="medio" stackId="risks" fill="var(--warning)" />
-              <Bar name="Alto" dataKey="alto" stackId="risks" fill="var(--alert)" />
-              <Bar name="Crítico" dataKey="critico" stackId="risks" fill="var(--danger)" radius={[0, 4, 4, 0]} />
-              {decisions.risks.some(r => r.semNivel > 0) && <Bar name="Sem classificação" dataKey="semNivel" stackId="risks" fill="var(--ink-5)" />}
-            </BarChart>
-          </ResponsiveContainer>}
-          {decisions.risks.length > 0 && <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-xs"><caption className="sr-only">Quantidade de riscos por organização e criticidade</caption><thead><tr>{['Organização','Baixo','Médio','Alto','Crítico','Sem classificação','Total'].map(t=><th key={t} className="p-2" scope="col">{t}</th>)}</tr></thead><tbody>{decisions.risks.map(r=><tr key={r.name} className="border-t"><th scope="row" className="p-2">{r.name}</th>{[r.baixo,r.medio,r.alto,r.critico,r.semNivel,r.total].map((n,i)=><td key={i} className="p-2">{n}</td>)}</tr>)}</tbody></table></div>}
-        </ChartCard>
-        <ChartCard title="Categorias dos riscos em aberto" description="A mesma quantidade de riscos do quadro por organização, distribuída por categoria.">
-          {decisions.riskCategories.length === 0 ? <ChartEmpty text="Nenhum risco em aberto neste recorte."/> : <>
-            <ResponsiveContainer width="100%" height={300}><PieChart><Pie data={decisions.riskCategories} dataKey="value" nameKey="name" innerRadius={65} outerRadius={100} strokeWidth={0}>{decisions.riskCategories.map((r,i)=><Cell key={r.name} fill={['var(--brand)','var(--success)','var(--warning)','var(--alert)','var(--ink-5)'][i%5]}/>)}</Pie><Tooltip contentStyle={tooltipStyle}/><Legend wrapperStyle={{fontSize:12}}/></PieChart></ResponsiveContainer>
-            <ul className="flex flex-wrap gap-3 text-xs">{decisions.riskCategories.map(r=><li key={r.name}>{r.name}: <strong>{r.value}</strong></li>)}</ul>
-          </>}
-        </ChartCard>
-        <ChartCard title="Prazos dos projetos não concluídos" description="Organize a agenda de acompanhamento pelos vencimentos. Prazos informados só com mês e ano usam o último dia do mês.">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={decisions.deadlines} margin={{ left: 0, right: 10, bottom: 22 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="name" tick={axisTick} angle={-20} textAnchor="end" interval={0} height={58} />
-              <YAxis allowDecimals={false} tick={axisTick} width={30} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar name="Projetos" dataKey="projetos" radius={[4, 4, 0, 0]}>
-                {decisions.deadlines.map((row, i) => <Cell key={row.name} fill={i === 0 ? 'var(--danger)' : i === 1 ? 'var(--alert)' : 'var(--brand)'} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-      </details>
       </>}
     </div>
   );
-}
-
-const axisTick = { fontSize: 11, fill: 'var(--ink-4)' };
-const tooltipStyle = { borderRadius: 8, border: '1px solid var(--border)', fontSize: 12, background: 'var(--surface-1)', color: 'var(--ink-1)' };
-const moneyAxis = (v: number) => v >= 1000000 ? `R$ ${(v / 1000000).toFixed(1)} mi` : `R$ ${(v / 1000).toFixed(0)} mil`;
-
-function ChartCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  return <section className="bg-card rounded-xl p-4 sm:p-5 border min-w-0" style={{ borderColor: 'var(--border)' }}>
-    <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink-1)' }}>{title}</h2>
-    <p className="text-xs mt-1 mb-4" style={{ color: 'var(--ink-5)', lineHeight: 1.6 }}>{description}</p>
-    {children}
-  </section>;
-}
-
-function ChartEmpty({ text = 'Sem dados suficientes para este gráfico.' }: { text?: string }) {
-  return <div className="h-64 flex items-center justify-center text-xs" style={{ color: 'var(--ink-4)' }}>{text}</div>;
 }

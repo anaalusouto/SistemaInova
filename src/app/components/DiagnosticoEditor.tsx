@@ -119,7 +119,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
 
   return (
     <div className={`diagnostico-painel diagnostico-editor ${incorporado ? 'flex flex-col min-w-0' : 'flex flex-col h-full min-h-0 overflow-hidden'}`}>
-      <div className={`flex min-w-0 flex-col flex-shrink-0 border-b ${incorporado ? '' : 'gap-3 px-3 sm:px-7 pt-4 pb-0'}`} style={{ borderColor: 'var(--border)' }}>
+      <div className={`flex min-w-0 flex-col flex-shrink-0 ${incorporado ? '' : 'gap-3 px-3 sm:px-7 pt-4 pb-0'}`}>
         {!incorporado && <nav aria-label="Caminho do mapeamento" className="flex flex-wrap items-center gap-2 text-xs">
           <button onClick={() => navegarSemPendencias(haPendencias, onBack)} className="flex items-center gap-1 hover:underline" style={{ color: 'var(--ink-4)' }}><ArrowLeft size={12} /> {rotuloVoltar}</button>
           <span aria-hidden>›</span><span aria-current="page">{tab === 'parecer' ? 'Parecer Técnico' : TABS.find(t => t.id === tab)?.label}</span>
