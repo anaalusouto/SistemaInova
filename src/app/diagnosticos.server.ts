@@ -493,9 +493,11 @@ export const criarCategoriaProduto = createServerFn({ method: 'POST' })
   });
 
 export const salvarDadosCestaProduto = createServerFn({ method: 'POST' })
-  .validator((d: { produtoId: string; categoriaId: string | null; unidadeMedida: string | null; safra: SafraProduto; canaisComerciais: CanalComercialProduto[]; etapasEconomicas: EtapaEconomicaProduto[] }) => d)
+  .validator((d: { produtoId: string; nome?: string; cadeia?: string | null; categoriaId: string | null; unidadeMedida: string | null; safra: SafraProduto; canaisComerciais: CanalComercialProduto[]; etapasEconomicas: EtapaEconomicaProduto[] }) => d)
   .handler(async ({ data }): Promise<Produto> => {
     await exigirProdutoEditavel(data.produtoId);
+    if (data.nome !== undefined && (typeof data.nome !== 'string' || !data.nome.trim() || data.nome.length > 500)) throw new Error('Informe um nome de produto/serviço com até 500 caracteres.');
+    if (data.cadeia !== undefined && data.cadeia !== null && (typeof data.cadeia !== 'string' || data.cadeia.length > 500)) throw new Error('Revise a cadeia/tipo do produto.');
     if (!['nao_informada','ano_inteiro','sazonal'].includes(data.safra.estado) || !Array.isArray(data.safra.intervalos) || data.safra.intervalos.some(i => !Number.isInteger(i.inicio) || !Number.isInteger(i.fim) || i.inicio < 1 || i.inicio > 12 || i.fim < 1 || i.fim > 12)) throw new Error('Revise a safra e os meses informados.');
     if (data.safra.estado !== 'sazonal' && data.safra.intervalos.length) throw new Error('Informe intervalos somente para safra sazonal.');
     if (!Array.isArray(data.canaisComerciais) || !Array.isArray(data.etapasEconomicas) || JSON.stringify(data).length > 100000) throw new Error('Dados da Cesta invÃ¡lidos ou extensos demais.');
@@ -510,7 +512,7 @@ export const salvarDadosCestaProduto = createServerFn({ method: 'POST' })
     ];
     if (finiteValues.some(v => v !== null && (!Number.isFinite(v) || v < 0))) throw new Error('Valores devem ser não negativos ou permanecer não informados.');
     const db = await getAdmin();
-    const { data: row, error } = await db.from('diagnostico_produtos').update({ categoria_id: data.categoriaId, unidade_medida: data.unidadeMedida?.trim() || null, safra: data.safra, canais_comerciais: data.canaisComerciais, etapas_economicas: data.etapasEconomicas, atualizado_em: new Date().toISOString() }).eq('id', data.produtoId).select('*').single();
+    const { data: row, error } = await db.from('diagnostico_produtos').update({ ...(data.nome !== undefined ? { nome: data.nome.trim() } : {}), ...(data.cadeia !== undefined ? { cadeia: data.cadeia?.trim() || null } : {}), categoria_id: data.categoriaId, unidade_medida: data.unidadeMedida?.trim() || null, safra: data.safra, canais_comerciais: data.canaisComerciais, etapas_economicas: data.etapasEconomicas, atualizado_em: new Date().toISOString() }).eq('id', data.produtoId).select('*').single();
     if (error) throw new Error(mensagemMapeamento(error));
     return mapProdutoRow(row);
   });
