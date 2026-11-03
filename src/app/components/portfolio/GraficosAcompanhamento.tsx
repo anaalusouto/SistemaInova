@@ -86,8 +86,13 @@ function dadosPrazos(projects: ProjectExt[], referencia: Date) {
   return { data, etapasNaoConcluidas };
 }
 
-function dadosMensais(projects: ProjectExt[]) {
+function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
   const porAno = new Map<number, Map<number, number>>();
+  const previstoMes = new Map<number, number>();
+  if (demonstrativo) for (const p of projects) for (const item of p.financialItems) {
+    const match = /^(\d{2})\/2026$/.exec(item.date ?? '');
+    if (match && Number.isFinite(item.plannedValue)) { const mes=Number(match[1]); previstoMes.set(mes,(previstoMes.get(mes)??0)+item.plannedValue); }
+  }
   let notasSemData = 0;
   for (const p of projects) for (const nota of p.orcamentoNotas ?? []) {
     const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(nota.dataEmissao ?? '');
@@ -102,8 +107,10 @@ function dadosMensais(projects: ProjectExt[]) {
   let acumulados: Record<string, string | number | null>[] = [];
   const totais = new Map(anos.map(ano => [ano, 0]));
   const inicioComRegistro = new Set<number>();
+  let previstoAcumulado = 0;
   for (let mes = 1; mes <= 12; mes++) {
-    const linha: Record<string, string | number | null> = { mes: MESES[mes - 1], previsto: null };
+    if (previstoMes.has(mes)) previstoAcumulado += previstoMes.get(mes)!;
+    const linha: Record<string, string | number | null> = { mes: MESES[mes - 1], previsto: previstoMes.size ? previstoAcumulado : null };
     for (const ano of anos) {
       const valorMes = porAno.get(ano)?.get(mes);
       if (valorMes !== undefined) { totais.set(ano, (totais.get(ano) ?? 0) + valorMes); inicioComRegistro.add(ano); }
@@ -157,9 +164,9 @@ function dadosRiscos(projects: ProjectExt[]) {
   return { organizacoes, categorias, porOrganizacao, porCategoria, porCriticidade, semOrganizacaoId };
 }
 
-export function GraficosAcompanhamento({ projects }: { projects: ProjectExt[] }) {
+export function GraficosAcompanhamento({ projects, demonstrativo = false }: { projects: ProjectExt[]; demonstrativo?: boolean }) {
   const avanco = useMemo(() => dadosAvanco(projects), [projects]);
-  const mensal = useMemo(() => dadosMensais(projects), [projects]);
+  const mensal = useMemo(() => dadosMensais(projects, demonstrativo), [projects, demonstrativo]);
   const orcamento = useMemo(() => dadosOrcamentoOrganizacao(projects), [projects]);
   const riscos = useMemo(() => dadosRiscos(projects), [projects]);
   const prazos = useMemo(() => dadosPrazos(projects, new Date()), [projects]);
@@ -187,8 +194,8 @@ export function GraficosAcompanhamento({ projects }: { projects: ProjectExt[] })
 
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">
     <article className="order-2 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Execução financeira acumulada por mês">
-      <div><h3 className="font-semibold">Execução financeira acumulada · janeiro a dezembro</h3><p className="text-xs text-muted-foreground">O período está identificado por ano na legenda. A distribuição mensal do orçamento previsto não existe nos registros atuais; não é estimada.</p></div>
-      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong><p>Previsto: Não informado</p>{mensal.anos.map(ano=><p key={ano}>Executado{mensal.anos.length>1?` · ${ano}`:''}: {typeof linha[`executado_${ano}`]==='number'?dinheiro(linha[`executado_${ano}`] as number):'Não informado'}</p>)}</div>:null}}/><Legend/><Area type="monotone" dataKey="previsto" name="Previsto" stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.35} connectNulls={false} dot={false}/>{mensal.anos.map((ano,i)=><Area key={ano} type="monotone" dataKey={`executado_${ano}`} name={mensal.anos.length===1?'Executado':`Executado · ${ano}`} stroke={i===0?'#294d7a':PALETA[i%PALETA.length]} fill={i===0?'#294d7a':PALETA[i%PALETA.length]} fillOpacity={0.14} connectNulls={false} dot={{r:3}} activeDot={{r:5}}/>)}</AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">O executado usa notas com data de emissão registrada e acumula o saldo conhecido a cada mês após o primeiro lançamento. O previsto mensal não está disponível e não foi estimado. {mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) sem data válida não entraram.` : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há notas com data válida neste recorte. Previsto mensal: Não informado. Executado mensal: Não informado.</p>}
+      <div><h3 className="font-semibold">Execução financeira acumulada · janeiro a dezembro</h3><p className="text-xs text-muted-foreground">O período está identificado por ano na legenda. A previsão mensal é exibida quando registrada no conjunto selecionado.</p></div>
+      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong><p>Previsto: {typeof linha.previsto === 'number' ? dinheiro(linha.previsto) : 'Não informado'}</p>{mensal.anos.map(ano=><p key={ano}>Executado{mensal.anos.length>1?` · ${ano}`:''}: {typeof linha[`executado_${ano}`]==='number'?dinheiro(linha[`executado_${ano}`] as number):'Não informado'}</p>)}</div>:null}}/><Legend/><Area type="monotone" dataKey="previsto" name="Previsto" stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.35} connectNulls={false} dot={false}/>{mensal.anos.map((ano,i)=><Area key={ano} type="monotone" dataKey={`executado_${ano}`} name={mensal.anos.length===1?'Executado':`Executado · ${ano}`} stroke={i===0?'#294d7a':PALETA[i%PALETA.length]} fill={i===0?'#294d7a':PALETA[i%PALETA.length]} fillOpacity={0.14} connectNulls={false} dot={{r:3}} activeDot={{r:5}}/>)}</AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">O executado usa notas com data de emissão registrada e acumula o saldo conhecido a cada mês após o primeiro lançamento. A previsão mensal dos dados reais não está disponível; no demonstrativo, ela é fictícia. {mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) sem data válida não entraram.` : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há notas com data válida neste recorte. Previsto mensal: Não informado. Executado mensal: Não informado.</p>}
     </article>
 
     <article className="order-1 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Orçamento aprovado e executado por organização">

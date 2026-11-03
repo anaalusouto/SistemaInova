@@ -68,7 +68,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
 
       {source === 'demo' && (
         <p className="rounded-lg px-3 py-2 text-xs" style={{ background: 'var(--brand-soft)', color: 'var(--brand-text)' }}>
-          Dados simulados para visualizar cenários de decisão · referência: 02/10/2026 · um projeto por organização.
+          Dados fictícios para visualizar os gráficos · prazos relativos à data atual · um projeto por organização.
         </p>
       )}
 
@@ -95,8 +95,8 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       </div>
 
       <div className="space-y-5">
-        <GraficosAcompanhamento projects={filteredProjects}/>
-        <GraficosMapeamento projects={filteredProjects}/>
+        <GraficosAcompanhamento projects={filteredProjects} demonstrativo={source === 'demo'}/>
+        <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'}/>
       </div>
 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={filteredProjects} login={user?.login}

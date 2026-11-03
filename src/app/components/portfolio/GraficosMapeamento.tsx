@@ -2,19 +2,20 @@ import { useQuery } from '@tanstack/react-query';
 import { CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ProjectExt } from '../../store';
 import { listarNotasMapeamentos } from '../../diagnosticos.server';
-import { pontosMapeamento } from '../../lib/cruzamentoMapeamento';
+import { pontosMapeamento, type NotaMapeamentoGrafico } from '../../lib/cruzamentoMapeamento';
 import { formatDateOnly } from '../../lib/dateOnly';
 import { conclusaoEtapas } from '../../lib/resumoPlanoPortfolio';
+import { notasMapeamentoDemo } from '../../data/portfolioDemo';
 
 const formatar = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const moeda = (n: number | null) => n == null ? 'Não informado' : n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const percentual = (n: number | null) => n == null ? 'Não informado' : `${formatar(n)}%`;
 
-export function GraficosMapeamento({ projects }: { projects: ProjectExt[] }) {
+export function GraficosMapeamento({ projects, demonstrativo = false }: { projects: ProjectExt[]; demonstrativo?: boolean }) {
   const organizacaoIds = [...new Set(projects.flatMap(p => p.organizacao?.id ? [p.organizacao.id] : []))].sort();
-  const consulta = useQuery({
-    queryKey: ['portfolio-notas-mapeamento', organizacaoIds],
-    queryFn: () => listarNotasMapeamentos({ data: { organizacaoIds } }),
+  const consulta = useQuery<NotaMapeamentoGrafico[]>({
+    queryKey: ['portfolio-notas-mapeamento', demonstrativo, organizacaoIds],
+    queryFn: () => demonstrativo ? Promise.resolve(notasMapeamentoDemo.filter(n=>organizacaoIds.includes(n.organizacaoId))) : listarNotasMapeamentos({ data: { organizacaoIds } }),
     enabled: organizacaoIds.length > 0,
   });
   const pendentes = consulta.data?.filter(n => n.ieoAguardandoReavaliacao).length ?? 0;

@@ -52,6 +52,16 @@ export const portfolioDemo: ProjectExt[] = demoOrganizations.map((p, index) => {
     };
   });
   const highest = Math.max(...risks.filter(r => r.status !== 'Encerrado').map(r => r.severity), 0);
+  const orgId = `d0000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`;
+  const concluidas = Math.round(progress[index] / 20);
+  const deliverables = Array.from({length: 5}, (_, etapa) => {
+    const concluida = etapa < concluidas;
+    const prazo = new Date(); prazo.setDate(prazo.getDate() + [-35, 15, 45, 75, 125][(index + etapa) % 5]);
+    const fim = `${prazo.getFullYear()}-${String(prazo.getMonth()+1).padStart(2,'0')}-${String(prazo.getDate()).padStart(2,'0')}`;
+    return { id:`demo-etapa-${index}-${etapa}`, name:`Etapa ${etapa + 1}`, expectedResult:'Resultado demonstrativo', order:etapa, plannedStart:'2026-01-01', plannedEnd:fim, actualStart:null, actualEnd:null,
+      activities:[{id:`demo-atividade-${index}-${etapa}`,name:'Atividade demonstrativa',responsible:'Equipe regional',progress:concluida?100:30,status:concluida?'Concluído' as const:'Em andamento' as const,observations:'',order:0,plannedStart:null,plannedEnd:fim,actualStart:null,actualEnd:null,delayJustification:'',budgetLink:'Não informado' as const,nextStep:'',nextStepOwner:'',nextStepDue:null,tasks:[],plannedDate:'',startDate:null,conclusionDate:null}] };
+  });
+  const orcamentoNotas = financialItems.filter(item=>item.executedValue > 0).map((item,month)=>({id:`demo-nota-${index}-${month}`,itemId:null,numero:null,fornecedor:null,dataEmissao:`2026-${String(month+1).padStart(2,'0')}-15`,valor:item.executedValue,descricao:'Registro demonstrativo',anexo:null,criadoPor:'Demonstração',criadoEm:'2026-01-01'}));
   return {
     id: -index - 1, name: p.name, org: p.org, segmento: p.segmento, code: `DEMO-${index + 1}`,
     coordinator: 'Equipe regional', team: [], financier: 'Programa demonstrativo', objective: 'Cenário simulado para análise gerencial.',
@@ -59,6 +69,8 @@ export const portfolioDemo: ProjectExt[] = demoOrganizations.map((p, index) => {
     startDate: '2026-01-01', endDate: `2026-${String(8 + index % 5).padStart(2, '0')}-28`,
     budgetApproved: budget, budgetExecuted: executed, financialItems, risks,
     riskLevel: faixaRisco(highest),
-    goals: [], changes: [], evidences: [], contrapartidas: [], organizacao: null,
+    goals: [{id:`demo-meta-${index}`,name:'Meta demonstrativa',order:0,deliverables}], orcamentoNotas, changes: [], evidences: [], contrapartidas: [], organizacao: {id:orgId,nome:p.org},
   };
 });
+
+export const notasMapeamentoDemo = portfolioDemo.map((p,i)=>({organizacaoId:p.organizacao!.id,diagnosticoId:`demo-${i}`,nota:1.4+(i%10)*0.25,parcial:false,dataAplicacao:'2026-01-01',versao:1}));
