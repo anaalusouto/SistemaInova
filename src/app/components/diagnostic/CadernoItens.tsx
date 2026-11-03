@@ -9,14 +9,14 @@ export interface ContextoCaderno { diagnosticoId: string; organizacaoId: string;
 export function useCaderno({ diagnosticoId, organizacaoId }: Pick<ContextoCaderno, 'diagnosticoId' | 'organizacaoId'>) {
   return useQuery({ queryKey: ['caderno-cria', diagnosticoId, organizacaoId], queryFn: () => listarRespostasCaderno({ data: { diagnosticoId, organizacaoId } }), enabled: Boolean(organizacaoId) });
 }
-export function CadernoItens({ itens, contexto = '', ...props }: ContextoCaderno & { itens: ItemCaderno[]; contexto?: string }) {
+export function CadernoItens({ itens, contexto = '', compact = false, ...props }: ContextoCaderno & { itens: ItemCaderno[]; contexto?: string; compact?: boolean }) {
   const consulta = useCaderno(props);
   if (consulta.isLoading) return <p role="status">Carregando respostas…</p>;
   if (consulta.error) return <p role="alert" className="rounded-xl border p-4 text-sm">{consulta.error.message} <button type="button" className="underline" onClick={() => void consulta.refetch()}>Tentar novamente</button></p>;
-  return <div className="space-y-3">{itens.map(item => <ItemCadernoFormulario key={`${contexto}:${item.codigo}`} {...props} contexto={contexto} item={item} registro={consulta.data?.find(r => r.codigo === item.codigo && r.contexto === contexto)}/>)}</div>;
+  return <div className={compact ? 'space-y-1' : 'space-y-3'}>{itens.map(item => <ItemCadernoFormulario key={`${contexto}:${item.codigo}`} {...props} contexto={contexto} compact={compact} item={item} registro={consulta.data?.find(r => r.codigo === item.codigo && r.contexto === contexto)}/>)}</div>;
 }
 const campo = 'w-full min-w-0 rounded-lg border bg-card p-2.5 text-sm';
-function ItemCadernoFormulario({ item, registro, contexto, diagnosticoId, organizacaoId, readOnly }: ContextoCaderno & { item: ItemCaderno; registro?: RegistroCaderno; contexto: string }) {
+function ItemCadernoFormulario({ item, registro, contexto, compact, diagnosticoId, organizacaoId, readOnly }: ContextoCaderno & { item: ItemCaderno; registro?: RegistroCaderno; contexto: string; compact: boolean }) {
   const client = useQueryClient();
   const [valores, setValores] = useState<ValoresCaderno>(registro?.resposta ?? valoresVazios);
   const [versao, setVersao] = useState(registro?.versao ?? 0);
@@ -34,8 +34,8 @@ function ItemCadernoFormulario({ item, registro, contexto, diagnosticoId, organi
   usePendenciaModulo(!readOnly && (sujo || salvar.isPending));
   const resposta = registro?.resposta;
   const exibicao = resposta?.valor ? item.opcoes?.find(o => o.valor === resposta.valor)?.descricao ?? resposta.valor : resposta?.selecoes.length ? resposta.selecoes.join(', ') : registro ? 'Registro sem resposta' : 'Não preenchido';
-  return <details className="rounded-xl border bg-card" data-caderno-codigo={item.codigo}>
-    <summary className="cursor-pointer p-4 text-sm"><span className="font-mono text-xs text-muted-foreground mr-2">{item.codigo}</span><strong>{item.texto}</strong><span className="mt-2 block text-xs text-muted-foreground line-clamp-2">{exibicao}{sujo ? ' · alterações ainda não salvas' : ''}</span></summary>
+  return <details className="rounded-lg border bg-card" data-caderno-codigo={item.codigo}>
+    <summary className={`cursor-pointer ${compact ? 'p-2.5 text-xs leading-5' : 'p-4 text-sm'}`}><span className="font-mono text-xs text-muted-foreground mr-2">{item.codigo}</span><strong>{item.texto}</strong><span className={`${compact ? 'mt-0.5' : 'mt-2'} block text-xs text-muted-foreground line-clamp-2`}>{exibicao}{sujo ? ' · alterações ainda não salvas' : ''}</span></summary>
     <div className="border-t p-4 space-y-3">
       {item.orientacao && <p className="text-sm text-muted-foreground">{item.orientacao}</p>}
       {item.aprofundar && <p className="text-sm text-muted-foreground">Aprofundar se necessário: {item.aprofundar}</p>}

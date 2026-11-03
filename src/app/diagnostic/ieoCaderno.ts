@@ -6,7 +6,7 @@ import type { RegistroCaderno } from './cadernoCria';
 export const DIMENSOES_IEO_CADERNO = [
   { id: '1', titulo: 'Governança e Base dos Membros', codigos: ['Q01', 'Q03', 'Q06', 'Q07', 'Q08', 'Q25'] },
   { id: '2', titulo: 'Gestão e Capacidade Organizacional', codigos: ['Q02', 'Q04', 'Q05', 'Q20', 'Q22'] },
-  { id: '3', titulo: 'Gestão Econômica-Financeira', codigos: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q19'] },
+  { id: '3', titulo: 'Gestão Econômico-Financeira', codigos: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q19'] },
   { id: '4', titulo: 'Geração de Valor e Articulação', codigos: ['Q09', 'Q10', 'Q16', 'Q17', 'Q18'] },
   { id: '5', titulo: 'Regularidade e Gestão de Riscos', codigos: ['Q21', 'Q23', 'Q24'] },
 ].map(d => ({

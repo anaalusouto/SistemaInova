@@ -31,7 +31,9 @@ test('visualização atual mantém dimensões, termômetros, relatos e perguntas
  const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
  assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Filtrar dimensão do IEO/);assert.match(html,/>Todas</);
- assert.match(html,/Média da dimensão/);assert.match(html,/Pontuação registrada \(1–4\)/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.ok(html.indexOf('Filtrar dimensão do IEO') < html.indexOf('Pontuações do IEO'));
+ assert.match(html,/Média simples dos níveis válidos/);assert.match(html,/Resposta de 1 a 4/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.match(html,/md:grid-cols-2/);assert.match(html,/DIMENSÃO SELECIONADA/);assert.match(html,/normalização por pergunta/);
  assert.equal((html.match(/role="table"/g)||[]).length,1);assert.match(html,/<span>0<\/span><span>1<\/span>/);assert.match(html,/<span>4<\/span>/);assert.match(html,/Q25/);assert.match(html,/N\/A/);
  assert.ok(html.indexOf('Gráfico horizontal das perguntas do IEO') < html.indexOf('Painel de síntese do IEO'));
  assert.ok(html.indexOf('Painel de síntese do IEO') < html.indexOf('Detalhes por dimensão'));
