@@ -4,8 +4,7 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import type { ProjectExt } from '../../store';
-import { faixaRisco, prazoDaMeta, riscoEmAberto } from '../../lib/planoTrabalho';
-import { conclusaoEtapas } from '../../lib/resumoPlanoPortfolio';
+import { faixaRisco, riscoEmAberto } from '../../lib/planoTrabalho';
 import { resumirConclusao } from '../../lib/conclusaoPlano';
 
 const PALETA = ['#426b9b', '#538566', '#cb8c38', '#b75959', '#816ba5', '#35969c', '#a5744a', '#6c7e93'];
@@ -23,30 +22,32 @@ const criticidadeRisco = (severity: number) => {
 };
 
 export function dadosAvanco(projects: ProjectExt[]) {
-  const grupos = new Map<string, { id: string; organizacao: string; projetos: number; etapasConcluidas: number; etapasTotal: number; projetosEtapas: number; aprovado: number; executado: number; projetosFinanceiro: number }>();
+  const grupos = new Map<string, { id: string; organizacao: string; projetos: number; atividadesConcluidas: number; atividadesTotal: number; projetosAtividades: number; aprovado: number; executado: number; projetosFinanceiro: number; projetosEstimados: number }>();
   for (const p of projects) {
     const id = p.organizacao?.id;
     if (!id) continue;
-    const grupo = grupos.get(id) ?? { id, organizacao: orgNome(p), projetos: 0, etapasConcluidas: 0, etapasTotal: 0, projetosEtapas: 0, aprovado: 0, executado: 0, projetosFinanceiro: 0 };
+    const grupo = grupos.get(id) ?? { id, organizacao: orgNome(p), projetos: 0, atividadesConcluidas: 0, atividadesTotal: 0, projetosAtividades: 0, aprovado: 0, executado: 0, projetosFinanceiro: 0, projetosEstimados: 0 };
     grupo.projetos++;
-    const etapas = conclusaoEtapas(p);
-    if (etapas.total > 0) { grupo.etapasConcluidas += etapas.concluidas; grupo.etapasTotal += etapas.total; grupo.projetosEtapas++; }
-    if (projectFinanceKnown(p, 'budgetApprovedInformado') && projectFinanceKnown(p, 'budgetExecutedInformado') && Number.isFinite(p.budgetApproved) && Number.isFinite(p.budgetExecuted) && p.budgetApproved >= 0 && p.budgetExecuted >= 0) {
-      grupo.aprovado += p.budgetApproved; grupo.executado += p.budgetExecuted; grupo.projetosFinanceiro++;
+    const atividades = resumirConclusao((p.goals ?? []).flatMap(meta => meta.deliverables.flatMap(etapa => etapa.activities)));
+    if (atividades.total > 0) { grupo.atividadesConcluidas += atividades.concluidas; grupo.atividadesTotal += atividades.total; grupo.projetosAtividades++; }
+    const executadoInformado = projectFinanceKnown(p, 'budgetExecutedInformado') && Number.isFinite(p.budgetExecuted) && p.budgetExecuted >= 0;
+    if (projectFinanceKnown(p, 'budgetApprovedInformado') && Number.isFinite(p.budgetApproved) && p.budgetApproved >= 0) {
+      grupo.aprovado += p.budgetApproved; grupo.executado += executadoInformado ? p.budgetExecuted : p.budgetApproved; grupo.projetosFinanceiro++;
+      if (!executadoInformado) grupo.projetosEstimados++;
     }
     grupos.set(id, grupo);
   }
   return [...grupos.values()].flatMap(g => {
-    const percentualEtapas = g.etapasTotal > 0 ? g.etapasConcluidas / g.etapasTotal * 100 : null;
+    const percentualAtividades = g.atividadesTotal > 0 ? g.atividadesConcluidas / g.atividadesTotal * 100 : null;
     const percentualFinanceiro = g.projetosFinanceiro > 0 && g.aprovado > 0 ? g.executado / g.aprovado * 100 : null;
-    if (percentualEtapas === null && percentualFinanceiro === null) return [];
-    const diferenca = percentualEtapas !== null && percentualFinanceiro !== null ? percentualEtapas - percentualFinanceiro : null;
+    if (percentualAtividades === null && percentualFinanceiro === null) return [];
+    const diferenca = percentualAtividades !== null && percentualFinanceiro !== null ? percentualAtividades - percentualFinanceiro : null;
     return [{
       id: g.id, nome: g.organizacao, organizacao: g.organizacao, organizacaoId: g.id,
-      projetos: g.projetos, etapasConcluidas: g.etapasConcluidas, etapasTotal: g.etapasTotal,
-      projetosEtapas: g.projetosEtapas, projetosFinanceiro: g.projetosFinanceiro,
-      percentualEtapas, percentualFinanceiro, diferenca, magnitude: diferenca === null ? null : Math.abs(diferenca),
-      aFrente: diferenca === null ? null : diferenca > 0 ? 'Avanço de Etapas' : diferenca < 0 ? 'Execução financeira' : 'Mesmo percentual',
+      projetos: g.projetos, atividadesConcluidas: g.atividadesConcluidas, atividadesTotal: g.atividadesTotal,
+      projetosAtividades: g.projetosAtividades, projetosFinanceiro: g.projetosFinanceiro, projetosEstimados: g.projetosEstimados,
+      percentualAtividades, percentualFinanceiro, diferenca, magnitude: diferenca === null ? null : Math.abs(diferenca),
+      aFrente: diferenca === null ? null : diferenca > 0 ? 'Avanço de atividades' : diferenca < 0 ? 'Valor financeiro' : 'Mesmo percentual',
     }];
   }).sort((a, b) => (b.magnitude ?? -1) - (a.magnitude ?? -1) || a.organizacao.localeCompare(b.organizacao, 'pt-BR'));
 }
@@ -90,7 +91,6 @@ export function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
   const previstoPorAno = new Map<number, Map<number, number>>();
   const executadoPorAno = new Map<number, Map<number, number>>();
   let previstosAlocados = 0;
-  let previstosSemVinculo = 0;
   let previstosSemPrazo = 0;
   const adicionar = (mapa: Map<number, Map<number, number>>, ano: number, mes: number, valor: number) => {
     const meses = mapa.get(ano) ?? new Map<number, number>();
@@ -107,19 +107,18 @@ export function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
     }
   } else {
     for (const p of projects) {
-      const metas = new Map(p.goals.map(meta => [meta.id, meta]));
-      for (const item of p.orcamentoItens ?? []) {
-        if (item.vigente === false || item.situacao !== 'Ativo' || !Number.isFinite(item.valorPlanejado)) continue;
-        if (!item.metaId) { previstosSemVinculo++; continue; }
-        const meta = metas.get(item.metaId);
-        if (!meta) { previstosSemVinculo++; continue; }
-        const fimPrevisto = prazoDaMeta(meta).fim;
-        const timestamp = fimPrevisto ? dataFimUtc(fimPrevisto) : null;
-        if (timestamp === null) { previstosSemPrazo++; continue; }
-        const data = new Date(timestamp);
-        adicionar(previstoPorAno, data.getUTCFullYear(), data.getUTCMonth() + 1, item.valorPlanejado);
-        previstosAlocados++;
+      if (!projectFinanceKnown(p, 'budgetApprovedInformado') || !Number.isFinite(p.budgetApproved) || p.budgetApproved < 0) continue;
+      const inicio = dataFimUtc(p.startDate);
+      const fim = dataFimUtc(p.endDate);
+      if (inicio === null || fim === null || inicio > fim) { previstosSemPrazo++; continue; }
+      const dataInicio = new Date(inicio), dataFim = new Date(fim);
+      const primeiroMes = dataInicio.getUTCFullYear() * 12 + dataInicio.getUTCMonth();
+      const ultimoMes = dataFim.getUTCFullYear() * 12 + dataFim.getUTCMonth();
+      const meses = ultimoMes - primeiroMes + 1;
+      for (let mes = primeiroMes; mes <= ultimoMes; mes++) {
+        adicionar(previstoPorAno, Math.floor(mes / 12), mes % 12 + 1, p.budgetApproved / meses);
       }
+      previstosAlocados++;
     }
   }
   let notasSemData = 0;
@@ -143,7 +142,7 @@ export function dadosMensais(projects: ProjectExt[], demonstrativo: boolean) {
       acumulados.push({ mes: `${MESES[mes - 1]}/${ano}`, previsto: inicioPrevisto ? totalPrevisto : null, executado: inicioExecutado ? totalExecutado : null });
     }
   }
-  return { anos, acumulados, notasSemData, previstosAlocados, previstosSemVinculo, previstosSemPrazo };
+  return { anos, acumulados, notasSemData, previstosAlocados, previstosSemPrazo };
 }
 
 export function dadosOrcamentoOrganizacao(projects: ProjectExt[]) {
@@ -209,13 +208,13 @@ export function GraficosAcompanhamento({ projects, demonstrativo = false, organi
     <div><h2 id="graficos-acompanhamento-titulo" className="text-lg font-semibold">Gráficos de acompanhamento</h2><p className="mt-1 text-xs text-muted-foreground">Os filtros de exercício, organização e status acima se aplicam a estes gráficos. Valores ausentes ficam “Não informado” e não entram em somas ou percentuais.</p></div>
 
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">
-    <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Avanço de etapas comparado à execução financeira">
-      <div><h3 className="font-semibold">Avanço de Etapas × execução financeira</h3><p className="text-xs text-muted-foreground">Barras agrupadas por organização. Mostra todas as organizações com ao menos uma medida calculável; eixo percentual fixo de 0% a 100%. A diferença, quando calculável, não indica ineficiência por si só.</p></div>
+    <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Avanço de atividades comparado à execução financeira">
+      <div><h3 className="font-semibold">Avanço de Atividades × execução financeira</h3><p className="text-xs text-muted-foreground">Barras agrupadas por organização. Mostra todas as organizações com ao menos uma medida calculável; eixo percentual fixo de 0% a 100%. Quando falta o executado de um projeto, usa-se o valor proposto como estimativa; isso pode resultar em 100%. A diferença não indica ineficiência por si só.</p></div>
       {organizacaoAtiva && <p className="text-xs text-muted-foreground">A seleção destaca a organização nos gráficos sem ocultar as demais.</p>}
       {avanco.length ? <><div className="min-w-0 overflow-x-auto"><div style={{height:Math.max(310,avanco.length*38+75)}} className="min-w-[540px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={avanco} layout="vertical" margin={{ top: 8, right: 18, bottom: 8, left: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" domain={[0, 100]} ticks={[0,20,40,60,80,100]} tickFormatter={v => `${Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0})}%`} tick={{ fontSize: 10 }}/><YAxis type="category" dataKey="nome" width={180} tick={{ fontSize: 9 }}/><Tooltip content={({ active, payload }) => { const d = payload?.[0]?.payload; return active && d ? <div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{d.organizacao}</strong><p>ID da organização: {d.organizacaoId}</p><p>Projetos no grupo: {d.projetos}</p><p>Projetos com etapas registradas: {d.projetosEtapas}/{d.projetos}</p><p>Etapas concluídas: {d.etapasTotal ? `${d.etapasConcluidas}/${d.etapasTotal}` : 'Não informado'}</p><p>Avanço de Etapas: {pct(d.percentualEtapas)}</p><p>Projetos com orçamento e execução: {d.projetosFinanceiro}/{d.projetos}</p><p>Execução financeira: {pct(d.percentualFinanceiro)}</p><p>Diferença: {d.diferenca === null ? 'Não calculável · falta uma das medidas' : `${Math.abs(d.diferenca).toLocaleString('pt-BR',{maximumFractionDigits:1})} p.p. · ${d.aFrente} à frente`}</p></div> : null; }}/><Legend verticalAlign="bottom"/><Bar dataKey="percentualEtapas" name="Avanço de Etapas" fill="#4e7558">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="percentualFinanceiro" name="Execução financeira" fill="#3b5687">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar>
-      </BarChart></ResponsiveContainer></div></div></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há projetos com total de etapas e percentual financeiro calculáveis neste recorte.</p>}
-      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Ver organizações sem medidas calculáveis ({excluidosAvanco.length})</summary><p className="mt-2">Organizações com apenas uma medida aparecem no gráfico; a outra é “Não informado”. Diferenças são ordenadas pela magnitude apenas quando ambas as medidas existem. {semVinculo} projeto(s) sem vínculo por ID não foram agrupados.</p><ul className="mt-2 list-disc pl-4">{excluidosAvanco.map(g=><li key={g[0].organizacao!.id}>{orgNome(g[0])}: sem etapas concluídas/total e sem par orçamento aprovado + executado calculável.</li>)}</ul></details>
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical/><XAxis type="number" domain={[0, 100]} ticks={[0,20,40,60,80,100]} tickFormatter={v => `${Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0})}%`} tick={{ fontSize: 10 }}/><YAxis type="category" dataKey="nome" width={180} tick={{ fontSize: 9 }}/><Tooltip content={({ active, payload }) => { const d = payload?.[0]?.payload; return active && d ? <div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{d.organizacao}</strong><p>ID da organização: {d.organizacaoId}</p><p>Projetos no grupo: {d.projetos}</p><p>Projetos com atividades registradas: {d.projetosAtividades}/{d.projetos}</p><p>Atividades concluídas: {d.atividadesTotal ? `${d.atividadesConcluidas}/${d.atividadesTotal}` : 'Não informado'}</p><p>Avanço de Atividades: {pct(d.percentualAtividades)}</p><p>Projetos com valor financeiro: {d.projetosFinanceiro}/{d.projetos}</p><p>Valor financeiro: {pct(d.percentualFinanceiro)}{d.projetosEstimados > 0 ? ` · inclui proposta em ${d.projetosEstimados} projeto(s) sem execução` : ' · executado registrado'}</p><p>Diferença: {d.diferenca === null ? 'Não calculável · falta uma das medidas' : `${Math.abs(d.diferenca).toLocaleString('pt-BR',{maximumFractionDigits:1})} p.p. · ${d.aFrente} à frente`}</p></div> : null; }}/><Legend verticalAlign="bottom"/><Bar dataKey="percentualAtividades" name="Avanço de Atividades" fill="#4e7558">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar><Bar dataKey="percentualFinanceiro" name="Executado ou proposto" fill="#3b5687">{avanco.map(d=><Cell key={d.id} fillOpacity={organizacaoAtiva && d.id!==organizacaoAtiva ? 0.18 : 1} onClick={()=>onSelecionarOrganizacao(d.id)} style={{cursor:"pointer"}}/>)}</Bar>
+      </BarChart></ResponsiveContainer></div></div></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há projetos com total de atividades e percentual financeiro calculáveis neste recorte.</p>}
+      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Ver organizações sem medidas calculáveis ({excluidosAvanco.length})</summary><p className="mt-2">Organizações com apenas uma medida aparecem no gráfico; a outra é “Não informado”. Diferenças são ordenadas pela magnitude apenas quando ambas as medidas existem. {semVinculo} projeto(s) sem vínculo por ID não foram agrupados.</p><ul className="mt-2 list-disc pl-4">{excluidosAvanco.map(g=><li key={g[0].organizacao!.id}>{orgNome(g[0])}: sem atividades concluídas/total e sem orçamento proposto calculável.</li>)}</ul></details>
     </article>
 
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Prazos e atraso das etapas não concluídas">
@@ -227,7 +226,7 @@ export function GraficosAcompanhamento({ projects, demonstrativo = false, organi
     <div className="grid min-w-0 gap-5 xl:grid-cols-2">
     <article className="order-2 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Execução financeira acumulada por mês">
       <div><h3 className="font-semibold">Execução financeira acumulada</h3><p className="text-xs text-muted-foreground">Os valores acumulados seguem a sequência dos meses e anos.</p></div>
-      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong><p>Previsto: {linha.previsto !== null ? dinheiro(linha.previsto) : 'Não informado'}</p><p>Executado: {linha.executado !== null ? dinheiro(linha.executado) : 'Não informado'}</p></div>:null}}/><Legend/><Area type="monotone" dataKey="previsto" name="Previsto" stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.3} dot={false}/><Area type="monotone" dataKey="executado" name="Executado" stroke="#294d7a" fill="#294d7a" fillOpacity={0.12} dot={{r:3}} activeDot={{r:5}}/></AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">Nos dados reais, o previsto soma o total calculado da linha orçamentária (Qtd × unidades × valor unitário), ligado a uma meta, no mês de término previsto da meta ou da última etapa. O executado soma notas pela data de emissão. {mensal.previstosSemVinculo ? `${mensal.previstosSemVinculo} item(ns) previsto(s) sem meta vinculada não entraram; ` : ''}{mensal.previstosSemPrazo ? `${mensal.previstosSemPrazo} item(ns) sem data prevista não entraram; ` : ''}{mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) executado(s) sem data válida não entraram.` : ''}{demonstrativo ? ' No demonstrativo, ambas as séries são fictícias e estão claramente identificadas como simulação.' : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Previsto mensal: Não informado para metas sem itens orçamentários vinculados e datados. Executado mensal: não informado neste recorte.</p>}
+      {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip content={({active,label})=>{const linha=mensal.acumulados.find(m=>m.mes===label);return active&&linha?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{label} · acumulado</strong><p>Previsto: {linha.previsto !== null ? dinheiro(linha.previsto) : 'Não informado'}</p><p>Executado: {linha.executado !== null ? dinheiro(linha.executado) : 'Não informado'}</p></div>:null}}/><Legend/><Area type="monotone" dataKey="previsto" name="Previsto" stroke="#8bb2d8" fill="#dbe8f4" fillOpacity={0.3} dot={false}/><Area type="monotone" dataKey="executado" name="Executado" stroke="#294d7a" fill="#294d7a" fillOpacity={0.12} dot={{r:3}} activeDot={{r:5}}/></AreaChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">O previsto distribui o orçamento proposto de cada projeto igualmente entre os meses de início e fim. O executado soma notas pela data de emissão. {mensal.previstosSemPrazo ? `${mensal.previstosSemPrazo} projeto(s) sem datas válidas de início e fim não entraram no previsto; ` : ''}{mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) executado(s) sem data válida não entraram.` : ''}{demonstrativo ? ' No demonstrativo, ambas as séries são fictícias e estão claramente identificadas como simulação.' : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Previsto mensal: Não informado para projetos sem orçamento e datas válidas. Executado mensal: não informado neste recorte.</p>}
     </article>
 
     <article className="order-1 rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Orçamento aprovado e executado por organização">

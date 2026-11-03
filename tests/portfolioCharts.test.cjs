@@ -26,14 +26,14 @@ const graficos = carregar('src/app/components/portfolio/GraficosAcompanhamento.t
   recharts: Object.fromEntries(['Area','AreaChart','Bar','BarChart','CartesianGrid','Cell','LabelList','Legend','Pie','PieChart','ResponsiveContainer','Tooltip','XAxis','YAxis'].map(k => [k, () => null])),
   '../../lib/planoTrabalho': { faixaRisco: () => 'Baixo', riscoEmAberto: () => true, prazoDaMeta: meta => ({ fim: meta.plannedEnd ?? meta.deliverables?.[0]?.plannedEnd ?? null }) },
   '../../lib/resumoPlanoPortfolio': { conclusaoEtapas: p => p.testEtapas },
-  '../../lib/conclusaoPlano': { resumirConclusao: () => ({ concluido: false }) },
+  '../../lib/conclusaoPlano': { resumirConclusao: atividades => ({ total: atividades.length, concluidas: atividades.filter(a => a.status === 'Concluído').length, concluido: atividades.length > 0 && atividades.every(a => a.status === 'Concluído') }) },
 });
 
 function projeto(id, { approved = 100, executed = 50, steps = { concluidas: 1, total: 2 }, approvedKnown = true, executedKnown = true } = {}) {
   return {
     id: `p-${id}`, code: `P-${id}`, org: `Org ${id}`, organizacao: { id: `org-${id}`, nome: `Organização ${id}` },
     budgetApproved: approved, budgetExecuted: executed, budgetApprovedInformado: approvedKnown, budgetExecutedInformado: executedKnown,
-    testEtapas: steps, financialItems: [], orcamentoNotas: [], risks: [], goals: [],
+    financialItems: [], orcamentoNotas: [], risks: [], goals: [{ deliverables: [{ activities: Array.from({ length: steps.total }, (_, i) => ({ status: i < steps.concluidas ? 'Concluído' : 'A iniciar' })) }] }],
   };
 }
 
@@ -45,10 +45,20 @@ test('avanço inclui todas as organizações com ao menos uma medida, sem zeros 
   );
   const linhas = graficos.dadosAvanco(projetos);
   assert.equal(linhas.length, 12);
-  assert.equal(linhas.find(l => l.id === 'org-etapas').percentualEtapas, 75);
+  assert.equal(linhas.find(l => l.id === 'org-etapas').percentualAtividades, 75);
   assert.equal(linhas.find(l => l.id === 'org-etapas').percentualFinanceiro, null);
-  assert.equal(linhas.find(l => l.id === 'org-financeiro').percentualEtapas, null);
+  assert.equal(linhas.find(l => l.id === 'org-financeiro').percentualAtividades, null);
   assert.equal(linhas.find(l => l.id === 'org-financeiro').percentualFinanceiro, 50);
+});
+
+test('usa o proposto como estimativa apenas quando falta execução', () => {
+  const estimado = projeto('estimado', { approved: 200, executed: 0, executedKnown: false });
+  const real = projeto('real', { approved: 100, executed: 0, executedKnown: true });
+  real.organizacao = estimado.organizacao;
+  const linha = graficos.dadosAvanco([estimado, real])[0];
+  assert.equal(linha.projetosEstimados, 1);
+  assert.equal(linha.percentualFinanceiro, 200 / 300 * 100);
+  assert.equal(linha.percentualAtividades, 50);
 });
 
 test('orçamento inclui todas as dotações não nulas e distingue parcial, zero e não informado', () => {
@@ -70,9 +80,9 @@ test('orçamento inclui todas as dotações não nulas e distingue parcial, zero
   assert.equal(resumo.orcamentoZero, 1);
 });
 
-test('previsto mensal vem do item orçamentário vinculado ao prazo da meta, e executado vem das notas', () => {
+test('previsto distribui o orçamento pelo período do projeto e executado vem das notas', () => {
   const projeto = {
-    id: 'p-real', goals: [{ id: 'meta-1', plannedEnd: '2026-04-30', deliverables: [] }],
+    id: 'p-real', startDate: '2026-03-01', endDate: '2026-04-30', budgetApproved: 1000, budgetApprovedInformado: true, goals: [{ id: 'meta-1', plannedEnd: '2026-04-30', deliverables: [] }],
     orcamentoItens: [
       { id: 'i1', metaId: 'meta-1', valorPlanejado: 1000, valorProposto: 1300, situacao: 'Ativo', vigente: true, dataCompra: '2026-01-15' },
       { id: 'i2', metaId: null, valorPlanejado: 9000, valorProposto: 9000, situacao: 'Ativo', vigente: true },
@@ -86,11 +96,11 @@ test('previsto mensal vem do item orçamentário vinculado ao prazo da meta, e e
   assert.deepEqual(serie.anos, [2026]);
   assert.equal(serie.acumulados[0].previsto, null);
   assert.equal(serie.acumulados[1].executado, 250);
-  assert.equal(serie.acumulados[2].previsto, null);
+  assert.equal(serie.acumulados[2].previsto, 500);
   assert.equal(serie.acumulados[3].previsto, 1000);
   assert.equal(serie.acumulados[11].previsto, 1000);
   assert.equal(serie.previstosAlocados, 1);
-  assert.equal(serie.previstosSemVinculo, 2);
+  assert.equal(serie.previstosSemPrazo, 0);
 });
 
 test('acumula valores em ordem cronológica entre anos', () => {
