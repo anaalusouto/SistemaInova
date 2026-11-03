@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart,
+  Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Line, LineChart, Pie, PieChart,
   ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import type { ProjectExt } from '../../store';
@@ -36,8 +36,38 @@ function dadosAvanco(projects: ProjectExt[]) {
       percentualEtapas: etapas.percentual,
       percentualFinanceiro: financeiro,
       diferenca,
+      magnitude: Math.abs(diferenca),
     }];
-  }).sort((a, b) => b.diferenca - a.diferenca || a.nome.localeCompare(b.nome, 'pt-BR')).slice(0, 8);
+  }).sort((a, b) => b.magnitude - a.magnitude || a.nome.localeCompare(b.nome, 'pt-BR')).slice(0, 8);
+}
+
+const FAIXAS_PRAZO = ['Vencido', 'Até 30 dias', '31–60 dias', '61–90 dias', 'Após 90 dias', 'Sem prazo'];
+function dataFimUtc(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw);
+  if (!iso && !br) return null;
+  const year = Number(iso?.[1] ?? br?.[3]);
+  const month = Number(iso?.[2] ?? br?.[2]);
+  const day = Number(iso?.[3] ?? br?.[1]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (month < 1 || month > 12 || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return date.getTime();
+}
+
+function dadosPrazos(projects: ProjectExt[], referencia: Date) {
+  const data = FAIXAS_PRAZO.map(faixa => ({ faixa, quantidade: 0 }));
+  const hoje = Date.UTC(referencia.getFullYear(), referencia.getMonth(), referencia.getDate());
+  let projetosAbertos = 0;
+  for (const projeto of projects) {
+    if (projeto.status === 'Concluído') continue;
+    projetosAbertos++;
+    const fim = dataFimUtc(projeto.endDate);
+    const dias = fim === null ? null : Math.ceil((fim - hoje) / 86_400_000);
+    const indice = dias === null ? 5 : dias < 0 ? 0 : dias <= 30 ? 1 : dias <= 60 ? 2 : dias <= 90 ? 3 : 4;
+    data[indice].quantidade++;
+  }
+  return { data, projetosAbertos };
 }
 
 function dadosMensais(projects: ProjectExt[]) {
@@ -81,27 +111,29 @@ function dadosOrcamentoOrganizacao(projects: ProjectExt[]) {
     if (projectFinanceKnown(p, 'budgetExecutedInformado') && Number.isFinite(p.budgetExecuted)) { atual.executados += p.budgetExecuted; atual.executadosN++; }
     grupos.set(id, atual);
   }
-  const linhas = [...grupos.values()].filter(g => g.aprovadosN > 0).sort((a, b) => b.aprovados - a.aprovados || a.nome.localeCompare(b.nome, 'pt-BR')).slice(0, 8);
+  const linhas = [...grupos.values()].filter(g => g.aprovadosN > 0).sort((a, b) => b.aprovados - a.aprovados || a.nome.localeCompare(b.nome, 'pt-BR')).slice(0, 8)
+    .map(g => ({ ...g, aprovados: g.aprovadosN ? g.aprovados : null, executados: g.executadosN ? g.executados : null }));
   return { linhas, semOrganizacaoId };
 }
 
 function dadosRiscos(projects: ProjectExt[]) {
-  const porOrg = new Map<string, { id: string; nome: string; riscos: ProjectExt['risks'] }>();
+  const porOrg = new Map<string, { id: string | null; nome: string; projetoSemVinculo?: string; riscos: ProjectExt['risks'] }>();
   let semOrganizacaoId = 0;
   for (const p of projects) {
     const abertos = (p.risks ?? []).filter(riscoEmAberto);
     if (!abertos.length) continue;
     const id = p.organizacao?.id;
-    if (!id) { semOrganizacaoId++; continue; }
-    const atual = porOrg.get(id) ?? { id, nome: orgNome(p), riscos: [] };
+    const chave = id ?? `sem-organizacao:${p.id}`;
+    if (!id) semOrganizacaoId++;
+    const atual = porOrg.get(chave) ?? { id: id ?? null, nome: id ? orgNome(p) : `${orgNome(p)} · projeto ${p.code}`, projetoSemVinculo: id ? undefined : p.code, riscos: [] };
     atual.riscos.push(...abertos);
-    porOrg.set(id, atual);
+    porOrg.set(chave, atual);
   }
-  const organizacoes = [...porOrg.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const organizacoes = [...porOrg.values()].sort((a, b) => b.riscos.length - a.riscos.length || a.nome.localeCompare(b.nome, 'pt-BR') || (a.id ?? '').localeCompare(b.id ?? ''));
   const categorias = [...new Set(organizacoes.flatMap(o => o.riscos.map(r => r.category.trim() || 'Categoria não informada')))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const porOrganizacao = organizacoes.map(o => {
-    const linha: Record<string, string | number> = { id: o.id, name: o.nome, total: o.riscos.length };
-    for (const categoria of categorias) linha[categoria] = o.riscos.filter(r => (r.category.trim() || 'Categoria não informada') === categoria).length;
+    const linha: Record<string, string | number | null> = { id: o.id ?? 'Não informado', name: o.nome, label: o.id ? `${o.nome} · ${o.id.slice(0, 6)}` : o.nome, total: o.riscos.length };
+    for (const nivel of CRITICIDADES) linha[nivel] = o.riscos.filter(r => criticidadeRisco(r.severity) === nivel).length;
     return linha;
   });
   const porCategoria = categorias.map(name => ({ name, value: organizacoes.reduce((s, o) => s + o.riscos.filter(r => (r.category.trim() || 'Categoria não informada') === name).length, 0) }));
@@ -114,6 +146,7 @@ export function GraficosAcompanhamento({ projects }: { projects: ProjectExt[] })
   const mensal = useMemo(() => dadosMensais(projects), [projects]);
   const orcamento = useMemo(() => dadosOrcamentoOrganizacao(projects), [projects]);
   const riscos = useMemo(() => dadosRiscos(projects), [projects]);
+  const prazos = useMemo(() => dadosPrazos(projects, new Date()), [projects]);
   return <section className="space-y-5" aria-labelledby="graficos-acompanhamento-titulo">
     <div><h2 id="graficos-acompanhamento-titulo" className="text-lg font-semibold">Gráficos de acompanhamento</h2><p className="mt-1 text-xs text-muted-foreground">Os filtros de exercício, organização e status acima se aplicam a estes gráficos. Valores ausentes ficam “Não informado” e não entram em somas ou percentuais.</p></div>
 
@@ -124,6 +157,11 @@ export function GraficosAcompanhamento({ projects }: { projects: ProjectExt[] })
       </BarChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">A diferença, sozinha, não indica ineficiência.</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há projetos com total de etapas e percentual financeiro calculáveis neste recorte.</p>}
     </article>
 
+    <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Prazos dos projetos não concluídos">
+      <div><h3 className="font-semibold">Prazos de projetos não concluídos · quantidade de projetos</h3><p className="text-xs text-muted-foreground">Faixas calculadas a partir da data final registrada e da data de hoje. Datas ausentes ou inválidas entram em “Sem prazo”; projetos concluídos são excluídos.</p></div>
+      {prazos.projetosAbertos ? <div className="h-[300px] min-w-0 overflow-x-auto"><div className="h-full min-w-[640px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={prazos.data} margin={{top:18,right:20,bottom:8,left:8}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/><XAxis dataKey="faixa" interval={0} tick={{fontSize:10}}/><YAxis allowDecimals={false} label={{value:'Projetos',angle:-90,position:'insideLeft',fontSize:11}}/><Tooltip formatter={(value:number)=>`${value} projeto(s)`}/><Bar dataKey="quantidade" name="Projetos por prazo" fill="#426b9b" radius={[5,5,0,0]}><LabelList dataKey="quantidade" position="top"/></Bar></BarChart></ResponsiveContainer></div></div> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há projetos não concluídos neste recorte.</p>}
+    </article>
+
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Execução financeira acumulada por mês">
       <div><h3 className="font-semibold">Execução financeira acumulada · janeiro a dezembro</h3><p className="text-xs text-muted-foreground">O período está identificado por ano na legenda. A distribuição mensal do orçamento previsto não existe nos registros atuais; não é estimada.</p></div>
       {mensal.anos.length ? <><div className="h-[320px] min-w-0 overflow-x-auto"><div className="h-full min-w-[620px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={mensal.acumulados} margin={{ top: 12, right: 20, bottom: 4, left: 12 }}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="mes"/><YAxis tickFormatter={v => Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={78}/><Tooltip formatter={(v: any) => typeof v === 'number' ? dinheiro(v) : 'Não informado'} labelFormatter={m => `${m} · acumulado`}/><Legend/><Line type="monotone" dataKey="previsto" name="Previsto acumulado · Não informado" stroke="#cb8c38" strokeDasharray="5 4" connectNulls={false} dot={false}/>{mensal.anos.map((ano,i)=><Line key={ano} type="monotone" dataKey={`executado_${ano}`} name={`Executado acumulado · ${ano}`} stroke={PALETA[i%PALETA.length]} connectNulls={false} dot={{r:3}}/>)}</LineChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">O executado usa notas com data de emissão registrada; meses sem lançamento permanecem sem ponto. O previsto mensal está não informado e foi excluído. {mensal.notasSemData ? `${mensal.notasSemData} lançamento(s) sem data válida não entraram.` : ''}</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Não há notas com data válida neste recorte. Previsto mensal: Não informado. Executado mensal: Não informado.</p>}
@@ -131,15 +169,15 @@ export function GraficosAcompanhamento({ projects }: { projects: ProjectExt[] })
 
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-3" aria-label="Orçamento aprovado e executado por organização">
       <div><h3 className="font-semibold">Orçamento por organização · oito maiores dotações</h3><p className="text-xs text-muted-foreground">Valores em reais, agrupados pelo identificador da organização. Só organizações com orçamento aprovado informado aparecem ordenadas pela maior dotação.</p></div>
-      {orcamento.linhas.length ? <><div className="h-[350px] min-w-0 overflow-x-auto"><div className="h-full min-w-[680px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={orcamento.linhas} margin={{top:12,right:20,bottom:45,left:18}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/><XAxis dataKey="nome" interval={0} angle={-22} textAnchor="end" height={70} tick={{fontSize:10}}/><YAxis tickFormatter={v=>Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={85}/><Tooltip formatter={(v:number)=>dinheiro(v)} labelFormatter={(nome,items)=>`${nome} · ID ${items?.[0]?.payload?.id ?? ''}`}/><Legend/><Bar dataKey="aprovados" name="Orçamento aprovado" fill="#426b9b" radius={[4,4,0,0]}/><Bar dataKey="executados" name="Valor executado informado" fill="#538566" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">{orcamento.semOrganizacaoId ? `${orcamento.semOrganizacaoId} projeto(s) sem ID de organização não foram agrupados.` : ''} Totais de execução usam apenas projetos com valor informado; ausência não é zero.</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Orçamento aprovado: Não informado neste recorte.</p>}
+      {orcamento.linhas.length ? <><div className="h-[350px] min-w-0 overflow-x-auto"><div className="h-full min-w-[680px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={orcamento.linhas} margin={{top:12,right:20,bottom:45,left:18}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/><XAxis dataKey="nome" interval={0} angle={-22} textAnchor="end" height={70} tick={{fontSize:10}}/><YAxis tickFormatter={v=>Number(v).toLocaleString('pt-BR',{notation:'compact',style:'currency',currency:'BRL'})} width={85}/><Tooltip formatter={(v:any)=>typeof v==='number'?dinheiro(v):'Não informado'} labelFormatter={(nome,items)=>`${nome} · ID ${items?.[0]?.payload?.id ?? ''}`}/><Legend/><Bar dataKey="aprovados" name="Orçamento aprovado" fill="#426b9b" radius={[4,4,0,0]}/><Bar dataKey="executados" name="Valor executado informado" fill="#538566" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer></div></div><p className="text-xs text-muted-foreground">{orcamento.semOrganizacaoId ? `${orcamento.semOrganizacaoId} projeto(s) sem ID de organização não foram agrupados.` : ''} Totais de execução usam apenas projetos com valor informado; execução sem registros permanece sem barra, não zero.</p></> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Orçamento aprovado: Não informado neste recorte.</p>}
     </article>
 
     <article className="rounded-xl border bg-card p-4 sm:p-5 min-w-0 space-y-4" aria-label="Riscos em aberto por organização, categoria e criticidade">
-      <div><h3 className="font-semibold">Riscos em aberto por organização e categoria</h3><p className="text-xs text-muted-foreground">Riscos encerrados são excluídos. Organizações ordenadas alfabeticamente e vinculadas pelo ID.</p></div>
+      <div><h3 className="font-semibold">Riscos em aberto por organização e criticidade</h3><p className="text-xs text-muted-foreground">Uma linha por criticidade em cada organização. Organizações ordenadas da maior para a menor quantidade total; riscos encerrados são excluídos e o agrupamento usa o ID da organização.</p></div>
       {riscos.organizacoes.length ? <><div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(240px,.7fr)]">
-        <div className="h-[360px] min-w-0 overflow-x-auto"><div className="h-full min-w-[700px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={riscos.porOrganizacao} margin={{top:10,right:16,bottom:45,left:0}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/><XAxis dataKey="name" interval={0} angle={-25} textAnchor="end" height={78} tick={{fontSize:10}}/><YAxis allowDecimals={false}/><Tooltip formatter={(v:number)=>`${v} risco(s)`} labelFormatter={(nome,items)=>`${nome} · ID ${items?.[0]?.payload?.id ?? ''}`}/><Legend/>{riscos.categorias.map((categoria,i)=><Bar key={categoria} dataKey={categoria} stackId="riscos" name={categoria} fill={PALETA[i%PALETA.length]}/>)}</BarChart></ResponsiveContainer></div></div>
+        <div className="h-[360px] min-w-0 overflow-x-auto"><div className="h-full min-w-[700px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={riscos.porOrganizacao} margin={{top:10,right:20,bottom:48,left:8}}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)"/><XAxis dataKey="label" interval={0} angle={-25} textAnchor="end" height={82} tick={{fontSize:10}}/><YAxis allowDecimals={false} label={{value:'Riscos em aberto',angle:-90,position:'insideLeft',fontSize:10}}/><Tooltip content={({active,payload})=>{const o=payload?.[0]?.payload;return active&&o?<div className="rounded-lg border bg-card p-3 text-xs shadow-lg"><strong>{o.name}</strong><p>ID da organização: {o.id}</p><p>Total de riscos em aberto: {o.total}</p><ul className="mt-1">{CRITICIDADES.map(nivel=><li key={nivel}>{nivel}: {o[nivel]}</li>)}</ul></div>:null}}/><Legend/>{CRITICIDADES.map((nivel,i)=><Line key={nivel} type="monotone" dataKey={nivel} name={nivel} stroke={PALETA[i%PALETA.length]} strokeWidth={2} connectNulls={false} dot={{r:4}} activeDot={{r:6}}/>)}</LineChart></ResponsiveContainer></div></div>
         <div className="min-w-0"><h4 className="text-sm font-semibold">Categorias · total de riscos em aberto</h4><div className="h-[260px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={riscos.porCategoria} dataKey="value" nameKey="name" innerRadius={58} outerRadius={92} paddingAngle={2}>{riscos.porCategoria.map((c,i)=><Cell key={c.name} fill={PALETA[i%PALETA.length]}/>)}</Pie><Tooltip formatter={(v:number)=>`${v} risco(s)`}/><Legend wrapperStyle={{fontSize:10}}/></PieChart></ResponsiveContainer></div></div>
-      </div><div className="overflow-x-auto"><table className="min-w-[820px] w-full text-left text-xs"><caption className="mb-2 text-left font-semibold">Distribuição por criticidade</caption><thead><tr className="border-b">{['Organização · ID','Riscos em aberto',...CRITICIDADES].map(t=><th key={t} scope="col" className="p-2">{t}</th>)}</tr></thead><tbody>{riscos.organizacoes.map(o=><tr key={o.id} className="border-b"><th scope="row" className="p-2 font-medium">{o.nome} · {o.id}</th><td className="p-2">{o.riscos.length}</td>{CRITICIDADES.map(nivel=><td key={nivel} className="p-2">{o.riscos.filter(r=>criticidadeRisco(r.severity)===nivel).length}</td>)}</tr>)}</tbody><tfoot><tr className="font-semibold"><th scope="row" className="p-2">Total do recorte</th><td className="p-2">{riscos.organizacoes.reduce((s,o)=>s+o.riscos.length,0)}</td>{CRITICIDADES.map(nivel=><td key={nivel} className="p-2">{riscos.porCriticidade.find(c=>c.nivel===nivel)?.quantidade ?? 0}</td>)}</tr></tfoot></table></div>{riscos.semOrganizacaoId ? <p className="text-xs text-muted-foreground">{riscos.semOrganizacaoId} projeto(s) com riscos em aberto, mas sem ID de organização, foram excluídos do agrupamento.</p> : null}</> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Nenhum risco em aberto com organização identificada neste recorte.</p>}
+      </div><div className="overflow-x-auto"><table className="min-w-[820px] w-full text-left text-xs"><caption className="mb-2 text-left font-semibold">Distribuição por criticidade · hierarquia por riscos em aberto</caption><thead><tr className="border-b">{['Organização · ID','Riscos em aberto',...CRITICIDADES].map(t=><th key={t} scope="col" className="p-2">{t}</th>)}</tr></thead><tbody>{riscos.organizacoes.map(o=><tr key={o.id ?? o.projetoSemVinculo} className="border-b"><th scope="row" className="p-2 font-medium">{o.nome} · {o.id ?? 'ID não informado; linha separada por projeto'}</th><td className="p-2">{o.riscos.length}</td>{CRITICIDADES.map(nivel=><td key={nivel} className="p-2">{o.riscos.filter(r=>criticidadeRisco(r.severity)===nivel).length}</td>)}</tr>)}</tbody><tfoot><tr className="font-semibold"><th scope="row" className="p-2">Total do recorte</th><td className="p-2">{riscos.organizacoes.reduce((s,o)=>s+o.riscos.length,0)}</td>{CRITICIDADES.map(nivel=><td key={nivel} className="p-2">{riscos.porCriticidade.find(c=>c.nivel===nivel)?.quantidade ?? 0}</td>)}</tr></tfoot></table></div>{riscos.semOrganizacaoId ? <p className="text-xs text-muted-foreground">{riscos.semOrganizacaoId} projeto(s) com riscos em aberto sem ID de organização aparecem em linhas separadas por projeto; não foram atribuídos a organizações.</p> : null}</> : <p role="status" className="py-8 text-center text-sm text-muted-foreground">Nenhum risco em aberto no recorte.</p>}
     </article>
   </section>;
 }
