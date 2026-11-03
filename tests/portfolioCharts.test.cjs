@@ -24,7 +24,7 @@ function carregar(arquivo, mocks = {}, cache = new Map()) {
 const graficos = carregar('src/app/components/portfolio/GraficosAcompanhamento.tsx', {
   react: { useMemo: fn => fn() },
   recharts: Object.fromEntries(['Area','AreaChart','Bar','BarChart','CartesianGrid','Cell','LabelList','Legend','Pie','PieChart','ResponsiveContainer','Tooltip','XAxis','YAxis'].map(k => [k, () => null])),
-  '../../lib/planoTrabalho': { faixaRisco: () => 'Baixo', riscoEmAberto: () => true },
+  '../../lib/planoTrabalho': { faixaRisco: () => 'Baixo', riscoEmAberto: () => true, prazoDaMeta: meta => ({ fim: meta.plannedEnd ?? meta.deliverables?.[0]?.plannedEnd ?? null }) },
   '../../lib/resumoPlanoPortfolio': { conclusaoEtapas: p => p.testEtapas },
   '../../lib/conclusaoPlano': { resumirConclusao: () => ({ concluido: false }) },
 });
@@ -68,4 +68,27 @@ test('orçamento inclui todas as dotações não nulas e distingue parcial, zero
   assert.equal(parcial.executados, null);
   assert.equal(resumo.semOrcamento, 1);
   assert.equal(resumo.orcamentoZero, 1);
+});
+
+test('previsto mensal vem do item orçamentário vinculado ao prazo da meta, e executado vem das notas', () => {
+  const projeto = {
+    id: 'p-real', goals: [{ id: 'meta-1', plannedEnd: '2026-04-30', deliverables: [] }],
+    orcamentoItens: [
+      { id: 'i1', metaId: 'meta-1', valorPlanejado: 1000, valorProposto: 1300, situacao: 'Ativo', vigente: true, dataCompra: '2026-01-15' },
+      { id: 'i2', metaId: null, valorPlanejado: 9000, valorProposto: 9000, situacao: 'Ativo', vigente: true },
+      { id: 'i3', metaId: 'meta-2', valorPlanejado: 8000, valorProposto: 8000, situacao: 'Ativo', vigente: true },
+    ],
+    // Data/valor do orçamento legado não devem substituir o cronograma de metas nem as notas.
+    financialItems: [{ date: '01/2026', plannedValue: 9000, executedValue: 9000 }],
+    orcamentoNotas: [{ dataEmissao: '2026-02-10', valor: 250 }],
+  };
+  const serie = graficos.dadosMensais([projeto], false);
+  assert.deepEqual(serie.anos, [2026]);
+  assert.equal(serie.acumulados[0].previsto_2026, null);
+  assert.equal(serie.acumulados[1].executado_2026, 250);
+  assert.equal(serie.acumulados[2].previsto_2026, null);
+  assert.equal(serie.acumulados[3].previsto_2026, 1000);
+  assert.equal(serie.acumulados[11].previsto_2026, 1000);
+  assert.equal(serie.previstosAlocados, 1);
+  assert.equal(serie.previstosSemVinculo, 2);
 });
