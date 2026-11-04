@@ -583,7 +583,7 @@ export interface LimitesLinhaTempo {
 }
 
 /**
- * Extremos da linha do tempo, tirados das datas das ETAPAS (RF-018).
+ * Extremos da linha do tempo, tirados das datas de metas, etapas e atividades.
  *
  * Considera previsto e realizado juntos: uma execução que passou do previsto
  * precisa caber na tela, senão a barra que mais importa fica fora do desenho.
@@ -598,6 +598,11 @@ export function limitesDaLinhaDoTempo(metas: Goal[]): LimitesLinhaTempo | null {
     for (const etapa of meta.deliverables) {
       for (const d of [etapa.plannedStart, etapa.plannedEnd, etapa.actualStart, etapa.actualEnd]) {
         if (d) datas.push(d);
+      }
+      for (const atividade of etapa.activities) {
+        for (const d of [atividade.plannedStart, atividade.plannedEnd, atividade.actualStart, atividade.actualEnd]) {
+          if (d) datas.push(d);
+        }
       }
     }
   }

@@ -22,6 +22,18 @@ function loadTs(file) {
 const { buildDecisionCharts } = loadTs('src/app/lib/portfolioDecisions');
 const { resumoAcompanhamento } = loadTs('src/app/lib/acompanhamentoPortfolio');
 
+test('Gantt inclui datas previstas e realizadas das atividades nos limites da escala', () => {
+  const { limitesDaLinhaDoTempo, posicaoNaLinha } = loadTs('src/app/lib/planoTrabalho');
+  const atividade = { plannedStart: '2026-01-15', plannedEnd: '2026-02-10', actualStart: '2026-03-01', actualEnd: '2026-05-20' };
+  const meta = { plannedStart: null, plannedEnd: null, deliverables: [{ plannedStart: '2026-03-01', plannedEnd: '2026-04-01', actualStart: null, actualEnd: null, activities: [atividade] }] };
+  const limites = limitesDaLinhaDoTempo([meta]);
+  assert.deepEqual(limites, { inicio: '2026-01-01', fim: '2026-05-31' });
+  assert.ok(posicaoNaLinha(atividade.plannedStart, atividade.plannedEnd, limites));
+  assert.ok(posicaoNaLinha(atividade.actualStart, atividade.actualEnd, limites));
+  const apenasAtividade = { ...meta, deliverables: [{ ...meta.deliverables[0], plannedStart: null, plannedEnd: null }] };
+  assert.deepEqual(limitesDaLinhaDoTempo([apenasAtividade]), limites);
+});
+
 test('acompanhamento exige registros do projeto, independentemente do status de execução', () => {
   for (const status of ['Em andamento', 'Não iniciado', 'Concluído']) {
     const resumo = resumoAcompanhamento({ status, commLogs: [{ meio: 'Presencial' }] });

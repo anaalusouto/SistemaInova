@@ -128,14 +128,14 @@ export function VisaoGantt({
     );
   }
 
-  // Sem nenhuma data de etapa não há escala possível. Dizer isso é melhor do
+  // Sem nenhuma data no plano não há escala possível. Dizer isso é melhor do
   // que desenhar uma grade arbitrária com barras que não significam nada.
   if (!limites) {
     return (
       <div className="p-8 text-center" style={{ color: 'var(--ink-5)', fontSize: '0.82rem', lineHeight: 1.6 }}>
-        Nenhuma etapa tem período informado, então não há linha do tempo a montar.
+        Nenhuma meta, etapa ou atividade tem data informada, então não há linha do tempo a montar.
         <br />
-        Preencha o período das etapas no painel de cada uma para ver o Gantt.
+        Preencha as datas previstas ou realizadas na tabela ou no painel de cada registro.
       </div>
     );
   }
