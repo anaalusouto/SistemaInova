@@ -649,6 +649,22 @@ export const salvarParecer = createServerFn({ method: 'POST' })
     return mapParecer(row, data.diagnosticoId);
   });
 
+/** Atualiza a conclusão sem alterar os demais campos do parecer. */
+export const salvarConclusaoTecnica = createServerFn({ method: 'POST' })
+  .validator((d: { diagnosticoId: string; texto: string }) => {
+    if (typeof d.texto !== 'string') throw new Error('Conclusão inválida.');
+    return d;
+  })
+  .handler(async ({ data }) => {
+    await exigirDiagnosticoEditavel(data.diagnosticoId);
+    const db = await getAdmin();
+    const { error } = await db.from('diagnostico_parecer').upsert(
+      { diagnostico_id: data.diagnosticoId, consideracoes_tecnicas: data.texto, atualizado_em: new Date().toISOString() },
+      { onConflict: 'diagnostico_id' },
+    );
+    if (error) throw new Error(mensagemMapeamento(error));
+  });
+
 const SITUACOES_EVIDENCIA: SituacaoEvidenciaDiagnostico[] = ['Consultado', 'Não apresentado', 'Relatado', 'Pendente de conferência'];
 const TAMANHO_MAXIMO_EVIDENCIA = 20 * 1024 * 1024;
 const TIPOS_EVIDENCIA_ACEITOS = [

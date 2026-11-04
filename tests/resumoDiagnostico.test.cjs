@@ -32,6 +32,16 @@ function carregar(arquivo, mocks = {}, cache = new Map()) {
   return m.exports;
 }
 const helpers = carregar("src/app/diagnostic/resumoDiagnostico.ts");
+test("IEO distribui as 25 questões nas cinco dimensões oficiais", () => {
+  const { DIMENSOES_IEO_CADERNO, calcularIeoCaderno } = carregar("src/app/diagnostic/ieoCaderno.ts");
+  assert.deepEqual(DIMENSOES_IEO_CADERNO.map(d => d.codigos), [
+    ['Q01','Q02','Q03','Q04','Q05'], ['Q06','Q07','Q08','Q09','Q10'],
+    ['Q11','Q12','Q13','Q14','Q15'], ['Q16','Q17','Q18','Q19','Q20'],
+    ['Q21','Q22','Q23','Q24','Q25'],
+  ]);
+  const resultado = calcularIeoCaderno([{ codigo: 'Q22', contexto: '', resposta: { valor: '4' } }]);
+  assert.deepEqual(resultado.porDimensao.map(d => d.media), [null, null, null, null, 4]);
+});
 const registro = (codigo, valor, relato = "", contexto = "") => ({
   codigo,
   contexto,
@@ -48,6 +58,8 @@ function resumo({ registros = [], historico = [], parecer = {}, falha = false, r
     react: reactMock,
     "../../diagnosticos.server": {},
     "@tanstack/react-query": {
+      useQueryClient: () => ({ invalidateQueries() {} }),
+      useMutation: () => ({}),
       useQuery: ({ queryKey }) => ({
         data: consultas[queryKey[0]],
         error: falha && queryKey[0] === "diagnostico-parecer",

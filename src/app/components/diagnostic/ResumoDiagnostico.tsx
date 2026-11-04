@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Sprout } from "lucide-react";
-import { getParecer, listarProdutos, listarRespostasMatriz } from "../../diagnosticos.server";
+import { getParecer, salvarConclusaoTecnica, listarProdutos, listarRespostasMatriz } from "../../diagnosticos.server";
 import { useFichaOrganizacao } from "../organizacoes/useOrganizacoes";
 import { DocumentosRegistro } from "../DocumentosRegistro";
 import { formatDateOnly } from "../../lib/dateOnly";
@@ -171,7 +171,6 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
   ];
   const coresPrioridade: Record<string, string> = { Crítica: '#b44747', Média: '#c5a542' };
   return <div className="space-y-3">
-    <p role="status" className="resumo-situacao resumo-em-revisao"><strong>Histórico/provisório — aguarda remapeamento e reavaliação do IEO.</strong> Estes valores não são resultados atuais validados.</p>
     <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
       <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades de dimensão e ordem de atuação</h5><p className="text-xs text-muted-foreground">Nota consolidada de priorização · escala de 0 a 4. Pontos e hastes refletem os valores históricos da referência; a nota atual permanece sem cálculo validado.</p></figcaption>
       <div className="overflow-x-auto"><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block min-w-[820px] w-full" role="img" aria-label="Gráfico histórico de priorização consolidada por dimensão">
@@ -195,12 +194,12 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
     </figure>
     <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
-      <colgroup><col style={{width:56}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:125}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
+      <colgroup><col style={{width:56}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
       <caption>Prioridades dimensionais · valores históricos da referência</caption>
-      <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota atual','Nota IEO · histórica','Nota Matriz · histórica','Nota Cesta · histórica','Consolidada · histórica','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
+      <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota IEO','Nota Matriz','Nota Cesta','Consolidada','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
       <tbody>{DIMENSOES_HISTORICAS_AGROMEL.map(d => <tr key={d.ordem}>
         <th scope="row" data-label="Ordem">{d.ordem}</th><td data-label="Prioridade">{d.prioridade}</td>
-        <td data-label="Dimensão integrada"><strong>{d.dimensao}</strong><p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p></td><td data-label="Nota atual">Sem nota calculável</td>
+        <td data-label="Dimensão integrada"><strong>{d.dimensao}</strong><p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p></td>
         <td data-label="Nota IEO">{d.ieo} · histórica</td><td data-label="Nota Matriz">{d.matriz}</td>
         <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada} · histórica</td><td data-label="Fórmula">{d.formula}</td>
       </tr>)}</tbody>
@@ -224,6 +223,14 @@ export function ResumoDiagnostico({
   readOnly?: boolean;
 }) {
   const raiz = useRef<HTMLDivElement>(null);
+  const conclusaoOriginal = useRef<HTMLDivElement>(null);
+  const [editandoConclusao, setEditandoConclusao] = useState(false);
+  const [textoConclusao, setTextoConclusao] = useState("");
+  const queryClient = useQueryClient();
+  const salvarConclusao = useMutation({
+    mutationFn: (texto: string) => salvarConclusaoTecnica({ data: { diagnosticoId, texto } }),
+    onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["diagnostico-parecer", diagnosticoId] }); setEditandoConclusao(false); },
+  });
   const ficha = useFichaOrganizacao(organizacaoId);
   const caderno = useCaderno({ diagnosticoId, organizacaoId });
   const matriz = useQuery({
@@ -437,11 +444,6 @@ export function ResumoDiagnostico({
       </section>
       <section className="resumo-secao-metodologia" aria-label="Metodologia, vínculos e pendências">
         <h4>Metodologia, vínculos e pendências</h4>
-        {ieoPendente && <article className="resumo-situacao resumo-em-revisao" role="status">
-          <h5>IEO atual sem nota calculável</h5>
-          <p>A referência informa que as 25 perguntas aguardam reavaliação pelos descritores do Caderno CRIA rev. 22/10/2026. Há {resultado.respondidas}/{resultado.total} respostas registradas, {resultado.pontuadas} notas históricas e Q25 como N/A. Respostas e níveis anteriores foram preservados; não são exibidos como avaliação atual.</p>
-          <p>Os relatos antigos e as prioridades dimensionais do agrupamento anterior precisam ser conferidos e remapeados.</p>
-        </article>}
         <details className="resumo-expansivel">
           <summary>Como a nota e a prioridade são calculadas</summary>
           <div>
@@ -451,7 +453,7 @@ export function ResumoDiagnostico({
               zero.
             </p>
             <p>
-              As dimensões são um agrupamento analítico do sistema. Notas menores aparecem primeiro
+              As dimensões seguem a distribuição do Guia. Notas menores aparecem primeiro
               para apoiar a análise. Empates mantêm a mesma ordem; dimensões sem nota não recebem
               ordem. Não há classificação técnica automática por faixas de nota.
             </p>
@@ -555,7 +557,7 @@ export function ResumoDiagnostico({
       </section>
       <section className="resumo-secao-conclusao-tecnica" aria-label="Conclusão técnica completa">
         <h4>Conclusão técnica completa</h4>
-        {diagnosticoAgromel ? <div className="resumo-cartao resumo-conclusao-tecnica">
+        {diagnosticoAgromel ? parecer.data?.consideracoesTecnicas != null ? <div className="resumo-cartao resumo-texto-integral">{parecer.data.consideracoesTecnicas}</div> : <div ref={conclusaoOriginal} className="resumo-cartao resumo-conclusao-tecnica">
           <p>O diagnóstico da AGROMEL revela uma <strong>cooperativa com experiência produtiva, atividades econômicas em funcionamento e oportunidades de diversificação</strong>. Entretanto, seu fortalecimento ainda <strong>depende de avanços na organização dos processos de gestão, na participação dos cooperados e na estruturação das operações coletivas</strong>.</p>
           <p>A produção e a comercialização de mel constituem a principal referência de atuação da cooperativa. A existência de um selo de produto artesanal, conforme informado no levantamento, também representa um elemento relevante de sua trajetória. Contudo, os impactos ambientais e a redução do volume produzido têm levado a AGROMEL a buscar alternativas para diversificar suas fontes de receita e reduzir a dependência dessa atividade.</p>
           <p>Foram identificadas oportunidades relacionadas ao beneficiamento do mel, às frutas, à macaxeira e seus derivados, às hortaliças e ao turismo rural. Essas possibilidades apresentam diferentes níveis de maturidade e exigem avaliações específicas antes de serem incorporadas às operações da cooperativa.</p>
@@ -573,7 +575,12 @@ export function ResumoDiagnostico({
           {[["Síntese geral", sintese], ["Potencial e capacidades", capacidades], ["Fragilidades", fragilidades], ["Pontos prioritários", parecer.data?.pontosPrioritarios], ["Considerações técnicas", parecer.data?.consideracoesTecnicas]].map(([titulo, texto]) => <section key={titulo}><h5>{titulo}</h5><p className="resumo-texto-integral">{texto || 'Não registrado.'}</p></section>)}
           {parecer.data?.atualizadoEm && <p>Parecer atualizado em {formatDateOnly(parecer.data.atualizadoEm)}.</p>}
         </div></details>}
-        {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer técnico' : 'Editar parecer técnico'}</button>}
+        {!readOnly && (editandoConclusao ? <div className="space-y-2">
+          <label htmlFor="conclusao-tecnica-edicao">Texto da conclusão técnica</label>
+          <textarea id="conclusao-tecnica-edicao" className="w-full rounded-md border p-3" rows={12} value={textoConclusao} onChange={e => setTextoConclusao(e.target.value)} />
+          {salvarConclusao.isError && <p role="alert">Não foi possível salvar a conclusão técnica. Tente novamente.</p>}
+          <div className="flex gap-2"><button type="button" className="resumo-acao" disabled={salvarConclusao.isPending} onClick={() => salvarConclusao.mutate(textoConclusao)}>Salvar conclusão</button><button type="button" className="resumo-acao" disabled={salvarConclusao.isPending} onClick={() => setEditandoConclusao(false)}>Cancelar</button></div>
+        </div> : <button type="button" className="resumo-acao" onClick={() => { setTextoConclusao(parecer.data?.consideracoesTecnicas ?? conclusaoOriginal.current?.innerText ?? ''); setEditandoConclusao(true); }}>Editar conclusão</button>)}
       </section>
     </div>
   );

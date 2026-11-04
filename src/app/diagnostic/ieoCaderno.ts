@@ -1,14 +1,13 @@
 import { QUESTIONARIO_CADERNO } from './catalog/cadernoCria';
 import type { RegistroCaderno } from './cadernoCria';
 
-// Agrupamento analítico do sistema. Códigos, públicos e descritores seguem o
-// caderno. Respostas do instrumento anterior não são convertidas.
+// Distribuição das questões conforme o Guia. Respostas permanecem vinculadas aos códigos.
 export const DIMENSOES_IEO_CADERNO = [
-  { id: '1', titulo: 'Governança e Base dos Membros', codigos: ['Q01', 'Q03', 'Q06', 'Q07', 'Q08', 'Q25'] },
-  { id: '2', titulo: 'Gestão e Capacidade Organizacional', codigos: ['Q02', 'Q04', 'Q05', 'Q20', 'Q22'] },
-  { id: '3', titulo: 'Gestão Econômico-Financeira', codigos: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q19'] },
-  { id: '4', titulo: 'Geração de Valor e Articulação', codigos: ['Q09', 'Q10', 'Q16', 'Q17', 'Q18'] },
-  { id: '5', titulo: 'Regularidade e Gestão de Riscos', codigos: ['Q21', 'Q23', 'Q24'] },
+  { id: '1', titulo: 'Organizacional e Governança', codigos: ['Q01', 'Q02', 'Q03', 'Q04', 'Q05'] },
+  { id: '2', titulo: 'Social e Território', codigos: ['Q06', 'Q07', 'Q08', 'Q09', 'Q10'] },
+  { id: '3', titulo: 'Gestão Econômico-financeira', codigos: ['Q11', 'Q12', 'Q13', 'Q14', 'Q15'] },
+  { id: '4', titulo: 'Produção e Negócio', codigos: ['Q16', 'Q17', 'Q18', 'Q19', 'Q20'] },
+  { id: '5', titulo: 'Regularidade e Gestão de Riscos', codigos: ['Q21', 'Q22', 'Q23', 'Q24', 'Q25'] },
 ].map(d => ({
   ...d,
   perguntas: d.codigos
