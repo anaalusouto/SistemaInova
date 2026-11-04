@@ -5,16 +5,16 @@ import '../responsive-tables.css';
 import { useLargurasTabela } from '../plano/useLargurasTabela';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
-interface Props { linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
+interface Props { cabecalho?: ReactNode; linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
 const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'];
-const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 320, 220];
+const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 560, 220];
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
 const grupos = [...new Set(FUNCOES_MATRIZ.map(f => f.grupo))];
 const CATEGORIAS_LEITURA = ['Lacuna crítica', 'Lacuna relevante', 'Melhoria pontual', 'Acompanhar', 'Completar avaliação'];
 
-export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao, renderAvaliacao, filtroBloqueado }: Props) {
+export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, renderEdicao, renderAvaliacao, filtroBloqueado }: Props) {
   const [grupo, setGrupo] = useState('Todos');
   const [leituraSelecionada, setLeituraSelecionada] = useState<string | null>(null);
   const colunas = renderEdicao ? [...COLUNAS, 'Ações'] : COLUNAS;
@@ -29,6 +29,25 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
   const maiorContagem = Math.max(1, ...distribuicao.map(item => item.funcoes.length));
   const funcoesLeituraSelecionada = distribuicao.find(item => item.leitura === leituraSelecionada)?.funcoes ?? [];
   return <div className="painel-matriz space-y-5">
+    <section className="space-y-4" aria-label="Quantidade de funções por categoria de Leitura">
+      <div><h4 className="font-semibold text-lg">Funções por categoria de Leitura</h4><p className="text-sm text-muted-foreground">Quantidade de funções em cada categoria. Selecione uma coluna para consultar todas as funções correspondentes.</p></div>
+      <div className="overflow-x-auto rounded-xl border bg-card p-3 sm:p-5" tabIndex={0} role="region" aria-label="Gráfico de colunas da quantidade de funções por Leitura">
+        <div className="min-w-[680px]">
+          <div className="flex items-end gap-4 border-b" style={{ height: 230 }}>
+            <div className="flex h-full w-10 shrink-0 flex-col justify-between pb-1 text-right text-[10px] text-muted-foreground" aria-hidden="true">{[4,3,2,1,0].map(i=><span key={i}>{Math.round(maiorContagem*i/4)}</span>)}</div>
+            {distribuicao.map(({ leitura, funcoes }) => <button key={leitura} type="button" aria-pressed={leituraSelecionada === leitura} aria-label={`${leitura}: ${funcoes.length} funções. Consultar lista.`} onClick={() => setLeituraSelecionada(atual => atual === leitura ? null : leitura)} className={`flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2 rounded-t-lg px-2 pt-2 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${leituraSelecionada === leitura ? 'bg-primary/10' : 'hover:bg-muted/60'}`}>
+              <span className="text-xs font-semibold">{funcoes.length}</span><span className="flex h-36 w-full items-end justify-center border-b border-l border-border bg-muted/20"><span className="w-1/2 rounded-t bg-primary transition-[height]" style={{height:`${funcoes.length/maiorContagem*100}%`}}/></span><span className="min-h-10 text-[11px] font-medium leading-tight">{leitura}</span>
+            </button>)}
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">Leitura (categorias) · eixo vertical: quantidade de funções</p>
+        </div>
+      </div>
+      {leituraSelecionada && <div className="rounded-xl border bg-card p-4" role="region" aria-label={`Funções classificadas como ${leituraSelecionada}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="font-semibold">{leituraSelecionada} · {funcoesLeituraSelecionada.length} função(ões)</h5><button type="button" className="text-xs underline" onClick={() => setLeituraSelecionada(null)}>Fechar lista</button></div>
+        {funcoesLeituraSelecionada.length ? <ul className="mt-3 grid gap-2 sm:grid-cols-2">{funcoesLeituraSelecionada.map(f => <li key={f.id}><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="w-full rounded-lg border px-3 py-2 text-left text-sm hover:border-primary disabled:opacity-60"><strong className="mr-2 text-primary">{f.id}</strong>{f.nome}</button></li>)}</ul> : <p className="mt-3 text-sm text-muted-foreground">Nenhuma função classificada nesta categoria.</p>}
+      </div>}
+    </section>
+    {cabecalho}
     <div className="flex flex-wrap gap-2" aria-label="Filtrar funções por grupo">
       {['Todos', ...grupos].map(g => <button key={g} type="button" disabled={filtroBloqueado} aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
     </div>
@@ -63,23 +82,6 @@ export function PainelMatriz({ linhas, onSelecionar, desabilitado, renderEdicao,
       </div>
       <p className="text-xs text-muted-foreground">{renderEdicao ? 'Edite as células e salve ou cancele cada linha. Tab percorre os campos; Enter salva a linha; Escape cancela. Em textos, Enter insere uma nova linha.' : 'Clique no nome de uma função para consultar ou editar suas respostas em pop-up.'}</p>
     </section>
-    <section className="space-y-4" aria-label="Quantidade de funções por categoria de Leitura">
-      <div><h4 className="font-semibold text-lg">Funções por categoria de Leitura</h4><p className="text-sm text-muted-foreground">Quantidade de funções em cada categoria. Selecione uma coluna para consultar todas as funções correspondentes.</p></div>
-      <div className="overflow-x-auto rounded-xl border bg-card p-3 sm:p-5" tabIndex={0} role="region" aria-label="Gráfico de colunas da quantidade de funções por Leitura">
-        <div className="min-w-[680px]">
-          <div className="flex items-end gap-4 border-b" style={{ height: 230 }}>
-            <div className="flex h-full w-10 shrink-0 flex-col justify-between pb-1 text-right text-[10px] text-muted-foreground" aria-hidden="true">{[4,3,2,1,0].map(i=><span key={i}>{Math.round(maiorContagem*i/4)}</span>)}</div>
-            {distribuicao.map(({ leitura, funcoes }) => <button key={leitura} type="button" aria-pressed={leituraSelecionada === leitura} aria-label={`${leitura}: ${funcoes.length} funções. Consultar lista.`} onClick={() => setLeituraSelecionada(atual => atual === leitura ? null : leitura)} className={`flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2 rounded-t-lg px-2 pt-2 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${leituraSelecionada === leitura ? 'bg-primary/10' : 'hover:bg-muted/60'}`}>
-              <span className="text-xs font-semibold">{funcoes.length}</span><span className="flex h-36 w-full items-end justify-center border-b border-l border-border bg-muted/20"><span className="w-1/2 rounded-t bg-primary transition-[height]" style={{height:`${funcoes.length/maiorContagem*100}%`}}/></span><span className="min-h-10 text-[11px] font-medium leading-tight">{leitura}</span>
-            </button>)}
-          </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">Leitura (categorias) · eixo vertical: quantidade de funções</p>
-        </div>
-      </div>
-      {leituraSelecionada && <div className="rounded-xl border bg-card p-4" role="region" aria-label={`Funções classificadas como ${leituraSelecionada}`}>
-        <div className="flex flex-wrap items-center justify-between gap-2"><h5 className="font-semibold">{leituraSelecionada} · {funcoesLeituraSelecionada.length} função(ões)</h5><button type="button" className="text-xs underline" onClick={() => setLeituraSelecionada(null)}>Fechar lista</button></div>
-        {funcoesLeituraSelecionada.length ? <ul className="mt-3 grid gap-2 sm:grid-cols-2">{funcoesLeituraSelecionada.map(f => <li key={f.id}><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="w-full rounded-lg border px-3 py-2 text-left text-sm hover:border-primary disabled:opacity-60"><strong className="mr-2 text-primary">{f.id}</strong>{f.nome}</button></li>)}</ul> : <p className="mt-3 text-sm text-muted-foreground">Nenhuma função classificada nesta categoria.</p>}
-      </div>}
-    </section>
+
   </div>;
 }

@@ -133,6 +133,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
     setAberta(id);setEditando(!readOnly&&(!indice.has(id)||Boolean(edicoes[id])));
   };
   return <div className="w-full space-y-4 min-w-0">
+    <PainelMatriz cabecalho={<div className="space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Distribuição das funções pela categoria da coluna Leitura. Criticidade e Interesse continuam disponíveis na tabela e no preenchimento.</p><div className="flex flex-wrap items-center gap-2">
       {!readOnly&&<><button type="button" aria-pressed={edicaoTabela} disabled={ocupado||temAvaliacaoPendente||(edicaoTabela&&pendentes>0)} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>{setAberta(null);setEditando(false);setEdicaoTabela(v=>!v);}}>{edicaoTabela?'Fechar edição':'Editar'}</button><button type="button" disabled={ocupado||temAvaliacaoPendente||edicaoTabela||pendentes>0||Object.keys(importadas).length>0} className="border rounded-lg px-3 py-2 text-xs font-medium disabled:opacity-60" onClick={()=>setEntrada(true)}>Importar PDF</button></>}
     </div></div>
@@ -147,7 +148,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       {!readOnly&&Object.keys(importadas).length>0&&<button type="button" disabled={ocupado||pendentes>0} className="underline" onClick={async()=>{if(!importacao)return;setDescartando(true);try{await descartarImportacaoMatriz({data:{organizacaoId,diagnosticoId,importacaoId:importacao.id}});onRegistro(null);}catch(e){toast.error(e instanceof Error?e.message:'Não foi possível descartar.');}finally{setDescartando(false);}}}>Descartar respostas ainda não salvas</button>}
     </div>}
     <p className="text-sm text-muted-foreground">{avaliadas} de {FUNCOES_MATRIZ.length} funções avaliadas.</p>
-    <PainelMatriz linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:{...((!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome))),nomeFuncao:f.nome},estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela||temAvaliacaoPendente} filtroBloqueado={pendentes>0||ocupado||temAvaliacaoPendente}
+    </div>} linhas={FUNCOES_MATRIZ.map(f=>({id:f.id,valores:{...((!readOnly?edicoes[f.id]?.valores:undefined)??(indice.has(f.id)?inicial(f.nome,indice.get(f.id)):importadas[f.id]??inicial(f.nome))),nomeFuncao:f.nome},estado:ESTADOS_MATRIZ.find(e=>e.id===estados.get(f.id))!.rotulo}))} onSelecionar={selecionarFuncao} desabilitado={ocupado||edicaoTabela||temAvaliacaoPendente} filtroBloqueado={pendentes>0||ocupado||temAvaliacaoPendente}
       renderAvaliacao={id=><AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={readOnly||!edicaoTabela||ocupado}/>}
       renderEdicao={!readOnly&&edicaoTabela?linha=>{
         const edicao=edicoes[linha.id];const escolhas=edicao?.decisoes??{};const revisada=edicao?.confirmado??false;
