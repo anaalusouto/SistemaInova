@@ -68,8 +68,8 @@ type Visao = "tabela" | "gantt" | "kanban" | "riscos" | "ordenar";
 export type PedidoVisaoPlano = { visao: "tabela" | "riscos" | "ordenar"; contador: number; somenteAbertos?: boolean };
 
 const VISOES: { id: Visao; rotulo: string; icone: typeof Table2; disponivel: boolean }[] = [
-  { id: "tabela", rotulo: "Tabela", icone: Table2, disponivel: true },
   { id: "gantt", rotulo: "Gantt", icone: GanttChartSquare, disponivel: true },
+  { id: "tabela", rotulo: "Tabela", icone: Table2, disponivel: true },
   { id: "kanban", rotulo: "Kanban", icone: Columns3, disponivel: true },
   // RF01: a visão consolidada de riscos, no lugar do modal "Registro de riscos".
   { id: "riscos", rotulo: "Riscos", icone: ShieldAlert, disponivel: true },
@@ -91,6 +91,7 @@ export function TabPlanoTrabalho({
   acoesExternas = false,
   acoesDaVisao,
   aoPendencias,
+  somenteRiscos = false,
 }: {
   project: Project;
   /** Muda quando o botão Riscos do cabeçalho do projeto é clicado. */
@@ -100,11 +101,12 @@ export function TabPlanoTrabalho({
   /** Ações adicionais à direita do seletor de visões. */
   acoesDaVisao?: ReactNode;
   aoPendencias?: (pendente: boolean) => void;
+  somenteRiscos?: boolean;
 }) {
   const p = project as ProjectExt;
   const { updateActivityStatus, setResponsavel } = useStore();
   const { readOnly } = useAuth();
-  const [visao, setVisao] = useState<Visao>("tabela");
+  const [visao, setVisao] = useState<Visao>(somenteRiscos ? "riscos" : "gantt");
   const { formato } = useFormatoPlano();
   const ordemCampos = formato.ordemCampos;
   const [edicaoAberta, setEdicaoAberta] = useState(false);
@@ -336,8 +338,9 @@ export function TabPlanoTrabalho({
       {/* Seletor de visão (RF-011) */}
       <div
         ref={seletorRef}
+        hidden={somenteRiscos}
         className="project-plan-toolbar flex min-w-0 items-center gap-3 px-3 sm:px-6 py-3 flex-wrap"
-        style={{ scrollMarginTop: 8 }}
+        style={{ scrollMarginTop: 8, display: somenteRiscos ? "none" : undefined }}
       >
         {(visao === "tabela" || visao === "gantt") && recolhiveis.length > 0 && (
           <button

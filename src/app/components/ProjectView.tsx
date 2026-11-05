@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, ClipboardList, DollarSign, Info, ChevronDown } from "lucide-react";
+import { FileText, ClipboardList, DollarSign, Info, ChevronDown, ShieldAlert } from "lucide-react";
 import type { Project } from "../data/mockData";
 import { useStore, type ProjectExt } from "../store";
 import { TituloNavegacao } from "./TituloNavegacao";
@@ -17,6 +17,7 @@ import "./project-responsive.css";
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
   { id: "plano", label: "Plano de Trabalho", icon: ClipboardList },
+  { id: "riscos", label: "Riscos", icon: ShieldAlert },
   { id: "orcamento", label: "Orçamento", icon: DollarSign },
 ] as const;
 interface ProjectViewProps {
@@ -93,7 +94,7 @@ export function ProjectView({
                 navegarSemPendencias(true, () => {});
                 return;
               }
-              mudarAba("plano");
+              mudarAba("riscos");
               setPedidoVisao((p) => ({ visao: "riscos", somenteAbertos: true, contador: (p?.contador ?? 0) + 1 }));
             }}
           />
@@ -107,11 +108,12 @@ export function ProjectView({
           {activeTab === "plano" && (
             <TabPlanoTrabalho
               project={project}
-              pedidoVisao={pedidoVisao}
+              pedidoVisao={pedidoVisao?.visao === "riscos" ? null : pedidoVisao}
               acoesExternas
               aoPendencias={setHaPendencias}
             />
           )}
+          {activeTab === "riscos" && <TabPlanoTrabalho project={project} somenteRiscos acoesExternas pedidoVisao={pedidoVisao?.visao === "riscos" ? pedidoVisao : null} aoPendencias={setHaPendencias} />}
           {activeTab === "orcamento" && <TabOrcamentoInterino project={project} />}
         </div>
       </div>

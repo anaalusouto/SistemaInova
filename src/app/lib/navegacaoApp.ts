@@ -1,7 +1,7 @@
 import type { RotaOrg, SecaoOrg } from './navegacaoOrg';
 
 export type AreaApp = 'overview' | 'organizations' | 'schedule' | 'diagnostics' | 'reports' | 'settings';
-export type AbaProjeto = 'descricao' | 'plano' | 'orcamento';
+export type AbaProjeto = 'descricao' | 'plano' | 'riscos' | 'orcamento';
 export type AbaGestao = 'plano' | 'rotas' | 'calendario' | 'executivo' | 'kanban' | 'mensagens';
 export type InstrumentoDiagnostico = 'resumo' | 'matriz' | 'ieo' | 'cesta' | 'parecer';
 
@@ -21,7 +21,7 @@ export interface BuscaApp {
 
 const areas: readonly AreaApp[] = ['overview', 'organizations', 'schedule', 'diagnostics', 'reports', 'settings'];
 const secoes: readonly SecaoOrg[] = ['dados', 'projetos', 'projeto', 'encaminhamentos', 'registros', 'mapeamento', 'parecer'];
-const abas: readonly AbaProjeto[] = ['descricao', 'plano', 'orcamento'];
+const abas: readonly AbaProjeto[] = ['descricao', 'plano', 'riscos', 'orcamento'];
 const texto = (v: unknown) => typeof v === 'string' && v.trim() && v.length <= 160 && !/[\u0000-\u001f]/.test(v) ? v.trim() : undefined;
 
 /** Somente o contexto de navegação entra na URL; formulário e sessão não entram. */
