@@ -111,14 +111,14 @@ function DimensoesResumo({
             {ordenadas.map((d) => (
               <tr key={d.dimensaoId}>
                 <th scope="row" data-label="Ordem / prioridade">
-                  {d.ordem === null ? "Sem ordem calculável" : `${historico ? "Histórica · " : ""}${d.ordem}ª prioridade`}
+                  {d.ordem === null ? "Sem ordem calculável" : `${d.ordem}ª prioridade`}
                 </th>
                 <td data-label="Dimensão e descrição">
                   <strong>{d.dimensaoTitulo}</strong><br />
                   Indicadores: {d.codigos?.join(", ") || "Não registrados"}
                 </td>
                 <td data-label="IEO / 4">
-                  <strong>{d.media === null ? "Sem nota" : `${nota(d.media)}${historico ? " · histórica" : ""}`}</strong><br />
+                  <strong>{d.media === null ? "Sem nota" : nota(d.media)}</strong><br />
                   {d.pontuadas ?? d.respondidas}/{d.total} com nota
                 </td>
                 <td data-label="Matriz / 4">Não registrado por dimensão</td>
@@ -173,8 +173,8 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
   return <div className="space-y-3">
     <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
       <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades de dimensão e ordem de atuação</h5><p className="text-xs text-muted-foreground">Nota consolidada de priorização · escala de 0 a 4. Pontos e hastes refletem os valores históricos da referência; a nota atual permanece sem cálculo validado.</p></figcaption>
-      <div className="overflow-x-auto"><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block min-w-[820px] w-full" role="img" aria-label="Gráfico histórico de priorização consolidada por dimensão">
-        <title>Nota consolidada de priorização por dimensão, valores históricos</title>
+      <div className="overflow-x-auto"><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block min-w-[820px] w-full" role="img" aria-label="Gráfico de priorização consolidada por dimensão">
+        <title>Nota consolidada de priorização por dimensão</title>
         <desc>Escala vertical de zero a quatro. Cinco notas históricas são mostradas com hastes até a linha de base; não representam o resultado atual validado.</desc>
         {[0,1,2,3,4].map(tick => <g key={tick}><line x1={left} x2={chartWidth-right} y1={y(tick)} y2={y(tick)} stroke={tick===0?'#7b8795':'#e1e6ec'} strokeWidth={tick===0?1.5:1}/><text x={left-14} y={y(tick)+4} textAnchor="end" fontSize="12" fill="#526174">{tick}</text></g>)}
         <text transform={`translate(22 ${(top+baseline)/2}) rotate(-90)`} textAnchor="middle" fontSize="13" fill="#263b55">Nota consolidada de priorização</text>
@@ -183,25 +183,25 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
           return <g key={item.dimensao}>
             <line x1={x(index)} x2={x(index)} y1={baseline} y2={y(value)} stroke="#aab5c2" strokeWidth="2"/>
             <circle cx={x(index)} cy={y(value)} r="8" fill={coresPrioridade[item.prioridade]} stroke="#fff" strokeWidth="2"/>
-            <text x={x(index)} y={y(value)-14} textAnchor="middle" fontSize="13" fontWeight="700" fill={coresPrioridade[item.prioridade]}>{item.consolidada}*</text>
+            <text x={x(index)} y={y(value)-14} textAnchor="middle" fontSize="13" fontWeight="700" fill={coresPrioridade[item.prioridade]}>{item.consolidada}</text>
             <text x={x(index)} y={baseline+27} textAnchor="middle" fontSize="12" fill="#263b55">{linhasRotulo[index].map((linha,i)=><tspan key={linha} x={x(index)} dy={i===0?0:16}>{linha}</tspan>)}</text>
             <text x={x(index)} y={baseline+67} textAnchor="middle" fontSize="11" fontWeight="600" fill={coresPrioridade[item.prioridade]}>{item.prioridade}</text>
           </g>;
         })}
-        <text x={(left+chartWidth-right)/2} y={chartHeight-14} textAnchor="middle" fontSize="12" fill="#526174">Dimensões integradas · *nota histórica</text>
+        <text x={(left+chartWidth-right)/2} y={chartHeight-14} textAnchor="middle" fontSize="12" fill="#526174">Dimensões integradas</text>
       </svg></div>
       <div className="flex flex-wrap gap-4 text-xs"><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Crítica}}/>Prioridade crítica</span><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Média}}/>Prioridade média</span></div>
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
     </figure>
     <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
-      <colgroup><col style={{width:56}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
-      <caption>Prioridades dimensionais · valores históricos da referência</caption>
+      <colgroup><col style={{width:85}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
+      <caption>Prioridades dimensionais</caption>
       <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota IEO','Nota Matriz','Nota Cesta','Consolidada','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
       <tbody>{DIMENSOES_HISTORICAS_AGROMEL.map(d => <tr key={d.ordem}>
         <th scope="row" data-label="Ordem">{d.ordem}</th><td data-label="Prioridade">{d.prioridade}</td>
         <td data-label="Dimensão integrada"><strong>{d.dimensao}</strong><p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p></td>
-        <td data-label="Nota IEO">{d.ieo} · histórica</td><td data-label="Nota Matriz">{d.matriz}</td>
-        <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada} · histórica</td><td data-label="Fórmula">{d.formula}</td>
+        <td data-label="Nota IEO">{d.ieo}</td><td data-label="Nota Matriz">{d.matriz}</td>
+        <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada}</td><td data-label="Fórmula">{d.formula}</td>
       </tr>)}</tbody>
     </table></div></div>
     {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos usados</button>}
@@ -441,119 +441,6 @@ export function ResumoDiagnostico({
             <div className="resumo-texto-integral">{parecer.data.pontosPrioritarios}</div>
           </details>
         )}
-      </section>
-      <section className="resumo-secao-metodologia" aria-label="Metodologia, vínculos e pendências">
-        <h4>Metodologia, vínculos e pendências</h4>
-        <details className="resumo-expansivel">
-          <summary>Como a nota e a prioridade são calculadas</summary>
-          <div>
-            <p>
-              O IEO atual é a média das notas 1–4 por dimensão; o IEO geral é a média das dimensões
-              com nota. NS, NC, N/A, divergência e vazios não entram nas médias, nem contam como
-              zero.
-            </p>
-            <p>
-              As dimensões seguem a distribuição do Guia. Notas menores aparecem primeiro
-              para apoiar a análise. Empates mantêm a mesma ordem; dimensões sem nota não recebem
-              ordem. Não há classificação técnica automática por faixas de nota.
-            </p>
-            <p>
-              Prioridades estratégicas são pactuadas, não derivam automaticamente das notas.
-              Respostas anteriores não são convertidas.
-            </p>
-          </div>
-        </details>
-        <article className="resumo-cartao">
-          <h5>Nota consolidada do mapeamento</h5>
-          <p><strong>{ieoPendente ? "Não calculável como resultado atual" : `${nota(consolidada.nota)}${consolidada.nota !== null ? " / 4" : ""}`}</strong>{ieoPendente && consolidada.nota !== null && <> · cálculo anterior preservado como histórico: {nota(consolidada.nota)} / 4</>}</p>
-          <ul>{consolidada.componentes.map((c) => <li key={c.id}>{c.nome}: {nota(c.nota)} · {c.pontuadas} registros com nota{ieoPendente && c.id === "ieo" ? " · histórico, aguarda reavaliação" : ""}</li>)}</ul>
-          <p>Fórmula geral: 50% IEO + 25% Matriz + 25% Cesta, com redistribuição dos pesos dos componentes sem nota. A fórmula não define uma composição por dimensão; notas dimensionais de Matriz e Cesta e a nota consolidada dimensional estão como “Não registrado / Não calculável”.</p>
-        </article>
-        <div className="resumo-cartao">
-          <h5>Pendências de atualização</h5>
-          {pendencias.length ? (
-            pendencias.map((r) => (
-              <div key={r.codigo}>
-                <p>
-                  <strong>Remapeamento dimensional pendente</strong> · código:
-                  {r.codigo}
-                </p>
-                <p className="resumo-texto-integral">{r.resposta.valor}</p>
-                <p className="resumo-texto-integral">{r.resposta.relato}</p>
-              </div>
-            ))
-          ) : diagnosticoAgromel ? (
-            <div>
-              <p><strong>Remapeamento dimensional pendente</strong> · apontado na referência AGROMEL.</p>
-              <p>O registro original e seus detalhes não foram localizados entre os registros carregados neste diagnóstico. Conteúdo: Não registrado.</p>
-              {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? "Consultar parecer e vínculos" : "Consultar ou editar parecer e vínculos"}</button>}
-            </div>
-          ) : (
-            <p>
-              Nenhuma pendência de remapeamento identificada nos títulos das prioridades
-              registradas. Consulte as evidências para outras pendências.
-            </p>
-          )}
-        </div>
-        <details className="resumo-expansivel">
-          <summary>Informações de apoio · documentos, registros e vínculos</summary>
-          <div className="resumo-apoio">
-            <section aria-label="Documentos do mapeamento">
-              <h5>Documentos</h5>
-              <DocumentosRegistro
-                area="mapeamento"
-                organizacaoId={organizacaoId}
-                relatorioUrl={org.mapeamentoRelatorioUrl}
-              />
-            </section>
-            <section>
-              <h5>Registros da organização</h5>
-              {org.registros.length ? (
-                org.registros.map((r) => (
-                  <article key={r.id} className="resumo-cartao">
-                    <h5>
-                      {formatDateOnly(r.data)} · {r.assunto || "Registro de contato"}
-                    </h5>
-                    <p className="resumo-texto-integral">{r.resumo}</p>
-                  </article>
-                ))
-              ) : (
-                <p>Nenhum registro disponível.</p>
-              )}
-            </section>
-            <section>
-              <h5>Observações de campo</h5>
-              {observacoes.length ? (
-                observacoes.map((o) => (
-                  <article key={o.id} className="resumo-cartao">
-                    <h5>{o.origem}</h5>
-                    <p className="resumo-texto-integral">{o.texto}</p>
-                  </article>
-                ))
-              ) : (
-                <p>Nenhuma observação registrada.</p>
-              )}
-            </section>
-            <section>
-              <h5>Vínculos da organização</h5>
-              {org.projetos.length ? (
-                <ul>
-                  {org.projetos.map((p) => (
-                    <li key={p.id}>
-                      <a
-                        href={`/?area=organizations&org=${encodeURIComponent(organizacaoId)}&secao=projeto&projeto=${p.id}`}
-                      >
-                        {p.codigo} · {p.nome}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Nenhum projeto vinculado.</p>
-              )}
-            </section>
-          </div>
-        </details>
       </section>
       <section className="resumo-secao-conclusao-tecnica" aria-label="Conclusão técnica completa">
         <h4>Conclusão técnica completa</h4>

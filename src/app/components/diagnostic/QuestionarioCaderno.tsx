@@ -152,18 +152,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
       </aside>
       </div>
 
-    <section className="col-span-1 space-y-3 xl:col-span-2" aria-label="Perguntas e respostas do IEO"><div><h3 className="text-lg font-semibold">Perguntas e relatos</h3></div>
-      {DIMENSOES_IEO_CADERNO.map(d => {
-        const resumo = resultado.porDimensao.find(r => r.dimensaoId === d.id)!;
-        const aplicaveis = Math.max(0, resumo.total - resumo.naoAplicaveis);
-        const aberta = dimensoesAbertas.has(d.id);
-        const perguntas = d.perguntas.filter(q => publico === 'Todos' || q.grupo === publico);
-        return <details key={d.id} open={aberta} onToggle={e => { const aberto = e.currentTarget.open; alterarAbertura(d.id, aberto); if (aberto && dimensaoId !== d.id) selecionarDimensao(d.id); }} className={`scroll-mt-4 overflow-hidden rounded-xl border bg-card ${dimensaoId === d.id ? 'border-primary ring-1 ring-primary/20' : ''}`}>
-          <summary className="cursor-pointer list-none p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:p-4"><span className="flex flex-wrap items-center justify-between gap-3"><span className="flex min-w-0 items-center gap-3"><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">{d.id}</span><span className="min-w-0"><strong className="block break-words text-sm">Dimensão {d.id} · {d.titulo}</strong><span className="mt-1 block text-xs text-muted-foreground">{resumo.respondidas}/{resumo.total} respondidas · média {fmtScore(resumo.media)} · {resumo.pontuadas}/{aplicaveis} aplicáveis avaliados</span></span></span><span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full border font-semibold">{aberta ? '−' : '+'}</span></span></summary>
-          <div className="space-y-2 border-t p-2 sm:p-3">{perguntas.map(q => <div key={q.codigo} className="min-w-0"><CadernoItens {...props} itens={[q]} compact/><p className="px-3 pt-1 text-[10px] text-muted-foreground">Público responsável: {q.grupo}</p></div>)}{!perguntas.length && <p className="p-3 text-sm text-muted-foreground">Nenhuma pergunta desta dimensão corresponde ao público selecionado.</p>}</div>
-        </details>;
-      })}
-    </section>
+
 
   </div>;
 }

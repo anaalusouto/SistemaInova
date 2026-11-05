@@ -17,8 +17,8 @@ import "./project-responsive.css";
 const tabs = [
   { id: "descricao", label: "Descrição", icon: FileText },
   { id: "plano", label: "Plano de Trabalho", icon: ClipboardList },
-  { id: "riscos", label: "Riscos", icon: ShieldAlert },
   { id: "orcamento", label: "Orçamento", icon: DollarSign },
+  { id: "riscos", label: "Riscos", icon: ShieldAlert },
 ] as const;
 interface ProjectViewProps {
   project: Project;

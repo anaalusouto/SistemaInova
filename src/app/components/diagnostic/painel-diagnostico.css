@@ -2,7 +2,7 @@
 .diagnostico-editor-matriz-neutra { background: var(--card, #fff); }
 .diagnostico-sobretitulo { color: var(--brand); font-size: .68rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 700; margin-bottom: .35rem; }
 .diagnostico-contexto { background: var(--surface-0); }
-.diagnostico-contexto-grid { display: grid; min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 24px; }
+.diagnostico-contexto-grid { display: grid; min-width: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; }
 .diagnostico-contexto-grid > div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .diagnostico-contexto-grid span { color: var(--ink-5); font-size: .65rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 .diagnostico-contexto-grid strong { color: var(--ink-2); font-size: .82rem; font-weight: 500; overflow-wrap: anywhere; }
@@ -131,6 +131,7 @@
 .resumo-tabela { width: 100%; min-width: 1080px; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: .85rem; }
 .resumo-tabela-prioridades { min-width: 1450px; }
 .resumo-tabela-prioridades th, .resumo-tabela-prioridades td { white-space: normal; overflow-wrap: anywhere; word-break: normal; }
+.resumo-tabela-prioridades thead th:first-child { white-space: nowrap; overflow-wrap: normal; }
 .resumo-tabela-prioridades td[data-label="Fórmula"] { line-height: 1.55; }
 .resumo-tabela caption { text-align: left; font-weight: 650; color: var(--ink-1, #172b46); margin-bottom: 12px; }
 .resumo-tabela th, .resumo-tabela td { padding: 12px; border-bottom: 1px solid var(--border, #d5dce5); vertical-align: top; overflow-wrap: anywhere; }

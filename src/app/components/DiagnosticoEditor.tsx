@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Download, ArrowLeft, Lock, CopyPlus, FileCheck2, PencilLine } from 'lucide-react';
-import { getDadosCompletosDiagnostico, getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
+import { ArrowLeft, Lock, CopyPlus, PencilLine } from 'lucide-react';
+import { getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import type { InstrumentoDiagnostico } from '../lib/navegacaoApp';
 import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
@@ -13,12 +13,6 @@ import { ParecerTecnicoTab } from './diagnostic/ParecerTecnicoTab';
 import { ResumoDiagnostico } from './diagnostic/ResumoDiagnostico';
 import { useAuth } from '../auth/authStore';
 import { listarComunidades } from '../comunidades.server';
-import { listarRespostasMatriz, listarProdutos, getParecer, listarChecklist } from '../diagnosticos.server';
-import { FUNCOES_MATRIZ } from '../diagnostic/catalog/matrizPrototipo';
-import { PARECER_GRUPOS } from '../diagnostic/catalog/parecerComplementar';
-import { CHECKLIST_DOCUMENTAL } from '../diagnostic/catalog/checklistDocumental';
-import { calcularIeoCaderno } from '../diagnostic/ieoCaderno';
-import { useCaderno } from './diagnostic/CadernoItens';
 import './diagnostic/painel-diagnostico.css';
 import { NavegacaoModulo } from './NavegacaoModulo';
 import { PendenciasModulo, navegarSemPendencias } from './PendenciasModulo';
@@ -62,40 +56,12 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
   const [registroEditor, setRegistroEditor] = useState<string | undefined>();
   const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
   const { readOnly } = useAuth();
-  const [baixando,setBaixando] = useState(false);
   const queryClient = useQueryClient();
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const { data: diagnostico, isLoading, error, refetch } = useQuery({
     queryKey: ['diagnostico', diagnosticoId, organizacaoId ?? null],
     queryFn: () => getDiagnostico({ data: { id: diagnosticoId, comunidadeId: organizacaoId } }),
   });
-  const matrizProgresso = useQuery({ queryKey: ['diagnostico-matriz', diagnosticoId], queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }) });
-  const ieoProgresso = useCaderno({ diagnosticoId, organizacaoId: diagnostico?.comunidadeId ?? organizacaoId ?? '' });
-  const cestaProgresso = useQuery({ queryKey: ['diagnostico-produtos', diagnosticoId], queryFn: () => listarProdutos({ data: { diagnosticoId } }) });
-  const parecerProgresso = useQuery({ queryKey: ['diagnostico-parecer', diagnosticoId], queryFn: () => getParecer({ data: { diagnosticoId } }) });
-  const checklistProgresso = useQuery({ queryKey: ['diagnostico-checklist', diagnosticoId], queryFn: () => listarChecklist({ data: { diagnosticoId } }) });
-  const funcoesAvaliadas = FUNCOES_MATRIZ.filter(f => {
-    const r = matrizProgresso.data?.find(item => item.funcaoId === f.id);
-    return Boolean(r?.atuacao.length && r.experiencia && r.criticidade && r.interesse);
-  }).length;
-  const ieoResultado = calcularIeoCaderno(ieoProgresso.data ?? []);
-  const percentualMatriz = funcoesAvaliadas / FUNCOES_MATRIZ.length;
-  const percentualIeo = ieoResultado.total ? ieoResultado.respondidas / ieoResultado.total : 0;
-  const produtos = cestaProgresso.data ?? [];
-  const percentualCesta = produtos.length ? produtos.filter(p => p.statusPreenchimento === 'completo').length / produtos.length : 0;
-  const camposParecer = PARECER_GRUPOS.flatMap(g => g.campos);
-  const respostasParecer = parecerProgresso.data?.respostasComplementares ?? {};
-  const respondidasParecer = camposParecer.filter(c => {
-    const value = respostasParecer[c.id];
-    return Array.isArray(value) ? value.length > 0 : Boolean(value?.trim());
-  }).length;
-  const analiseParecer = ['sintese', 'capacidades', 'fragilidades', 'pontosPrioritarios', 'consideracoesTecnicas'] as const;
-  const analiseRespondida = analiseParecer.filter(c => Boolean(parecerProgresso.data?.[c]?.trim())).length;
-  const documentosRespondidos = (checklistProgresso.data ?? []).filter(item => item.disponivel !== null).length;
-  const totalParecer = camposParecer.length + analiseParecer.length + CHECKLIST_DOCUMENTAL.length;
-  const percentualParecer = totalParecer ? (respondidasParecer + analiseRespondida + documentosRespondidos) / totalParecer : 0;
-  const percentualProgresso = Math.round((percentualMatriz + percentualIeo + percentualCesta + percentualParecer) / 4 * 100);
-
   const concluir = useMutation({
     mutationFn: () => concluirDiagnostico({ data: { id: diagnosticoId } }),
     onSuccess: () => {
@@ -131,7 +97,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
               <div><span>Aplicação</span><strong>{diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'}</strong></div>
               <div><span>Versão</span><strong>{diagnostico?.versao ?? '—'}</strong></div>
               <div><span>Última edição</span><strong>{diagnostico?.atualizadoEm ? new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR') : '—'}</strong></div>
-              <div title="Média do preenchimento da Matriz, IEO, Cesta de Produtos e Parecer"><span>Andamento</span><strong className="inline-flex items-center gap-2"><span className="project-summary-progress" aria-hidden="true"><span style={{ width: `${percentualProgresso}%` }} /></span>{percentualProgresso}%</strong></div>
+              <div><span>Status</span><strong>{diagnostico ? STATUS_LABEL[diagnostico.status] : '—'}</strong></div>
             </> : <>
               <p className="diagnostico-sobretitulo">Inova Sociobio · Diagnóstico organizacional</p>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.8rem', color: 'var(--ink-1)' }}>
@@ -139,37 +105,15 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
               </h2>
               <p style={{ color: 'var(--ink-4)', fontSize: '0.78rem', marginTop: 2 }}>
                 Aplicação {diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'} · Versão {diagnostico?.versao ?? '—'}
-                {diagnostico?.atualizadoEm && <> · Última alteração salva em {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>}
+                {diagnostico?.atualizadoEm && <> · Última edição {new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR')}</>} · Status {diagnostico ? STATUS_LABEL[diagnostico.status] : '—'}
               </p>
-              <p className="mt-2 flex items-center gap-2 text-xs font-semibold" title="Média do preenchimento da Matriz, IEO, Cesta de Produtos e Parecer" style={{ color: 'var(--ink-3)' }}><span>Andamento</span><span className="project-summary-progress" aria-hidden="true"><span style={{ width: `${percentualProgresso}%` }} /></span>{percentualProgresso}%</p>
             </>}
           </div>
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
-              <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => setEvidenciasAberto(true))}>
-                <FileCheck2 size={14} aria-hidden /> Evidências
-              </button>
               <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => { setSecaoEditor('Dados gerais'); setEditorAberto(true); })}>
                 <PencilLine size={14} aria-hidden /> Editar informações
               </button>
-              <button type="button" aria-label={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} title={tab === 'parecer' ? 'Baixar parecer em PDF' : 'Baixar mapeamento em PDF'} disabled={baixando} className="rounded-lg p-2.5 text-white shadow-sm disabled:opacity-60" style={{background:'var(--primary)'}} onClick={async()=>{
-                setBaixando(true);
-                try {
-                  const dados=await getDadosCompletosDiagnostico({data:{diagnosticoId}});
-                  const {buildDiagnosticoReportModel,exportDiagnosticoReportPdf}=await import('../lib/diagnosticReportExport');
-                  exportDiagnosticoReportPdf(buildDiagnosticoReportModel(tab === 'parecer' ? 'Parecer Técnico' : 'Mapeamento Organizacional',[dados],tab === 'parecer' ? ['identificacao','parecer'] : ['identificacao','matriz','ieo','cesta']));
-                } catch(e){toast.error(e instanceof Error ? e.message : 'Não foi possível baixar o PDF.');}
-                finally{setBaixando(false);}
-              }}><span className="flex items-center gap-2 text-xs font-medium"><Download size={16} className={baixando ? 'animate-pulse' : undefined} aria-hidden />{baixando ? 'Preparando relatório…' : 'Baixar relatório completo'}</span></button>
-              <span
-                className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium"
-                style={{
-                  color: diagnostico.status === 'concluido' ? 'var(--success)' : 'var(--brand)',
-                  background: diagnostico.status === 'concluido' ? 'var(--success-soft)' : 'var(--brand-soft)',
-                }}
-              >
-                {STATUS_LABEL[diagnostico.status]}
-              </span>
               {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} bloqueado={haPendencias} />}
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
