@@ -111,7 +111,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
           <div className="min-w-0"><p className="diagnostico-sobretitulo">{dimensaoId ? `Dimensão ${dimensaoId}` : 'Análise geral'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Respostas das cinco dimensões'}</h3><p className="text-sm text-muted-foreground">{fmtScore(mediaFoco)} / 4 · {avaliadasFoco}/{aplicaveisFoco} indicadores aplicáveis avaliados · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura</p></div>
           {dimensaoId && <button type="button" className="diagnostico-filtro shrink-0" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
         </div>
-        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground" aria-label="Legenda do gráfico"><span className="flex items-center gap-2"><i className="size-3 rounded-sm bg-primary"/>Resposta de 1 a 4</span><span className="flex items-center gap-2"><i className="h-4 border-l-2 border-dashed border-amber-700"/>Média da dimensão</span><span>N/A aparece sem barra numérica</span></div>
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground" aria-label="Legenda do gráfico"><span className="flex items-center gap-2"><i className="size-3 rounded-sm bg-primary"/>Resposta de 1 a 4</span><span className="flex items-center gap-2"><i className="h-4 border-l-2 border-amber-700"/>Média da dimensão</span><span>N/A aparece sem barra numérica</span></div>
         <div className="overflow-hidden rounded-lg border bg-card" role="table" aria-label="Gráfico horizontal das perguntas do IEO">
           <div className="grid grid-cols-1 items-end gap-x-4 border-b bg-muted/30 px-3 py-2 text-[11px] font-semibold text-muted-foreground sm:grid-cols-[minmax(0,1.15fr)_minmax(120px,0.85fr)_54px] sm:px-4" role="row">
             <span role="columnheader">Indicador</span><span role="columnheader"><span className="flex justify-between"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></span></span><span role="columnheader" className="sm:text-right">Nota</span>
@@ -123,13 +123,12 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
             const mediaDimensao = resultado.porDimensao.find(x => x.dimensaoId === d.id)?.media ?? null;
             const cor = pontuacao == null ? null : CORES_ESCALA[pontuacao as keyof typeof CORES_ESCALA].base;
             const estado = valor ? q.opcoes?.find(o => o.valor === valor)?.descricao ?? valor : 'Sem resposta';
-            return <div key={q.codigo} className="grid min-w-0 grid-cols-1 items-center gap-x-4 gap-y-2 border-b px-3 py-2 last:border-b-0 sm:grid-cols-[minmax(0,1.15fr)_minmax(120px,0.85fr)_54px] sm:px-4" role="row">
+            return <div key={q.codigo} className="grid min-w-0 grid-cols-1 items-stretch gap-x-4 gap-y-2 border-b px-3 py-2 last:border-b-0 sm:grid-cols-[minmax(0,1.15fr)_minmax(120px,0.85fr)_54px] sm:px-4" role="row">
               <div className="min-w-0" role="cell"><p className="text-xs font-semibold text-primary">{q.codigo} <span className="font-normal text-muted-foreground">· dimensão {d.id}</span></p><p className="mt-1 break-words text-sm">{q.texto}</p></div>
-              <div className="min-w-0" role="cell"><div className="relative h-5 overflow-visible rounded bg-muted" role="img" aria-label={`${q.codigo}: ${pontuacao == null ? estado : `${pontuacao} de 4`}; média da dimensão ${fmtScore(mediaDimensao)}`}>
+              <div className="relative flex min-w-0 items-center" role="cell"><div className="relative h-5 w-full overflow-visible rounded bg-muted" role="img" aria-label={`${q.codigo}: ${pontuacao == null ? estado : `${pontuacao} de 4`}; média da dimensão ${fmtScore(mediaDimensao)}`}>
                 {pontuacao != null && <span className="absolute inset-y-0 left-0 rounded" style={{ width: `${pontuacao / 4 * 100}%`, backgroundColor: cor ?? undefined }} />}
-                {mediaDimensao != null && <span className="absolute -top-1 bottom-[-4px] z-10 border-l-2 border-dashed border-amber-700" style={{ left: `${mediaDimensao / 4 * 100}%` }} />}
                 <span className="absolute inset-0 flex justify-between" aria-hidden="true">{[0, 1, 2, 3, 4].map(n => <i key={n} className="h-full border-l border-background/80" />)}</span>
-              </div></div>
+              </div>{mediaDimensao != null && <span aria-hidden="true" className="pointer-events-none absolute -top-2 -bottom-2 z-10 border-l-2 border-amber-700" style={{ left: `${mediaDimensao / 4 * 100}%` }} />}</div>
               <span role="cell" className={`justify-self-start rounded-md px-2 py-1 text-xs font-semibold sm:justify-self-end ${pontuacao == null ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>{pontuacao ?? (valor === 'NA' ? 'N/A' : valor || '—')}</span>
             </div>;
           })}

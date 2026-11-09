@@ -16,6 +16,7 @@ try {
     CREATE FUNCTION realtime.send(jsonb,text,text,boolean) RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;`);
   const arquivos = (await readdir('supabase/migrations')).filter(n=>n.endsWith('.sql')).sort();
   for (const arquivo of arquivos) {
+    if (arquivo.endsWith('_classificacao_origem_encaminhamentos.sql')) await db.exec(`INSERT INTO public.encaminhamentos(comunidade_id,descricao,origem_texto) VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Registro anterior','Vínculo anterior')`);
     if (arquivo.endsWith('_riscos_encaminhamentos.sql')) await db.exec(`
       INSERT INTO public.comunidades(id,code,nome) VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','teste-risco','Organização teste');
       INSERT INTO public.projetos(comunidade_id,nome,code) VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','Projeto teste','teste-risco');
@@ -28,6 +29,12 @@ try {
     try { await db.exec(await readFile(path.join('supabase/migrations',arquivo),'utf8')); }
     catch(e) { throw new Error(`Falha na migração ${arquivo}: ${e.message}`,{cause:e}); }
   }
+  const legado = (await db.query("SELECT descricao,origem_texto,classificacao_origem FROM public.encaminhamentos WHERE descricao='Registro anterior'")).rows[0];
+  assert.deepEqual(legado, {descricao:'Registro anterior',origem_texto:'Vínculo anterior',classificacao_origem:null});
+  await db.exec("UPDATE public.encaminhamentos SET classificacao_origem='Plano de trabalho' WHERE descricao='Registro anterior'");
+  assert.deepEqual((await db.query("SELECT origem_texto,classificacao_origem FROM public.encaminhamentos WHERE descricao='Registro anterior'")).rows[0],{origem_texto:'Vínculo anterior',classificacao_origem:'Plano de trabalho'});
+  await assert.rejects(db.exec("UPDATE public.encaminhamentos SET classificacao_origem='Inválida' WHERE descricao='Registro anterior'"));
+  await db.exec("DELETE FROM public.encaminhamentos WHERE descricao='Registro anterior'");
   const anterior = (await db.query("SELECT estrategia_mitigacao,estrategia_resposta_historica FROM public.plano_riscos WHERE id='dddddddd-dddd-4ddd-8ddd-dddddddddddd'")).rows[0];
   assert.equal(anterior.estrategia_mitigacao, 'Estratégia antiga');
   assert.equal(anterior.estrategia_resposta_historica, 'Estratégia antiga');

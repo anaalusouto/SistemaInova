@@ -177,7 +177,7 @@ function ProjetoDaOrganizacao({
       </div>
     );
   }
-  return <ProjectView key={projeto.id} project={projeto} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao
+  return <ProjectView key={projeto.id} project={projeto} organizacaoId={org.id} onBack={aoVoltarProjetos} rotuloVoltar="Dados da organização" dentroDaOrganizacao
     abaAtual={abaAtual} focoAtual={focoAtual} aoMudarAba={aoMudarAba} />;
 }
 

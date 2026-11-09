@@ -297,6 +297,7 @@ export function TabOrcamento({ project }: { project: Project }) {
 
               {grupos.map(({ grupo, itens: doGrupo, totais }) => {
                 const recolhido = recolhidos.has(grupo);
+                const itensOrdenados = [...doGrupo].sort((a,b) => (a.categoria || '').localeCompare(b.categoria || '', 'pt-BR'));
                 return (
                   <Fragment key={grupo}>
                     <tr style={{ background: 'var(--surface-2)' }}>
@@ -317,9 +318,11 @@ export function TabOrcamento({ project }: { project: Project }) {
                       </td>
                     </tr>
 
-                    {!recolhido && doGrupo.map(item => {
+                    {!recolhido && itensOrdenados.map((item, indice) => {
                       const diferenca = diferencaDoItem(item);
                       const excluido = item.situacao === 'Excluído';
+                      const primeiraCategoria = indice === 0 || (itensOrdenados[indice - 1].categoria || '') !== (item.categoria || '');
+                      const quantidadeCategoria = itensOrdenados.filter(i => (i.categoria || '') === (item.categoria || '')).length;
                       return (
                         <tr
                           key={item.id}
@@ -333,7 +336,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                             opacity: excluido ? 0.8 : 1,
                           }}
                         >
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>
+                          {primeiraCategoria && <td rowSpan={quantidadeCategoria} className="px-2 py-1.5 align-top" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>}
                           <td className="px-2 py-1.5" style={{ fontSize: '0.75rem', color: 'var(--ink-1)', maxWidth: 240 }}>
                             <span className="block truncate" title={item.descricao} style={{ textDecoration: excluido ? 'line-through' : undefined }}>{item.descricao}</span>
                             <span className="block text-xs mt-1" style={{ color: item.metaId ? 'var(--brand-text)' : 'var(--ink-5)' }}>

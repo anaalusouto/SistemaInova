@@ -64,6 +64,8 @@ test('excluir risco aguarda resposta, evita duplicidade e mantém confirmação 
     './PainelBase':{ Painel, BotaoAcao:Acao, Linha:() => null, Ausente:() => null },
     './FormularioRisco':{ FormularioRisco:() => null },
     './camposFormulario':{ ConfirmarExclusao:Confirmacao },
+    '../organizacoes/useOrganizacoes':{ useEscritaOrganizacao:()=>({}), useFichaOrganizacao:()=>({}) },
+    '../organizacoes/AbaEncaminhamentos':{ FormularioEncaminhamento:()=>null },
     sonner:{ toast:{ success() {} } },
   });
   const render = () => { indice = 0; refIndice = 0; return PainelRisco({ risco:{ id:'r-teste',title:'Teste',severity:6 }, projetoId:1, metas:[], codigos:new Map(), acoesDeResposta:[], aoFechar() { fechou++; } }); };

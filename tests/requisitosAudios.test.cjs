@@ -40,7 +40,7 @@ test('resumo: ordem da referência, andamento independente do financeiro e risco
     risks: ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'].map(status => ({ status })) };
   const html = renderToStaticMarkup(React.createElement(ResumoProjetoTopo, { project }));
   assert.ok(html.indexOf('Projeto</span>') < html.indexOf('VALOR EXECUTADO'));
-  assert.ok(html.indexOf('VALOR EXECUTADO') < html.indexOf('ANDAMENTO'));
+  assert.ok(html.indexOf('ANDAMENTO') < html.indexOf('VALOR EXECUTADO'));
   assert.match(html, /width:73%/);
   assert.match(html, />73%<\/span>/);
   assert.match(html, /80\.244,69/);
@@ -276,6 +276,7 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
     './project-tabs/TabFinanceiro': { TabFinanceiro: () => null },
     './project-tabs/TabMudancas': { TabMudancas: () => null },
     './DocumentosRegistro': { DocumentosRegistro: () => null },
+    './organizacoes/ParecerOrganizacao': { ParecerOrganizacao: () => null },
     sonner: { toast: { error() {} } },
   });
   const render = () => { indice = 0; return ProjectView({ project: p, onBack() {}, aoEncaminhamentos() { saidas++; },
@@ -293,18 +294,19 @@ test('R05: projeto mantem abas e resumo sem duplicar encaminhamentos', () => {
   resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],false);
   assert.equal(achar(render(),e=>e.props?.id==='project-context-1').props['data-expanded'],false);
   resumo().props.onClick();assert.equal(resumo().props['aria-expanded'],true);
-  achar(render(), e => e.type === 'button' && e.props.children?.includes?.('Plano de Trabalho')).props.onClick();
+  const nav = () => achar(render(), e => e.props?.rotulo === 'Abas do projeto');
+  nav().props.aoMudar('plano');
   assert.ok(achar(render(), e => e.type === Plano));
   const atalhos = () => achar(render(), e => typeof e.props?.aoDescricao === 'function').props;
-  const abaAtiva = nome => achar(render(), e => e.type === 'button' && e.props.children?.includes?.(nome)).props['aria-current'];
-  atalhos().aoDescricao(); assert.equal(abaAtiva('Descrição'), 'page');
-  atalhos().aoOrcamento(); assert.equal(abaAtiva('Orçamento'), 'page');
-  atalhos().aoPlano(); assert.equal(abaAtiva('Plano de Trabalho'), 'page');
+  const abaAtiva = () => nav().props.atual;
+  atalhos().aoDescricao(); assert.equal(abaAtiva(), 'descricao');
+  atalhos().aoOrcamento(); assert.equal(abaAtiva(), 'orcamento');
+  atalhos().aoPlano(); assert.equal(abaAtiva(), 'plano');
   assert.equal(achar(render(), e => e.type === Plano).props.pedidoVisao.visao, 'tabela');
   atalhos().aoRiscos();
   assert.equal(achar(render(), e => e.type === Plano).props.pedidoVisao.somenteAbertos, true);
   achar(render(), e => e.type === Plano).props.aoPendencias(true);
-  atalhos().aoDescricao(); assert.equal(abaAtiva('Plano de Trabalho'), 'page', 'Rascunhos bloqueiam a saída pelos atalhos');
+  atalhos().aoDescricao(); assert.equal(abaAtiva(), 'riscos', 'Rascunhos bloqueiam a saída pelos atalhos');
   assert.equal(achar(render(), e => e.type === 'button' && e.props['aria-label'] === 'Encaminhamentos'), undefined);
   assert.equal(saidas, 0);
   }

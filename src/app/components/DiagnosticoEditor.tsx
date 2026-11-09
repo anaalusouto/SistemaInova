@@ -23,10 +23,10 @@ const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em ediçã
 
 type TabId = InstrumentoDiagnostico;
 const TABS: { id: TabId; label: string }[] = [
+  { id: 'resumo', label: 'Resumo' },
   { id: 'matriz', label: 'Matriz' },
   { id: 'ieo', label: 'IEO' },
   { id: 'cesta', label: 'Cesta' },
-  { id: 'resumo', label: 'Resumo' },
 ];
 
 interface DiagnosticoEditorProps {
@@ -40,6 +40,7 @@ interface DiagnosticoEditorProps {
   instrumentoAtual?: TabId;
   onMudarInstrumento?: (instrumento: TabId) => void;
   onExcluido?: () => void;
+  onHistorico?: () => void;
 }
 
 export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
@@ -47,12 +48,12 @@ export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
   return <PendenciasModulo key={props.diagnosticoId} aoPendencias={setHaPendencias}><ConteudoDiagnosticoEditor {...props} haPendencias={haPendencias}/></PendenciasModulo>;
 }
 
-function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
+function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, onHistorico, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
   const [evidenciasAberto, setEvidenciasAberto] = useState(false);
   const [editorAberto, setEditorAberto] = useState(false);
-  const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências' | 'Implantação'>('Dados gerais');
+  const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências' | 'Implantação' | 'Matriz Funcional' | 'Questões do IEO' | 'Produtos e serviços'>('Dados gerais');
   const [registroEditor, setRegistroEditor] = useState<string | undefined>();
   const setTab = (instrumento: TabId) => { if (instrumento === tab) return; navegarSemPendencias(haPendencias, () => { if (onMudarInstrumento) onMudarInstrumento(instrumento); else setTabLocal(instrumento); }); };
   const { readOnly } = useAuth();
@@ -94,8 +95,8 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         <div className={`flex flex-wrap items-center justify-between gap-3 ${incorporado ? 'diagnostico-contexto px-4 sm:px-6 py-4' : 'pb-3'}`}>
           <div className={incorporado ? 'diagnostico-contexto-grid' : ''}>
             {incorporado ? <>
+              <div><span>Versão</span><strong>{diagnostico?.versao ?? '—'}</strong>{onHistorico && <button type="button" className="block text-xs text-primary underline" onClick={onHistorico}>Ver todas as Versões</button>}</div>
               <div><span>Aplicação</span><strong>{diagnostico ? formatDateOnly(diagnostico.dataAplicacao) : '—'}</strong></div>
-              <div><span>Versão</span><strong>{diagnostico?.versao ?? '—'}</strong></div>
               <div><span>Última edição</span><strong>{diagnostico?.atualizadoEm ? new Date(diagnostico.atualizadoEm).toLocaleString('pt-BR') : '—'}</strong></div>
               <div><span>Status</span><strong>{diagnostico ? STATUS_LABEL[diagnostico.status] : '—'}</strong></div>
             </> : <>
@@ -111,15 +112,15 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
           </div>
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
-              <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => { setSecaoEditor('Dados gerais'); setEditorAberto(true); })}>
+              {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} bloqueado={haPendencias} />}
+              <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => { setRegistroEditor(undefined); setSecaoEditor(tab === 'matriz' ? 'Matriz Funcional' : tab === 'ieo' ? 'Questões do IEO' : tab === 'cesta' ? 'Produtos e serviços' : 'Dados gerais'); setEditorAberto(true); })}>
                 <PencilLine size={14} aria-hidden /> Editar informações
               </button>
-              {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} bloqueado={haPendencias} />}
               {!readOnly && (diagnostico.status === 'em_edicao' ? (
                 <button
                   onClick={() => { if (window.confirm('Concluir este mapeamento? Para alterar depois, será preciso criar uma nova versão.')) concluir.mutate(); }}
                   disabled={concluir.isPending || haPendencias}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium text-white disabled:opacity-60"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white disabled:opacity-60"
                   style={{ background: 'var(--primary)' }}
                 >
                   <Lock size={12} /> Concluir mapeamento

@@ -383,10 +383,9 @@ export function ResumoDiagnostico({
       </section>
       <section className="resumo-secao-prioridades-estrategicas" aria-label="Prioridades estratégicas">
         <h4>Prioridades estratégicas identificadas</h4>
-        <p>{diagnosticoAgromel ? 'Referências do levantamento anterior; confirmar e pactuar após a revisão.' : emRevisao ? 'Aguardam confirmação após a revisão do diagnóstico.' : 'Prioridades registradas no fechamento estratégico.'}</p>
         <div className="resumo-duas-colunas">
           {diagnosticoAgromel ? PRIORIDADES_AGROMEL.map(p => <article key={p.codigo} className="resumo-cartao resumo-prioridade">
-            <p className="resumo-etiqueta">{p.codigo} · Referência anterior · confirmar após remapeamento</p><h5>{p.titulo}</h5>
+            <h5>{p.titulo}</h5>
             <dl>{[['resultado','Resultado desejado',p.resultado],['obstaculo','Obstáculo',p.obstaculo],['apoio','Apoio necessário',p.apoio],['publico','Público beneficiado',p.publico],['dimensoes','Dimensões vinculadas',p.dimensoes]].map(([key,label,value]) => <div key={key}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
             {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer e prioridades' : 'Consultar ou editar parecer'}</button>}
           </article>) : prioridadesExibidas.map((r) => {

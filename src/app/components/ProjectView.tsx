@@ -12,6 +12,7 @@ import type { AbaProjeto } from "../lib/navegacaoApp";
 import { DocumentosRegistro } from "./DocumentosRegistro";
 import { NavegacaoModulo } from './NavegacaoModulo';
 import { navegarSemPendencias } from './PendenciasModulo';
+import { ParecerOrganizacao } from './organizacoes/ParecerOrganizacao';
 import "./project-responsive.css";
 
 const tabs = [
@@ -25,6 +26,7 @@ interface ProjectViewProps {
   onBack: () => void;
   rotuloVoltar?: string;
   dentroDaOrganizacao?: boolean;
+  organizacaoId?: string;
   abaAtual?: AbaProjeto;
   focoAtual?: string | null;
   aoMudarAba?: (aba: AbaProjeto, foco?: string | null) => void;
@@ -34,6 +36,7 @@ export function ProjectView({
   onBack,
   rotuloVoltar = "Organizações",
   dentroDaOrganizacao = false,
+  organizacaoId,
   abaAtual,
   aoMudarAba,
 }: ProjectViewProps) {
@@ -43,6 +46,7 @@ export function ProjectView({
   const [pedidoVisao, setPedidoVisao] = useState<PedidoVisaoPlano | null>(null);
   const [mostrarResumo, setMostrarResumo] = useState(true);
   const [haPendencias, setHaPendencias] = useState(false);
+  const [parecerAberto, setParecerAberto] = useState(false);
   const activeTab = abaAtual ?? abaLocal;
   const mudarAba = (aba: AbaProjeto, foco?: string | null) => {
     if (haPendencias && aba !== activeTab) {
@@ -88,6 +92,7 @@ export function ProjectView({
               setPedidoVisao((p) => ({ visao: "tabela", contador: (p?.contador ?? 0) + 1 }));
             }}
             aoOrcamento={() => mudarAba("orcamento")}
+            aoParecer={() => setParecerAberto(true)}
             bloqueado={haPendencias}
             aoRiscos={() => {
               if (haPendencias) {
@@ -122,6 +127,7 @@ export function ProjectView({
         <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 sm:px-6 py-3 text-sm font-medium">Documentos do projeto<ChevronDown size={16} aria-hidden /></summary>
         <div className="px-4 sm:px-6 pb-3"><DocumentosRegistro area="projeto" projetoId={project.id} /></div>
       </details>
+      {parecerAberto && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onMouseDown={e => { if (e.target === e.currentTarget) setParecerAberto(false); }}><section role="dialog" aria-modal="true" aria-label="Pareceres da organização" className="max-h-[90dvh] w-full max-w-5xl overflow-y-auto rounded-xl bg-card shadow-xl">{(organizacaoId || (project as ProjectExt).organizacao?.id) ? <ParecerOrganizacao organizacaoId={(organizacaoId || (project as ProjectExt).organizacao?.id)!} aoVoltar={() => setParecerAberto(false)} /> : <div className="p-6"><p>Organização não vinculada ao projeto.</p><button type="button" className="mt-3 underline" onClick={() => setParecerAberto(false)}>Fechar</button></div>}</section></div>}
     </div>
   );
 }

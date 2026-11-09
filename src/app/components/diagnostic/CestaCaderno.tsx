@@ -51,10 +51,9 @@ const COLUNAS_CESTA = [
   { grupo: 'Gestão, mercado e riscos', itens: [['C01','Planejamento'],['C05','Custos'],['C06','Comercialização'],['C07','Logística'],['C08','Resultados'],['C09','Clima']] },
 ] as const;
 const DIFICULDADES = [
-  { titulo: 'Capital de giro e produção', codigos: ['CP08'], tipo: 'Dificuldade relatada' },
-  { titulo: 'Barreiras para vender', codigos: ['CP09'], tipo: 'Dificuldade relatada' },
-  { titulo: 'Clima e produção', codigos: ['CP10','CP11'], tipo: 'Dificuldade relatada' },
-  { titulo: 'Logística e acesso', codigos: ['CP12'], tipo: 'Dificuldade relatada' },
+  { titulo: 'Limitações Produtivas', codigos: ['CP08'], tipo: 'Dificuldade relatada' },
+  { titulo: 'Limitações comerciais', codigos: ['CP09'], tipo: 'Dificuldade relatada' },
+  { titulo: 'Impactos Climáticos', codigos: ['CP10'], tipo: 'Dificuldade relatada' },
 ] as const;
 const COMPLETAR = [
   { titulo: 'Preço e custos', codigos: ['CP18'], tipo: 'Informação a completar' },

@@ -1,0 +1,238 @@
+import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useStore } from "../../store";
+import { usePeople } from "../../auth/authStore";
+import { encaminhamentosDoPlano, atividadesDaOrganizacao } from "../../lib/planoRelatorio";
+import { codigosHierarquicos } from "../../lib/planoTrabalho";
+import { formatDateOnly } from "../../lib/dateOnly";
+import type { Encaminhamento, OrganizacaoFicha } from "../../lib/organizacoes";
+import { PainelAtividade } from "../plano/PainelAtividade";
+import { PainelRisco } from "../plano/PainelRisco";
+
+type Origem = "Plano de trabalho" | "Riscos" | "Outros";
+export function TabelaEncaminhamentos({
+  org,
+  foco,
+  linhas,
+  mostrarConcluidos,
+  readOnly,
+  pessoas,
+  textoOrigem,
+  aoConsultar,
+  aoContato,
+  aoEditar,
+  aoExcluir,
+}: {
+  org: OrganizacaoFicha;
+  foco: string | null;
+  linhas: Encaminhamento[];
+  mostrarConcluidos: boolean;
+  readOnly: boolean;
+  pessoas: ReturnType<typeof usePeople>;
+  textoOrigem: (e: Encaminhamento) => { texto: string; contato: boolean } | null;
+  aoConsultar: (id: string) => void;
+  aoContato: (id: string) => void;
+  aoEditar: (e: Encaminhamento) => void;
+  aoExcluir: (e: Encaminhamento) => void;
+}) {
+  const { projects, projectsLoading } = useStore();
+  const [filtro, setFiltro] = useState<Origem | "Todas">("Todas");
+  const [atividadeId, setAtividadeId] = useState<string | null>(null);
+  const [riscoId, setRiscoId] = useState<string | null>(null);
+  const plano = encaminhamentosDoPlano(projects, org.id).filter(
+    (l) => mostrarConcluidos || l.atividade.status !== "Concluído",
+  );
+  const alvo = atividadeId
+    ? atividadesDaOrganizacao(projects, org.id).find((l) => l.atividade.id === atividadeId)
+    : undefined;
+  const projetoRisco = riscoId
+    ? projects.find((p) => p.organizacao?.id === org.id && p.risks.some((r) => r.id === riscoId))
+    : undefined;
+  const risco = projetoRisco?.risks.find((r) => r.id === riscoId);
+  const metaRisco = projetoRisco?.goals.find((m) =>
+    m.deliverables.some((e) => e.id === risco?.stageId),
+  );
+  const etapaRisco = metaRisco?.deliverables.find((e) => e.id === risco?.stageId);
+  const registros = [
+    ...plano.map((l) => ({
+      id: `plano:${l.atividade.id}`,
+      origem: "Plano de trabalho" as Origem,
+      vinculo: `${l.projeto.code} / ${l.meta.name} / ${l.etapa.name} / ${l.atividade.name}`,
+      acao: l.atividade.nextStep,
+      responsavel: l.atividade.nextStepOwner || "Não informado",
+      prazo: l.atividade.nextStepDue,
+      status: l.atividade.status,
+      abrir: () => setAtividadeId(l.atividade.id),
+      enc: undefined as Encaminhamento | undefined,
+    })),
+    ...linhas.map((e) => ({
+      id: `enc:${e.id}`,
+      origem: (e.classificacaoOrigem ?? (e.origem?.tipo === "risco" ? "Riscos" : "Outros")) as Origem,
+      vinculo: textoOrigem(e)?.texto || "Sem vínculo",
+      acao: e.descricao,
+      responsavel:
+        pessoas.find((p) => p.id && p.id === e.responsavelUsuarioId)?.name ??
+        e.responsavel ??
+        "Não informado",
+      prazo: e.dataFim,
+      status: e.status,
+      abrir: () => aoConsultar(e.id),
+      enc: e,
+    })),
+  ]
+    .filter((r) => filtro === "Todas" || r.origem === filtro)
+    .sort(
+      (a, b) =>
+        a.origem.localeCompare(b.origem, "pt-BR") ||
+        a.vinculo.localeCompare(b.vinculo, "pt-BR") ||
+        a.acao.localeCompare(b.acao, "pt-BR"),
+    );
+  return (
+    <>
+      <div className="rounded-xl border bg-card overflow-x-auto">
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead>
+            <tr className="border-b bg-muted/30">
+              <th className="p-3">
+                <label>
+                  Origem{" "}
+                  <select
+                    aria-label="Filtrar origem"
+                    className="ml-1 rounded border bg-card p-1 text-xs"
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value as typeof filtro)}
+                  >
+                    <option>Todas</option>
+                    <option>Plano de trabalho</option>
+                    <option>Riscos</option>
+                    <option>Outros</option>
+                  </select>
+                </label>
+              </th>
+              {["Vínculo", "Ação", "Responsável", "Prazo", "Status", "Ações"].map((c) => (
+                <th className="p-3" key={c}>
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {registros.map((r, i) => {
+              const primeiraOrigem = i === 0 || registros[i - 1].origem !== r.origem;
+              const primeiroVinculo = primeiraOrigem || registros[i - 1].vinculo !== r.vinculo;
+              const totalOrigem = registros.filter((x) => x.origem === r.origem).length;
+              const totalVinculo = registros.filter(
+                (x) => x.origem === r.origem && x.vinculo === r.vinculo,
+              ).length;
+              return (
+                <tr
+                  key={r.id}
+                  className="border-b align-top"
+                  style={{
+                    background:
+                      foco &&
+                      (r.id === `plano:${foco}` ||
+                        (r.enc?.origem?.tipo === "contato" && r.enc.origem.registroId === foco))
+                        ? "var(--brand-soft)"
+                        : undefined,
+                  }}
+                >
+                  {primeiraOrigem && (
+                    <th rowSpan={totalOrigem} scope="rowgroup" className="p-3 font-medium">
+                      {r.origem}
+                    </th>
+                  )}
+                  {primeiroVinculo && (
+                    <td rowSpan={totalVinculo} className="p-3">
+                      {r.enc?.origem?.tipo === "contato" ? (
+                        <button
+                          className="text-left text-primary underline"
+                          onClick={() =>
+                            aoContato((r.enc!.origem as { registroId: string }).registroId)
+                          }
+                        >
+                          {r.vinculo}
+                        </button>
+                      ) : (
+                        r.vinculo
+                      )}
+                    </td>
+                  )}
+                  <td className="p-3">
+                    <button className="text-left hover:underline" onClick={r.abrir}>
+                      {r.acao}
+                    </button>
+                  </td>
+                  <td className="p-3">{r.responsavel}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    {r.prazo ? formatDateOnly(r.prazo) : "Não informado"}
+                  </td>
+                  <td className="p-3">{r.status}</td>
+                  <td className="p-3">
+                    {r.enc && !readOnly && (
+                      <span className="flex gap-2">
+                        <button onClick={() => aoEditar(r.enc!)} aria-label="Editar encaminhamento">
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => aoExcluir(r.enc!)}
+                          aria-label="Excluir encaminhamento"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+            {!registros.length && (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                  {projectsLoading
+                    ? "Carregando encaminhamentos…"
+                    : "Nenhum encaminhamento neste filtro."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {alvo && (
+        <PainelAtividade
+          key={alvo.atividade.id}
+          atividade={alvo.atividade}
+          etapa={alvo.etapa}
+          meta={alvo.meta}
+          projetoId={alvo.projeto.id}
+          codigo={codigosHierarquicos(alvo.projeto.goals).get(alvo.atividade.id) ?? ""}
+          riscoOrigem={alvo.projeto.risks.find((r) => r.id === alvo.atividade.riskOriginId)}
+          aoFechar={() => setAtividadeId(null)}
+          aoAbrirRisco={(r) => {
+            setAtividadeId(null);
+            setRiscoId(r.id);
+          }}
+        />
+      )}
+      {risco && projetoRisco && (
+        <PainelRisco
+          risco={risco}
+          organizacaoId={org.id}
+          etapa={etapaRisco}
+          meta={metaRisco}
+          projetoId={projetoRisco.id}
+          metas={projetoRisco.goals}
+          codigos={codigosHierarquicos(projetoRisco.goals)}
+          acoesDeResposta={projetoRisco.goals
+            .flatMap((m) => m.deliverables.flatMap((e) => e.activities))
+            .filter((a) => a.riskOriginId === risco.id)}
+          aoFechar={() => setRiscoId(null)}
+          aoAbrirAtividade={(a) => {
+            setRiscoId(null);
+            setAtividadeId(a.id);
+          }}
+        />
+      )}
+    </>
+  );
+}

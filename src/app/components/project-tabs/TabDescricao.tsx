@@ -25,15 +25,9 @@ interface Item {
 }
 
 function TextoProposta({ valor, rotulo }: { valor: string | number; rotulo: string }) {
-  const { orientacao, blocos } = formatarTextoDescricao(valor, rotulo);
+  const { blocos } = formatarTextoDescricao(valor, rotulo);
   return (
     <div className="project-description-text">
-      {orientacao && (
-        <details className="project-description-guidance">
-          <summary>Orientação do formulário original</summary>
-          <p>{orientacao}</p>
-        </details>
-      )}
       {blocos.map((bloco, indice) => {
         if (bloco.tipo === 'paragrafo') return <p key={indice}>{bloco.texto}</p>;
         const Lista = bloco.ordenada ? 'ol' : 'ul';

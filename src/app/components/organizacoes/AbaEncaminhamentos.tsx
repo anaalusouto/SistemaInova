@@ -9,31 +9,23 @@
  * assunto do registro não quebra o vínculo.
  */
 import { useMemo, useState } from 'react';
-import { Pencil, Trash2, ListChecks, X, MessageSquare } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth, usePeople } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
 import { formatDateOnly } from '../../lib/dateOnly';
 import {
   STATUS_ENCAMINHAMENTO, rotuloRegistro, validarEncaminhamento,
-  type OrganizacaoFicha, type Encaminhamento, type EncaminhamentoInput, type StatusEncaminhamento,
+  type OrganizacaoFicha, type Encaminhamento, type EncaminhamentoInput,
 } from '../../lib/organizacoes';
 import { Campo, Texto, AreaTexto, Data, Selecao, Erros, Acoes, ConfirmarExclusao } from '../plano/camposFormulario';
 import { useEscritaOrganizacao } from './useOrganizacoes';
-import { useDestaque } from './useDestaque';
 import { BotaoNovo } from '../BotaoNovo';
-import { EncaminhamentosPlano } from './EncaminhamentosPlano';
+import { TabelaEncaminhamentos } from './TabelaEncaminhamentos';
 import { PopupDetalhe } from '../PopupDetalhe';
 import { usePopupChave } from '../PopupNavegacao';
 import { Linha, BotaoAcao } from '../plano/PainelBase';
 
-const COR_STATUS: Record<StatusEncaminhamento, { cor: string; fundo: string }> = {
-  'A iniciar': { cor: 'var(--ink-3)', fundo: 'var(--surface-2)' },
-  'Em andamento': { cor: 'var(--brand)', fundo: 'var(--brand-soft)' },
-  'Concluído': { cor: 'var(--success)', fundo: 'var(--success-soft)' },
-};
-
-const COLUNAS = ['Descrição', 'Responsável', 'Data inicial', 'Data final', 'Status', 'Origem'];
 
 type Form = EncaminhamentoInput & { id?: string };
 type TipoOrigem = 'nenhuma' | 'contato' | 'texto' | 'risco';
@@ -46,8 +38,6 @@ export function AbaEncaminhamentos({
   foco: string | null;
   aoVerRegistro: (registroId: string) => void;
 }) {
-  const doFoco = (e: Encaminhamento) => !!foco && e.origem?.tipo === 'contato' && e.origem.registroId === foco;
-  const destaque = useDestaque(org.encaminhamentos.find(doFoco)?.id ?? null);
   const { user, readOnly } = useAuth();
   const pessoas = usePeople();
   const { log: audit } = useAudit();
@@ -68,12 +58,12 @@ export function AbaEncaminhamentos({
 
   const novo = () => setForm({
     organizacaoId: org.id, descricao: '', responsavel: '', responsavelUsuarioId: null, dataInicio: null, dataFim: null,
-    status: 'A iniciar', origem: null,
+    status: 'A iniciar', origem: null, classificacaoOrigem: 'Outros',
   });
 
   const editar = (e: Encaminhamento) => setForm({
     id: e.id, organizacaoId: org.id, descricao: e.descricao, responsavel: e.responsavel ?? '', responsavelUsuarioId: e.responsavelUsuarioId,
-    dataInicio: e.dataInicio, dataFim: e.dataFim, status: e.status, origem: e.origem,
+    dataInicio: e.dataInicio, dataFim: e.dataFim, status: e.status, origem: e.origem, classificacaoOrigem: e.classificacaoOrigem ?? (e.origem?.tipo === 'risco' ? 'Riscos' : 'Outros'),
   });
 
   const confirmarExclusao = async () => {
@@ -99,14 +89,13 @@ export function AbaEncaminhamentos({
 
   return (
     <div className="p-4 sm:p-7 space-y-4">
-      <EncaminhamentosPlano orgId={org.id} foco={foco} mostrarConcluidos={mostrarConcluidos} />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <p style={{ fontSize: '0.78rem', color: 'var(--ink-4)' }}>
             {org.pendentes === 0 ? 'Nenhum encaminhamento pendente.' : `${org.pendentes} ${org.pendentes === 1 ? 'pendente' : 'pendentes'}`}
             {concluidos > 0 && ` · ${concluidos} ${concluidos === 1 ? 'concluído' : 'concluídos'}`}
           </p>
-          {concluidos > 0 && (
+          {(
             <label className="inline-flex items-center gap-1.5 cursor-pointer" style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>
               <input type="checkbox" checked={mostrarConcluidos} onChange={e => setMostrarConcluidos(e.target.checked)} />
               Mostrar concluídos
@@ -118,95 +107,7 @@ export function AbaEncaminhamentos({
         )}
       </div>
 
-      <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: 900 }}>
-            <thead>
-              <tr style={{ background: 'var(--surface-1)' }}>
-                {[...COLUNAS, 'Ações'].map(h => (
-                  <th
-                    key={h}
-                    className="px-3 py-2.5 text-left"
-                    style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {linhas.length === 0 ? (
-                <tr>
-                  <td colSpan={COLUNAS.length + 1} className="py-12 text-center">
-                    <ListChecks size={30} color="var(--line-2)" className="mx-auto mb-2" />
-                    <span style={{ color: 'var(--ink-5)', fontSize: '0.82rem' }}>
-                      {org.encaminhamentos.length === 0 ? 'Nenhum encaminhamento registrado.' : 'Todos os encaminhamentos estão concluídos.'}
-                    </span>
-                  </td>
-                </tr>
-              ) : linhas.map(e => {
-                const origem = textoOrigem(e);
-                const cor = COR_STATUS[e.status];
-                return (
-                  <tr
-                    key={e.id}
-                    ref={destaque.ref(e.id)}
-                    style={{ borderBottom: '1px solid var(--border)', background: doFoco(e) ? 'var(--brand-soft)' : undefined }}
-                  >
-                    <td className="px-3 py-2.5" style={{ fontSize: '0.8rem', color: 'var(--ink-1)', minWidth: 260, whiteSpace: 'pre-line' }}>
-                      <button type="button" className="text-left hover:underline" onClick={() => setConsulta(`enc:${e.id}`)} aria-label={`Ver encaminhamento: ${e.descricao}`}>{e.descricao}</button>
-                    </td>
-                    <td className="px-3 py-2.5" style={{ fontSize: '0.78rem', color: e.responsavel ? 'var(--ink-2)' : 'var(--ink-5)' }}>
-                      {pessoas.find(p => p.id && p.id === e.responsavelUsuarioId)?.name ?? e.responsavel ?? '—'}
-                    </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>
-                      {formatDateOnly(e.dataInicio)}
-                    </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>
-                      {formatDateOnly(e.dataFim)}
-                    </td>
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium" style={{ color: cor.cor, background: cor.fundo }}>
-                        {e.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5" style={{ fontSize: '0.76rem', color: origem ? 'var(--ink-3)' : 'var(--ink-5)', minWidth: 180 }}>
-                      {origem ? (
-                        origem.contato && e.origem?.tipo === 'contato' ? (
-                          <button
-                            type="button"
-                            onClick={() => setConsulta(`contato:${(e.origem as { registroId: string }).registroId}`)}
-                            className="inline-flex items-start gap-1 text-left hover:underline"
-                            style={{ color: 'var(--brand-text)' }}
-                            title="Abrir o registro de contato de origem"
-                          >
-                            <MessageSquare size={11} style={{ marginTop: 3, flexShrink: 0 }} />
-                            {origem.texto}
-                          </button>
-                        ) : (
-                          <span>{origem.texto}</span>
-                        )
-                      ) : '—'}
-                    </td>
-                    <td className="px-2 py-2.5 whitespace-nowrap">
-                      {!readOnly && (
-                        <span className="flex items-center gap-1">
-                          <button onClick={() => editar(e)} className="p-1.5 rounded hover:bg-accent" aria-label="Editar encaminhamento">
-                            <Pencil size={12} color="var(--ink-3)" />
-                          </button>
-                          <button onClick={() => setExcluindo(e)} className="p-1.5 rounded hover:bg-accent" aria-label="Excluir encaminhamento">
-                            <Trash2 size={12} color="var(--danger)" />
-                          </button>
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TabelaEncaminhamentos org={org} foco={foco} linhas={linhas} mostrarConcluidos={mostrarConcluidos} readOnly={readOnly} pessoas={pessoas} textoOrigem={textoOrigem} aoConsultar={id => setConsulta(`enc:${id}`)} aoContato={id => setConsulta(`contato:${id}`)} aoEditar={editar} aoExcluir={setExcluindo} />
 
       {visto && <PopupDetalhe titulo="Encaminhamento" descricao={org.nome} aoFechar={() => setConsulta(null)}
         acoes={!readOnly ? <BotaoAcao aoClicar={() => { setConsulta(null); editar(visto); }}><Pencil size={12} /> Editar encaminhamento</BotaoAcao> : undefined}>
@@ -214,7 +115,8 @@ export function AbaEncaminhamentos({
         <Linha rotulo="Responsável">{pessoas.find(p => p.id === visto.responsavelUsuarioId)?.name ?? visto.responsavel ?? 'Não informado'}</Linha>
         <Linha rotulo="Status">{visto.status}</Linha>
         <Linha rotulo="Período">{formatDateOnly(visto.dataInicio)} — {formatDateOnly(visto.dataFim)}</Linha>
-        <Linha rotulo="Origem">{visto.origem?.tipo === 'contato' ? <button className="underline" onClick={() => { if (visto.origem?.tipo === 'contato') setConsulta(`contato:${visto.origem.registroId}`); }}>{textoOrigem(visto)?.texto ?? 'Ver registro de contato'}</button> : textoOrigem(visto)?.texto ?? 'Não informada'}</Linha>
+        <Linha rotulo="Origem">{visto.classificacaoOrigem ?? (visto.origem?.tipo === 'risco' ? 'Riscos' : 'Outros')}</Linha>
+        <Linha rotulo="Vínculo">{visto.origem?.tipo === 'contato' ? <button className="underline" onClick={() => { if (visto.origem?.tipo === 'contato') setConsulta(`contato:${visto.origem.registroId}`); }}>{textoOrigem(visto)?.texto ?? 'Ver registro de contato'}</button> : textoOrigem(visto)?.texto ?? 'Não informado'}</Linha>
       </PopupDetalhe>}
       {contatoVisto && <PopupDetalhe titulo={contatoVisto.assunto ?? 'Registro de contato'} descricao={org.nome} aoFechar={() => setConsulta(null)}>
         <Linha rotulo="Data">{formatDateOnly(contatoVisto.data)} {contatoVisto.hora ?? ''}</Linha>
@@ -347,7 +249,12 @@ export function FormularioEncaminhamento({
           </Campo>
         </div>
 
-        <Campo rotulo="Origem">
+        <Campo rotulo="Origem" obrigatorio>
+          <select className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput} value={form.classificacaoOrigem ?? (form.origem?.tipo === 'risco' ? 'Riscos' : 'Outros')} onChange={e => alterar('classificacaoOrigem', e.target.value as NonNullable<Form['classificacaoOrigem']>)}>
+            <option>Plano de trabalho</option><option>Riscos</option><option>Outros</option>
+          </select>
+        </Campo>
+        <Campo rotulo="Vínculo">
           <select disabled={origemFixa || form.origem?.tipo === 'risco'} className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput} value={tipoOrigem} onChange={e => mudarTipoOrigem(e.target.value as TipoOrigem)}>
             <option value="nenhuma">Sem origem</option>
             <option value="contato" disabled={org.registros.length === 0}>

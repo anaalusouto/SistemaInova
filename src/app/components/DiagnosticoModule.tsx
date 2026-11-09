@@ -6,15 +6,17 @@ import type { BuscaApp, InstrumentoDiagnostico } from '../lib/navegacaoApp';
 import { DiagnosticoVisaoGeral } from './DiagnosticoVisaoGeral';
 import { DiagnosticoOrganizacao } from './DiagnosticoOrganizacao';
 import { DiagnosticoEditor } from './DiagnosticoEditor';
+import { useState } from 'react';
 
 /** Versões, aplicação e instrumento integram a URL e o histórico do navegador. */
 export function DiagnosticoModule({ comunidadeId, instrumentoInicial = 'resumo' }: { comunidadeId?: string; instrumentoInicial?: 'resumo' | 'matriz' | 'parecer' }) {
+  const [historicoAberto, setHistoricoAberto] = useState(false);
   const busca = useSearch({ from: '/' });
   const navigate = useNavigate({ from: '/' });
   const router = useRouter();
   const podeVoltar = useCanGoBack();
   const organizacao = comunidadeId ?? busca.org;
-  const visao = busca.visaoDiagnostico ?? (instrumentoInicial === 'parecer' ? 'atual' : 'versoes');
+  const visao = busca.visaoDiagnostico ?? 'atual';
   const instrumento = busca.instrumento ?? (instrumentoInicial === 'parecer' ? 'parecer' : 'resumo');
   const ir = (contexto: Pick<BuscaApp, 'org' | 'visaoDiagnostico' | 'diagnostico' | 'instrumento'>, replace = false) => {
     void navigate({ to: '/', search: anterior => ({ ...anterior, org: organizacao, visaoDiagnostico: undefined, diagnostico: undefined, instrumento: undefined, popup: undefined, ...contexto }), replace, resetScroll: true });
@@ -32,12 +34,14 @@ export function DiagnosticoModule({ comunidadeId, instrumentoInicial = 'resumo' 
   const mudarInstrumento = (novo: InstrumentoDiagnostico) => ir({ org: organizacao, visaoDiagnostico: visao, diagnostico: busca.diagnostico, instrumento: novo });
 
   if (!organizacao) return <DiagnosticoVisaoGeral onSelectOrganizacao={org => ir({ org, visaoDiagnostico: instrumentoInicial === 'parecer' ? 'atual' : 'versoes' })} />;
-  if (visao === 'atual') return <EntradaDiagnosticoAtual comunidadeId={organizacao} incorporado={!!comunidadeId}
+  if (visao === 'atual') return <><EntradaDiagnosticoAtual comunidadeId={organizacao} incorporado={!!comunidadeId}
     instrumentoInicial={instrumentoInicial === 'parecer' ? 'parecer' : 'resumo'} instrumentoAtual={instrumento}
-    onBack={voltar} onHistorico={() => historico()} onNovaVersao={abrir} onMudarInstrumento={mudarInstrumento} onExcluido={() => historico(true)} />;
-  if (visao === 'editor' && busca.diagnostico) return <DiagnosticoEditor key={busca.diagnostico}
+    onBack={voltar} onHistorico={() => setHistoricoAberto(true)} onNovaVersao={abrir} onMudarInstrumento={mudarInstrumento} onExcluido={() => ir({org: organizacao, visaoDiagnostico: 'atual'}, true)} />
+    {historicoAberto && <HistoricoModal comunidadeId={organizacao} aoFechar={() => setHistoricoAberto(false)} aoSelecionar={id => { setHistoricoAberto(false); abrir(id); }} />}</>;
+  if (visao === 'editor' && busca.diagnostico) return <><DiagnosticoEditor key={busca.diagnostico}
     diagnosticoId={busca.diagnostico} organizacaoId={organizacao} incorporado={!!comunidadeId} instrumentoInicial={instrumentoInicial === 'parecer' ? 'parecer' : 'resumo'} instrumentoAtual={instrumento}
-    onMudarInstrumento={mudarInstrumento} rotuloVoltar="Voltar" onBack={voltar} onNovaVersao={abrir} onExcluido={() => historico(true)} />;
+    onMudarInstrumento={mudarInstrumento} rotuloVoltar="Voltar" onBack={voltar} onNovaVersao={abrir} onHistorico={() => setHistoricoAberto(true)} onExcluido={() => ir({org: organizacao, visaoDiagnostico: 'atual'}, true)} />
+    {historicoAberto && <HistoricoModal comunidadeId={organizacao} aoFechar={() => setHistoricoAberto(false)} aoSelecionar={id => { setHistoricoAberto(false); abrir(id); }} />}</>;
   return <DiagnosticoOrganizacao comunidadeId={organizacao} incorporado={!!comunidadeId} onBack={voltar} onSelectDiagnostico={abrir} />;
 }
 
@@ -52,8 +56,12 @@ export function EntradaDiagnosticoAtual({ comunidadeId, incorporado, instrumento
   if(error) return <div role="alert" className="p-7 space-y-2"><p>Não foi possível carregar o mapeamento atual.</p>
     <button type="button" className="underline mr-3" onClick={()=>void refetch()}>Tentar novamente</button><button type="button" className="underline" onClick={onBack}>Voltar</button></div>;
   const atual=diagnosticoAtual(data??[],comunidadeId);
-  if(!atual) return <DiagnosticoOrganizacao comunidadeId={comunidadeId} incorporado={incorporado} onBack={onBack} onSelectDiagnostico={onNovaVersao} />;
+  if(!atual) return <DiagnosticoOrganizacao comunidadeId={comunidadeId} incorporado={incorporado} iniciarCriacao onBack={onBack} onSelectDiagnostico={onNovaVersao} />;
   return <DiagnosticoEditor key={atual.id} diagnosticoId={atual.id} organizacaoId={comunidadeId} incorporado={incorporado} instrumentoInicial={instrumentoInicial}
-    instrumentoAtual={instrumentoAtual} onMudarInstrumento={onMudarInstrumento} onExcluido={onExcluido}
+    instrumentoAtual={instrumentoAtual} onMudarInstrumento={onMudarInstrumento} onExcluido={onExcluido} onHistorico={onHistorico}
     rotuloVoltar="Voltar" onBack={onBack} onNovaVersao={onNovaVersao} />;
+}
+
+function HistoricoModal({ comunidadeId, aoFechar, aoSelecionar }: { comunidadeId: string; aoFechar: () => void; aoSelecionar: (id: string) => void }) {
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onMouseDown={e => { if (e.target === e.currentTarget) aoFechar(); }}><section role="dialog" aria-modal="true" aria-label="Versões do mapeamento" className="max-h-[90dvh] w-full max-w-5xl overflow-y-auto rounded-xl bg-card shadow-xl"><DiagnosticoOrganizacao comunidadeId={comunidadeId} incorporado somenteConsulta onBack={aoFechar} onSelectDiagnostico={aoSelecionar}/></section></div>;
 }

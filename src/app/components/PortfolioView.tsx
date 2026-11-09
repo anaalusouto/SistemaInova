@@ -16,6 +16,8 @@ import { VisualizacoesPersonalizadas } from './portfolio/VisualizacoesPersonaliz
 import { GraficosAcompanhamento } from './portfolio/GraficosAcompanhamento';
 import { GraficosMapeamento } from './portfolio/GraficosMapeamento';
 import { useAuth } from '../auth/authStore';
+import { NavegacaoModulo } from './NavegacaoModulo';
+import { GraficosDiagnosticoPortfolio } from './portfolio/GraficosDiagnosticoPortfolio';
 
 type DataSource = 'demo' | 'real';
 
@@ -23,6 +25,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const { projects: realProjects, projectsLoading } = useStore();
   const { user } = useAuth();
   const [source, setSource] = useState<DataSource>('real');
+  const [aba, setAba] = useState<'projetos' | 'mapeamento' | 'cruzadas'>('projetos');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
   const [organizacaoAtiva, setOrganizacaoAtiva] = useState<string | null>(null);
@@ -77,6 +80,8 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </p>
       )}
 
+      <NavegacaoModulo abas={[{id:'projetos',label:'Projetos'},{id:'mapeamento',label:'Mapeamento'},{id:'cruzadas',label:'Informações Cruzadas'}]} atual={aba} aoMudar={setAba} rotulo="Visão Geral" />
+
       <PortfolioFilters
         exercicios={exercicios}
         statusOptions={STATUS_OPTIONS}
@@ -94,7 +99,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       ) : <>
       {filteredProjects.length === 0 && <p className="py-6 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Nenhum projeto encontrado para os filtros selecionados.</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Conclusão do plano de trabalho">
+      {aba === 'projetos' && <><div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-label="Conclusão do plano de trabalho">
         {resumoPlano.map(resumo => <section key={resumo.rotulo} className="rounded-xl border bg-card p-4" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-sm" style={{ color: 'var(--ink-4)' }}>{resumo.rotulo}</h2>
           <p className="mt-1 text-2xl font-semibold" style={{ color: 'var(--success)' }}>{resumo.concluidas} <span className="text-sm font-normal" style={{ color: 'var(--ink-4)' }}>de {resumo.total}</span></p>
@@ -103,11 +108,13 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
 
       <div className="space-y-5">
         <GraficosAcompanhamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>
-        <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>
       </div>
 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={selecionados} login={user?.login} onSelecionarOrganizacao={selecionarOrganizacao}
         onOpenProject={source === 'real' ? onOpenProject : undefined}/>
+      </>}
+      {aba === 'mapeamento' && <GraficosDiagnosticoPortfolio projects={selecionados} demonstrativo={source === 'demo'} />}
+      {aba === 'cruzadas' && <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>}
 
       </>}
     </div>

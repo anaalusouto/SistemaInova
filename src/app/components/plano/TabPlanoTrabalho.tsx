@@ -455,6 +455,17 @@ export function TabPlanoTrabalho({
               </button>
             </>
           )}
+          {visao === 'tabela' && <button type="button" className="border rounded-lg px-3 py-1.5 text-xs" disabled={pendentes.size > 0} onClick={async () => {
+            const tabela = seletorRef.current?.parentElement?.querySelector<HTMLTableElement>('table[aria-label="Plano de trabalho"]');
+            if (!tabela) { toast.error('Não há tabela para baixar.'); return; }
+            try {
+              const XLSX = await import('xlsx');
+              const folha = XLSX.utils.table_to_sheet(tabela, { display: true });
+              const livro = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(livro, folha, 'Plano de trabalho');
+              XLSX.writeFile(livro, 'plano-de-trabalho.xlsx');
+            } catch (e) { toast.error(e instanceof Error ? e.message : 'Não foi possível baixar a tabela.'); }
+          }}>Baixar tabela</button>}
           {!acoesExternas && (
             <button
               type="button"

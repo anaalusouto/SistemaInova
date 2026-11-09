@@ -25,13 +25,15 @@ interface DiagnosticoOrganizacaoProps {
   onBack: () => void;
   onSelectDiagnostico: (diagnosticoId: string) => void;
   incorporado?: boolean;
+  iniciarCriacao?: boolean;
+  somenteConsulta?: boolean;
 }
 
-export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnostico, incorporado = false }: DiagnosticoOrganizacaoProps) {
+export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnostico, incorporado = false, iniciarCriacao = false, somenteConsulta = false }: DiagnosticoOrganizacaoProps) {
   const { user, readOnly } = useAuth();
   const { log: audit } = useAudit();
   const queryClient = useQueryClient();
-  const [showNew, setShowNew] = useState(false);
+  const [showNew, setShowNew] = useState(iniciarCriacao);
   const [novaData, setNovaData] = useState('');
 
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
@@ -71,7 +73,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
               {incorporado ? <h2 className="text-lg font-semibold">Mapeamento</h2> : <h1 className="text-xl font-bold">{comunidade?.nome ?? 'Organização'}</h1>}
             </div>
           </div>
-          {!readOnly && <BotaoNovo onClick={() => setShowNew(true)}>Novo mapeamento</BotaoNovo>}
+          {!readOnly && !somenteConsulta && <BotaoNovo onClick={() => setShowNew(true)}>Novo mapeamento</BotaoNovo>}
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                     <button onClick={() => onSelectDiagnostico(d.id)} className="text-[12px] font-medium hover:underline" style={{ color: 'var(--primary)' }}>
                       Visualizar
                     </button>
-                    <ExcluirDiagnosticoButton diagnostico={d} nomeOrganizacao={comunidade?.nome ?? 'Organização'} />
+                    {!somenteConsulta && <ExcluirDiagnosticoButton diagnostico={d} nomeOrganizacao={comunidade?.nome ?? 'Organização'} />}
                     </div>
                   </td>
                 </tr>

@@ -19,13 +19,14 @@ import { useStore } from '../../store';
 import { useEscritaOrganizacao, useFichaOrganizacao } from '../organizacoes/useOrganizacoes';
 import { FormularioEncaminhamento } from '../organizacoes/AbaEncaminhamentos';
 import type { EncaminhamentoInput } from '../../lib/organizacoes';
+import { formatDateOnly } from '../../lib/dateOnly';
 
 function NovoEncaminhamentoRisco({ organizacaoId, risco, texto, aoFechar }: { organizacaoId: string; risco: Risk; texto: string; aoFechar: () => void }) {
   const ficha = useFichaOrganizacao(organizacaoId);
   const escrita = useEscritaOrganizacao();
   const [form, setForm] = useState<EncaminhamentoInput>({
     organizacaoId, descricao: texto, responsavel: '', responsavelUsuarioId: null,
-    dataInicio: null, dataFim: null, status: 'A iniciar',
+    dataInicio: null, dataFim: null, status: 'A iniciar', classificacaoOrigem: 'Riscos',
     origem: { tipo: 'risco', registroId: risco.id, texto: risco.title || risco.description, excluido: false },
   });
   if (ficha.isLoading) return <div role="status">Carregando organização…</div>;
@@ -138,6 +139,8 @@ export function PainelRisco({
           {risco.responseStrategyHistorica && <Linha rotulo="Histórico: estratégia de resposta">{risco.responseStrategyHistorica}{podeEditar && organizacaoId && <button type="button" className="ml-2 text-xs underline" onClick={() => setTextoEncaminhamento(risco.responseStrategyHistorica!)}>Criar encaminhamento</button>}</Linha>}
           <Linha rotulo="Especificação / resultado vinculado">{risco.specification || <Ausente />}</Linha>
 
+          {organizacaoId && <EncaminhamentosDoRisco organizacaoId={organizacaoId} riscoId={risco.id} />}
+
           <Linha rotulo={`Atividades de resposta (${acoesDeResposta.length})`}>
             {acoesDeResposta.length === 0 ? (
               <span style={{ color: 'var(--ink-5)' }}>Nenhuma ação de resposta cadastrada.</span>
@@ -190,4 +193,14 @@ export function PainelRisco({
     )}
     </>
   );
+}
+
+function EncaminhamentosDoRisco({ organizacaoId, riscoId }: { organizacaoId: string; riscoId: string }) {
+  const ficha = useFichaOrganizacao(organizacaoId);
+  if (ficha.isLoading) return <Linha rotulo="Encaminhamentos">Carregando…</Linha>;
+  if (ficha.error || !ficha.data) return <Linha rotulo="Encaminhamentos">Não foi possível carregar os encaminhamentos.</Linha>;
+  const encaminhamentos = ficha.data.encaminhamentos.filter(e => e.origem?.tipo === 'risco' && e.origem.registroId === riscoId);
+  return <Linha rotulo={`Encaminhamentos (${encaminhamentos.length})`}>
+    {encaminhamentos.length === 0 ? <Ausente /> : <ul className="space-y-2">{encaminhamentos.map(e => <li key={e.id} className="rounded-lg border p-2"><strong>{e.descricao}</strong><p>Responsável: {e.responsavel || 'Não informado'} · Prazo: {e.dataFim ? formatDateOnly(e.dataFim) : 'Não informado'} · Status: {e.status}</p><p>Origem: {e.classificacaoOrigem ?? 'Riscos'}</p></li>)}</ul>}
+  </Linha>;
 }

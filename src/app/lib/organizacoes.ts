@@ -152,6 +152,8 @@ export type OrigemEncaminhamento =
   | { tipo: 'risco'; registroId: string | null; referencia?: string | null; texto: string; excluido: boolean }
   | { tipo: 'texto'; texto: string };
 
+export type ClassificacaoOrigemEncaminhamento = 'Plano de trabalho' | 'Riscos' | 'Outros';
+
 /** Encaminhamento (RC-04). */
 export interface Encaminhamento {
   id: string;
@@ -163,6 +165,7 @@ export interface Encaminhamento {
   status: StatusEncaminhamento;
   /** Null quando não há origem, ou quando o registro de origem foi excluído. */
   origem: OrigemEncaminhamento | null;
+  classificacaoOrigem?: ClassificacaoOrigemEncaminhamento;
   criadoPor: string | null;
   atualizadoPor: string | null;
   criadoEm: string;
@@ -277,10 +280,12 @@ export interface EncaminhamentoInput {
   dataFim: string | null;
   status: StatusEncaminhamento;
   origem: OrigemEncaminhamento | null;
+  classificacaoOrigem?: ClassificacaoOrigemEncaminhamento;
 }
 
 export function validarEncaminhamento(d: EncaminhamentoInput): string[] {
   const erros: string[] = [];
+  if (d.classificacaoOrigem && !['Plano de trabalho', 'Riscos', 'Outros'].includes(d.classificacaoOrigem)) erros.push('Classificação de origem inválida.');
   if (!d.descricao.trim()) erros.push('Informe a descrição.');
   if (d.origem?.tipo === 'risco' && !d.responsavel.trim() && !d.responsavelUsuarioId) erros.push('Informe o responsável pelo encaminhamento do risco.');
   if (d.origem?.tipo === 'risco' && !d.dataFim) erros.push('Informe o prazo do encaminhamento do risco.');
