@@ -59,7 +59,6 @@ export function registrosDoPlano(p: Project, selecionados = ['metas', 'riscos', 
     }
   }
   if (selecionados.includes('riscos')) for (const r of p.risks) {
-    const respostas = metas.flatMap(m => m.deliverables.flatMap(e => e.activities)).filter(a => a.riskOriginId === r.id);
     adicionar(r.id, 'risco', `Risco: ${r.title || r.description}`, [
       campo('title', 'Título', r.title), campo('description', 'Descrição', r.description),
       campo('stageId', 'Meta / Etapa', (r.stageId && etapas.get(r.stageId)) || r.stage || (r.goalId && nomesMetas.get(r.goalId))),
@@ -67,7 +66,7 @@ export function registrosDoPlano(p: Project, selecionados = ['metas', 'riscos', 
       campo('category', 'Categoria', r.category), campo('probability', 'Probabilidade', r.probability),
       campo('impact', 'Impacto', r.impact), campo('severity', 'Pontuação', r.severity),
       campo('status', 'Status', r.status), campo('responsible', 'Responsável', r.responsible),
-      campo('responseStrategy', 'Estratégia de resposta', r.responseStrategy), campo('responses', 'Ações de resposta', respostas.map(a => a.name).join('\n')),
+      campo('responseStrategy', 'Ações para Encaminhamento', r.responseStrategy),
     ]);
   }
   if (selecionados.includes('pareceres')) for (const r of (p as ProjectExt).pareceres ?? []) {

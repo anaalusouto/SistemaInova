@@ -30,7 +30,7 @@ import { dadosDoRisco, errosDaEdicaoRisco } from '../../lib/edicaoLinhaRisco';
 import { useLargurasTabela, larguraInicialColuna } from './useLargurasTabela';
 
 const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
-const COLUNAS = ['Risco', 'Meta / Etapa', 'Especificação', 'P × I', 'Categoria · Status', 'Responsável', 'Estratégia de resposta', 'Ações de resposta'] as const;
+const COLUNAS = ['Risco', 'Meta / Etapa', 'Especificação', 'P × I', 'Categoria · Status', 'Responsável', 'Ações para Encaminhamento'] as const;
 const criteriosAbertos = (): CriteriosRisco => ({ ...CRITERIOS_RISCO_VAZIOS, status: STATUS.filter(status => riscoEmAberto({ status })) });
 
 const CORES: Record<string, { cor: string; fundo: string; forte: string; base: string }> = {
@@ -46,7 +46,7 @@ const quebra: React.CSSProperties = { whiteSpace: 'pre-line', overflowWrap: 'any
 interface Local { etapa: string; meta: string; codigo: string }
 
 export function VisaoRiscos({
-  projetoId, riscos, metas, codigos, atividades, aoAbrirRisco, aoAbrirAtividade, aoNovoRisco, pedidoAbertos = 0,
+  projetoId, riscos, metas, codigos, aoAbrirRisco, aoNovoRisco, pedidoAbertos = 0,
   editar = false, aoPendencia,
 }: {
   projetoId: number;
@@ -117,15 +117,6 @@ export function VisaoRiscos({
     }
     return mapa;
   }, [metas, codigos]);
-
-  const respostas = useMemo(() => {
-    const mapa = new Map<string, Activity[]>();
-    for (const a of atividades) {
-      if (!a.riskOriginId) continue;
-      mapa.set(a.riskOriginId, [...(mapa.get(a.riskOriginId) ?? []), a]);
-    }
-    return mapa;
-  }, [atividades]);
 
   const nomeDaEtapa = (stageId: string | undefined) => (stageId && localizacao.get(stageId)?.etapa) || '';
 
@@ -276,8 +267,8 @@ export function VisaoRiscos({
                 {filtrados.map(r => (
                   <LinhaRisco
                     key={r.id} risco={r} onde={r.stageId ? localizacao.get(r.stageId) : undefined}
-                    respostas={respostas.get(r.id) ?? []} podeEditar={!readOnly}
-                    aoAbrirRisco={aoAbrirRisco} aoAbrirAtividade={aoAbrirAtividade}
+                    podeEditar={!readOnly}
+                    aoAbrirRisco={aoAbrirRisco}
                     metas={metas} codigos={codigos}
                     dados={rascunhos[r.id] ?? dadosDoRisco(projetoId, r)}
                     emEdicao={!readOnly && (editar || edicaoLocal.has(r.id))}
@@ -302,10 +293,8 @@ export function VisaoRiscos({
 interface ItemProps {
   risco: Risk;
   onde: Local | undefined;
-  respostas: Activity[];
   podeEditar: boolean;
   aoAbrirRisco: (r: Risk) => void;
-  aoAbrirAtividade: (a: Activity) => void;
 }
 
 function Vazio({ texto = '—' }: { texto?: string }) {
@@ -349,21 +338,6 @@ function OndeTexto({ onde, risco }: { onde: Local | undefined; risco: Risk }) {
     : <Vazio texto="sem etapa vinculada" />;
 }
 
-function Respostas({ respostas, aoAbrirAtividade, bloqueado = false }: { respostas: Activity[]; aoAbrirAtividade: (a: Activity) => void; bloqueado?: boolean }) {
-  if (respostas.length === 0) return <Vazio />;
-  return (
-    <ul className="flex flex-col gap-1">
-      {respostas.map(a => (
-        <li key={a.id}>
-          <button disabled={bloqueado} onClick={() => aoAbrirAtividade(a)} className="text-left hover:underline" style={{ ...quebra, color: 'var(--brand-text)' }}>
-            {a.name}
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function CabecaRisco({ risco, podeEditar, aoAbrirRisco, bloqueado = false }: { risco: Risk; podeEditar: boolean; aoAbrirRisco: (r: Risk) => void; bloqueado?: boolean }) {
   const { titulo, detalhe } = textoDoRisco(risco);
   const cor = (CORES[faixaRisco(risco.severity)] ?? CORES['—']).forte;
@@ -401,7 +375,7 @@ interface LinhaPlanilhaProps extends ItemProps {
   aoCancelar: () => void;
 }
 
-function LinhaRisco({ risco, onde, respostas, podeEditar, aoAbrirRisco, aoAbrirAtividade,
+function LinhaRisco({ risco, onde, podeEditar, aoAbrirRisco,
   metas, codigos, dados, emEdicao, alterado, salvando, erro, bloqueado,
   aoEditar, aoAlterar, aoSalvar, aoCancelar,
 }: LinhaPlanilhaProps) {
@@ -463,8 +437,7 @@ function LinhaRisco({ risco, onde, respostas, podeEditar, aoAbrirRisco, aoAbrirA
         </select>
       </div> : <><div style={quebra}>{risco.category || <Vazio />}</div><div style={{ color: 'var(--ink-4)', marginTop: 2 }}>{risco.status}</div></>}</td>
       <td style={td} data-label="Responsável">{emEdicao ? simples('responsavel', 'Responsável') : risco.responsible ? <span style={quebra}>{risco.responsible}</span> : <Vazio />}</td>
-      <td style={td} data-label="Estratégia de resposta">{emEdicao ? texto('estrategiaResposta', 'Estratégia de resposta') : risco.responseStrategy ? <span style={quebra}>{risco.responseStrategy}</span> : <Vazio />}</td>
-      <td style={td} data-label="Ações de resposta"><Respostas respostas={respostas} aoAbrirAtividade={aoAbrirAtividade} bloqueado={bloqueado} /></td>
+      <td style={td} data-label="Ações para Encaminhamento">{emEdicao ? texto('estrategiaResposta', 'Ações para Encaminhamento') : risco.responseStrategy ? <span style={quebra}>{risco.responseStrategy}</span> : <Vazio />}</td>
     </tr>
   );
 }

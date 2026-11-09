@@ -699,6 +699,7 @@ export function TabPlanoTrabalho({
               meta={alvo?.meta}
               codigoEtapa={alvo ? codigos.get(alvo.etapa.id) : undefined}
               projetoId={p.id}
+              organizacaoId={p.organizacao?.id}
               metas={metas}
               codigos={codigos}
               acoesDeResposta={todasAtividades.filter((a) => a.riskOriginId === risco.id)}

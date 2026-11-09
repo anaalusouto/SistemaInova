@@ -6,7 +6,7 @@ const minimo = (coluna: string) => coluna === "Atividade" || coluna === "Risco" 
 const limitar = (n: number, coluna: string) => Math.round(Math.max(minimo(coluna), Math.min(MAX, n)));
 export const larguraInicialColuna = (c: string) => {
   if (c === "Risco") return 280;
-  if (c === "Meta / Etapa" || c === "Estratégia de resposta") return 240;
+  if (c === "Meta / Etapa" || c === "Ações para Encaminhamento") return 240;
   if (c === "Especificação" || c === "Ações de resposta") return 200;
   if (c === "Categoria · Status") return 160;
   if (c === "Atividade") return 260;

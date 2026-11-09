@@ -36,7 +36,7 @@ const COR_STATUS: Record<StatusEncaminhamento, { cor: string; fundo: string }> =
 const COLUNAS = ['Descrição', 'Responsável', 'Data inicial', 'Data final', 'Status', 'Origem'];
 
 type Form = EncaminhamentoInput & { id?: string };
-type TipoOrigem = 'nenhuma' | 'contato' | 'texto';
+type TipoOrigem = 'nenhuma' | 'contato' | 'texto' | 'risco';
 
 export function AbaEncaminhamentos({
   org, foco, aoVerRegistro,
@@ -92,6 +92,7 @@ export function AbaEncaminhamentos({
   const textoOrigem = (e: Encaminhamento): { texto: string; contato: boolean } | null => {
     if (!e.origem) return null;
     if (e.origem.tipo === 'texto') return { texto: e.origem.texto, contato: false };
+    if (e.origem.tipo === 'risco') return { texto: `Risco: ${e.origem.texto}${e.origem.excluido ? ` (excluído${e.origem.referencia ? ` · ${e.origem.referencia}` : ''})` : ''}`, contato: false };
     const r = registros.get(e.origem.registroId);
     return r ? { texto: rotuloRegistro(r), contato: true } : null;
   };
@@ -255,14 +256,15 @@ export function AbaEncaminhamentos({
   );
 }
 
-function FormularioEncaminhamento({
-  form, aoMudar, org, aoFechar, aoSalvar,
+export function FormularioEncaminhamento({
+  form, aoMudar, org, aoFechar, aoSalvar, origemFixa = false,
 }: {
   form: Form;
   aoMudar: (f: Form) => void;
   org: OrganizacaoFicha;
   aoFechar: () => void;
   aoSalvar: () => Promise<void>;
+  origemFixa?: boolean;
 }) {
   const pessoas = usePeople();
   const [erros, setErros] = useState<string[]>([]);
@@ -320,7 +322,7 @@ function FormularioEncaminhamento({
         </Campo>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Campo rotulo="Responsável">
+          <Campo rotulo="Responsável" obrigatorio={form.origem?.tipo === 'risco'}>
             <select aria-label="Responsável cadastrado"
               className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput}
               value={form.responsavelUsuarioId ?? (form.responsavel ? '__legado__' : '')}
@@ -340,18 +342,19 @@ function FormularioEncaminhamento({
           <Campo rotulo="Data inicial">
             <Data valor={form.dataInicio} aoMudar={v => alterar('dataInicio', v)} max={form.dataFim} />
           </Campo>
-          <Campo rotulo="Data final">
+          <Campo rotulo="Data final" obrigatorio={form.origem?.tipo === 'risco'}>
             <Data valor={form.dataFim} aoMudar={v => alterar('dataFim', v)} min={form.dataInicio} />
           </Campo>
         </div>
 
         <Campo rotulo="Origem">
-          <select className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput} value={tipoOrigem} onChange={e => mudarTipoOrigem(e.target.value as TipoOrigem)}>
+          <select disabled={origemFixa || form.origem?.tipo === 'risco'} className="w-full border rounded-lg px-2.5 py-1.5" style={baseInput} value={tipoOrigem} onChange={e => mudarTipoOrigem(e.target.value as TipoOrigem)}>
             <option value="nenhuma">Sem origem</option>
             <option value="contato" disabled={org.registros.length === 0}>
               Registro de contato{org.registros.length === 0 ? ' (nenhum registrado)' : ''}
             </option>
             <option value="texto">Outra origem (descrever)</option>
+            {form.origem?.tipo === 'risco' && <option value="risco">Risco: {form.origem.texto}{form.origem.excluido ? ' (excluído)' : ''}</option>}
           </select>
         </Campo>
 

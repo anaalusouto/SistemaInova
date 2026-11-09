@@ -149,6 +149,7 @@ export interface RegistroContato {
 
 export type OrigemEncaminhamento =
   | { tipo: 'contato'; registroId: string }
+  | { tipo: 'risco'; registroId: string | null; referencia?: string | null; texto: string; excluido: boolean }
   | { tipo: 'texto'; texto: string };
 
 /** Encaminhamento (RC-04). */
@@ -281,6 +282,8 @@ export interface EncaminhamentoInput {
 export function validarEncaminhamento(d: EncaminhamentoInput): string[] {
   const erros: string[] = [];
   if (!d.descricao.trim()) erros.push('Informe a descrição.');
+  if (d.origem?.tipo === 'risco' && !d.responsavel.trim() && !d.responsavelUsuarioId) erros.push('Informe o responsável pelo encaminhamento do risco.');
+  if (d.origem?.tipo === 'risco' && !d.dataFim) erros.push('Informe o prazo do encaminhamento do risco.');
   if (!(STATUS_ENCAMINHAMENTO as readonly string[]).includes(d.status)) erros.push('Status inválido.');
   if (d.dataInicio && d.dataFim && d.dataFim < d.dataInicio) {
     erros.push('A data final não pode ser anterior à data inicial.');

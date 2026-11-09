@@ -104,7 +104,7 @@ function mapRisco(r: any): Risk {
   return {
     id: r.id, title: r.titulo ?? r.descricao ?? '', description: r.descricao,
     category: r.categoria ?? '', probability: n2(r.probabilidade),
-    impact: n2(r.impacto), severity: n2(r.severidade), responseStrategy: r.estrategia_mitigacao ?? '',
+    impact: n2(r.impacto), severity: n2(r.severidade), responseStrategy: r.estrategia_mitigacao ?? '', responseStrategyHistorica: r.estrategia_resposta_historica ?? '',
     responsible: r.responsavel ?? '', status: r.status,
     stageId: r.etapa_id ?? undefined, specification: r.especificacao ?? r.especificacao_legado ?? undefined,
     goalId: r.meta_id ?? undefined,

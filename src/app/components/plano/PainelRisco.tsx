@@ -16,11 +16,32 @@ import { Painel, Linha, Ausente, BotaoAcao } from './PainelBase';
 import { FormularioRisco } from './FormularioRisco';
 import { ConfirmarExclusao } from './camposFormulario';
 import { useStore } from '../../store';
+import { useEscritaOrganizacao, useFichaOrganizacao } from '../organizacoes/useOrganizacoes';
+import { FormularioEncaminhamento } from '../organizacoes/AbaEncaminhamentos';
+import type { EncaminhamentoInput } from '../../lib/organizacoes';
+
+function NovoEncaminhamentoRisco({ organizacaoId, risco, texto, aoFechar }: { organizacaoId: string; risco: Risk; texto: string; aoFechar: () => void }) {
+  const ficha = useFichaOrganizacao(organizacaoId);
+  const escrita = useEscritaOrganizacao();
+  const [form, setForm] = useState<EncaminhamentoInput>({
+    organizacaoId, descricao: texto, responsavel: '', responsavelUsuarioId: null,
+    dataInicio: null, dataFim: null, status: 'A iniciar',
+    origem: { tipo: 'risco', registroId: risco.id, texto: risco.title || risco.description, excluido: false },
+  });
+  if (ficha.isLoading) return <div role="status">Carregando organização…</div>;
+  if (!ficha.data) return <div role="alert">Não foi possível carregar a organização. <button type="button" onClick={aoFechar}>Fechar</button></div>;
+  return <FormularioEncaminhamento origemFixa form={form} aoMudar={setForm} org={ficha.data} aoFechar={aoFechar} aoSalvar={async () => {
+    await escrita.criarEncaminhamento(form);
+    toast.success('Encaminhamento registrado.');
+    aoFechar();
+  }} />;
+}
 
 export function PainelRisco({
-  risco, etapa, meta, codigoEtapa, projetoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade, lateral, bloqueado,
+  risco, etapa, meta, codigoEtapa, projetoId, organizacaoId, metas, codigos, acoesDeResposta, aoFechar, aoAbrirAtividade, lateral, bloqueado,
 }: {
   risco: Risk; etapa?: Deliverable; meta?: Goal; codigoEtapa?: string; projetoId: number;
+  organizacaoId?: string;
   /** Metas do projeto, para escolher (ou trocar) a etapa ao editar. */
   metas: Goal[];
   codigos: Map<string, string>;
@@ -36,6 +57,7 @@ export function PainelRisco({
   const [removendo, setRemovendo] = useState(false);
   const emRemocao = useRef(false);
   const [erroExclusao, setErroExclusao] = useState<string | null>(null);
+  const [textoEncaminhamento, setTextoEncaminhamento] = useState<string | null>(null);
   const faixa = faixaRisco(risco.severity);
 
   const caminho = etapa && meta
@@ -48,6 +70,7 @@ export function PainelRisco({
   const acoes = podeEditar && !editando ? (
     <>
       <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar risco</BotaoAcao>
+      {organizacaoId && <BotaoAcao aoClicar={() => setTextoEncaminhamento('')}>Novo encaminhamento</BotaoAcao>}
       <BotaoAcao aoClicar={() => { if (!emRemocao.current) { setErroExclusao(null); setExcluindo(true); } }} perigo>
         <Trash2 size={12} /> {removendo ? 'Excluindo…' : 'Excluir risco'}
       </BotaoAcao>
@@ -110,7 +133,9 @@ export function PainelRisco({
             </span>
           </Linha>
 
-          <Linha rotulo="Estratégia de resposta">{risco.responseStrategy || <Ausente />}</Linha>
+          <Linha rotulo="Ações para Encaminhamento (texto registrado)">{risco.responseStrategy || <Ausente />}</Linha>
+          {podeEditar && organizacaoId && risco.responseStrategy && <button type="button" className="text-sm underline" onClick={() => setTextoEncaminhamento(risco.responseStrategy)}>Criar encaminhamento a partir deste texto</button>}
+          {risco.responseStrategyHistorica && <Linha rotulo="Histórico: estratégia de resposta">{risco.responseStrategyHistorica}{podeEditar && organizacaoId && <button type="button" className="ml-2 text-xs underline" onClick={() => setTextoEncaminhamento(risco.responseStrategyHistorica!)}>Criar encaminhamento</button>}</Linha>}
           <Linha rotulo="Especificação / resultado vinculado">{risco.specification || <Ausente />}</Linha>
 
           <Linha rotulo={`Atividades de resposta (${acoesDeResposta.length})`}>
@@ -127,6 +152,7 @@ export function PainelRisco({
                     >
                       {a.name}
                     </button>
+                    {podeEditar && organizacaoId && <button type="button" className="ml-2 text-xs underline" onClick={() => setTextoEncaminhamento(a.name)}>Criar encaminhamento</button>}
                   </li>
                 ))}
               </ul>
@@ -135,10 +161,11 @@ export function PainelRisco({
         </>
       )}
     </Painel>
+    {organizacaoId && textoEncaminhamento !== null && <NovoEncaminhamentoRisco organizacaoId={organizacaoId} risco={risco} texto={textoEncaminhamento} aoFechar={() => setTextoEncaminhamento(null)} />}
     {excluindo && (
       <ConfirmarExclusao
         titulo="Excluir risco"
-        descricao={`O risco "${risco.title || risco.description}" será removido do projeto e da matriz. As atividades de resposta e os itens de orçamento serão preservados, apenas sem o vínculo com este risco.`}
+        descricao={`O risco "${risco.title || risco.description}" será removido do projeto e da matriz. Os encaminhamentos serão preservados com a identificação do risco excluído. As atividades de resposta e os itens de orçamento serão preservados sem o vínculo com este risco.`}
         aoCancelar={() => setExcluindo(false)}
         ocupado={removendo}
         erro={erroExclusao}

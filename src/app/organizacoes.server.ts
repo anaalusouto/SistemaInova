@@ -93,7 +93,9 @@ function mapEncaminhamento(e: any): Encaminhamento {
     dataInicio: e.data_inicio ?? null,
     dataFim: e.data_fim ?? null,
     status: e.status,
-    origem: e.log_comunicacao_id
+    origem: e.risco_origem_identificacao
+      ? { tipo: 'risco', registroId: e.risco_origem_id ?? null, referencia: e.risco_origem_referencia ?? null, texto: e.risco_origem_identificacao, excluido: e.risco_origem_excluido }
+      : e.log_comunicacao_id
       ? { tipo: 'contato', registroId: e.log_comunicacao_id }
       : e.origem_texto
         ? { tipo: 'texto', texto: e.origem_texto }
@@ -303,6 +305,10 @@ async function linhaEncaminhamento(
     status: d.status,
     log_comunicacao_id: d.origem?.tipo === 'contato' ? d.origem.registroId : null,
     origem_texto: d.origem?.tipo === 'texto' ? d.origem.texto.trim() : null,
+    risco_origem_id: d.origem?.tipo === 'risco' ? d.origem.registroId : null,
+    risco_origem_referencia: d.origem?.tipo === 'risco' ? (d.origem.referencia ?? d.origem.registroId) : null,
+    risco_origem_identificacao: d.origem?.tipo === 'risco' ? d.origem.texto : null,
+    risco_origem_excluido: d.origem?.tipo === 'risco' ? d.origem.excluido : false,
   };
 }
 

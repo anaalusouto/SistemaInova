@@ -222,7 +222,7 @@ export function FormularioRisco({
         <Selecao valor={form.status} opcoes={STATUS} aoMudar={v => alterar('status', v)} />
       </Campo>
 
-      <Campo rotulo="Estratégia de resposta">
+      <Campo rotulo="Ações para Encaminhamento">
         <AreaTexto valor={form.estrategiaResposta} aoMudar={v => alterar('estrategiaResposta', v)} linhas={2} />
       </Campo>
 

@@ -189,6 +189,7 @@ export interface Risk {
   impact: number;
   severity: number;
   responseStrategy: string;
+  responseStrategyHistorica?: string;
   responsible: string;
   status: RiskStatus;
   /** Título curto do risco (RF-028) — obrigatório nos registros novos. */
