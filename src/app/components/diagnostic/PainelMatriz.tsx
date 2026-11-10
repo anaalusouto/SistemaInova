@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
 import '../responsive-tables.css';
-import { useLargurasTabela } from '../plano/useLargurasTabela';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
 interface Props { cabecalho?: ReactNode; linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
@@ -13,19 +12,23 @@ const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
 const grupos = [...new Set(FUNCOES_MATRIZ.map(f => f.grupo))];
 const CATEGORIAS_LEITURA = ['Lacuna crítica', 'Lacuna relevante', 'Melhoria pontual', 'Acompanhar', 'Completar avaliação'];
 
-export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, renderEdicao, renderAvaliacao, filtroBloqueado }: Props) {
-  const [grupo, setGrupo] = useState('Todos');
-  const [campos, setCampos] = useState<'atuacao' | 'avaliacao' | 'detalhes'>('atuacao');
+export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, renderEdicao, renderAvaliacao }: Props) {
   const [leituraSelecionada, setLeituraSelecionada] = useState<string | null>(null);
-  const camposPorGrupo = {
-    atuacao: ['Função', 'Avaliação', 'Atuação', 'Externo', 'Experiência'],
-    avaliacao: ['Função', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação'],
-    detalhes: ['Função', 'Avaliação', 'Observação'],
-  };
-  const colunas = [...COLUNAS.filter(c => camposPorGrupo[campos].includes(c)), ...(renderEdicao ? ['Ações'] : [])];
-  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunas);
+  const colunas = [...COLUNAS, ...(renderEdicao ? ['Ações'] : [])];
   const indice = new Map(linhas.map(l => [l.id, l]));
-  const visiveis = FUNCOES_MATRIZ.filter(f => grupo === 'Todos' || f.grupo === grupo);
+  const visiveis = FUNCOES_MATRIZ;
+  const respostasVisiveis = visiveis.map(f => indice.get(f.id)?.valores).filter(v => v != null);
+  const camposVazios: Record<string, boolean> = {
+    'Atuação': respostasVisiveis.every(v => !v.atuacao),
+    'Externo': respostasVisiveis.every(v => !v.externo?.trim()),
+    'Experiência': respostasVisiveis.every(v => !v.experiencia),
+    'Interesse': respostasVisiveis.every(v => !v.interesse),
+    'Criticidade': respostasVisiveis.every(v => !v.criticidade),
+    'Observação': respostasVisiveis.every(v => !v.observacoes?.trim()),
+  };
+  const pesosBase: Record<string, number> = { 'Função': 20, 'Avaliação': 15, 'Atuação': 10, 'Externo': 11, 'Experiência': 10, 'Interesse': 8, 'Criticidade': 11, 'Leitura': 12, 'Observação': 15, 'Ações': 14 };
+  const pesos = colunas.map(c => camposVazios[c] ? 5 : pesosBase[c]);
+  const totalPesos = pesos.reduce((total, peso) => total + peso, 0);
   const distribuicao = CATEGORIAS_LEITURA.map(leitura => ({
     leitura,
     funcoes: FUNCOES_MATRIZ.filter(f => leituraMatriz(indice.get(f.id)?.valores.criticidade ?? null, indice.get(f.id)?.valores.experiencia ?? null) === leitura),
@@ -52,17 +55,13 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
       </div>}
     </section>
     {cabecalho}
-    <div className="flex flex-wrap gap-2" aria-label="Filtrar funções por grupo">
-      {['Todos', ...grupos].map(g => <button key={g} type="button" disabled={filtroBloqueado} aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
-    </div>
     <section aria-label="Funções por grupo" className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2 text-xs" role="group" aria-label="Colunas da tabela"><span>Colunas da tabela</span>{([['atuacao','Atuação'],['avaliacao','Avaliação'],['detalhes','Detalhes']] as const).map(([id, rotulo]) => <button type="button" key={id} aria-pressed={campos === id} onClick={() => { setCampos(id); restaurar(); }} className="rounded border bg-card px-2 py-1.5">{rotulo}</button>)}</div>
-      <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4><button type="button" className="text-xs underline" onClick={restaurar}>Restaurar larguras das colunas</button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">Todas as funções</h4></div>
       <div className="inova-table-frame diagnostico-tabela-scroll matriz-tabela-scroll" role="region" aria-label="Tabela da Matriz Funcional">
-        <table ref={tabelaRef} data-campos={campos} style={{ width: larguraTotal ?? '100%', minWidth: 0 }} className="diagnostico-tabela matriz-grade"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <colgroup>{colunas.map(c => <col key={c} style={{ width: larguras?.[c] ?? `${100 / colunas.length}%` }}/>)}</colgroup>
-          <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}<div {...controles(t)} className="plano-resize-handle"/></th>)}</tr></thead>
-          {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
+        <table style={{ width: '100%', minWidth: 0 }} className="diagnostico-tabela matriz-grade"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
+          <colgroup>{colunas.map((c, i) => <col key={c} style={{ width: `${pesos[i] / totalPesos * 100}%` }}/>)}</colgroup>
+          <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
+          {grupos.map(g => <tbody key={g}>
             <tr className="diagnostico-grupo"><th colSpan={colunas.length} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {
               const linha = indice.get(f.id)!;

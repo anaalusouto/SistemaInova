@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { QUESTIONARIO_CADERNO } from '../../diagnostic/catalog/cadernoCria';
-import { CadernoItens, useCaderno, type ContextoCaderno } from './CadernoItens';
+import { useCaderno, type ContextoCaderno } from './CadernoItens';
 import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from '../../diagnostic/ieoCaderno';
 import { CORES_ESCALA } from '../../theme/coresInstitucionais';
 
@@ -19,9 +19,8 @@ function Termometro({ valor, rotulo }: { valor: number | null; rotulo: string })
 }
 
 export function QuestionarioCaderno(props: ContextoCaderno) {
-  const [dimensaoId, setDimensaoId] = useState<string | null>('1');
+  const [dimensaoId, setDimensaoId] = useState<string | null>(null);
   const [publico, setPublico] = useState('Todos');
-  const [dimensoesAbertas, setDimensoesAbertas] = useState<Set<string>>(() => new Set(['1']));
   const consulta = useCaderno(props);
   const registros = consulta.data ?? [];
   const resultado = calcularIeoCaderno(registros);
@@ -35,13 +34,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
 
   const selecionarDimensao = (id: string | null) => {
     setDimensaoId(id);
-    if (id) setDimensoesAbertas(atuais => new Set(atuais).add(id));
   };
-  const alterarAbertura = (id: string, aberta: boolean) => setDimensoesAbertas(atuais => {
-    const proxima = new Set(atuais);
-    if (aberta) proxima.add(id); else proxima.delete(id);
-    return proxima;
-  });
   const valorResposta = (codigo: string) => respostas.get(codigo)?.valor ?? null;
   const avaliadasGerais = resultado.pontuadas;
   const aplicaveisGerais = Math.max(0, resultado.total - resultado.naoAplicaveis);
@@ -57,14 +50,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
 
   const completo = avaliadasGerais === aplicaveisGerais && resultado.invalidas === 0;
 
-  const perguntasFoco = perguntasGrafico.map(q => ({
-    codigo: q.codigo,
-    texto: q.texto,
-    resposta: valorResposta(q.codigo),
-    relato: respostas.get(q.codigo)?.relato?.trim() ?? '',
-  }));
-
-  return <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+  return <div className="min-w-0">
     <main className="min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3" aria-label="Filtros do IEO">
       <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Filtrar dimensão do IEO">
@@ -94,16 +80,25 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
         </div>
       </div>
 
-      <div className="grid min-w-0 gap-3 md:grid-cols-2">{resultado.porDimensao.map(d => {
+      <div className="min-w-0 rounded-xl border bg-card p-4 sm:p-6" aria-label="Régua das cinco dimensões do IEO">
+        <h3 className="text-xl font-bold">Régua das dimensões</h3>
+        <p className="mt-1 text-sm text-muted-foreground">As barras mostram as médias das dimensões; os pontos representam as respostas de cada pergunta. Selecione uma dimensão para aprofundar.</p>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"><span>1 · Inicial</span><span>2 · Em construção</span><span>3 · Estruturado</span><span>4 · Consolidado</span><span>Sem nota não é zero</span></div>
+        <div className="mt-4 divide-y">{resultado.porDimensao.map(d => {
         const aplicaveis = Math.max(0, d.total - d.naoAplicaveis);
         const selecionada = dimensaoId === d.dimensaoId;
-        return <button type="button" key={d.dimensaoId} aria-pressed={selecionada} aria-label={`Selecionar dimensão ${d.dimensaoId}: ${d.dimensaoTitulo}`} onClick={() => selecionarDimensao(d.dimensaoId)} className={`min-w-0 rounded-xl border p-4 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${selecionada ? 'border-primary bg-primary/10 ring-2 ring-primary/25' : 'border-border bg-card'}`}>
-          <span className="flex items-start justify-between gap-3"><strong className="min-w-0 text-sm">{d.dimensaoId}. {d.dimensaoTitulo}</strong><span className="shrink-0 text-xl font-bold">{fmtScore(d.media)}<span className="text-xs font-normal text-muted-foreground"> / 4</span></span></span>
-          <p className="mt-1 text-[11px] text-muted-foreground">Média simples dos níveis válidos</p>
-          <div className="mt-2"><Termometro valor={d.media} rotulo={`Dimensão ${d.dimensaoId}`} /></div>
-          <p className="mt-2 text-xs text-muted-foreground">{d.pontuadas}/{aplicaveis} indicadores avaliados · {fmtPercentual(d.pontuadas, aplicaveis)}% de cobertura</p>
+        const dimensao = DIMENSOES_IEO_CADERNO.find(item => item.id === d.dimensaoId)!;
+        const pontos = dimensao.perguntas.map(q => ({ codigo: q.codigo, valor: valorResposta(q.codigo) })).filter(p => p.valor && /^[1-4]$/.test(p.valor));
+        return <button type="button" key={d.dimensaoId} aria-pressed={selecionada} aria-label={`${d.dimensaoTitulo}: ${fmtScore(d.media)} de 4, ${d.pontuadas} de ${aplicaveis} avaliados. Selecionar dimensão.`} onClick={() => selecionarDimensao(d.dimensaoId)} className={`grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[minmax(160px,1fr)_minmax(0,1.6fr)_64px] ${selecionada ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+          <span className="min-w-0"><strong className="block text-sm">{d.dimensaoId}. {d.dimensaoTitulo}</strong><span className="text-xs text-muted-foreground">{d.pontuadas}/{aplicaveis} indicadores avaliados</span></span>
+          <span className="col-start-2 text-right text-xl font-bold sm:col-start-3">{fmtScore(d.media)}<span className="text-xs font-normal text-muted-foreground"> / 4</span></span>
+          <span className="relative col-span-2 row-start-2 block h-14 min-w-0 rounded sm:col-span-1 sm:col-start-2 sm:row-start-1" style={{background:'linear-gradient(90deg, #f8dfda 0%, #f8dfda 33.33%, #f8edda 33.33%, #f8edda 66.66%, #e1f0e7 66.66%)'}}>
+            {d.media != null && <span className="absolute left-0 top-1 h-2 rounded" style={{width:`${Math.max(0, Math.min(100, (d.media - 1) / 3 * 100))}%`, backgroundColor: CORES_ESCALA[Math.max(1, Math.min(4, Math.floor(d.media))) as keyof typeof CORES_ESCALA].base}} />}
+            {[1,2,3,4].map(n => <span key={n} className="absolute inset-y-0 border-l border-foreground/15" style={{left:`${(n-1)/3*100}%`}} />)}
+            {pontos.map((p, i) => <span key={p.codigo} title={`${p.codigo}: ${p.valor}`} className="absolute size-2 rounded-full border border-white" style={{left:`${(Number(p.valor)-1)/3*100}%`,top: 13 + i*8, transform:'translateX(-50%)',backgroundColor:CORES_ESCALA[Number(p.valor) as keyof typeof CORES_ESCALA].base}} />)}
+          </span>
         </button>;
-      })}</div>
+      })}</div></div>
     </section>
 
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-3 sm:p-5" aria-label="Detalhamento visual do IEO">
@@ -130,28 +125,13 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
                 <span className="absolute inset-0 flex justify-between" aria-hidden="true">{[0, 1, 2, 3, 4].map(n => <i key={n} className="h-full border-l border-background/80" />)}</span>
               </div>{mediaDimensao != null && <span aria-hidden="true" className="pointer-events-none absolute -top-2 -bottom-2 z-10 border-l-2 border-amber-700" style={{ left: `${mediaDimensao / 4 * 100}%` }} />}</div>
               <span role="cell" className={`justify-self-start rounded-md px-2 py-1 text-xs font-semibold sm:justify-self-end ${pontuacao == null ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>{pontuacao ?? (valor === 'NA' ? 'N/A' : valor || '—')}</span>
+              <details className="min-w-0 sm:col-span-3"><summary className="cursor-pointer text-xs font-medium text-primary">Ver resposta e relato</summary><div className="mt-2 space-y-1 border-t pt-2 text-sm"><p><strong>Resposta:</strong> {estado}</p><p className="whitespace-pre-wrap"><strong>Relato:</strong> {respostas.get(q.codigo)?.relato?.trim() || 'Não registrado para esta pergunta.'}</p></div></details>
             </div>;
           })}
           {!perguntasGrafico.length && <p className="p-6 text-center text-sm text-muted-foreground">Não há perguntas para este público nesta dimensão.</p>}
         </div>
       </section>
     </main>
-
-      <div className="min-w-0 self-stretch">
-      <aside className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto" aria-label="Painel de síntese do IEO">
-        <p className="diagnostico-sobretitulo">{dimensaoId ? 'DIMENSÃO SELECIONADA' : 'VISÃO GERAL DO IEO'}</p><h3 className="text-lg font-semibold">{dimensaoId ? DIMENSOES_IEO_CADERNO.find(d => d.id === dimensaoId)?.titulo : 'Análise geral'}</h3>
-        <p className="mt-3 text-3xl font-bold">{fmtScore(dimensaoId ? resumoSelecionado?.media ?? null : resultado.geral)}<span className="text-sm font-normal text-muted-foreground"> / 4</span></p>
-        <p className="text-xs text-muted-foreground">Média simples dos níveis válidos</p>
-        <p className="mt-3 text-xs text-muted-foreground">{avaliadasFoco} indicadores avaliados · {aplicaveisFoco} aplicáveis · {fmtPercentual(avaliadasFoco, aplicaveisFoco)}% de cobertura · {resumoSelecionado?.naoAplicaveis ?? resultado.naoAplicaveis} N/A</p>
-        <section className="mt-5 space-y-2" aria-label="Resumo da dimensão">
-          <h4 className="font-semibold">Resumo da dimensão</h4>
-          {perguntasFoco.length ? <ul className="space-y-2">{perguntasFoco.map(item => <li key={item.codigo} className="rounded-lg border bg-muted/20 p-3"><details><summary className="cursor-pointer text-sm"><strong className="mr-1 text-primary">{item.codigo}</strong>{item.texto}</summary><div className="mt-2 border-t pt-2 text-sm"><p><strong>Resposta:</strong> {item.resposta || 'Sem resposta'}</p><p className="mt-1 whitespace-pre-wrap"><strong>Relato:</strong> {item.relato || 'Não registrado para esta pergunta.'}</p></div></details></li>)}</ul> : <p className="text-sm text-muted-foreground">Não há perguntas vinculadas a esta seleção.</p>}
-        </section>
-        {dimensaoId && <button type="button" className="diagnostico-filtro mt-5 w-full" onClick={() => selecionarDimensao(null)}>Voltar à análise geral</button>}
-      </aside>
-      </div>
-
-
 
   </div>;
 }

@@ -43,20 +43,18 @@
 .diagnostico-funcao:hover { color: var(--primary); text-decoration: underline; }
 .diagnostico-atuacao { background: var(--surface-1); border-radius: 5px; padding: 4px 7px; display: inline-block; }
 .diagnostico-leitura { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
-.matriz-tabela-scroll { max-height: 70vh; overflow: auto; }
+.matriz-tabela-scroll { max-height: 70vh; overflow-y: auto; overflow-x: hidden; }
 .matriz-tabela-scroll .diagnostico-tabela { table-layout: fixed; border-collapse: separate; border-spacing: 0; }
-.matriz-grade[data-campos="atuacao"] td[data-label]:not([data-label="Avaliação"]):not([data-label="Atuação"]):not([data-label="Externo"]):not([data-label="Experiência"]):not([data-label="Ações"]),
-.matriz-grade[data-campos="avaliacao"] td[data-label]:not([data-label="Interesse"]):not([data-label="Criticidade"]):not([data-label="Leitura"]):not([data-label="Avaliação"]):not([data-label="Ações"]),
-.matriz-grade[data-campos="detalhes"] td[data-label]:not([data-label="Avaliação"]):not([data-label="Observação"]):not([data-label="Ações"]) { display: none; }
-.matriz-tabela-scroll .matriz-grade :is(th, td) { min-width: 0 !important; width: auto; overflow-wrap: anywhere; white-space: normal; padding: 8px; }
+.matriz-tabela-scroll .matriz-grade :is(th, td) { min-width: 0 !important; width: auto; overflow-wrap: anywhere; white-space: normal; padding: 3px; }
 .matriz-tabela-scroll .matriz-grade :is(input, select, textarea, form, span) { min-width: 0; max-width: 100%; }
 .matriz-tabela-scroll .diagnostico-tabela thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-1, #f1f5f9); box-shadow: 0 1px 0 var(--border); }
 .matriz-tabela-scroll .diagnostico-tabela thead th:first-child { left: 0; z-index: 4; }
 .matriz-tabela-scroll .diagnostico-tabela tbody tr:has(select, textarea) > th[scope="row"] { position: sticky; left: 0; z-index: 1; background: var(--card, #fff); box-shadow: 1px 0 0 var(--border); }
 .matriz-tabela-scroll .diagnostico-tabela tbody tr:has(select, textarea) > td { background: var(--card, #fff); }
 .matriz-tabela-scroll .diagnostico-tabela :is(select, textarea, input, button):focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.matriz-tabela-scroll .diagnostico-tabela :is(th, td) { width: auto; min-width: 0; overflow-wrap: break-word; word-break: normal; }
-.matriz-tabela-scroll .diagnostico-leitura { overflow-wrap: normal; word-break: normal; }
+.matriz-tabela-scroll .diagnostico-tabela :is(th, td, button, label) { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+.matriz-tabela-scroll .diagnostico-tabela button { white-space: normal; }
+.matriz-tabela-scroll .diagnostico-leitura { overflow-wrap: anywhere; word-break: normal; padding: 3px; }
 .matriz-tabela-scroll .diagnostico-nivel { white-space: normal; }
 .matriz-tabela-scroll :is(select, textarea) { min-width: 0; max-width: 100%; }
 @container inova-table (max-width: 63.999rem) {

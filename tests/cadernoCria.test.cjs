@@ -10,6 +10,18 @@ const catalogo=load('src/app/diagnostic/catalog/cadernoCria.ts');
 const {valoresVazios,validarRespostaCaderno:validar}=load('src/app/diagnostic/cadernoCria.ts');
 const uuid='00000000-0000-0000-0000-000000000011';
 
+test('régua do IEO reúne cinco dimensões e respostas e relatos ficam nas perguntas',()=>{
+ const registro={codigo:'Q01',contexto:'',resposta:{...valoresVazios(),valor:'3',relato:'Relato de teste'},versao:1};
+ const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',{'./CadernoItens':{useCaderno:()=>({data:[registro]})}});
+ const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
+ assert.match(html,/Régua das cinco dimensões do IEO/);
+ assert.equal((html.match(/Selecionar dimensão\./g)||[]).length,5);
+ assert.match(html,/title="Q01: 3"/);
+ assert.match(html,/<summary[^>]*>Ver resposta e relato<\/summary>/);
+ assert.match(html,/Relato de teste/);
+ assert.doesNotMatch(html,/Painel de síntese do IEO/);
+});
+
 test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos de operação',()=>{
  const {DIMENSOES_IEO_CADERNO:dimensoes,calcularIeoCaderno:calcular}=load('src/app/diagnostic/ieoCaderno.ts');
  const codigos=dimensoes.flatMap(d=>d.codigos);
