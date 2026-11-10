@@ -6,7 +6,7 @@ import { useLargurasTabela } from '../plano/useLargurasTabela';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
 interface Props { cabecalho?: ReactNode; linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
-const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'];
+const COLUNAS = ['Função', 'Avaliação', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Observação'];
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
@@ -18,7 +18,7 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
   const [campos, setCampos] = useState<'atuacao' | 'avaliacao' | 'detalhes'>('atuacao');
   const [leituraSelecionada, setLeituraSelecionada] = useState<string | null>(null);
   const camposPorGrupo = {
-    atuacao: ['Função', 'Atuação', 'Externo', 'Experiência'],
+    atuacao: ['Função', 'Avaliação', 'Atuação', 'Externo', 'Experiência'],
     avaliacao: ['Função', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação'],
     detalhes: ['Função', 'Avaliação', 'Observação'],
   };
@@ -72,13 +72,13 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
               const cor = leitura === 'Lacuna crítica' ? '#b44747' : leitura === 'Lacuna relevante' ? '#c46b35' : leitura === 'Acompanhar' ? '#528363' : '#b27b24';
               return <tr key={f.id}>
                 <th scope="row" data-label="Função"><button type="button" disabled={desabilitado} onClick={() => onSelecionar(f.id)} className="diagnostico-funcao"><span>{f.id}</span>{f.nome}</button><small className="block mt-2 text-muted-foreground font-normal">{linha.estado}</small></th>
+                <td data-label="Avaliação">{renderAvaliacao?.(f.id) ?? 'Não avaliado'}</td>
                 <td data-label="Atuação"><span className="diagnostico-atuacao">{v.atuacao || 'Não informado'}</span></td>
                 <td data-label="Externo" className="whitespace-pre-wrap">{v.externo || '—'}</td>
                 <td data-label="Experiência">{v.experiencia || 'Não informado'}</td>
                 <td data-label="Interesse">{v.interesse ? INTERESSE[Number(v.interesse) - 1] : 'Não informado'}</td>
                 <td data-label="Criticidade"><span className="diagnostico-nivel" style={{ color: CORES[Number(v.criticidade)] || CORES[0] }}>{v.criticidade ? `${v.criticidade} · ${CRITICIDADE[Number(v.criticidade) - 1]}` : 'Não informado'}</span></td>
                 <td data-label="Leitura"><span className="diagnostico-leitura" style={{ color: cor, background: `${cor}12` }}>{leitura}</span></td>
-                <td data-label="Avaliação">{renderAvaliacao?.(f.id) ?? 'Não avaliado'}</td>
                 <td data-label="Observação" className="whitespace-pre-wrap">{v.observacoes || <span className="text-muted-foreground">Sem observação registrada.</span>}</td>
               </tr>;
             })}

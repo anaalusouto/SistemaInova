@@ -75,6 +75,8 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
       void client.invalidateQueries({queryKey:['diagnostico-matriz',diagnosticoId]});
       void client.invalidateQueries({queryKey:['diagnostico',diagnosticoId]});
       void client.invalidateQueries({queryKey:['diagnostico-visao-geral']});
+      void client.invalidateQueries({queryKey:['prioridades-cruzadas']});
+      void client.invalidateQueries({queryKey:['portfolio-detalhes-mapeamento']});
       setEditando(false);toast.success('Resposta salva.');
     },onError:(e:Error,data)=>{const mensagem=(e.message||'Não foi possível salvar.')+' Suas alterações continuam visíveis e ainda não foram confirmadas. Tente salvar novamente.';setErrosLinha(anteriores=>({...anteriores,[data.funcaoId]:mensagem}));setErroConferencia(mensagem);toast.error(mensagem);},onSettled:()=>{emCurso.current=false;},
   });
@@ -178,6 +180,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
           </div>
           {open&&<div className="border-t p-4">
             <p role="status" className="mb-3 text-xs text-muted-foreground">{r&&!edicoes[f.id]&&!editando?'Respostas salvas nesta aplicação.':estado.id==='revisada'?'Valores revisados e prontos para salvar. Ainda não salvos.':readOnly&&importadas[f.id]?'Prévia de respostas importadas ainda não confirmadas nem salvas na Matriz.':estado.descricao}</p>
+            <section className="mb-5 border-b pb-4 space-y-2" aria-label={`Avaliação da função ${f.id}`}><h5 className="font-semibold">Avaliação</h5><AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${f.id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={f.id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={readOnly||(!editando&&!temAvaliacaoPendente)||ocupado}/></section>
             {editando&&!readOnly?<form className="grid gap-4 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();if(readOnly||emCurso.current)return;
               gravarFuncao(f.id,draft,decisoes,confirmado);}}>
               <fieldset disabled={salvar.isPending||descartando} className="contents">
@@ -198,7 +201,6 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
               <LeituraFuncaoMatriz valores={valoresConsulta}/>
               {!readOnly&&<button type="button" className="underline text-primary text-sm" onClick={()=>{carregarEdicao(f.id,reiniciar());setEditando(true);}}>Editar</button>}
             </div>}
-            <section className="mt-5 border-t pt-4 space-y-2" aria-label={`Avaliação da função ${f.id}`}><h5 className="font-semibold">Avaliação</h5><AvaliacaoMatriz key={`${organizacaoId}:${diagnosticoId}:${f.id}`} aoPendencias={setAvaliacoesPendentes} funcaoId={f.id} organizacaoId={organizacaoId} diagnosticoId={diagnosticoId} readOnly={readOnly||(!editando&&!temAvaliacaoPendente)||ocupado}/></section>
           </div>}
         </div></PopupDetalhe>;
       })}

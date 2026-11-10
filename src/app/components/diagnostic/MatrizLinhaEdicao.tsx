@@ -44,13 +44,13 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, bloqueado
   </>;
   return <>
     <th scope="row" className="sticky left-0 z-10 bg-card"><span className="block mb-2 text-xs text-muted-foreground">{id} · {estado}</span><span className="block min-w-60 font-medium">{valores.nomeFuncao}</span>{pendente && <span className="block mt-2 text-xs font-normal">Alterações não salvas</span>}</th>
+    <td data-label="Avaliação">{avaliacao}</td>
     <td data-label="Atuação">{selecao('Atuação', 'atuacao', ATUACAO_MATRIZ)}</td>
     <td data-label="Externo">{texto('Externo', 'externo')}</td>
     <td data-label="Experiência">{selecao('Experiência', 'experiencia', EXPERIENCIA_MATRIZ)}</td>
     <td data-label="Interesse">{selecao('Interesse em desenvolvimento', 'interesse', NIVEIS_MATRIZ)}</td>
     <td data-label="Criticidade">{selecao('Criticidade atual', 'criticidade', NIVEIS_MATRIZ)}</td>
     <td data-label="Leitura"><span className="diagnostico-leitura">{leituraMatriz(valores.criticidade, valores.experiencia)}</span></td>
-    <td data-label="Avaliação">{avaliacao}</td>
     <td data-label="Observação">{texto('Observação', 'observacoes')}</td>
     <td data-label="Ações">
       <form id={formularioId} aria-label={`Salvar função ${id}`} onSubmit={e => { e.preventDefault(); if (!bloqueado) aoSalvar(); }} className="min-w-44 space-y-2">

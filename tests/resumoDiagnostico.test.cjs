@@ -48,9 +48,9 @@ const registro = (codigo, valor, relato = "", contexto = "") => ({
   resposta: { valor, relato, fonte: "", respondentes: "", selecoes: [] },
 });
 
-function resumo({ registros = [], historico = [], parecer = {}, falha = false, reactMock = React } = {}) {
+function resumo({ registros = [], historico = [], parecer = {}, matriz = [], chaves = [], falha = false, reactMock = React } = {}) {
   const consultas = {
-    "diagnostico-matriz": [],
+    "diagnostico-matriz": matriz,
     "diagnostico-ieo": historico,
     "diagnostico-parecer": parecer,
   };
@@ -60,7 +60,7 @@ function resumo({ registros = [], historico = [], parecer = {}, falha = false, r
     "@tanstack/react-query": {
       useQueryClient: () => ({ invalidateQueries() {} }),
       useMutation: () => ({}),
-      useQuery: ({ queryKey }) => ({
+      useQuery: ({ queryKey }) => (chaves.push(queryKey), {
         data: consultas[queryKey[0]],
         error: falha && queryKey[0] === "diagnostico-parecer",
         refetch() {},
@@ -79,6 +79,20 @@ function resumo({ registros = [], historico = [], parecer = {}, falha = false, r
     React.createElement(ResumoDiagnostico, { diagnosticoId: "d1", organizacaoId: "o1" }),
   );
 }
+
+test("resumo acompanha respostas salvas da matriz e distingue avaliações incompletas", () => {
+  const chaves = [];
+  const resposta = { funcaoId: "F01", experiencia: "Inicial", criticidade: "4" };
+  const antes = resumo({ matriz: [resposta, { funcaoId: "F02", experiencia: null, criticidade: null }], chaves });
+  assert.match(antes, /2 de 21 funções com resposta salva/);
+  assert.match(antes, /Lacuna crítica: 1/);
+  assert.match(antes, /Completar avaliação: 1/);
+  assert.deepEqual(chaves.find(c => c[0] === "diagnostico-matriz"), ["diagnostico-matriz", "d1", "o1"]);
+  const depois = resumo({ matriz: [{ ...resposta, experiencia: "Recorrente" }] });
+  assert.match(depois, /Lacuna crítica: 0/);
+  assert.match(depois, /Acompanhar: 1/);
+  assert.match(depois, /1 de 21 funções com resposta salva/);
+});
 
 test("Resumo apresenta conclusão, gráfico/tabela de prioridades, prioridades estratégicas, metodologia e conclusão técnica nessa ordem", () => {
   const html = resumo();

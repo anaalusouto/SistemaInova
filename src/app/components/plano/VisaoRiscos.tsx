@@ -150,6 +150,19 @@ export function VisaoRiscos({
 
   return (
     <div className="flex flex-col gap-4 p-4">
+      <section aria-label="Quantidade de riscos por criticidade" className="space-y-2">
+        <div><h3 className="font-semibold">Quantidade de riscos por criticidade</h3><p className="text-xs text-muted-foreground">Todos os riscos do projeto, incluindo os encerrados; a contagem não muda com os filtros.</p></div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {(['Crítico', 'Alto', 'Médio', 'Baixo', '—'] as const).map(faixa => {
+            const quantidade = riscos.filter(r => faixaRisco(r.severity) === faixa).length;
+            const cor = CORES[faixa];
+            return <div key={faixa} className="rounded-lg border p-3" style={{ background: cor.fundo, color: cor.forte }}>
+              <span className="block text-xs font-medium">{faixa === '—' ? 'Não classificado' : faixa}</span>
+              <strong className="block text-2xl font-bold leading-tight">{quantidade}</strong>
+            </div>;
+          })}
+        </div>
+      </section>
       {!readOnly && (
         <div className="flex justify-end">
           <button type="button" onClick={aoNovoRisco} disabled={haPendencias}
@@ -315,8 +328,8 @@ function Pontuacao({ risco }: { risco: Risk }) {
   const cor = CORES[faixa] ?? CORES['—'];
   return (
     <span className="inline-flex flex-col gap-0.5">
-      <span className="inline-flex px-1.5 py-0.5 rounded self-start" style={{ background: cor.fundo, color: cor.forte, fontSize: '0.7rem', fontWeight: 700 }}>
-        {risco.severity} · {faixa}
+      <span className="inline-flex items-center gap-2 px-2 py-1 rounded self-start" style={{ background: cor.fundo, color: cor.forte }}>
+        <strong className="text-xl leading-none">{risco.severity}</strong><span className="text-xs font-semibold">{faixa}</span>
       </span>
       <span style={{ fontSize: '0.66rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
         {risco.probability} × {risco.impact}
@@ -498,7 +511,7 @@ function Matriz({
                         color: vazia ? 'var(--ink-5)' : cor.forte,
                         border: selecionada ? '2px solid var(--primary)' : '1px solid var(--line-1)',
                         borderTop: `4px solid ${cor.base}`,
-                        fontSize: '0.88rem', fontWeight: vazia ? 400 : 700,
+                        fontSize: vazia ? '0.88rem' : '1.2rem', fontWeight: vazia ? 400 : 800,
                         cursor: vazia ? 'default' : 'pointer',
                       }}
                     >

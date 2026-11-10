@@ -9,6 +9,7 @@ import { useCaderno } from "./CadernoItens";
 import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from "../../diagnostic/ieoCaderno";
 import { AGROMEL_ID_REAVALIACAO_IEO, ieoAguardandoReavaliacao } from "../../diagnostic/validadeIeoCaderno";
 import { calcularNotaConsolidada } from '../../diagnostic/notaConsolidada';
+import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import {
   camposDaPrioridade,
   ordenarDimensoes,
@@ -234,8 +235,8 @@ export function ResumoDiagnostico({
   const ficha = useFichaOrganizacao(organizacaoId);
   const caderno = useCaderno({ diagnosticoId, organizacaoId });
   const matriz = useQuery({
-    queryKey: ["diagnostico-matriz", diagnosticoId],
-    queryFn: () => listarRespostasMatriz({ data: { diagnosticoId } }),
+    queryKey: ["diagnostico-matriz", diagnosticoId, organizacaoId],
+    queryFn: () => listarRespostasMatriz({ data: { diagnosticoId, organizacaoId } }),
   });
   const parecer = useQuery({
     queryKey: ["diagnostico-parecer", diagnosticoId],
@@ -321,6 +322,11 @@ export function ResumoDiagnostico({
   const capacidades = parecer.data?.capacidades || textoCaderno("E02");
   const fragilidades = parecer.data?.fragilidades || textoCaderno("D01");
   const sintese = parecer.data?.sintese;
+  const indiceMatriz = new Map((matriz.data ?? []).map((r) => [r.funcaoId, r]));
+  const funcoesRegistradas = FUNCOES_MATRIZ.flatMap((funcao) => {
+    const resposta = indiceMatriz.get(funcao.id);
+    return resposta ? [{ funcao, resposta, leitura: leituraMatriz(resposta.criticidade, resposta.experiencia ?? null) }] : [];
+  });
   const observacoes = [
     ...(matriz.data ?? [])
       .filter((r) => r.observacoes?.trim())
@@ -366,6 +372,25 @@ export function ResumoDiagnostico({
               : fragilidades?.trim() || 'Não registrado no parecer técnico.'}</p>
           </article>
         </div>
+      </section>
+      <section aria-label="Síntese atual da Matriz Funcional">
+        <h4>Matriz Funcional</h4>
+        <p>{funcoesRegistradas.length} de {FUNCOES_MATRIZ.length} funções com resposta salva. As leituras usam experiência e criticidade; respostas sem esses campos aparecem como incompletas.</p>
+        {funcoesRegistradas.length === 0 ? <p>Nenhuma função registrada.</p> : <>
+          <p>{['Lacuna crítica', 'Lacuna relevante', 'Melhoria pontual', 'Acompanhar', 'Completar avaliação'].map((leitura) => `${leitura}: ${funcoesRegistradas.filter((item) => item.leitura === leitura).length}`).join(' · ')}</p>
+          <details className="resumo-expansivel">
+            <summary>Ver funções registradas</summary>
+            <div className="w-full min-w-0">
+              <table className="w-full table-fixed border-collapse text-left text-xs sm:text-sm">
+                <thead><tr><th>Função</th><th>Experiência</th><th>Criticidade</th><th>Leitura orientativa</th></tr></thead>
+                <tbody>{funcoesRegistradas.map(({ funcao, resposta, leitura }) => <tr key={funcao.id}>
+                  <td className="border p-1 break-words">{funcao.id} · {funcao.nome}</td><td className="border p-1 break-words">{resposta.experiencia || 'Não informada'}</td><td className="border p-1 break-words">{resposta.criticidade || 'Não informada'}</td><td className="border p-1 break-words">{leitura}</td>
+                </tr>)}</tbody>
+              </table>
+            </div>
+          </details>
+        </>}
+        <p>O parecer técnico, as prioridades pactuadas e os resultados históricos são registrados separadamente e não são alterados automaticamente.</p>
       </section>
       <section className="resumo-secao-prioridades-dimensionais" aria-label="Prioridades por dimensão">
         <h4>Prioridades de dimensão e ordem de atuação</h4>

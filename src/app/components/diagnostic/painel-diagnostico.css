@@ -45,7 +45,7 @@
 .diagnostico-leitura { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
 .matriz-tabela-scroll { max-height: 70vh; overflow: auto; }
 .matriz-tabela-scroll .diagnostico-tabela { table-layout: fixed; border-collapse: separate; border-spacing: 0; }
-.matriz-grade[data-campos="atuacao"] td[data-label]:not([data-label="Atuação"]):not([data-label="Externo"]):not([data-label="Experiência"]):not([data-label="Ações"]),
+.matriz-grade[data-campos="atuacao"] td[data-label]:not([data-label="Avaliação"]):not([data-label="Atuação"]):not([data-label="Externo"]):not([data-label="Experiência"]):not([data-label="Ações"]),
 .matriz-grade[data-campos="avaliacao"] td[data-label]:not([data-label="Interesse"]):not([data-label="Criticidade"]):not([data-label="Leitura"]):not([data-label="Avaliação"]):not([data-label="Ações"]),
 .matriz-grade[data-campos="detalhes"] td[data-label]:not([data-label="Avaliação"]):not([data-label="Observação"]):not([data-label="Ações"]) { display: none; }
 .matriz-tabela-scroll .matriz-grade :is(th, td) { min-width: 0 !important; width: auto; overflow-wrap: anywhere; white-space: normal; padding: 8px; }
