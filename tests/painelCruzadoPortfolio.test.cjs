@@ -27,5 +27,6 @@ test('painel distingue dados ausentes de zero e reúne sinais reais sem vínculo
   assert.match(html,/Associação A/); assert.match(html,/Associação B/);
   assert.match(html,/1 com nota calculável/); assert.match(html,/1 matrizes com leitura calculável/);
   assert.match(html,/F01 · Função A/); assert.match(html,/sem associar funções a dimensões/);
+  for (const titulo of ['Mapa de decisão do portfólio','Funções com mais lacunas críticas','Frentes de atenção','Mapa de calor das organizações']) assert.ok(html.includes(titulo));
   assert.match(html,/Sem aplicação encontrada/); assert.match(html,/2,0/);
 });
