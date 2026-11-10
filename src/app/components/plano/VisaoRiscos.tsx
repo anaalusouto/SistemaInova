@@ -63,7 +63,6 @@ export function VisaoRiscos({
 }) {
   const { readOnly } = useAuth();
   const { updateRisco } = useStore();
-  const largurasColunas = ['7%', '17%', '16%', '16%', '11%', '10%', '23%'];
   const [rascunhos, setRascunhos] = useState<Record<string, RiscoInput>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [edicaoLocal, setEdicaoLocal] = useState<Set<string>>(new Set());
@@ -133,6 +132,16 @@ export function VisaoRiscos({
     [riscos, criterios.busca, criterios.status, localizacao],
   );
   const filtroAtivo = temFiltroDeRiscoAtivo(criterios);
+  // Colunas sem dados no recorte conservam o cabeçalho e espaço para edição.
+  const vazias = filtrados.length ? {
+    'Meta / Etapa': filtrados.every(r => !r.stageId && !r.stage?.trim() && !rascunhos[r.id]?.etapaId),
+    'Especificação': filtrados.every(r => !r.specification?.trim() && !rascunhos[r.id]?.especificacao?.trim()),
+    'Responsável': filtrados.every(r => !r.responsible?.trim() && !rascunhos[r.id]?.responsavel?.trim()),
+    'Ações para Encaminhamento': filtrados.every(r => !r.responseStrategy?.trim() && !rascunhos[r.id]?.estrategiaResposta?.trim()),
+  } : {};
+  const largurasBase = [7, 17, 16, 16, 11, 10, 23];
+  const pesos = COLUNAS.map((coluna, i) => coluna in vazias && vazias[coluna as keyof typeof vazias] ? 5 : largurasBase[i]);
+  const somaPesos = pesos.reduce((soma, peso) => soma + peso, 0);
 
   const alternarStatus = (s: RiskStatus) =>
     setCriterios(c => ({ ...c, status: c.status.includes(s) ? c.status.filter(x => x !== s) : [...c.status, s] }));
@@ -253,7 +262,7 @@ export function VisaoRiscos({
             <table aria-label="Riscos do projeto" className="plano-grade risco-grade w-full"
               style={{ width: '100%', tableLayout: 'fixed' }}>
               <caption className="sr-only">Riscos do projeto com todas as colunas visíveis</caption>
-              <colgroup>{COLUNAS.map((c, i) => <col key={c} style={{ width: largurasColunas[i] }} />)}</colgroup>
+              <colgroup>{COLUNAS.map((c, i) => <col key={c} style={{ width: `${pesos[i] / somaPesos * 100}%` }} />)}</colgroup>
               <thead>
                 <tr>
                   {COLUNAS.map(c => (
@@ -353,10 +362,7 @@ function CabecaRisco({ risco, podeEditar, aoAbrirRisco, bloqueado = false }: { r
     <div className="flex items-start gap-1.5">
       <ShieldAlert size={12} color={cor} style={{ flexShrink: 0, marginTop: 3 }} />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-2" style={{ ...quebra, fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>
-          <span aria-label={`Pontuação do risco: ${risco.severity}, ${faixaRisco(risco.severity)}`} className="rounded px-2 py-0.5 text-base font-bold" style={{ color: cor, background: (CORES[faixaRisco(risco.severity)] ?? CORES['—']).fundo }}>{risco.severity}</span>
-          <span>{titulo}</span>
-        </div>
+        <div style={{ ...quebra, fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>{titulo}</div>
         {detalhe && <div style={{ ...quebra, fontSize: '0.76rem', color: 'var(--ink-3)', marginTop: 2 }}>{detalhe}</div>}
         <button
           disabled={bloqueado}
