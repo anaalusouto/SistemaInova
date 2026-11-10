@@ -94,6 +94,18 @@ test("resumo acompanha respostas salvas da matriz e distingue avaliações incom
   assert.match(depois, /1 de 21 funções com resposta salva/);
 });
 
+test("prioridades estratégicas aparecem em cartões e detalhes dimensionais começam recolhidos", () => {
+  const html = resumo({ registros: [
+    registro('PRIO1', 'Participação', 'Resultado desejado: Ampliar participação'),
+    registro('PRIO2', 'Mercado', 'Resultado desejado: Diversificar canais'),
+    registro('PRIO3', 'Gestão', 'Resultado desejado: Melhorar controles'),
+  ] });
+  assert.match(html, /Participação/);
+  assert.match(html, /Ampliar participação/);
+  assert.equal((html.match(/Ver detalhes/g) || []).length, 3);
+  assert.match(html, /<details class="resumo-expansivel"><summary>Ver prioridades dimensionais<\/summary>/);
+});
+
 test("Resumo apresenta conclusão, gráfico/tabela de prioridades, prioridades estratégicas, metodologia e conclusão técnica nessa ordem", () => {
   const html = resumo();
   const secoes = [

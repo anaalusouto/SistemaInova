@@ -83,6 +83,17 @@
 .diagnostico-resumo { display: grid; gap: 28px; min-width: 0; color: var(--ink-1, #172b46); font-size: .9rem; line-height: 1.65; overflow-wrap: anywhere; }
 .diagnostico-resumo > .resumo-secao-conclusao-geral { grid-row: 1; }
 .diagnostico-resumo > .resumo-secao-destaques { grid-row: 2; }
+.diagnostico-resumo > .resumo-prioridades-lado-a-lado { grid-row: 3; }
+.resumo-prioridades-lado-a-lado { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; min-width: 0; }
+.resumo-prioridades-lado-a-lado > section { display: grid; gap: 12px; min-width: 0; }
+.resumo-prioridades-lado-a-lado .resumo-cartao { padding: 14px; }
+.resumo-prioridades-lado-a-lado .resumo-barras { gap: 8px; }
+.resumo-cartoes-prioridades { display: grid; gap: 8px; }
+.resumo-prioridade-botao { width: 100%; text-align: left; cursor: pointer; gap: 6px; }
+.resumo-prioridade-botao:hover { border-color: var(--primary); }
+.resumo-prioridade-link { color: #244b70; font-weight: 650; text-decoration: underline; }
+@media (max-width: 760px) { .resumo-prioridades-lado-a-lado { grid-template-columns: minmax(0, 1fr); } }
+@media print { .resumo-prioridades-lado-a-lado { display: block; } }
 .diagnostico-resumo > .resumo-secao-prioridades-dimensionais { grid-row: 3; }
 .diagnostico-resumo > .resumo-secao-prioridades-estrategicas { grid-row: 4; }
 .diagnostico-resumo > .resumo-secao-metodologia { grid-row: 5; }

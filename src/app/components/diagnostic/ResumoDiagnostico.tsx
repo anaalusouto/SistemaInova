@@ -4,6 +4,7 @@ import { AlertTriangle, Sprout } from "lucide-react";
 import { getParecer, salvarConclusaoTecnica, listarProdutos, listarRespostasMatriz } from "../../diagnosticos.server";
 import { useFichaOrganizacao } from "../organizacoes/useOrganizacoes";
 import { DocumentosRegistro } from "../DocumentosRegistro";
+import { PopupDetalhe } from "../PopupDetalhe";
 import { formatDateOnly } from "../../lib/dateOnly";
 import { useCaderno } from "./CadernoItens";
 import { calcularIeoCaderno, DIMENSOES_IEO_CADERNO } from "../../diagnostic/ieoCaderno";
@@ -94,7 +95,7 @@ function DimensoesResumo({
           automaticamente.
         </p>
       </figure>
-      <div className="resumo-cartao resumo-tabela-container">
+      <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container">
         <table className="resumo-tabela">
           <caption>Prioridades dimensionais · {rotulo}</caption>
           <thead>
@@ -147,7 +148,7 @@ function DimensoesResumo({
             {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos do IEO</button>}
           </div>
         </details>
-      </div>
+      </div></details>
     </div>
   );
 }
@@ -174,7 +175,7 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
   return <div className="space-y-3">
     <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
       <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades de dimensão e ordem de atuação</h5><p className="text-xs text-muted-foreground">Nota consolidada de priorização · escala de 0 a 4. Pontos e hastes refletem os valores históricos da referência; a nota atual permanece sem cálculo validado.</p></figcaption>
-      <div className="overflow-x-auto"><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block min-w-[820px] w-full" role="img" aria-label="Gráfico de priorização consolidada por dimensão">
+      <div><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block w-full" role="img" aria-label="Gráfico de priorização consolidada por dimensão">
         <title>Nota consolidada de priorização por dimensão</title>
         <desc>Escala vertical de zero a quatro. Cinco notas históricas são mostradas com hastes até a linha de base; não representam o resultado atual validado.</desc>
         {[0,1,2,3,4].map(tick => <g key={tick}><line x1={left} x2={chartWidth-right} y1={y(tick)} y2={y(tick)} stroke={tick===0?'#7b8795':'#e1e6ec'} strokeWidth={tick===0?1.5:1}/><text x={left-14} y={y(tick)+4} textAnchor="end" fontSize="12" fill="#526174">{tick}</text></g>)}
@@ -194,7 +195,7 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
       <div className="flex flex-wrap gap-4 text-xs"><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Crítica}}/>Prioridade crítica</span><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Média}}/>Prioridade média</span></div>
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
     </figure>
-    <div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
+    <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
       <colgroup><col style={{width:85}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
       <caption>Prioridades dimensionais</caption>
       <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota IEO','Nota Matriz','Nota Cesta','Consolidada','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
@@ -204,7 +205,7 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
         <td data-label="Nota IEO">{d.ieo}</td><td data-label="Nota Matriz">{d.matriz}</td>
         <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada}</td><td data-label="Fórmula">{d.formula}</td>
       </tr>)}</tbody>
-    </table></div></div>
+    </table></div></div></details>
     {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos usados</button>}
   </div>;
 }
@@ -227,6 +228,7 @@ export function ResumoDiagnostico({
   const conclusaoOriginal = useRef<HTMLDivElement>(null);
   const [editandoConclusao, setEditandoConclusao] = useState(false);
   const [textoConclusao, setTextoConclusao] = useState("");
+  const [prioridadeAberta, setPrioridadeAberta] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const salvarConclusao = useMutation({
     mutationFn: (texto: string) => salvarConclusaoTecnica({ data: { diagnosticoId, texto } }),
@@ -322,6 +324,13 @@ export function ResumoDiagnostico({
   const capacidades = parecer.data?.capacidades || textoCaderno("E02");
   const fragilidades = parecer.data?.fragilidades || textoCaderno("D01");
   const sintese = parecer.data?.sintese;
+  const cartoesPrioridade = diagnosticoAgromel
+    ? PRIORIDADES_AGROMEL.map(p => ({ codigo: p.codigo, titulo: p.titulo, resumo: p.resultado, campos: { resultado: p.resultado, obstaculo: p.obstaculo, apoio: p.apoio, publico: p.publico, dimensoes: p.dimensoes }, valor: '', relato: '', respondentes: '', etiqueta: 'Referência histórica' }))
+    : prioridadesExibidas.map(r => {
+        const campos = camposDaPrioridade([r.resposta.valor, r.resposta.relato].filter(Boolean).join('\n'));
+        return { codigo: r.codigo, titulo: trechoExecutivo(r.resposta.valor?.split('\n')[0], 120) || `Prioridade ${r.codigo.slice(-1)}`, resumo: campos.resultado || r.resposta.relato || '', campos, valor: r.resposta.valor || '', relato: r.resposta.relato || '', respondentes: r.resposta.respondentes || '', etiqueta: r.referencia ? 'Referência indicada · detalhes não registrados' : emRevisao ? 'Aguardando confirmação' : 'Registro' };
+      });
+  const prioridadeSelecionada = cartoesPrioridade.find(p => p.codigo === prioridadeAberta);
   const indiceMatriz = new Map((matriz.data ?? []).map((r) => [r.funcaoId, r]));
   const funcoesRegistradas = FUNCOES_MATRIZ.flatMap((funcao) => {
     const resposta = indiceMatriz.get(funcao.id);
@@ -392,6 +401,7 @@ export function ResumoDiagnostico({
         </>}
         <p>O parecer técnico, as prioridades pactuadas e os resultados históricos são registrados separadamente e não são alterados automaticamente.</p>
       </section>
+      <div className="resumo-prioridades-lado-a-lado">
       <section className="resumo-secao-prioridades-dimensionais" aria-label="Prioridades por dimensão">
         <h4>Prioridades de dimensão e ordem de atuação</h4>
         {diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo
@@ -408,55 +418,13 @@ export function ResumoDiagnostico({
       </section>
       <section className="resumo-secao-prioridades-estrategicas" aria-label="Prioridades estratégicas">
         <h4>Prioridades estratégicas identificadas</h4>
-        <div className="resumo-duas-colunas">
-          {diagnosticoAgromel ? PRIORIDADES_AGROMEL.map(p => <article key={p.codigo} className="resumo-cartao resumo-prioridade">
-            <h5>{p.titulo}</h5>
-            <dl>{[['resultado','Resultado desejado',p.resultado],['obstaculo','Obstáculo',p.obstaculo],['apoio','Apoio necessário',p.apoio],['publico','Público beneficiado',p.publico],['dimensoes','Dimensões vinculadas',p.dimensoes]].map(([key,label,value]) => <div key={key}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-            {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer e prioridades' : 'Consultar ou editar parecer'}</button>}
-          </article>) : prioridadesExibidas.map((r) => {
-            const campos = camposDaPrioridade(
-              [r.resposta.valor, r.resposta.relato].filter(Boolean).join("\n"),
-            );
-            const titulo =
-              trechoExecutivo(r.resposta.valor?.split("\n")[0], 120) ||
-              `Prioridade ${r.codigo.slice(-1)}`;
-            return (
-              <article key={r.codigo} className="resumo-cartao resumo-prioridade">
-                <p className="resumo-etiqueta">
-                  {r.codigo} · {"referencia" in r && r.referencia ? "Referência indicada · detalhes não registrados" : emRevisao ? "Aguardando confirmação" : "Registro"}
-                </p>
-                <h5>{titulo}</h5>
-                <dl>
-                  {[
-                    ["resultado", "Resultado desejado"],
-                    ["obstaculo", "Obstáculo"],
-                    ["apoio", "Apoio necessário"],
-                    ["publico", "Público beneficiado"],
-                    ["dimensoes", "Dimensões vinculadas"],
-                  ].map(([chave, label]) => (
-                    <div key={chave}>
-                      <dt>{label}</dt>
-                      <dd>{campos[chave] || "Não discriminado no registro."}</dd>
-                    </div>
-                  ))}
-                </dl>
-                {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? "Consultar registro de prioridades" : "Consultar ou editar prioridades"}</button>}
-                <details className="resumo-expansivel">
-                  <summary>Consultar dados disponíveis</summary>
-                  <div>
-                    <p className="resumo-texto-integral">{r.resposta.valor || "Não registrado."}</p>
-                    <p className="resumo-texto-integral">{r.resposta.relato || "Descrição, obstáculos, apoio, público e dimensões vinculadas: não registrados neste diagnóstico."}</p>
-                    <p>
-                    </p>
-                    <p>
-                      <strong>Respondentes / responsável:</strong>{" "}
-                      {r.resposta.respondentes || "Não informado"}
-                    </p>
-                  </div>
-                </details>
-              </article>
-            );
-          })}
+        <div className="resumo-cartoes-prioridades">
+          {cartoesPrioridade.map(p => <button type="button" key={p.codigo} className="resumo-cartao resumo-prioridade resumo-prioridade-botao" onClick={() => setPrioridadeAberta(p.codigo)}>
+            <span className="resumo-etiqueta">{p.codigo} · {p.etiqueta}</span>
+            <strong>{p.titulo}</strong>
+            <span>{trechoExecutivo(p.resumo, 150) || 'Detalhes não registrados.'}</span>
+            <span className="resumo-prioridade-link">Ver detalhes</span>
+          </button>)}
         </div>
         {!diagnosticoAgromel && !prioridadesExibidas.length && <p>Não registrado.</p>}
         {parecer.data?.pontosPrioritarios && (
@@ -466,6 +434,14 @@ export function ResumoDiagnostico({
           </details>
         )}
       </section>
+      </div>
+      {prioridadeSelecionada && <PopupDetalhe titulo={prioridadeSelecionada.titulo} descricao={`${prioridadeSelecionada.codigo} · ${prioridadeSelecionada.etiqueta}`} aoFechar={() => setPrioridadeAberta(null)}>
+        <div className="resumo-prioridade space-y-4">
+          <dl>{[['resultado','Resultado desejado'],['obstaculo','Obstáculo'],['apoio','Apoio necessário'],['publico','Público beneficiado'],['dimensoes','Dimensões vinculadas']].map(([chave, label]) => <div key={chave}><dt>{label}</dt><dd>{prioridadeSelecionada.campos[chave as keyof typeof prioridadeSelecionada.campos] || 'Não discriminado no registro.'}</dd></div>)}</dl>
+          {!diagnosticoAgromel && <div className="space-y-2"><h5>Registro completo</h5><p className="resumo-texto-integral">{prioridadeSelecionada.valor || 'Não registrado.'}</p><p className="resumo-texto-integral">{prioridadeSelecionada.relato || 'Sem relato adicional.'}</p><p><strong>Respondentes / responsável:</strong> {prioridadeSelecionada.respondentes || 'Não informado'}</p></div>}
+          {onConsultarParecer && <button type="button" className="resumo-acao" onClick={onConsultarParecer}>{readOnly ? 'Consultar parecer e prioridades' : 'Consultar ou editar prioridades'}</button>}
+        </div>
+      </PopupDetalhe>}
       <section className="resumo-secao-conclusao-tecnica" aria-label="Conclusão técnica completa">
         <h4>Conclusão técnica completa</h4>
         {diagnosticoAgromel ? parecer.data?.consideracoesTecnicas != null ? <div className="resumo-cartao resumo-texto-integral">{parecer.data.consideracoesTecnicas}</div> : <div ref={conclusaoOriginal} className="resumo-cartao resumo-conclusao-tecnica">
