@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from 'recharts';
 import type { ProjectExt } from '../../store';
@@ -53,8 +54,15 @@ export function GraficosMapeamento({ projects, demonstrativo = false, organizaca
           }}/>
           <Scatter name="Projetos vinculados à organização" data={pontos} fill="var(--brand)">{pontos.map(p=><Cell key={p.id} fillOpacity={organizacaoAtiva && p.organizacaoId !== organizacaoAtiva ? 0.18 : 1} onClick={()=>p.organizacaoId && onSelecionarOrganizacao(p.organizacaoId)} style={{cursor:'pointer'}}/>)}</Scatter>
         </ScatterChart></ResponsiveContainer>
-        <details className="mt-3 text-xs"><summary className="cursor-pointer">Consultar detalhes e valores usados</summary><div className="mt-3 grid gap-3 lg:grid-cols-2">{pontos.map(p=><article key={p.id} className="min-w-0 rounded-lg border p-3"><h4 className="font-semibold">{p.projeto}</h4><dl className="mt-2 grid gap-2 sm:grid-cols-2">{[['Organiza??o',p.organizacao],['Nota / 4',formatar(p.x)+(p.parcial?' ? parcial':'')],['Etapas conclu?das',`${p.etapasConcluidas}/${p.etapasTotal}`],['Avan?o de etapas',percentual(p.percentualEtapas)],['Or?amento aprovado',moeda(p.valorAprovado)],['Valor executado',moeda(p.valorExecutado)],['Execu??o financeira',percentual(p.percentualFinanceiro)],['Aplica??o',`${formatDateOnly(p.dataAplicacao)} ? v${p.versao}`]].map(([nome,valor])=><div key={nome} className="min-w-0 rounded bg-muted/30 p-2"><dt className="font-semibold text-muted-foreground">{nome}</dt><dd className="mt-1 break-words">{valor}</dd></div>)}</dl></article>)}</div></details>
+        <details className="mt-3 text-xs"><summary className="cursor-pointer">Consultar detalhes e valores usados</summary><TabelaPontos pontos={pontos} /></details>
       </>}
     </section>;
   })}</div>;
+}
+
+function TabelaPontos({ pontos }: { pontos: ReturnType<typeof pontosMapeamento> }) {
+  const [grupo, setGrupo] = useState<'etapas' | 'financeiro'>('etapas');
+  return <div className="mt-2 min-w-0"><label className="inline-flex items-center gap-2">Colunas da tabela <select value={grupo} onChange={e => setGrupo(e.target.value as typeof grupo)} className="rounded border bg-card p-1"><option value="etapas">Etapas</option><option value="financeiro">Financeiro</option></select></label>
+    <table className="mt-2 w-full table-fixed text-left"><thead><tr>{(grupo === 'etapas' ? ['Projeto','Organização','Nota / 4','Etapas concluídas','Avanço','Aplicação'] : ['Projeto','Organização','Orçamento aprovado','Valor executado','Execução financeira']).map(t => <th key={t} scope="col" className="break-words p-1">{t}</th>)}</tr></thead><tbody>{pontos.map(p => <tr key={p.id} className="border-t align-top"><th scope="row" className="break-words p-1 font-medium">{p.projeto}</th><td className="break-words p-1">{p.organizacao}</td>{grupo === 'etapas' ? <><td className="break-words p-1">{formatar(p.x)}{p.parcial ? ' · parcial' : ''}</td><td className="break-words p-1">{p.etapasConcluidas}/{p.etapasTotal}</td><td className="break-words p-1">{percentual(p.percentualEtapas)}</td><td className="break-words p-1">{formatDateOnly(p.dataAplicacao)} · v{p.versao}</td></> : <><td className="break-words p-1">{moeda(p.valorAprovado)}</td><td className="break-words p-1">{moeda(p.valorExecutado)}</td><td className="break-words p-1">{percentual(p.percentualFinanceiro)}</td></>}</tr>)}</tbody></table>
+  </div>;
 }

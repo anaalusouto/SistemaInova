@@ -139,7 +139,7 @@ test('plano administrativo renderiza tabela e controles comuns sem abrir projeto
     const html = renderToStaticMarkup(React.createElement(PlanoAdministrativo));
     assert.match(html, /Administração/);
     assert.match(html, /Expandir tudo/);
-    for (const campo of ['Tabela', 'Gantt', 'Kanban', 'Responsável', 'Início previsto', 'Fim previsto', 'Justificativa de atraso']) assert.ok(html.includes(campo), campo);
+    for (const campo of ['Tabela', 'Gantt', 'Kanban', 'Responsável', 'Início previsto', 'Fim previsto', 'Colunas da tabela', 'Execução']) assert.ok(html.includes(campo), campo);
     assert.ok(!html.includes('data-plano-projeto'));
   }
 });

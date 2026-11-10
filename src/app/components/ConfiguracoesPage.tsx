@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import './responsive-tables.css';
 import { toast } from 'sonner';
 import {
   User, Bell, Users, ChevronRight, Check, LogOut, Mail, Lock, FolderKanban, UserSearch, Search, ArrowLeft, Palette, Sun, Moon,
@@ -155,7 +156,7 @@ export function ConfiguracoesPage() {
             </h2>
             <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
               <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="configuracoes-grade w-full table-fixed">
                 <thead>
                   <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
                     {['Membro', 'Função', ...(isAdmin ? ['Status'] : [])].map(h => (
@@ -727,6 +728,7 @@ function UsuariosSection() {
   const [dialogOpen, setDialogOpen] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [colunasUsuarios, setColunasUsuarios] = useState<'acesso' | 'contato'>('acesso');
 
   const load = async (login: string, senha: string) => {
     try {
@@ -787,11 +789,12 @@ function UsuariosSection() {
       </div>
 
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="overflow-x-auto">
-        <table className="w-full">
+        <label className="inline-flex items-center gap-2 px-3 py-2 text-xs">Colunas da tabela <select value={colunasUsuarios} onChange={e => setColunasUsuarios(e.target.value as typeof colunasUsuarios)} className="rounded border bg-card px-2 py-1.5"><option value="acesso">Acesso</option><option value="contato">Contato</option></select></label>
+        <div className="min-w-0">
+        <table className="configuracoes-grade w-full table-fixed">
           <thead>
             <tr style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}>
-              {['Nome', 'Login', 'Papel', 'Admin total', 'E-mail', ''].map(h => (
+              {(colunasUsuarios === 'acesso' ? ['Nome', 'Login', 'Papel', 'Admin total', 'Ações'] : ['Nome', 'E-mail', 'Ações']).map(h => (
                 <th key={h} className="px-4 py-2.5 text-left" style={{ fontSize: '0.71rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}
             </tr>
@@ -800,7 +803,7 @@ function UsuariosSection() {
             {(rows ?? []).map(r => (
               <tr key={r.login} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td className="px-4 py-2.5" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--ink-1)' }}>{r.displayName}</td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{r.login}</td>
+                {colunasUsuarios === 'acesso' && <><td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>{r.login}</td>
                 <td className="px-4 py-2.5">
                   <select
                     value={r.role}
@@ -816,8 +819,8 @@ function UsuariosSection() {
                     type="checkbox" checked={r.adminOverride}
                     onChange={e => run(creds => atualizarUsuario({ data: { ...creds, alvoLogin: r.login, adminOverride: e.target.checked } }), 'Atualizado.')}
                   />
-                </td>
-                <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>{r.email ?? '—'}</td>
+                </td></>}
+                {colunasUsuarios === 'contato' && <td className="px-4 py-2.5" style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>{r.email ?? '—'}</td>}
                 <td className="px-4 py-2.5 text-right">
                   {r.login.toLowerCase() !== unlock.login.toLowerCase() && (
                     confirmDelete === r.login ? (
@@ -1053,7 +1056,7 @@ function RegistroProjeto({ project, entries, onBack }: {
 
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
         <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="configuracoes-grade w-full table-fixed">
           <thead>
             <tr style={{ background: 'var(--surface-1)' }}>
               {['Data e hora', 'Login', 'Área', 'Ação', 'Alteração'].map(h => (

@@ -38,6 +38,7 @@ export function TabelaEncaminhamentos({
 }) {
   const { projects, projectsLoading } = useStore();
   const [filtro, setFiltro] = useState<Origem | "Todas">("Todas");
+  const [colunas, setColunas] = useState<"origem" | "acompanhamento">("origem");
   const [atividadeId, setAtividadeId] = useState<string | null>(null);
   const [riscoId, setRiscoId] = useState<string | null>(null);
   const plano = encaminhamentosDoPlano(projects, org.id).filter(
@@ -90,17 +91,15 @@ export function TabelaEncaminhamentos({
     );
   return (
     <>
-      <label className="mb-3 inline-flex items-center gap-2 text-sm">Origem
-        <select aria-label="Filtrar origem" className="rounded border bg-card p-2 text-xs" value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)}>
-          <option>Todas</option><option>Plano de trabalho</option><option>Riscos</option><option>Outros</option>
-        </select>
-      </label>
-      <div className="inova-table-frame orcamento-tabela-adaptavel rounded-xl border bg-card">
-        <table className="inova-table-cards w-full text-left text-sm" aria-label="Encaminhamentos">
+      <div className="flex flex-wrap items-center gap-3 pb-3 text-xs">
+        <label>Origem <select aria-label="Filtrar origem" className="rounded border bg-card p-1.5" value={filtro} onChange={e => setFiltro(e.target.value as typeof filtro)}><option>Todas</option><option>Plano de trabalho</option><option>Riscos</option><option>Outros</option></select></label>
+        <label>Colunas <select className="rounded border bg-card p-1.5" value={colunas} onChange={e => setColunas(e.target.value as typeof colunas)}><option value="origem">Origem</option><option value="acompanhamento">Acompanhamento</option></select></label>
+      </div>
+      <div className="rounded-xl border bg-card">
+        <table data-grupo={colunas} className="encaminhamentos-grade w-full table-fixed text-left text-sm" aria-label="Encaminhamentos">
           <thead>
             <tr className="border-b bg-muted/30">
-              <th className="p-3">Origem</th>
-              {["Vínculo", "Ação", "Responsável", "Prazo", "Status", "Ações"].map((c) => (
+              {(colunas === "origem" ? ["Origem", "Vínculo", "Ação", "Status", "Ações"] : ["Origem", "Ação", "Responsável", "Prazo", "Status", "Ações"]).map((c) => (
                 <th className="p-3" key={c}>
                   {c}
                 </th>
@@ -122,10 +121,11 @@ export function TabelaEncaminhamentos({
                         : undefined,
                   }}
                 >
-                    <td data-label="Origem" className="p-3 font-medium">
+                    <th scope="row" className="p-3 font-medium">
                       {r.origem}
-                    </td>
-                    <td data-label="Vínculo" className="p-3">
+                    </th>
+                  {colunas === "origem" && (
+                    <td className="p-3">
                       {r.enc?.origem?.tipo === "contato" ? (
                         <button
                           className="text-left text-primary underline"
@@ -139,17 +139,18 @@ export function TabelaEncaminhamentos({
                         r.vinculo
                       )}
                     </td>
-                  <td data-label="Ação" className="p-3">
+                  )}
+                  <td className="p-3">
                     <button className="text-left hover:underline" onClick={r.abrir}>
                       {r.acao}
                     </button>
                   </td>
-                  <td data-label="Responsável" className="p-3">{r.responsavel}</td>
-                  <td data-label="Prazo" className="p-3 whitespace-nowrap">
+                  {colunas === "acompanhamento" && <td className="p-3">{r.responsavel}</td>}
+                  {colunas === "acompanhamento" && <td className="p-3">
                     {r.prazo ? formatDateOnly(r.prazo) : "Não informado"}
-                  </td>
-                  <td data-label="Status" className="p-3">{r.status}</td>
-                  <td data-label="Ações" className="p-3">
+                  </td>}
+                  <td className="p-3">{r.status}</td>
+                  <td className="p-3">
                     {r.enc && !readOnly && (
                       <span className="flex gap-2">
                         <button onClick={() => aoEditar(r.enc!)} aria-label="Editar encaminhamento">
@@ -169,7 +170,7 @@ export function TabelaEncaminhamentos({
             })}
             {!registros.length && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                <td colSpan={colunas === "origem" ? 5 : 6} className="p-8 text-center text-muted-foreground">
                   {projectsLoading
                     ? "Carregando encaminhamentos…"
                     : "Nenhum encaminhamento neste filtro."}

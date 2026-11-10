@@ -64,7 +64,15 @@ export function VisaoRiscos({
 }) {
   const { readOnly } = useAuth();
   const { updateRisco } = useStore();
-  const { tabelaRef, larguras, larguraTotal, larguraInicialTotal, controles, restaurar } = useLargurasTabela(COLUNAS);
+  const [grupoColunas, setGrupoColunas] = useState<'avaliacao' | 'contexto' | 'resposta'>('avaliacao');
+  const gruposColunas = {
+    avaliacao: ['Risco', 'P × I', 'Categoria · Status', 'Responsável'],
+    contexto: ['Risco', 'Meta / Etapa', 'Especificação'],
+    resposta: ['Risco', 'Responsável', 'Ações para Encaminhamento'],
+  };
+  const colunasVisiveis = COLUNAS.filter(c => gruposColunas[grupoColunas].includes(c));
+  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunasVisiveis);
+  const somaLarguras = colunasVisiveis.reduce((s, c) => s + larguraInicialColuna(c), 0);
   const [rascunhos, setRascunhos] = useState<Record<string, RiscoInput>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [edicaoLocal, setEdicaoLocal] = useState<Set<string>>(new Set());
@@ -237,17 +245,18 @@ export function VisaoRiscos({
         </div>
       ) : (
         <>
+          <label className="inline-flex flex-wrap items-center gap-2 text-xs">Colunas da tabela <select value={grupoColunas} onChange={e => { setGrupoColunas(e.target.value as typeof grupoColunas); restaurar(); }} className="rounded border bg-card px-2 py-1.5"><option value="avaliacao">Avaliação</option><option value="contexto">Contexto</option><option value="resposta">Encaminhamento</option></select></label>
           {larguras && <div className="flex justify-end text-xs text-muted-foreground">
             <button type="button" onClick={restaurar} className="underline">Restaurar larguras</button>
           </div>}
           <div className="inova-table-frame overflow-x-auto">
-            <table ref={tabelaRef} aria-label="Riscos do projeto" className="inova-table-cards w-full"
-              style={{ width: larguraTotal ?? `max(100%, ${larguraInicialTotal}px)`, tableLayout: 'fixed' }}>
+            <table ref={tabelaRef} aria-label="Riscos do projeto" data-grupo={grupoColunas} className="plano-grade risco-grade w-full"
+              style={{ width: larguraTotal ?? '100%', tableLayout: 'fixed' }}>
               <caption className="sr-only">Arraste a borda direita do cabeçalho para ajustar cada coluna. Também é possível usar as setas do teclado.</caption>
-              <colgroup>{COLUNAS.map(c => <col key={c} style={{ width: larguras?.[c] ?? larguraInicialColuna(c) }} />)}</colgroup>
+              <colgroup>{colunasVisiveis.map(c => <col key={c} style={{ width: larguras?.[c] ?? `${larguraInicialColuna(c) / somaLarguras * 100}%` }} />)}</colgroup>
               <thead>
                 <tr>
-                  {COLUNAS.map(c => (
+                  {colunasVisiveis.map(c => (
                     <th
                       key={c}
                       scope="col"

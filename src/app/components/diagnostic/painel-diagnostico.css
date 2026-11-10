@@ -21,16 +21,10 @@
 .diagnostico-tabela-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
 .diagnostico-tabela { width: 100%; min-width: 1850px; border-collapse: collapse; font-size: .76rem; line-height: 1.6; text-align: left; }
 .diagnostico-tabela.inova-table-cards { min-width: 1850px; }
-.matriz-tabela-cartoes .diagnostico-tabela.inova-table-cards { min-width: 0; }
-.matriz-tabela-cartoes .diagnostico-tabela tr.diagnostico-grupo { display: block; background: var(--surface-1); }
-.matriz-tabela-cartoes .diagnostico-tabela tr:not(.diagnostico-grupo) > th[scope="row"] { display: block; grid-column: 1 / -1; width: auto; }
 .diagnostico-tabela th, .diagnostico-tabela td { padding: 16px 14px; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .diagnostico-tabela thead th { background: var(--surface-1); color: var(--ink-4); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; border-right: 1px solid var(--border); }
 @container inova-table (max-width: 63.999rem) {
   .diagnostico-tabela.inova-table-cards { min-width: 0; }
-  .diagnostico-tabela.inova-table-cards tr.diagnostico-grupo { display: block; background: var(--surface-1); }
-  .diagnostico-tabela.inova-table-cards tr.diagnostico-grupo th { display: block; padding: .65rem .8rem; }
-  .diagnostico-tabela.inova-table-cards tr:not(.diagnostico-grupo) > th[scope="row"] { display: block; grid-column: 1 / -1; }
 }
 .diagnostico-tabela th:first-child { width: 235px; }
 .diagnostico-tabela td:nth-child(2) { width: 190px; }
@@ -51,6 +45,11 @@
 .diagnostico-leitura { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
 .matriz-tabela-scroll { max-height: 70vh; overflow: auto; }
 .matriz-tabela-scroll .diagnostico-tabela { table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+.matriz-grade[data-campos="atuacao"] td[data-label]:not([data-label="Atuação"]):not([data-label="Externo"]):not([data-label="Experiência"]):not([data-label="Ações"]),
+.matriz-grade[data-campos="avaliacao"] td[data-label]:not([data-label="Interesse"]):not([data-label="Criticidade"]):not([data-label="Leitura"]):not([data-label="Avaliação"]):not([data-label="Ações"]),
+.matriz-grade[data-campos="detalhes"] td[data-label]:not([data-label="Avaliação"]):not([data-label="Observação"]):not([data-label="Ações"]) { display: none; }
+.matriz-tabela-scroll .matriz-grade :is(th, td) { min-width: 0 !important; width: auto; overflow-wrap: anywhere; white-space: normal; padding: 8px; }
+.matriz-tabela-scroll .matriz-grade :is(input, select, textarea, form, span) { min-width: 0; max-width: 100%; }
 .matriz-tabela-scroll .diagnostico-tabela thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-1, #f1f5f9); box-shadow: 0 1px 0 var(--border); }
 .matriz-tabela-scroll .diagnostico-tabela thead th:first-child { left: 0; z-index: 4; }
 .matriz-tabela-scroll .diagnostico-tabela tbody tr:has(select, textarea) > th[scope="row"] { position: sticky; left: 0; z-index: 1; background: var(--card, #fff); box-shadow: 1px 0 0 var(--border); }

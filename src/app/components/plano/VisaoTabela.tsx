@@ -18,6 +18,7 @@ import { formatDateOnly } from "../../lib/dateOnly";
 import { dadosDaAtividade, errosDaEdicao } from "../../lib/edicaoLinhaPlano";
 import { tituloSemNumeroLegado } from "../../lib/tituloPlano";
 import { COLUNAS_PLANO, type ColunaPlano } from "../../lib/formatoPlano";
+import { useLargurasTabela, larguraInicialColuna } from "./useLargurasTabela";
 import {
   estaAtrasada,
   hojeISO,
@@ -106,6 +107,16 @@ export function VisaoTabela({
 }: VisaoTabelaProps) {
   const { readOnly } = useAuth();
   const store = useStore();
+  const [conjunto, setConjunto] = useState<"planejamento" | "execucao" | "detalhes" | "todas">("planejamento");
+  const grupos: Record<typeof conjunto, readonly ColunaPlano[]> = {
+    planejamento: ["Atividade", "Responsável", "Início previsto", "Fim previsto", "Status", "Progresso (%)"],
+    execucao: ["Atividade", "Responsável", "Início", "Fim", "Status", "Progresso (%)", "Justificativa de atraso"],
+    detalhes: ["Atividade", "Observações / resultado esperado", "Nível risco", "Vínculo orçamentário", "Anexo"],
+    todas: COLUNAS_PLANO,
+  };
+  const colunasVisiveis = colunas.filter(c => grupos[conjunto].includes(c));
+  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunasVisiveis);
+  const somaLarguras = colunasVisiveis.reduce((s, c) => s + larguraInicialColuna(c), 0);
   const conclusoes = useMemo(
     () => indiceConclusao(metasCompletas ?? metas),
     [metasCompletas, metas],
@@ -543,7 +554,7 @@ export function VisaoTabela({
           }
         }}
       >
-        {colunas.map((c) => (
+        {colunasVisiveis.map((c) => (
           <td
             key={c}
             data-label={c}
@@ -561,21 +572,33 @@ export function VisaoTabela({
     );
   return (
     <div className="min-w-0">
-    <div className="inova-table-frame plano-tabela-adaptavel">
+    <label className="inline-flex flex-wrap items-center gap-2 px-2 py-2 text-xs">Colunas da tabela
+      <select value={conjunto} onChange={e => { setConjunto(e.target.value as typeof conjunto); restaurar(); }} className="rounded border bg-background px-2 py-1.5">
+        <option value="planejamento">Planejamento</option><option value="execucao">Execução</option><option value="detalhes">Detalhes</option><option value="todas">Todas as colunas</option>
+      </select>
+    </label>
+    {larguras && <div className="flex justify-end px-2 py-1 text-xs text-muted-foreground">
+      <button type="button" className="underline" onClick={restaurar}>Restaurar larguras</button>
+    </div>}
+    <div className="inova-table-frame overflow-x-auto">
       <table
-        className="inova-table-cards w-full"
+        ref={tabelaRef}
+        className="plano-grade w-full"
         aria-label="Plano de trabalho"
+        style={{ width: larguraTotal ?? "100%", tableLayout: "fixed" }}
       >
-        <caption className="sr-only">Plano de trabalho organizado por registro, com os campos identificados.</caption>
+        <caption className="sr-only">Arraste a borda direita do cabeçalho para ajustar cada coluna. Também é possível usar as setas do teclado.</caption>
+        <colgroup>{colunasVisiveis.map(c => <col key={c} style={{ width: larguras?.[c] ?? `${larguraInicialColuna(c) / somaLarguras * 100}%` }} />)}</colgroup>
         <thead>
           <tr>
-            {colunas.map((c) => (
+            {colunasVisiveis.map((c) => (
               <th
                 key={c}
                 scope="col"
                 className="relative p-2 pr-3 text-left text-[10px] uppercase text-muted-foreground border-b"
               >
                 {c}
+                <div {...controles(c)} className="plano-resize-handle" />
               </th>
             ))}
           </tr>

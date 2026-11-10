@@ -30,7 +30,6 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
   const [organizacaoAtiva, setOrganizacaoAtiva] = useState<string | null>(null);
-  const [graficosAbertos, setGraficosAbertos] = useState(false);
 
   const exercicios = useMemo(() => getExercicios(projects), [projects]);
   const orgOptions = useMemo(() => getOrgOptions(projects), [projects]);
@@ -108,12 +107,9 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </section>)}
       </div>
 
-      <details className="rounded-xl border bg-card p-4" open={graficosAbertos} onToggle={e => setGraficosAbertos(e.currentTarget.open)}>
-        <summary className="cursor-pointer font-semibold">Gráficos de acompanhamento</summary>
-        {graficosAbertos && <div className="mt-4 space-y-5">
+      <div className="space-y-5">
         <GraficosAcompanhamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>
-        </div>}
-      </details>
+      </div>
 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={selecionados} login={user?.login} onSelecionarOrganizacao={selecionarOrganizacao}
         onOpenProject={source === 'real' ? onOpenProject : undefined}/>

@@ -20,6 +20,7 @@ import { useStore, type ProjectExt } from '../../store';
 import { ApprovalsBanner, useOpAuthor } from './ApprovalsBanner';
 import { useAuth } from '../../auth/authStore';
 import { useAudit } from '../../audit/auditStore';
+import '../responsive-tables.css';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 }).format(n);
@@ -73,6 +74,9 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
   const [showCpForm, setShowCpForm] = useState(false);
   const [editItem, setEditItem] = useState<FinancialItem | null>(null);
   const [showAporteForm, setShowAporteForm] = useState(false);
+  const [colunasFinanceiro, setColunasFinanceiro] = useState<'itens' | 'valores' | 'execucao' | 'registros'>('itens');
+  const [colunasContrapartida, setColunasContrapartida] = useState<'resumo' | 'quantidades'>('resumo');
+  const [colunasAportes, setColunasAportes] = useState<'valores' | 'detalhes'>('valores');
 
   const items = p.financialItems;
   const contrapartidas = p.contrapartidas ?? [];
@@ -289,7 +293,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
           </h3>
         </div>
         <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="financeiro-resumo-grade w-full table-fixed">
           <thead>
             <tr style={{ background: 'var(--surface-1)' }}>
               {['Categoria', 'Itens', 'Previsto', 'Executado', '% Exec.'].map(h => (
@@ -327,6 +331,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
           <h3 style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.875rem', color: 'var(--ink-1)' }}>
             Detalhamento Orçamentário por Meta
           </h3>
+          <label className="mt-2 inline-flex flex-wrap items-center gap-2 text-xs">Colunas da tabela <select value={colunasFinanceiro} onChange={e => setColunasFinanceiro(e.target.value as typeof colunasFinanceiro)} className="rounded border bg-card px-2 py-1.5"><option value="itens">Itens</option><option value="valores">Valores previstos</option><option value="execucao">Execução</option><option value="registros">Alterações</option></select></label>
         </div>
 
         <div style={{ maxHeight: 520, overflow: 'auto' }}>
@@ -350,7 +355,7 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
                     </span>
                   </div>
                   <div className="overflow-x-auto">
-                  <table className="w-full" style={{ minWidth: 1420 }}>
+                  <table className="financeiro-grade w-full table-fixed" data-grupo={colunasFinanceiro}>
                     <thead>
                       <tr style={{ background: 'var(--surface-1)' }}>
                         {['Categoria', 'Descrição', 'Qtd.', 'Unidade', 'Qtd. de unidade', 'Valor unitário (R$)', 'Total da linha (previsto)', 'Valor executado', 'R$ executado', 'Status prestação de contas', 'Registro de alterações', isAdmin ? '' : 'Realizar alteração'].map(h => (
@@ -484,8 +489,9 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
               <p style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>Nenhuma contrapartida cadastrada.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-            <table className="w-full">
+            <div className="min-w-0">
+            <label className="inline-flex items-center gap-2 px-3 py-2 text-xs">Colunas da tabela <select value={colunasContrapartida} onChange={e => setColunasContrapartida(e.target.value as typeof colunasContrapartida)} className="rounded border bg-card px-2 py-1.5"><option value="resumo">Resumo</option><option value="quantidades">Quantidades</option></select></label>
+            <table className="contrapartida-grade w-full table-fixed" data-grupo={colunasContrapartida}>
               <thead>
                 <tr style={{ background: 'var(--surface-1)' }}>
                   {['Meta', 'Descrição', 'Tipo', 'Qtd', 'Unidade', 'Valor Unit.', 'Total', ''].map(h => (
@@ -559,8 +565,9 @@ export function TabFinanceiro({ project }: TabFinanceiroProps) {
         </div>
 
         {aportes.length > 0 && (
-          <div className="overflow-x-auto">
-          <table className="w-full" style={{ borderTop: '1px solid var(--border)' }}>
+          <div className="min-w-0">
+          <label className="inline-flex items-center gap-2 px-3 py-2 text-xs">Colunas da tabela <select value={colunasAportes} onChange={e => setColunasAportes(e.target.value as typeof colunasAportes)} className="rounded border bg-card px-2 py-1.5"><option value="valores">Valores</option><option value="detalhes">Detalhes</option></select></label>
+          <table className="aportes-grade w-full table-fixed" data-grupo={colunasAportes} style={{ borderTop: '1px solid var(--border)' }}>
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
                 {['Data', 'Tipo', 'Origem / destino', 'Descrição', 'Valor', 'Registrado por', ''].map(h => (

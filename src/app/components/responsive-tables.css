@@ -66,170 +66,41 @@
 }
 .plano-resize-handle:is(:hover, :focus-visible)::after { width: 3px; background: var(--brand); }
 .plano-resize-handle:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-.orcamento-tabela-adaptavel td[data-label="Ações"] > span { flex-wrap: wrap; }
+.plano-grade th, .plano-grade td { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.plano-grade :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+.plano-grade .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
+.risco-grade[data-grupo="avaliacao"] td[data-label]:not([data-label="Risco"]):not([data-label="P × I"]):not([data-label="Categoria · Status"]):not([data-label="Responsável"]),
+.risco-grade[data-grupo="contexto"] td[data-label]:not([data-label="Risco"]):not([data-label="Meta / Etapa"]):not([data-label="Especificação"]),
+.risco-grade[data-grupo="resposta"] td[data-label]:not([data-label="Risco"]):not([data-label="Responsável"]):not([data-label="Ações para Encaminhamento"]) { display: none; }
+.orcamento-grade[data-grupo="planejado"] td[data-col]:not([data-col="0"]):not([data-col="1"]):not([data-col="2"]):not([data-col="3"]):not([data-col="4"]):not([data-col="5"]):not([data-col="6"]):not([data-col="13"]),
+.orcamento-grade[data-grupo="execucao"] td[data-col]:not([data-col="0"]):not([data-col="1"]):not([data-col="6"]):not([data-col="7"]):not([data-col="8"]):not([data-col="9"]):not([data-col="13"]),
+.orcamento-grade[data-grupo="detalhes"] td[data-col]:not([data-col="0"]):not([data-col="1"]):not([data-col="10"]):not([data-col="11"]):not([data-col="12"]):not([data-col="13"]) { display: none; }
+.orcamento-grade :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal !important; vertical-align: top; }
+.orcamento-grade .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
+.orcamento-grade td[data-col="13"] > span { flex-wrap: wrap; }
+.encaminhamentos-grade :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.encaminhamentos-grade :is(button, input, select) { max-width: 100%; }
+.notas-grade :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal !important; vertical-align: top; }
+.notas-grade .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
+.financeiro-grade[data-grupo="itens"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(12)),
+.financeiro-grade[data-grupo="valores"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(6)):not(:nth-child(7)):not(:nth-child(12)),
+.financeiro-grade[data-grupo="execucao"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(8)):not(:nth-child(9)):not(:nth-child(10)):not(:nth-child(12)),
+.financeiro-grade[data-grupo="registros"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(11)):not(:nth-child(12)) { display: none; }
+.financeiro-grade :is(th, td) { min-width: 0 !important; width: auto; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.financeiro-grade :is(input, select, button) { min-width: 0; max-width: 100%; }
+.contrapartida-grade[data-grupo="resumo"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(7)):not(:nth-child(8)),
+.contrapartida-grade[data-grupo="quantidades"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(6)):not(:nth-child(8)),
+.aportes-grade[data-grupo="valores"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(5)):not(:nth-child(7)),
+.aportes-grade[data-grupo="detalhes"] :is(th, td):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(4)):not(:nth-child(6)):not(:nth-child(7)) { display: none; }
+:is(.financeiro-resumo-grade, .contrapartida-grade, .aportes-grade) :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.acompanhamento-grade :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.acompanhamento-grade :is(input, select) { min-width: 0; max-width: 100%; }
+.configuracoes-grade :is(th, td) { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+.configuracoes-grade :is(select, input, button) { min-width: 0; max-width: 100%; }
 @container inova-table (max-width: 63.999rem) {
-  .inova-table-cards {
-    display: block;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-  .inova-table-cards colgroup, .inova-table-cards .plano-resize-handle { display: none; }
-  .inova-table-cards thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .inova-table-cards tbody {
-    display: block;
-    min-width: 0;
-  }
-  .inova-table-cards tr {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-width: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .inova-table-cards td {
-    display: block;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow-wrap: anywhere;
-    white-space: normal !important;
-  }
-  .inova-table-cards td[colspan],
-  .inova-table-cards td[data-label="Atividade"],
-  .inova-table-cards td[data-label="Risco"],
-  .inova-table-cards td[data-label="Especificação"],
-  .inova-table-cards td[data-label="Ações para Encaminhamento"],
-  .inova-table-cards td[data-label="Produto"],
-  .inova-table-cards td[data-label="Observações"],
-  .inova-table-cards td[data-label="Observações / resultado esperado"],
-  .inova-table-cards td[data-label="Justificativa de atraso"] {
-    grid-column: 1 / -1;
-  }
-  .inova-table-cards td:has(input),
-  .inova-table-cards td:has(select),
-  .inova-table-cards td:has(textarea) {
-    grid-column: 1 / -1;
-  }
-  .inova-table-cards td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 0.25rem;
-    color: var(--ink-5);
-    font-size: 0.68rem;
-    font-weight: 600;
-  }
-  .inova-table-cards td > span,
-  .inova-table-cards td > div {
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  .inova-table-cards td[colspan] > div {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .inova-table-cards button {
-    min-height: 2.25rem;
-    overflow-wrap: anywhere;
-  }
-  .inova-table-cards input,
-  .inova-table-cards select,
-  .inova-table-cards textarea {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    min-height: 2.5rem;
-  }
-  .inova-table-cards .truncate {
-    white-space: normal !important;
-    overflow: visible;
-    text-overflow: clip;
-  }
-}
-
-/* Fichas tamb?m em telas largas: todos os campos permanecem vis?veis sem rolagem lateral. */
-@container inova-table (min-width: 64rem) {
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards {
-    display: block;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards colgroup, :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards .plano-resize-handle { display: none; }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards tbody {
-    display: block;
-    min-width: 0;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards tr {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    min-width: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td {
-    display: block;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow-wrap: anywhere;
-    white-space: normal !important;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[colspan],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Atividade"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Risco"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Especificação"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Ações para Encaminhamento"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Produto"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Observações"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Observações / resultado esperado"],
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Justificativa de atraso"] {
-    grid-column: 1 / -1;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(input),
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(select),
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(textarea) {
-    grid-column: 1 / -1;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 0.25rem;
-    color: var(--ink-5);
-    font-size: 0.68rem;
-    font-weight: 600;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td > span,
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td > div {
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[colspan] > div {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards button {
-    min-height: 2.25rem;
-    overflow-wrap: anywhere;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards input,
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards select,
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards textarea {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    min-height: 2.5rem;
-  }
-  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards .truncate {
-    white-space: normal !important;
-    overflow: visible;
-    text-overflow: clip;
-  }
+  .inova-table-cards { width: 100% !important; min-width: 0 !important; table-layout: fixed; }
+  .inova-table-cards col { width: auto !important; }
+  .inova-table-cards :is(th, td) { min-width: 0 !important; max-width: none !important; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
+  .inova-table-cards :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+  .inova-table-cards .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
 }
