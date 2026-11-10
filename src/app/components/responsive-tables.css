@@ -66,6 +66,7 @@
 }
 .plano-resize-handle:is(:hover, :focus-visible)::after { width: 3px; background: var(--brand); }
 .plano-resize-handle:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.orcamento-tabela-adaptavel td[data-label="Ações"] > span { flex-wrap: wrap; }
 @container inova-table (max-width: 63.999rem) {
   .inova-table-cards {
     display: block;
@@ -95,7 +96,7 @@
     min-width: 0 !important;
     max-width: none !important;
     overflow-wrap: anywhere;
-    white-space: normal;
+    white-space: normal !important;
   }
   .inova-table-cards td[colspan],
   .inova-table-cards td[data-label="Atividade"],
@@ -143,7 +144,91 @@
     min-height: 2.5rem;
   }
   .inova-table-cards .truncate {
-    white-space: normal;
+    white-space: normal !important;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* Fichas tamb?m em telas largas: todos os campos permanecem vis?veis sem rolagem lateral. */
+@container inova-table (min-width: 64rem) {
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards colgroup, :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards .plano-resize-handle { display: none; }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards tbody {
+    display: block;
+    min-width: 0;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-width: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td {
+    display: block;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[colspan],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Atividade"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Risco"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Especificação"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Ações para Encaminhamento"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Produto"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Observações"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Observações / resultado esperado"],
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label="Justificativa de atraso"] {
+    grid-column: 1 / -1;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(input),
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(select),
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td:has(textarea) {
+    grid-column: 1 / -1;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--ink-5);
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td > span,
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards td[colspan] > div {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards button {
+    min-height: 2.25rem;
+    overflow-wrap: anywhere;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards input,
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards select,
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 2.5rem;
+  }
+  :is(.plano-tabela-adaptavel, .orcamento-tabela-adaptavel) .inova-table-cards .truncate {
+    white-space: normal !important;
     overflow: visible;
     text-overflow: clip;
   }

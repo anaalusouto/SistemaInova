@@ -129,7 +129,7 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
           Nenhum estagiário ou administrador cadastrado ainda.
         </div>
       ) : (
-        <div className="flex-1 flex gap-4 overflow-x-auto pb-2">
+        <div className="flex-1 grid grid-cols-1 items-start gap-4 pb-2 sm:grid-cols-2 xl:grid-cols-3">
           {people.map(person => {
             const list = byLogin.get(person.login) ?? [];
             const isOver = dragOverLogin === person.login;
@@ -139,9 +139,8 @@ export function GestaoPage({ onOpenProject, onOpenOrg, onOpenAdmin }: {
                 onDragOver={e => { e.preventDefault(); setDragOverLogin(person.login); }}
                 onDragLeave={() => setDragOverLogin(prev => (prev === person.login ? null : prev))}
                 onDrop={e => handleDrop(person.login, person.name, e)}
-                className="flex flex-col flex-shrink-0 rounded-xl border"
+                className="flex min-w-0 flex-col rounded-xl border"
                 style={{
-                  width: 280,
                   borderColor: isOver ? 'var(--brand)' : 'var(--border)',
                   background: isOver ? 'var(--brand-soft)' : 'var(--surface-1)',
                   transition: 'background 120ms, border-color 120ms',

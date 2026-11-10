@@ -358,8 +358,18 @@ function MonthView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Ca
   const today = new Date();
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[640px]">
+    <div className="min-w-0">
+      <div className="sm:hidden divide-y">
+        {cells.filter((d): d is Date => d !== null).map(d => {
+          const key = fmtDate(d);
+          const list = events.filter(e => e.date === key);
+          return <div key={key} className="p-3">
+            <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold">{d.getDate()} · {weekDays[d.getDay()]}</span><button type="button" onClick={() => onNew(key)} className="rounded border px-2 py-1 text-xs" aria-label={`Novo evento em ${key}`}>Novo evento</button></div>
+            {list.map(e => <button key={e.id} type="button" onClick={() => onEdit(e.id)} className="mt-1 block w-full rounded px-2 py-1 text-left text-xs text-white" style={{ background: typeColors[e.type] }}>{e.startTime ? `${e.startTime} ` : ''}{e.title}</button>)}
+          </div>;
+        })}
+      </div>
+      <div className="hidden sm:block">
       <div className="grid grid-cols-7 border-b text-[11px] font-semibold text-muted-foreground" style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}>
         {weekDays.map(w => <div key={w} className="px-2 py-1.5 text-center">{w}</div>)}
       </div>
@@ -404,14 +414,14 @@ function WeekView({ cursor, events, onNew, onEdit }: { cursor: Date; events: Cal
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate() + i); return d; });
   const today = new Date();
   return (
-    <div className="overflow-x-auto">
-    <div className="grid grid-cols-7 min-w-[700px]">
+    <div className="min-w-0">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7">
       {days.map(d => {
         const key = fmtDate(d);
         const list = events.filter(e => e.date === key).sort((a, b) => (a.startTime ?? '').localeCompare(b.startTime ?? ''));
         const isToday = isSameDay(d, today);
         return (
-          <div key={key} className="border-r min-h-[500px]" style={{ borderColor: 'var(--border)' }}>
+          <div key={key} className="min-w-0 border-b lg:min-h-[500px] lg:border-r" style={{ borderColor: 'var(--border)' }}>
             <div className="text-center py-2 border-b" style={{ borderColor: 'var(--border)', background: isToday ? 'var(--brand-soft)' : 'var(--surface-1)' }}>
               <div className="text-[10px] uppercase text-muted-foreground">{weekDays[d.getDay()]}</div>
               <div className="text-lg font-bold" style={{ color: isToday ? 'var(--primary)' : undefined }}>{d.getDate()}</div>

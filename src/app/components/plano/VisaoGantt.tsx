@@ -29,10 +29,6 @@ import {
   type EscalaGantt, type LimitesLinhaTempo, type PosicaoBarra,
 } from '../../lib/planoTrabalho';
 
-/** Largura mínima de cada coluna. Abaixo disso o rótulo do mês fica ilegível. */
-const LARGURA_COLUNA = { mes: 74, trimestre: 96 } as const;
-const LARGURA_ESQUERDA = 340;
-
 interface Faixa {
   previsto: PosicaoBarra | null;
   realizado: PosicaoBarra | null;
@@ -148,7 +144,6 @@ export function VisaoGantt({
   }
 
   const colunas = colunasDaLinhaDoTempo(limites, escala);
-  const larguraLinha = Math.max(colunas.length * LARGURA_COLUNA[escala === 'mes' ? 'mes' : 'trimestre'], 320);
   const marcadorHoje = posicaoDeHoje(limites, hoje);
 
   /** Uma linha da grade: esquerda fixa + faixa de tempo, mesma altura. */
@@ -161,12 +156,12 @@ export function VisaoGantt({
   }) => (
     <div className="flex" style={{ background: fundo, borderBottom: '1px solid var(--line-1)', minHeight: 26 }}>
       <div
-        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1"
-        style={{ width: LARGURA_ESQUERDA, paddingLeft: 12 + indentacao }}
+        className="flex w-[44%] min-w-0 shrink-0 items-center gap-1.5 px-2 py-1 sm:w-[38%]"
+        style={{ paddingLeft: 4 + Math.min(indentacao, 14) }}
       >
         {conteudo}
       </div>
-      <div className="relative" style={{ width: larguraLinha, flexShrink: 0 }}>
+      <div className="relative min-w-0 flex-1">
         {/* Grade vertical igual à do cabeçalho — mesma origem, mesmas colunas. */}
         <div className="absolute inset-0 flex" aria-hidden>
           {colunas.map(c => (
@@ -179,24 +174,24 @@ export function VisaoGantt({
   );
 
   return (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth: LARGURA_ESQUERDA + larguraLinha }}>
+    <div className="min-w-0">
+      <div className="w-full min-w-0">
         {/* Cabeçalho */}
         <div
           className="flex"
           style={{ background: 'var(--surface-1)', borderBottom: '1px solid var(--border)' }}
         >
           <div
-            className="flex-shrink-0 px-3 py-2"
+            className="w-[44%] min-w-0 shrink-0 px-2 py-2 sm:w-[38%]"
             style={{
-              width: LARGURA_ESQUERDA, fontSize: '0.66rem', fontWeight: 600,
+              fontSize: '0.66rem', fontWeight: 600,
               color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.04em',
             }}
           >
             Meta · Etapa · Atividade
           </div>
-          <div className="relative flex" style={{ width: larguraLinha, flexShrink: 0 }}>
-            {colunas.map(c => (
+          <div className="relative flex min-w-0 flex-1">
+            {colunas.map((c, indice) => (
               <div
                 key={c.chave}
                 className="flex-1 px-1 py-2 text-center"
@@ -205,7 +200,7 @@ export function VisaoGantt({
                   borderRight: '1px solid var(--line-1)', whiteSpace: 'nowrap',
                 }}
               >
-                {c.rotulo}
+                <span className={indice !== 0 && indice !== colunas.length - 1 ? (colunas.length > 6 ? 'hidden' : 'hidden lg:inline') : ''}>{c.rotulo}</span>
               </div>
             ))}
             {marcadorHoje !== null && (
@@ -251,7 +246,7 @@ export function VisaoGantt({
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-4)' }}>
                       {codigos.get(meta.id)}.
                     </span>
-                    <span className={`truncate ${conclusoes.get(`meta:${meta.id}`)?.concluido ? 'line-through' : ''}`} style={{ fontWeight: 700, fontSize: '0.76rem', color: 'var(--ink-1)' }}>
+                    <span className={`break-words ${conclusoes.get(`meta:${meta.id}`)?.concluido ? 'line-through' : ''}`} style={{ fontWeight: 700, fontSize: '0.76rem', color: 'var(--ink-1)' }}>
                       {meta.name}
                     </span>
                   </button>
@@ -286,7 +281,7 @@ export function VisaoGantt({
                           </span>
                           <button
                             onClick={() => aoAbrirEtapa(etapa, meta)}
-                            className="truncate text-left hover:underline min-w-0"
+                            className="break-words text-left hover:underline min-w-0"
                             style={{ fontWeight: 600, fontSize: '0.74rem', color: 'var(--ink-2)' }}
                           >
                             <span className={conclusoes.get(`etapa:${etapa.id}`)?.concluido ? 'line-through' : undefined}>{etapa.name}</span>
@@ -323,7 +318,7 @@ export function VisaoGantt({
                               </span>
                               <button
                                 onClick={() => aoAbrirAtividade(atividade, etapa, meta)}
-                                className="truncate text-left hover:underline min-w-0 flex-1"
+                                className="break-words text-left hover:underline min-w-0 flex-1"
                                 style={{ fontSize: '0.74rem', color: 'var(--ink-2)' }}
                               >
                                 <span className={atividade.status === 'Concluído' ? 'line-through' : undefined}>{atividade.name}</span>

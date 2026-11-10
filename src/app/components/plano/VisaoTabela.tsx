@@ -18,7 +18,6 @@ import { formatDateOnly } from "../../lib/dateOnly";
 import { dadosDaAtividade, errosDaEdicao } from "../../lib/edicaoLinhaPlano";
 import { tituloSemNumeroLegado } from "../../lib/tituloPlano";
 import { COLUNAS_PLANO, type ColunaPlano } from "../../lib/formatoPlano";
-import { useLargurasTabela, larguraInicialColuna } from "./useLargurasTabela";
 import {
   estaAtrasada,
   hojeISO,
@@ -107,7 +106,6 @@ export function VisaoTabela({
 }: VisaoTabelaProps) {
   const { readOnly } = useAuth();
   const store = useStore();
-  const { tabelaRef, larguras, larguraTotal, larguraInicialTotal, controles, restaurar } = useLargurasTabela(colunas);
   const conclusoes = useMemo(
     () => indiceConclusao(metasCompletas ?? metas),
     [metasCompletas, metas],
@@ -563,18 +561,12 @@ export function VisaoTabela({
     );
   return (
     <div className="min-w-0">
-    {larguras && <div className="flex justify-end px-2 py-1 text-xs text-muted-foreground">
-      <button type="button" className="underline" onClick={restaurar}>Restaurar larguras</button>
-    </div>}
-    <div className="inova-table-frame overflow-x-auto">
+    <div className="inova-table-frame plano-tabela-adaptavel">
       <table
-        ref={tabelaRef}
         className="inova-table-cards w-full"
         aria-label="Plano de trabalho"
-        style={{ width: larguraTotal ?? `max(100%, ${larguraInicialTotal}px)`, tableLayout: "fixed" }}
       >
-        <caption className="sr-only">Arraste a borda direita do cabeçalho para ajustar cada coluna. Também é possível usar as setas do teclado.</caption>
-        <colgroup>{colunas.map(c => <col key={c} style={{ width: larguras?.[c] ?? larguraInicialColuna(c) }} />)}</colgroup>
+        <caption className="sr-only">Plano de trabalho organizado por registro, com os campos identificados.</caption>
         <thead>
           <tr>
             {colunas.map((c) => (
@@ -584,7 +576,6 @@ export function VisaoTabela({
                 className="relative p-2 pr-3 text-left text-[10px] uppercase text-muted-foreground border-b"
               >
                 {c}
-                <div {...controles(c)} className="plano-resize-handle" />
               </th>
             ))}
           </tr>

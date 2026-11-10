@@ -17,6 +17,7 @@ import {
 } from '../../lib/orcamento';
 import { ConfirmarExclusao } from '../plano/camposFormulario';
 import { BotaoNovo } from '../BotaoNovo';
+import '../responsive-tables.css';
 
 export function ComparativoExecucao({
   proposto, executado, notas,
@@ -133,8 +134,8 @@ export function ListaNotas({
           Nenhuma nota lançada neste projeto.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: 720 }}>
+        <div className="inova-table-frame orcamento-tabela-adaptavel">
+          <table className="inova-table-cards w-full" aria-label="Notas do orçamento">
             <thead>
               <tr style={{ background: 'var(--surface-1)' }}>
                 {['Data', 'Nº', 'Fornecedor', 'Item do orçamento', 'Valor', 'Comprovante', ''].map(c => (
@@ -151,27 +152,27 @@ export function ListaNotas({
             <tbody>
               {notas.map(n => (
                 <tr key={n.id} style={{ borderBottom: '1px solid var(--line-1)' }}>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
+                  <td data-label="Data" className="px-3 py-1.5" style={{ fontSize: '0.74rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
                     {formatDateOnly(n.dataEmissao)}
                   </td>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.74rem', color: n.numero ? 'var(--ink-2)' : 'var(--ink-5)' }}>{n.numero ?? '—'}</td>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.74rem', color: 'var(--ink-2)', maxWidth: 200 }}>
+                  <td data-label="Número" className="px-3 py-1.5" style={{ fontSize: '0.74rem', color: n.numero ? 'var(--ink-2)' : 'var(--ink-5)' }}>{n.numero ?? '—'}</td>
+                  <td data-label="Fornecedor" className="px-3 py-1.5" style={{ fontSize: '0.74rem', color: 'var(--ink-2)', maxWidth: 200 }}>
                     <span className="block truncate" title={n.fornecedor ?? undefined}>{n.fornecedor ?? <span style={{ color: 'var(--ink-5)' }}>—</span>}</span>
                   </td>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.74rem', maxWidth: 240 }}>
+                  <td data-label="Item do orçamento" className="px-3 py-1.5" style={{ fontSize: '0.74rem', maxWidth: 240 }}>
                     {n.itemId
                       ? <span className="block truncate" style={{ color: 'var(--ink-2)' }} title={nomeItem.get(n.itemId)}>{nomeItem.get(n.itemId) ?? 'Item removido'}</span>
                       : <span style={{ color: 'var(--ink-5)', fontStyle: 'italic' }}>Sem item</span>}
                   </td>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink-1)', whiteSpace: 'nowrap' }}>
+                  <td data-label="Valor" className="px-3 py-1.5" style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink-1)', whiteSpace: 'nowrap' }}>
                     {moeda(n.valor)}
                   </td>
-                  <td className="px-3 py-1.5" style={{ fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                  <td data-label="Comprovante" className="px-3 py-1.5" style={{ fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
                     {n.anexo
                       ? <span className="inline-flex items-center gap-1" style={{ color: 'var(--ink-3)' }}><Paperclip size={11} /> anexado</span>
                       : <span style={{ color: 'var(--warning)', fontWeight: 600 }}>sem comprovante</span>}
                   </td>
-                  <td className="px-3 py-1.5 whitespace-nowrap">
+                  <td data-label="Ações" className="px-3 py-1.5 whitespace-nowrap">
                     <span className="flex items-center gap-1 justify-end">
                       <button onClick={() => aoAbrirNota(n)} aria-label={readOnly ? 'Ver nota' : 'Editar nota'} className="p-1 rounded hover:bg-accent">
                         <Pencil size={12} color="var(--ink-4)" />

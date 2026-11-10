@@ -7,6 +7,7 @@ import { useAudit } from '../audit/auditStore';
 import { ganttStatusColors, type GanttActivity, type GanttStatus } from '../data/cronogramaExecutivo';
 import { INTERNAL_STATUSES, internalStatusColors } from '../data/controleInterno';
 import { LinkNovo } from './BotaoNovo';
+import './responsive-tables.css';
 
 const STATUS_LIST: GanttStatus[] = INTERNAL_STATUSES;
 
@@ -137,21 +138,12 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
     return { minDate: start, maxDate: end, weeks: weekList };
   }, [gantt]);
 
-  const DAY_PX = 5;
-  const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / 86400000));
-  const timelineWidth = showGantt ? totalDays * DAY_PX : 0;
-  const LEFT_COL = showGantt ? 430 : 0;
-
-  const pctPos = (dateStr: string) =>
-    Math.round((new Date(`${dateStr}T00:00:00`).getTime() - minDate.getTime()) / 86400000) * DAY_PX;
-  const barWidth = (ini: string, fim: string) =>
-    Math.max(DAY_PX, (Math.round((new Date(`${fim}T00:00:00`).getTime() - new Date(`${ini}T00:00:00`).getTime()) / 86400000) + 1) * DAY_PX);
-
-  const todayPx = (() => {
-    const t = new Date();
-    if (t < minDate || t > maxDate) return null;
-    return Math.round((t.getTime() - minDate.getTime()) / 86400000) * DAY_PX;
-  })();
+  const totalDays = Math.max(1, Math.round((maxDate.getTime() - minDate.getTime()) / 86400000) + 1);
+  const timelineWidth = '57%';
+  const LEFT_COL = '43%';
+  const pctPos = (dateStr: string) => `${Math.max(0, Math.min(100, Math.round((new Date(`${dateStr}T00:00:00`).getTime() - minDate.getTime()) / 86400000) / totalDays * 100))}%`;
+  const barWidth = (ini: string, fim: string) => `${Math.max(0.5, Math.min(100, (Math.round((new Date(`${fim}T00:00:00`).getTime() - new Date(`${ini}T00:00:00`).getTime()) / 86400000) + 1) / totalDays * 100))}%`;
+  const todayPx = (() => { const t = new Date(); return t < minDate || t > maxDate ? null : `${(t.getTime()-minDate.getTime())/86400000/totalDays*100}%`; })();
 
   const toggle = (id: number) => setExpanded(prev => {
     const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n;
@@ -229,7 +221,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
       <div key={a.id}>
         <div className="flex hover:bg-accent group" style={{ borderBottom: '1px solid var(--surface-2)' }}>
           <div className={`pr-3 py-1.5 flex items-start gap-2 ${showGantt ? 'shrink-0' : 'flex-1'}`}
-            style={{ paddingLeft: 32 + depth * 20, width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
+            style={{ paddingLeft: Math.min(12 + depth * 8, 32), width: showGantt ? LEFT_COL : undefined, borderRight: showGantt ? '1px solid var(--border)' : undefined }}>
             <button
               disabled={!isAdmin}
               onClick={() => {
@@ -379,7 +371,7 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
         </div>
 
         <div className="overflow-auto flex-1 min-h-0">
-          <div style={{ minWidth: showGantt ? LEFT_COL + timelineWidth : '100%' }}>
+          <div className="w-full min-w-0">
             {/* Cabeçalho da timeline */}
             <div className="sticky top-0 z-10 flex text-[10px]" style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
               <div className={showGantt ? 'shrink-0 px-3 py-2 font-semibold' : 'flex-1 px-3 py-2 font-semibold'}
@@ -389,8 +381,8 @@ export function CronogramaExecutivoTab({ projectId }: Props) {
               {showGantt && <div className="relative" style={{ width: timelineWidth, height: 32 }}>
                 {weeks.map((w, i) => (
                   <div key={i} className="absolute top-0 bottom-0 flex items-center pl-1 text-muted-foreground"
-                    style={{ left: pctPos(fmtDate(w)), width: 7 * DAY_PX, borderLeft: '1px solid var(--line-1)' }}>
-                    {i % 2 === 0 ? `${String(w.getDate()).padStart(2, '0')}/${String(w.getMonth() + 1).padStart(2, '0')}` : ''}
+                    style={{ left: pctPos(fmtDate(w)), width: `${100 / Math.max(weeks.length, 1)}%`, borderLeft: '1px solid var(--line-1)' }}>
+                    {(i === 0 || i === weeks.length - 1) ? `${String(w.getDate()).padStart(2, '0')}/${String(w.getMonth() + 1).padStart(2, '0')}` : ''}
                   </div>
                 ))}
               </div>}
@@ -694,8 +686,8 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
   const APP_PEOPLE = usePeople();
   return (
     <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      <div className="overflow-x-auto">
-      <table className="w-full text-[12px]">
+      <div className="inova-table-frame orcamento-tabela-adaptavel">
+      <table className="inova-table-cards w-full text-[12px]" aria-label="Acompanhamento por projeto">
         <thead>
           <tr style={{ background: 'var(--surface-1)' }}>
             <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)' }}>Projeto / Comunidade</th>
@@ -712,26 +704,26 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
             const c = internalStatusColors[t.status];
             return (
               <tr key={p.id} style={{ borderTop: '1px solid var(--border)', background: 'var(--surface-0)' }}>
-                <td className="px-3 py-1.5">
+                <td data-label="Projeto / Comunidade" className="px-3 py-1.5">
                   {p.org && <span className="text-[10px] font-bold mr-1.5" style={{ color: 'var(--brand-text)' }}>{p.org}</span>}
                   <span>{p.name}</span>
                 </td>
-                <td className="px-3 py-1.5">
+                <td data-label="Status" className="px-3 py-1.5">
                   <select value={t.status} onChange={e => onTrack(p.id, { status: e.target.value as GanttStatus })}
                     className="w-full text-[11px] px-2 py-1 rounded font-medium"
                     style={{ background: c.bg, color: c.color, border: '1px solid var(--border)' }}>
                     {STATUS_LIST.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </td>
-                <td className="px-3 py-1.5">
+                <td data-label="Início" className="px-3 py-1.5">
                   <input type="date" value={t.inicio ?? fallback.inicio ?? ''} onChange={e => onTrack(p.id, { inicio: e.target.value })}
                     className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)' }} />
                 </td>
-                <td className="px-3 py-1.5">
+                <td data-label="Fim" className="px-3 py-1.5">
                   <input type="date" value={t.fim ?? fallback.fim ?? ''} onChange={e => onTrack(p.id, { fim: e.target.value })}
                     className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)' }} />
                 </td>
-                <td className="px-3 py-1.5">
+                <td data-label="Responsável" className="px-3 py-1.5">
                   <select value={t.responsavel ?? fallback.responsavel ?? ''} onChange={e => onTrack(p.id, { responsavel: e.target.value })}
                     className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}>
                     <option value="">—</option>
@@ -739,7 +731,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
                     {t.responsavel && !APP_PEOPLE.some(pe => pe.name === t.responsavel) && <option value={t.responsavel}>{t.responsavel}</option>}
                   </select>
                 </td>
-                <td className="px-3 py-1.5">
+                <td data-label="Observação" className="px-3 py-1.5">
                   <input value={t.observacao ?? ''} onChange={e => onTrack(p.id, { observacao: e.target.value })}
                     placeholder="—" className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)' }} />
                 </td>
@@ -754,7 +746,7 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
 }
 
 function GanttBar({ left, width, color, progress, label, bold, onClick }: {
-  left: number; width: number; color: string; progress: number; label: string; bold?: boolean; onClick?: () => void;
+  left: string; width: string; color: string; progress: number; label: string; bold?: boolean; onClick?: () => void;
 }) {
   return (
     <button onClick={onClick} title={`${label} · ${progress}%`}

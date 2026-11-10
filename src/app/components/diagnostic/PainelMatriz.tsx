@@ -2,12 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { FUNCOES_MATRIZ, leituraMatriz } from '../../diagnostic/catalog/matrizPrototipo';
 import type { RascunhoMatriz } from '../../diagnostic/importarMatriz';
 import '../responsive-tables.css';
-import { useLargurasTabela } from '../plano/useLargurasTabela';
 
 interface Linha { id: string; valores: RascunhoMatriz; estado: string }
 interface Props { cabecalho?: ReactNode; linhas: Linha[]; onSelecionar: (id: string) => void; desabilitado: boolean; renderEdicao?: (linha: Linha) => ReactNode; renderAvaliacao?: (id: string) => ReactNode; filtroBloqueado?: boolean }
 const COLUNAS = ['Função', 'Atuação', 'Externo', 'Experiência', 'Interesse', 'Criticidade', 'Leitura', 'Avaliação', 'Observação'];
-const LARGURAS = [280, 210, 220, 190, 170, 250, 180, 320, 560, 220];
 const INTERESSE = ['Sem interesse', 'Baixo', 'Médio', 'Alto'];
 const CRITICIDADE = ['Baixo impacto', 'Limitações pontuais', 'Compromete resultados', 'Compromete atuação ou continuidade'];
 const CORES = ['#64748b', '#528363', '#b27b24', '#c46b35', '#b44747'];
@@ -18,8 +16,6 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
   const [grupo, setGrupo] = useState('Todos');
   const [leituraSelecionada, setLeituraSelecionada] = useState<string | null>(null);
   const colunas = renderEdicao ? [...COLUNAS, 'Ações'] : COLUNAS;
-  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunas);
-  const largura = larguraTotal ?? colunas.reduce((s, _, i) => s + LARGURAS[i], 0);
   const indice = new Map(linhas.map(l => [l.id, l]));
   const visiveis = FUNCOES_MATRIZ.filter(f => grupo === 'Todos' || f.grupo === grupo);
   const distribuicao = CATEGORIAS_LEITURA.map(leitura => ({
@@ -31,9 +27,9 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
   return <div className="painel-matriz space-y-5">
     <section className="space-y-4" aria-label="Quantidade de funções por categoria de Leitura">
       <div><h4 className="font-semibold text-lg">Funções por categoria de Leitura</h4><p className="text-sm text-muted-foreground">Quantidade de funções em cada categoria. Selecione uma coluna para consultar todas as funções correspondentes.</p></div>
-      <div className="overflow-x-auto rounded-xl border bg-card p-3 sm:p-5" tabIndex={0} role="region" aria-label="Gráfico de colunas da quantidade de funções por Leitura">
-        <div className="min-w-[680px]">
-          <div className="flex items-end gap-4 border-b" style={{ height: 230 }}>
+      <div className="rounded-xl border bg-card p-3 sm:p-5" role="region" aria-label="Gráfico de colunas da quantidade de funções por Leitura">
+        <div className="min-w-0">
+          <div className="flex items-end gap-1 border-b sm:gap-4" style={{ height: 230 }}>
             <div className="flex h-full w-10 shrink-0 flex-col justify-between pb-1 text-right text-[10px] text-muted-foreground" aria-hidden="true">{[4,3,2,1,0].map(i=><span key={i}>{Math.round(maiorContagem*i/4)}</span>)}</div>
             {distribuicao.map(({ leitura, funcoes }) => <button key={leitura} type="button" aria-pressed={leituraSelecionada === leitura} aria-label={`${leitura}: ${funcoes.length} funções. Consultar lista.`} onClick={() => setLeituraSelecionada(atual => atual === leitura ? null : leitura)} className={`flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2 rounded-t-lg px-2 pt-2 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${leituraSelecionada === leitura ? 'bg-primary/10' : 'hover:bg-muted/60'}`}>
               <span className="text-xs font-semibold">{funcoes.length}</span><span className="flex h-36 w-full items-end justify-center border-b border-l border-border bg-muted/20"><span className="w-1/2 rounded-t bg-primary transition-[height]" style={{height:`${funcoes.length/maiorContagem*100}%`}}/></span><span className="min-h-10 text-[11px] font-medium leading-tight">{leitura}</span>
@@ -52,11 +48,10 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
       {['Todos', ...grupos].map(g => <button key={g} type="button" disabled={filtroBloqueado} aria-pressed={grupo === g} onClick={() => setGrupo(g)} className="diagnostico-filtro" data-active={grupo === g}>{g}</button>)}
     </div>
     <section aria-label="Funções por grupo" className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4><button type="button" className="text-xs underline" onClick={restaurar}>Restaurar larguras das colunas</button></div>
-      <div className="inova-table-frame diagnostico-tabela-scroll matriz-tabela-scroll" tabIndex={0} role="region" aria-label="Tabela da Matriz Funcional, role para ver todas as colunas">
-        <table ref={tabelaRef} style={{ width: largura, minWidth: largura }} className="diagnostico-tabela"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
-          <colgroup>{colunas.map((c, i) => <col key={c} style={{ width: larguras?.[c] ?? LARGURAS[i] }}/>)}</colgroup>
-          <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}<div {...controles(t)} className="plano-resize-handle"/></th>)}</tr></thead>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">{grupo === 'Todos' ? 'Todas as funções' : grupo}</h4></div>
+      <div className="inova-table-frame orcamento-tabela-adaptavel diagnostico-tabela-scroll matriz-tabela-cartoes" role="region" aria-label="Tabela da Matriz Funcional">
+        <table className="diagnostico-tabela inova-table-cards"><caption className="sr-only">Funções por grupo — respostas desta organização e aplicação</caption>
+          <thead><tr>{colunas.map(t => <th scope="col" key={t}>{t}</th>)}</tr></thead>
           {grupos.filter(g => grupo === 'Todos' || grupo === g).map(g => <tbody key={g}>
             <tr className="diagnostico-grupo"><th colSpan={colunas.length} scope="rowgroup">{g}</th></tr>
             {visiveis.filter(f => f.grupo === g).map(f => {

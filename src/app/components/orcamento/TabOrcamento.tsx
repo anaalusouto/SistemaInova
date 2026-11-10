@@ -33,6 +33,7 @@ import { DialogoExclusaoItem } from './DialogoExclusaoItem';
 import { PainelHistoricoItem } from './PainelHistoricoItem';
 import { DialogoImportacao } from './DialogoImportacao';
 import { FormularioPlanejado } from './FormularioPlanejado';
+import '../responsive-tables.css';
 
 type FiltroSituacao = 'ativos' | 'excluidos' | 'todos';
 
@@ -281,8 +282,8 @@ export function TabOrcamento({ project }: { project: Project }) {
 
       {/* Tabela por grupo */}
       <div className="bg-card rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ borderCollapse: 'separate', borderSpacing: 0, minWidth: 1180 }}>
+        <div className="inova-table-frame orcamento-tabela-adaptavel">
+          <table className="inova-table-cards w-full" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
             <thead>
               <tr>{COLUNAS.map(c => <Cabecalho key={c}>{c}</Cabecalho>)}</tr>
             </thead>
@@ -318,11 +319,9 @@ export function TabOrcamento({ project }: { project: Project }) {
                       </td>
                     </tr>
 
-                    {!recolhido && itensOrdenados.map((item, indice) => {
+                    {!recolhido && itensOrdenados.map(item => {
                       const diferenca = diferencaDoItem(item);
                       const excluido = item.situacao === 'Excluído';
-                      const primeiraCategoria = indice === 0 || (itensOrdenados[indice - 1].categoria || '') !== (item.categoria || '');
-                      const quantidadeCategoria = itensOrdenados.filter(i => (i.categoria || '') === (item.categoria || '')).length;
                       return (
                         <tr
                           key={item.id}
@@ -336,8 +335,8 @@ export function TabOrcamento({ project }: { project: Project }) {
                             opacity: excluido ? 0.8 : 1,
                           }}
                         >
-                          {primeiraCategoria && <td rowSpan={quantidadeCategoria} className="px-2 py-1.5 align-top" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>}
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.75rem', color: 'var(--ink-1)', maxWidth: 240 }}>
+                          <td data-label="Categoria" className="px-2 py-1.5 align-top" style={{ fontSize: '0.73rem', color: 'var(--ink-3)' }}>{item.categoria || '—'}</td>
+                          <td data-label="Descrição" className="px-2 py-1.5" style={{ fontSize: '0.75rem', color: 'var(--ink-1)', maxWidth: 240 }}>
                             <span className="block truncate" title={item.descricao} style={{ textDecoration: excluido ? 'line-through' : undefined }}>{item.descricao}</span>
                             <span className="block text-xs mt-1" style={{ color: item.metaId ? 'var(--brand-text)' : 'var(--ink-5)' }}>
                               {(() => {
@@ -347,12 +346,12 @@ export function TabOrcamento({ project }: { project: Project }) {
                             </span>
                             {!readOnly && !excluido && <button type="button" onClick={() => setPlanejado(item)} className="text-xs underline mt-1" aria-label={`${item.metaId ? 'Alterar meta' : 'Vincular meta'} de ${item.descricao}`}>{item.metaId ? 'Alterar meta' : 'Vincular meta'}</button>}
                           </td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtd}</td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{item.unidade || '—'}</td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtdUnidades}</td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{moeda(item.valorUnitario)}</td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.73rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 600, whiteSpace: 'nowrap' }}>{moeda(item.valorProposto)}</td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.73rem', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
+                          <td data-label="Quantidade" className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtd}</td>
+                          <td data-label="Unidade" className="px-2 py-1.5" style={{ fontSize: '0.72rem', color: 'var(--ink-4)' }}>{item.unidade || '—'}</td>
+                          <td data-label="Quantidade por unidade" className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)' }}>{item.qtdUnidades}</td>
+                          <td data-label="Valor unitário" className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>{moeda(item.valorUnitario)}</td>
+                          <td data-label="Total proposto" className="px-2 py-1.5" style={{ fontSize: '0.73rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-1)', fontWeight: 600, whiteSpace: 'nowrap' }}>{moeda(item.valorProposto)}</td>
+                          <td data-label="Valor executado" className="px-2 py-1.5" style={{ fontSize: '0.73rem', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap' }}>
                             {item.valorExecutado === null ? (
                               <span style={{ color: 'var(--ink-5)', fontStyle: 'italic', fontFamily: 'inherit' }}>{NAO_INFORMADO}</span>
                             ) : (
@@ -365,10 +364,10 @@ export function TabOrcamento({ project }: { project: Project }) {
                               })()}
                             </span>
                           </td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
+                          <td data-label="Data da compra" className="px-2 py-1.5" style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
                             {item.dataCompra ? formatDateOnly(item.dataCompra) : '—'}
                           </td>
-                          <td
+                          <td data-label="Diferença"
                             className="px-2 py-1.5"
                             style={{
                               fontSize: '0.73rem', fontFamily: 'var(--font-mono)', whiteSpace: 'nowrap',
@@ -379,7 +378,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                           >
                             {moedaComSinal(diferenca)}
                           </td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                          <td data-label="Situação" className="px-2 py-1.5" style={{ fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
                             <span
                               className="px-1.5 py-0.5 rounded"
                               style={{
@@ -392,7 +391,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                               {item.situacao}
                             </span>
                           </td>
-                          <td className="px-2 py-1.5" style={{ fontSize: '0.71rem', color: 'var(--ink-3)', maxWidth: 180 }}>
+                          <td data-label="Justificativa" className="px-2 py-1.5" style={{ fontSize: '0.71rem', color: 'var(--ink-3)', maxWidth: 180 }}>
                             {justificativaPendente(item) ? (
                               <span style={{ color: 'var(--warning)', fontWeight: 600 }} title="O executado difere do proposto e ainda não há justificativa.">
                                 justificativa pendente
@@ -404,7 +403,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                               </span>
                             )}
                           </td>
-                          <td className="px-2 py-1.5 whitespace-nowrap">
+                          <td data-label="Risco" className="px-2 py-1.5 whitespace-nowrap">
                             {item.riscoId ? (
                               <span className="inline-flex items-center gap-1" style={{ fontSize: '0.7rem', color: 'var(--danger)' }} title="Risco orçamentário vinculado">
                                 <ShieldAlert size={11} /> vinculado
@@ -413,7 +412,7 @@ export function TabOrcamento({ project }: { project: Project }) {
                               <span style={{ color: 'var(--ink-5)' }}>—</span>
                             )}
                           </td>
-                          <td className="px-2 py-1.5 whitespace-nowrap">
+                          <td data-label="Ações" className="px-2 py-1.5 whitespace-nowrap">
                             <span className="flex items-center gap-1">
                               <button onClick={() => setHistorico(item)} aria-label={`Histórico de ${item.descricao}`} className="p-1 rounded">
                                 <History size={12} color="var(--ink-4)" />

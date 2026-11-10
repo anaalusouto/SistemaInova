@@ -8,6 +8,7 @@ import { formatDateOnly } from "../../lib/dateOnly";
 import type { Encaminhamento, OrganizacaoFicha } from "../../lib/organizacoes";
 import { PainelAtividade } from "../plano/PainelAtividade";
 import { PainelRisco } from "../plano/PainelRisco";
+import "../responsive-tables.css";
 
 type Origem = "Plano de trabalho" | "Riscos" | "Outros";
 export function TabelaEncaminhamentos({
@@ -89,26 +90,16 @@ export function TabelaEncaminhamentos({
     );
   return (
     <>
-      <div className="rounded-xl border bg-card overflow-x-auto">
-        <table className="w-full min-w-[900px] text-left text-sm">
+      <label className="mb-3 inline-flex items-center gap-2 text-sm">Origem
+        <select aria-label="Filtrar origem" className="rounded border bg-card p-2 text-xs" value={filtro} onChange={(e) => setFiltro(e.target.value as typeof filtro)}>
+          <option>Todas</option><option>Plano de trabalho</option><option>Riscos</option><option>Outros</option>
+        </select>
+      </label>
+      <div className="inova-table-frame orcamento-tabela-adaptavel rounded-xl border bg-card">
+        <table className="inova-table-cards w-full text-left text-sm" aria-label="Encaminhamentos">
           <thead>
             <tr className="border-b bg-muted/30">
-              <th className="p-3">
-                <label>
-                  Origem{" "}
-                  <select
-                    aria-label="Filtrar origem"
-                    className="ml-1 rounded border bg-card p-1 text-xs"
-                    value={filtro}
-                    onChange={(e) => setFiltro(e.target.value as typeof filtro)}
-                  >
-                    <option>Todas</option>
-                    <option>Plano de trabalho</option>
-                    <option>Riscos</option>
-                    <option>Outros</option>
-                  </select>
-                </label>
-              </th>
+              <th className="p-3">Origem</th>
               {["Vínculo", "Ação", "Responsável", "Prazo", "Status", "Ações"].map((c) => (
                 <th className="p-3" key={c}>
                   {c}
@@ -117,13 +108,7 @@ export function TabelaEncaminhamentos({
             </tr>
           </thead>
           <tbody>
-            {registros.map((r, i) => {
-              const primeiraOrigem = i === 0 || registros[i - 1].origem !== r.origem;
-              const primeiroVinculo = primeiraOrigem || registros[i - 1].vinculo !== r.vinculo;
-              const totalOrigem = registros.filter((x) => x.origem === r.origem).length;
-              const totalVinculo = registros.filter(
-                (x) => x.origem === r.origem && x.vinculo === r.vinculo,
-              ).length;
+            {registros.map((r) => {
               return (
                 <tr
                   key={r.id}
@@ -137,13 +122,10 @@ export function TabelaEncaminhamentos({
                         : undefined,
                   }}
                 >
-                  {primeiraOrigem && (
-                    <th rowSpan={totalOrigem} scope="rowgroup" className="p-3 font-medium">
+                    <td data-label="Origem" className="p-3 font-medium">
                       {r.origem}
-                    </th>
-                  )}
-                  {primeiroVinculo && (
-                    <td rowSpan={totalVinculo} className="p-3">
+                    </td>
+                    <td data-label="Vínculo" className="p-3">
                       {r.enc?.origem?.tipo === "contato" ? (
                         <button
                           className="text-left text-primary underline"
@@ -157,18 +139,17 @@ export function TabelaEncaminhamentos({
                         r.vinculo
                       )}
                     </td>
-                  )}
-                  <td className="p-3">
+                  <td data-label="Ação" className="p-3">
                     <button className="text-left hover:underline" onClick={r.abrir}>
                       {r.acao}
                     </button>
                   </td>
-                  <td className="p-3">{r.responsavel}</td>
-                  <td className="p-3 whitespace-nowrap">
+                  <td data-label="Responsável" className="p-3">{r.responsavel}</td>
+                  <td data-label="Prazo" className="p-3 whitespace-nowrap">
                     {r.prazo ? formatDateOnly(r.prazo) : "Não informado"}
                   </td>
-                  <td className="p-3">{r.status}</td>
-                  <td className="p-3">
+                  <td data-label="Status" className="p-3">{r.status}</td>
+                  <td data-label="Ações" className="p-3">
                     {r.enc && !readOnly && (
                       <span className="flex gap-2">
                         <button onClick={() => aoEditar(r.enc!)} aria-label="Editar encaminhamento">

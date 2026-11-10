@@ -236,8 +236,8 @@ export function VisaoKanban({
   }
 
   return (
-    <div className="overflow-x-auto p-3">
-      <div className="flex gap-3" style={{ minWidth: colunas.length * 250 }}>
+    <div className="min-w-0 p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {colunas.map(coluna => (
           <div
             key={coluna.chave}
@@ -251,7 +251,6 @@ export function VisaoKanban({
             data-coluna={coluna.chave}
             className="flex-1 rounded-xl border flex flex-col"
             style={{
-              minWidth: 236,
               borderColor: sobre === coluna.chave ? 'var(--primary)' : 'var(--line-1)',
               background: sobre === coluna.chave ? 'var(--brand-soft)' : 'var(--surface-1)',
             }}
