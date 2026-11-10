@@ -29,7 +29,7 @@ import type { RiscoInput } from '../../planoTrabalho.server';
 import { dadosDoRisco, errosDaEdicaoRisco } from '../../lib/edicaoLinhaRisco';
 
 const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
-const COLUNAS = ['P × I', 'Risco', 'Meta / Etapa', 'Especificação', 'Categoria · Status', 'Responsável', 'Ações para Encaminhamento'] as const;
+const COLUNAS = ['P × I', 'Risco', 'Meta / Etapa', 'Especificação', 'Categoria', 'Status', 'Ações para Encaminhamento'] as const;
 const criteriosAbertos = (): CriteriosRisco => ({ ...CRITERIOS_RISCO_VAZIOS, status: STATUS.filter(status => riscoEmAberto({ status })) });
 
 const CORES: Record<string, { cor: string; fundo: string; forte: string; base: string }> = {
@@ -136,7 +136,7 @@ export function VisaoRiscos({
   const vazias = filtrados.length ? {
     'Meta / Etapa': filtrados.every(r => !r.stageId && !r.stage?.trim() && !rascunhos[r.id]?.etapaId),
     'Especificação': filtrados.every(r => !r.specification?.trim() && !rascunhos[r.id]?.especificacao?.trim()),
-    'Responsável': filtrados.every(r => !r.responsible?.trim() && !rascunhos[r.id]?.responsavel?.trim()),
+    'Categoria': filtrados.every(r => !r.category?.trim() && !rascunhos[r.id]?.categoria?.trim()),
     'Ações para Encaminhamento': filtrados.every(r => !r.responseStrategy?.trim() && !rascunhos[r.id]?.estrategiaResposta?.trim()),
   } : {};
   const largurasBase = [7, 17, 16, 16, 11, 10, 23];
@@ -446,14 +446,11 @@ function LinhaRisco({ risco, onde, podeEditar, aoAbrirRisco,
           <option key={etapa.id} value={etapa.id}>{codigos.get(etapa.id)} · {etapa.name}</option>)}</optgroup>)}
       </select> : <OndeTexto onde={onde} risco={risco} />}</td>
       <td style={td} data-label="Especificação">{emEdicao ? texto('especificacao', 'Especificação') : risco.specification ? <span style={quebra}>{risco.specification}</span> : <Vazio />}</td>
-      <td style={td} data-label="Categoria · Status">{emEdicao ? <div className="flex flex-col gap-2">
-        {simples('categoria', 'Categoria')}
-        <select aria-label={`Status: ${nome}`} value={dados.status} disabled={salvando !== null}
+      <td style={td} data-label="Categoria">{emEdicao ? simples('categoria', 'Categoria') : risco.category || <Vazio />}</td>
+      <td style={td} data-label="Status">{emEdicao ? <select aria-label={`Status: ${nome}`} value={dados.status} disabled={salvando !== null}
           className={classeCampo} onChange={e => aoAlterar('status', e.target.value)}>
           {STATUS.map(s => <option key={s}>{s}</option>)}
-        </select>
-      </div> : <><div style={quebra}>{risco.category || <Vazio />}</div><div style={{ color: 'var(--ink-4)', marginTop: 2 }}>{risco.status}</div></>}</td>
-      <td style={td} data-label="Responsável">{emEdicao ? simples('responsavel', 'Responsável') : risco.responsible ? <span style={quebra}>{risco.responsible}</span> : <Vazio />}</td>
+        </select> : risco.status}</td>
       <td style={td} data-label="Ações para Encaminhamento">{emEdicao ? texto('estrategiaResposta', 'Ações para Encaminhamento') : risco.responseStrategy ? <span style={quebra}>{risco.responseStrategy}</span> : <Vazio />}</td>
     </tr>
   );
