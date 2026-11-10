@@ -156,17 +156,45 @@ function DimensoesResumo({
 }
 
 function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo, parte }: { onConsultarIeo?: () => void; parte: 'grafico' | 'detalhes' }) {
+  const chartWidth = 1080;
+  const chartHeight = 470;
+  const left = 82;
+  const right = 28;
+  const top = 28;
+  const baseline = 335;
+  const plotHeight = baseline - top;
+  const plotWidth = chartWidth - left - right;
+  const x = (index: number) => left + plotWidth * (index + 0.5) / DIMENSOES_HISTORICAS_AGROMEL.length;
+  const y = (value: number) => baseline - plotHeight * value / 4;
+  const linhasRotulo = [
+    ['Organizacional e', 'Governança'],
+    ['Social e Território'],
+    ['Produção e Negócio'],
+    ['Gestão Econômico-', 'Financeira'],
+    ['Regularidade e', 'Gestão de Riscos'],
+  ];
   const coresPrioridade: Record<string, string> = { Crítica: '#b44747', Média: '#c5a542' };
   return <div className="space-y-3">
     {parte === 'grafico' && <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
-      <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades por dimensão</h5><p className="text-xs text-muted-foreground">Notas históricas de 0 a 4 · quanto menor a nota, maior a prioridade de análise.</p></figcaption>
-      <ol className="resumo-barras resumo-barras-historicas" aria-label="Notas históricas por dimensão">
-        {DIMENSOES_HISTORICAS_AGROMEL.map(item => <li key={item.dimensao}>
-          <div className="resumo-barra-rotulo"><span><strong>{item.ordem}º</strong> · {item.dimensao}</span><strong>{item.consolidada} / 4</strong></div>
-          <div className="resumo-barra-trilho" aria-hidden="true"><span style={{width:`${Number(item.consolidada.replace(',', '.')) / 4 * 100}%`,background:coresPrioridade[item.prioridade]}} /></div>
-          <span className="text-xs" style={{color:coresPrioridade[item.prioridade]}}>Prioridade {item.prioridade.toLowerCase()}</span>
-        </li>)}
-      </ol>
+      <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades de dimensão e ordem de atuação</h5><p className="text-xs text-muted-foreground">Nota consolidada de priorização · escala de 0 a 4. Pontos e hastes refletem os valores históricos da referência; a nota atual permanece sem cálculo validado.</p></figcaption>
+      <div><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block w-full" role="img" aria-label="Gráfico de priorização consolidada por dimensão">
+        <title>Nota consolidada de priorização por dimensão</title>
+        <desc>Escala vertical de zero a quatro. Cinco notas históricas são mostradas com hastes até a linha de base; não representam o resultado atual validado.</desc>
+        {[0,1,2,3,4].map(tick => <g key={tick}><line x1={left} x2={chartWidth-right} y1={y(tick)} y2={y(tick)} stroke={tick===0?'#7b8795':'#e1e6ec'} strokeWidth={tick===0?1.5:1}/><text x={left-14} y={y(tick)+4} textAnchor="end" fontSize="12" fill="#526174">{tick}</text></g>)}
+        <text transform={`translate(22 ${(top+baseline)/2}) rotate(-90)`} textAnchor="middle" fontSize="13" fill="#263b55">Nota consolidada de priorização</text>
+        {DIMENSOES_HISTORICAS_AGROMEL.map((item,index) => {
+          const value = Number(item.consolidada.replace(',', '.'));
+          return <g key={item.dimensao}>
+            <line x1={x(index)} x2={x(index)} y1={baseline} y2={y(value)} stroke="#aab5c2" strokeWidth="2"/>
+            <circle cx={x(index)} cy={y(value)} r="8" fill={coresPrioridade[item.prioridade]} stroke="#fff" strokeWidth="2"/>
+            <text x={x(index)} y={y(value)-14} textAnchor="middle" fontSize="13" fontWeight="700" fill={coresPrioridade[item.prioridade]}>{item.consolidada}</text>
+            <text x={x(index)} y={baseline+27} textAnchor="middle" fontSize="12" fill="#263b55">{linhasRotulo[index].map((linha,i)=><tspan key={linha} x={x(index)} dy={i===0?0:16}>{linha}</tspan>)}</text>
+            <text x={x(index)} y={baseline+67} textAnchor="middle" fontSize="11" fontWeight="600" fill={coresPrioridade[item.prioridade]}>{item.prioridade}</text>
+          </g>;
+        })}
+        <text x={(left+chartWidth-right)/2} y={chartHeight-14} textAnchor="middle" fontSize="12" fill="#526174">Dimensões integradas</text>
+      </svg></div>
+      <div className="flex flex-wrap gap-4 text-xs"><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Crítica}}/>Prioridade crítica</span><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Média}}/>Prioridade média</span></div>
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
     </figure>}
     {parte === 'detalhes' && <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
