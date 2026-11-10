@@ -348,3 +348,27 @@ test('justificativa trata datas parciais e não aceita apenas espaços quando h�
   assert.equal(validarJustificativaAtraso({ ...dates, actualStart: '2026-10-09' }, '').ok, true);
   assert.equal(validarJustificativaAtraso({ ...dates, actualStart: null, actualEnd: '2026-10-21' }, '').ok, false);
 });
+
+test('triagem cruza sinais reais sem converter ausência em zero ou criar vínculo entre instrumentos', () => {
+  const { sinaisPrioridade } = loadTs('src/app/lib/prioridadesCruzadas');
+  const resposta = valor => ({ valor, relato: '', selecoes: [] });
+  const sinais = sinaisPrioridade('org-teste', [
+    { codigo: 'Q01', contexto: '', resposta: resposta('1') },
+    { codigo: 'Q02', contexto: '', resposta: resposta('NS') },
+  ], [
+    { funcaoId: 'F01', criticidade: '4', experiencia: 'Inicial' },
+    { funcaoId: 'F02', criticidade: null, experiencia: null },
+    { funcaoId: 'F03', criticidade: '3', experiencia: 'Inicial' },
+  ]);
+  assert.equal(sinais.criticas, 1);
+  assert.equal(sinais.matrizAvaliadas, 2);
+  assert.deepEqual(sinais.funcoes.map(f => f.leitura), ['Lacuna crítica', 'Lacuna relevante']);
+  assert.equal(sinais.dimensoes.length, 1);
+  assert.equal(sinais.dimensoes[0].media, 1);
+  assert.equal(sinais.dimensoes[0].pontuadas, 1);
+  const vazio = sinaisPrioridade('org-vazia', [], []);
+  assert.equal(vazio.ieo.geral, null);
+  assert.deepEqual(vazio.dimensoes, []);
+  assert.equal(vazio.matrizAvaliadas, 0);
+});
+

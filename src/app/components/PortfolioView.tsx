@@ -18,6 +18,7 @@ import { GraficosMapeamento } from './portfolio/GraficosMapeamento';
 import { useAuth } from '../auth/authStore';
 import { NavegacaoModulo } from './NavegacaoModulo';
 import { GraficosDiagnosticoPortfolio } from './portfolio/GraficosDiagnosticoPortfolio';
+import { PrioridadesCruzadas } from './portfolio/PrioridadesCruzadas';
 
 type DataSource = 'demo' | 'real';
 
@@ -25,7 +26,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const { projects: realProjects, projectsLoading } = useStore();
   const { user } = useAuth();
   const [source, setSource] = useState<DataSource>('real');
-  const [aba, setAba] = useState<'projetos' | 'mapeamento' | 'cruzadas'>('projetos');
+  const [aba, setAba] = useState<'projetos' | 'mapeamento' | 'cruzadas' | 'prioridades'>('projetos');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
   const [organizacaoAtiva, setOrganizacaoAtiva] = useState<string | null>(null);
@@ -81,7 +82,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </p>
       )}
 
-      <NavegacaoModulo abas={[{id:'projetos',label:'Projetos'},{id:'mapeamento',label:'Mapeamento'},{id:'cruzadas',label:'Informações Cruzadas'}]} atual={aba} aoMudar={setAba} rotulo="Visão Geral" />
+      <NavegacaoModulo abas={[{id:'projetos',label:'Projetos'},{id:'mapeamento',label:'Mapeamento'},{id:'cruzadas',label:'Informações Cruzadas'},{id:'prioridades',label:'Matriz × IEO'}]} atual={aba} aoMudar={setAba} rotulo="Visão Geral" />
 
       <PortfolioFilters
         exercicios={exercicios}
@@ -119,6 +120,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       </>}
       {aba === 'mapeamento' && <GraficosDiagnosticoPortfolio projects={selecionados} demonstrativo={source === 'demo'} />}
       {aba === 'cruzadas' && <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>}
+      {aba === 'prioridades' && <PrioridadesCruzadas projects={selecionados} demonstrativo={source === 'demo'} onOpenProject={source === 'real' ? onOpenProject : undefined} />}
 
       </>}
     </div>
