@@ -35,6 +35,8 @@ function ItemCadernoFormulario({ item, registro, contexto, compact, abertoInicia
       setVersao(r.versao); setValores(r.resposta); setSujo(false); setErro('');
       void client.invalidateQueries({ queryKey: ['diagnostico', diagnosticoId] });
       void client.invalidateQueries({ queryKey: ['portfolio-notas-mapeamento'] });
+      void client.invalidateQueries({ queryKey: ['prioridades-cruzadas'] });
+      void client.invalidateQueries({ queryKey: ['portfolio-detalhes-mapeamento'] });
     }, onError: (e: Error) => setErro(e.message + ' Suas alterações continuam neste formulário.') });
   usePendenciaModulo(!readOnly && (sujo || salvar.isPending));
   const resposta = registro?.resposta;

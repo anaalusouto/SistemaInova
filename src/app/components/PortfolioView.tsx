@@ -26,7 +26,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
   const { projects: realProjects, projectsLoading } = useStore();
   const { user } = useAuth();
   const [source, setSource] = useState<DataSource>('real');
-  const [aba, setAba] = useState<'projetos' | 'mapeamento' | 'cruzadas' | 'prioridades'>('projetos');
+  const [aba, setAba] = useState<'projetos' | 'mapeamento'>('projetos');
   const projects = source === 'demo' ? portfolioDemo : realProjects;
   const [filters, setFilters] = useState<PortfolioFilterValues>(emptyPortfolioFilters);
   const [organizacaoAtiva, setOrganizacaoAtiva] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
         </p>
       )}
 
-      <NavegacaoModulo abas={[{id:'projetos',label:'Projetos'},{id:'mapeamento',label:'Mapeamento'},{id:'cruzadas',label:'Informações Cruzadas'},{id:'prioridades',label:'Matriz × IEO'}]} atual={aba} aoMudar={setAba} rotulo="Visão Geral" />
+      <NavegacaoModulo abas={[{id:'projetos',label:'Projetos'},{id:'mapeamento',label:'Mapeamento'}]} atual={aba} aoMudar={setAba} rotulo="Visão Geral" />
 
       <PortfolioFilters
         exercicios={exercicios}
@@ -114,9 +114,11 @@ export function PortfolioView({ onOpenProject }: { onOpenProject?: (id: number) 
       <VisualizacoesPersonalizadas key={user?.login ?? 'sessao'} projects={selecionados} login={user?.login} onSelecionarOrganizacao={selecionarOrganizacao}
         onOpenProject={source === 'real' ? onOpenProject : undefined}/>
       </>}
-      {aba === 'mapeamento' && <GraficosDiagnosticoPortfolio projects={selecionados} demonstrativo={source === 'demo'} />}
-      {aba === 'cruzadas' && <GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/>}
-      {aba === 'prioridades' && <PrioridadesCruzadas projects={selecionados} demonstrativo={source === 'demo'} onOpenProject={source === 'real' ? onOpenProject : undefined} />}
+      {aba === 'mapeamento' && <div className="space-y-6">
+        <PrioridadesCruzadas projects={selecionados} demonstrativo={source === 'demo'} onOpenProject={source === 'real' ? onOpenProject : undefined} />
+        <details className="rounded-xl border bg-card p-4"><summary className="cursor-pointer font-semibold">Outros gráficos do mapeamento</summary><div className="mt-4"><GraficosDiagnosticoPortfolio projects={selecionados} demonstrativo={source === 'demo'} /></div></details>
+        <details className="rounded-xl border bg-card p-4"><summary className="cursor-pointer font-semibold">Informações cruzadas com projetos</summary><div className="mt-4"><GraficosMapeamento projects={filteredProjects} demonstrativo={source === 'demo'} organizacaoAtiva={organizacaoAtiva} onSelecionarOrganizacao={selecionarOrganizacao}/></div></details>
+      </div>}
 
       </>}
     </div>

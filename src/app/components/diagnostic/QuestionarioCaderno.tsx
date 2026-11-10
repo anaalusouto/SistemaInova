@@ -82,21 +82,15 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
 
       <div className="min-w-0 rounded-xl border bg-card p-4 sm:p-6" aria-label="Régua das cinco dimensões do IEO">
         <h3 className="text-xl font-bold">Régua das dimensões</h3>
-        <p className="mt-1 text-sm text-muted-foreground">As barras mostram as médias das dimensões; os pontos representam as respostas de cada pergunta. Selecione uma dimensão para aprofundar.</p>
+        <p className="mt-1 text-sm text-muted-foreground">A régua mostra a média de cada dimensão na mesma escala do IEO geral. Selecione uma dimensão para aprofundar.</p>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground"><span>1 · Inicial</span><span>2 · Em construção</span><span>3 · Estruturado</span><span>4 · Consolidado</span><span>Sem nota não é zero</span></div>
         <div className="mt-4 divide-y">{resultado.porDimensao.map(d => {
         const aplicaveis = Math.max(0, d.total - d.naoAplicaveis);
         const selecionada = dimensaoId === d.dimensaoId;
-        const dimensao = DIMENSOES_IEO_CADERNO.find(item => item.id === d.dimensaoId)!;
-        const pontos = dimensao.perguntas.map(q => ({ codigo: q.codigo, valor: valorResposta(q.codigo) })).filter(p => p.valor && /^[1-4]$/.test(p.valor));
         return <button type="button" key={d.dimensaoId} aria-pressed={selecionada} aria-label={`${d.dimensaoTitulo}: ${fmtScore(d.media)} de 4, ${d.pontuadas} de ${aplicaveis} avaliados. Selecionar dimensão.`} onClick={() => selecionarDimensao(d.dimensaoId)} className={`grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[minmax(160px,1fr)_minmax(0,1.6fr)_64px] ${selecionada ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
           <span className="min-w-0"><strong className="block text-sm">{d.dimensaoId}. {d.dimensaoTitulo}</strong><span className="text-xs text-muted-foreground">{d.pontuadas}/{aplicaveis} indicadores avaliados</span></span>
           <span className="col-start-2 text-right text-xl font-bold sm:col-start-3">{fmtScore(d.media)}<span className="text-xs font-normal text-muted-foreground"> / 4</span></span>
-          <span className="relative col-span-2 row-start-2 block h-14 min-w-0 rounded sm:col-span-1 sm:col-start-2 sm:row-start-1" style={{background:'linear-gradient(90deg, #f8dfda 0%, #f8dfda 33.33%, #f8edda 33.33%, #f8edda 66.66%, #e1f0e7 66.66%)'}}>
-            {d.media != null && <span className="absolute left-0 top-1 h-2 rounded" style={{width:`${Math.max(0, Math.min(100, (d.media - 1) / 3 * 100))}%`, backgroundColor: CORES_ESCALA[Math.max(1, Math.min(4, Math.floor(d.media))) as keyof typeof CORES_ESCALA].base}} />}
-            {[1,2,3,4].map(n => <span key={n} className="absolute inset-y-0 border-l border-foreground/15" style={{left:`${(n-1)/3*100}%`}} />)}
-            {pontos.map((p, i) => <span key={p.codigo} title={`${p.codigo}: ${p.valor}`} className="absolute size-2 rounded-full border border-white" style={{left:`${(Number(p.valor)-1)/3*100}%`,top: 13 + i*8, transform:'translateX(-50%)',backgroundColor:CORES_ESCALA[Number(p.valor) as keyof typeof CORES_ESCALA].base}} />)}
-          </span>
+          <div className="col-span-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1"><Termometro valor={d.media} rotulo={`Dimensão ${d.dimensaoId}`} /></div>
         </button>;
       })}</div></div>
     </section>

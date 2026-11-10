@@ -16,7 +16,8 @@ test('régua do IEO reúne cinco dimensões e respostas e relatos ficam nas perg
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
  assert.match(html,/Régua das cinco dimensões do IEO/);
  assert.equal((html.match(/Selecionar dimensão\./g)||[]).length,5);
- assert.match(html,/title="Q01: 3"/);
+ assert.match(html,/Dimensão 1: 3,0 de 4/);
+ assert.doesNotMatch(html,/title="Q01: 3"/);
  assert.match(html,/<summary[^>]*>Ver resposta e relato<\/summary>/);
  assert.match(html,/Relato de teste/);
  assert.doesNotMatch(html,/Painel de síntese do IEO/);
