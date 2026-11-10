@@ -27,7 +27,6 @@ import { useAuth } from '../../auth/authStore';
 import { useStore } from '../../store';
 import type { RiscoInput } from '../../planoTrabalho.server';
 import { dadosDoRisco, errosDaEdicaoRisco } from '../../lib/edicaoLinhaRisco';
-import { useLargurasTabela, larguraInicialColuna } from './useLargurasTabela';
 
 const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
 const COLUNAS = ['Risco', 'Meta / Etapa', 'Especificação', 'P × I', 'Categoria · Status', 'Responsável', 'Ações para Encaminhamento'] as const;
@@ -64,15 +63,7 @@ export function VisaoRiscos({
 }) {
   const { readOnly } = useAuth();
   const { updateRisco } = useStore();
-  const [grupoColunas, setGrupoColunas] = useState<'avaliacao' | 'contexto' | 'resposta'>('avaliacao');
-  const gruposColunas = {
-    avaliacao: ['Risco', 'P × I', 'Categoria · Status', 'Responsável'],
-    contexto: ['Risco', 'Meta / Etapa', 'Especificação'],
-    resposta: ['Risco', 'Responsável', 'Ações para Encaminhamento'],
-  };
-  const colunasVisiveis = COLUNAS.filter(c => gruposColunas[grupoColunas].includes(c));
-  const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunasVisiveis);
-  const somaLarguras = colunasVisiveis.reduce((s, c) => s + larguraInicialColuna(c), 0);
+  const largurasColunas = ['19%', '16%', '15%', '9%', '12%', '11%', '18%'];
   const [rascunhos, setRascunhos] = useState<Record<string, RiscoInput>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [edicaoLocal, setEdicaoLocal] = useState<Set<string>>(new Set());
@@ -258,18 +249,14 @@ export function VisaoRiscos({
         </div>
       ) : (
         <>
-          <label className="inline-flex flex-wrap items-center gap-2 text-xs">Colunas da tabela <select value={grupoColunas} onChange={e => { setGrupoColunas(e.target.value as typeof grupoColunas); restaurar(); }} className="rounded border bg-card px-2 py-1.5"><option value="avaliacao">Avaliação</option><option value="contexto">Contexto</option><option value="resposta">Encaminhamento</option></select></label>
-          {larguras && <div className="flex justify-end text-xs text-muted-foreground">
-            <button type="button" onClick={restaurar} className="underline">Restaurar larguras</button>
-          </div>}
-          <div className="inova-table-frame overflow-x-auto">
-            <table ref={tabelaRef} aria-label="Riscos do projeto" data-grupo={grupoColunas} className="plano-grade risco-grade w-full"
-              style={{ width: larguraTotal ?? '100%', tableLayout: 'fixed' }}>
-              <caption className="sr-only">Arraste a borda direita do cabeçalho para ajustar cada coluna. Também é possível usar as setas do teclado.</caption>
-              <colgroup>{colunasVisiveis.map(c => <col key={c} style={{ width: larguras?.[c] ?? `${larguraInicialColuna(c) / somaLarguras * 100}%` }} />)}</colgroup>
+          <div className="inova-table-frame">
+            <table aria-label="Riscos do projeto" className="plano-grade risco-grade w-full"
+              style={{ width: '100%', tableLayout: 'fixed' }}>
+              <caption className="sr-only">Riscos do projeto com todas as colunas visíveis</caption>
+              <colgroup>{COLUNAS.map((c, i) => <col key={c} style={{ width: largurasColunas[i] }} />)}</colgroup>
               <thead>
                 <tr>
-                  {colunasVisiveis.map(c => (
+                  {COLUNAS.map(c => (
                     <th
                       key={c}
                       scope="col"
@@ -280,7 +267,6 @@ export function VisaoRiscos({
                       }}
                     >
                       {c}
-                      <div {...controles(c)} className="plano-resize-handle" />
                     </th>
                   ))}
                 </tr>
@@ -328,7 +314,7 @@ function Pontuacao({ risco }: { risco: Risk }) {
   const cor = CORES[faixa] ?? CORES['—'];
   return (
     <span className="inline-flex flex-col gap-0.5">
-      <span className="inline-flex items-center gap-2 px-2 py-1 rounded self-start" style={{ background: cor.fundo, color: cor.forte }}>
+      <span className="inline-flex flex-wrap items-center gap-1 px-1 py-1 rounded self-start" style={{ background: cor.fundo, color: cor.forte }}>
         <strong className="text-xl leading-none">{risco.severity}</strong><span className="text-xs font-semibold">{faixa}</span>
       </span>
       <span style={{ fontSize: '0.66rem', color: 'var(--ink-5)', fontFamily: 'var(--font-mono)' }}>
@@ -367,7 +353,10 @@ function CabecaRisco({ risco, podeEditar, aoAbrirRisco, bloqueado = false }: { r
     <div className="flex items-start gap-1.5">
       <ShieldAlert size={12} color={cor} style={{ flexShrink: 0, marginTop: 3 }} />
       <div className="min-w-0 flex-1">
-        <div style={{ ...quebra, fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>{titulo}</div>
+        <div className="flex flex-wrap items-baseline gap-2" style={{ ...quebra, fontSize: '0.8rem', fontWeight: 600, color: 'var(--ink-1)' }}>
+          <span aria-label={`Pontuação do risco: ${risco.severity}, ${faixaRisco(risco.severity)}`} className="rounded px-2 py-0.5 text-base font-bold" style={{ color: cor, background: (CORES[faixaRisco(risco.severity)] ?? CORES['—']).fundo }}>{risco.severity}</span>
+          <span>{titulo}</span>
+        </div>
         {detalhe && <div style={{ ...quebra, fontSize: '0.76rem', color: 'var(--ink-3)', marginTop: 2 }}>{detalhe}</div>}
         <button
           disabled={bloqueado}
