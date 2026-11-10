@@ -69,7 +69,7 @@
 .plano-grade th, .plano-grade td { min-width: 0; overflow-wrap: anywhere; white-space: normal; vertical-align: top; }
 .plano-grade :is(input, select, textarea) { min-width: 0; max-width: 100%; }
 .plano-grade .truncate { white-space: normal; overflow: visible; text-overflow: clip; }
-.risco-grade :is(th, td) { padding: 5px !important; overflow-wrap: anywhere; }
+.risco-grade :is(th, td) { padding: 3px !important; overflow-wrap: anywhere; }
 .risco-grade :is(input, select, textarea) { width: 100%; min-width: 0; }
 .orcamento-grade[data-grupo="planejado"] td[data-col]:not([data-col="0"]):not([data-col="1"]):not([data-col="2"]):not([data-col="3"]):not([data-col="4"]):not([data-col="5"]):not([data-col="6"]):not([data-col="13"]),
 .orcamento-grade[data-grupo="execucao"] td[data-col]:not([data-col="0"]):not([data-col="1"]):not([data-col="6"]):not([data-col="7"]):not([data-col="8"]):not([data-col="9"]):not([data-col="13"]),

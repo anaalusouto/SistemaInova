@@ -29,7 +29,7 @@ import type { RiscoInput } from '../../planoTrabalho.server';
 import { dadosDoRisco, errosDaEdicaoRisco } from '../../lib/edicaoLinhaRisco';
 
 const STATUS: RiskStatus[] = ['Aberto', 'Em mitigação', 'Monitorando', 'Encerrado'];
-const COLUNAS = ['Risco', 'Meta / Etapa', 'Especificação', 'P × I', 'Categoria · Status', 'Responsável', 'Ações para Encaminhamento'] as const;
+const COLUNAS = ['P × I', 'Risco', 'Meta / Etapa', 'Especificação', 'Categoria · Status', 'Responsável', 'Ações para Encaminhamento'] as const;
 const criteriosAbertos = (): CriteriosRisco => ({ ...CRITERIOS_RISCO_VAZIOS, status: STATUS.filter(status => riscoEmAberto({ status })) });
 
 const CORES: Record<string, { cor: string; fundo: string; forte: string; base: string }> = {
@@ -63,7 +63,7 @@ export function VisaoRiscos({
 }) {
   const { readOnly } = useAuth();
   const { updateRisco } = useStore();
-  const largurasColunas = ['19%', '16%', '15%', '9%', '12%', '11%', '18%'];
+  const largurasColunas = ['7%', '17%', '16%', '16%', '11%', '10%', '23%'];
   const [rascunhos, setRascunhos] = useState<Record<string, RiscoInput>>({});
   const [erros, setErros] = useState<Record<string, string>>({});
   const [edicaoLocal, setEdicaoLocal] = useState<Set<string>>(new Set());
@@ -409,6 +409,14 @@ function LinhaRisco({ risco, onde, podeEditar, aoAbrirRisco,
         e.preventDefault(); aoSalvar();
       }
     }}>
+      <td style={td} data-label="P × I">
+        {emEdicao && <div className="flex flex-col gap-2 mb-2">{(['probabilidade', 'impacto'] as const).map(campo =>
+          <label key={campo} className="text-xs">{campo === 'impacto' ? 'Impacto' : 'Probabilidade'}
+            <input aria-label={`${campo === 'impacto' ? 'Impacto' : 'Probabilidade'}: ${nome}`} type="number" min={1} max={5} step={1}
+              value={dados[campo]} className={classeCampo} disabled={salvando !== null} onChange={e => aoAlterar(campo, Number(e.target.value))} />
+          </label>)}</div>}
+        <Pontuacao risco={riscoPreview} />
+      </td>
       <td style={td} data-label="Risco">
         {emEdicao ? <div className="flex flex-col gap-2">
           {texto('titulo', 'Título do risco')}{texto('descricao', 'Descrição')}
@@ -432,14 +440,6 @@ function LinhaRisco({ risco, onde, podeEditar, aoAbrirRisco,
           <option key={etapa.id} value={etapa.id}>{codigos.get(etapa.id)} · {etapa.name}</option>)}</optgroup>)}
       </select> : <OndeTexto onde={onde} risco={risco} />}</td>
       <td style={td} data-label="Especificação">{emEdicao ? texto('especificacao', 'Especificação') : risco.specification ? <span style={quebra}>{risco.specification}</span> : <Vazio />}</td>
-      <td style={td} data-label="P × I">
-        {emEdicao && <div className="flex flex-col gap-2 mb-2">{(['probabilidade', 'impacto'] as const).map(campo =>
-          <label key={campo} className="text-xs">{campo === 'impacto' ? 'Impacto' : 'Probabilidade'}
-            <input aria-label={`${campo === 'impacto' ? 'Impacto' : 'Probabilidade'}: ${nome}`} type="number" min={1} max={5} step={1}
-              value={dados[campo]} className={classeCampo} disabled={salvando !== null} onChange={e => aoAlterar(campo, Number(e.target.value))} />
-          </label>)}</div>}
-        <Pontuacao risco={riscoPreview} />
-      </td>
       <td style={td} data-label="Categoria · Status">{emEdicao ? <div className="flex flex-col gap-2">
         {simples('categoria', 'Categoria')}
         <select aria-label={`Status: ${nome}`} value={dados.status} disabled={salvando !== null}
