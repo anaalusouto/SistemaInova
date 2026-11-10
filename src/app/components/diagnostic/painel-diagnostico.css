@@ -84,7 +84,8 @@
 .diagnostico-resumo > .resumo-secao-conclusao-geral { grid-row: 1; }
 .diagnostico-resumo > .resumo-secao-destaques { grid-row: 2; }
 .diagnostico-resumo > .resumo-prioridades-lado-a-lado { grid-row: 3; }
-.resumo-prioridades-lado-a-lado { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; min-width: 0; }
+.resumo-prioridades-lado-a-lado { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: end; min-width: 0; }
+.resumo-prioridades-detalhes { grid-column: 1 / -1; min-width: 0; }
 .resumo-prioridades-lado-a-lado > section { display: grid; gap: 12px; min-width: 0; }
 .resumo-prioridades-lado-a-lado .resumo-cartao { padding: 14px; }
 .resumo-prioridades-lado-a-lado .resumo-barras { gap: 8px; }

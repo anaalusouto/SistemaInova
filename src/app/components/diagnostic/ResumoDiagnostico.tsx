@@ -52,16 +52,18 @@ function DimensoesResumo({
   historico,
   rotulo,
   onConsultarIeo,
+  parte,
 }: {
   dimensoes: Dimensao[];
   historico?: boolean;
   rotulo: string;
   onConsultarIeo?: () => void;
+  parte: 'grafico' | 'detalhes';
 }) {
   const ordenadas = ordenarDimensoes(dimensoes);
   return (
     <div className="resumo-dimensoes">
-      <figure className="resumo-cartao resumo-grafico">
+      {parte === 'grafico' && <figure className="resumo-cartao resumo-grafico">
         <figcaption>
           <h5>Prioridades por dimensão</h5>
           <p className="resumo-etiqueta">{rotulo}</p>
@@ -94,8 +96,8 @@ function DimensoesResumo({
           As prioridades estratégicas são pactuadas com a organização; esta ordenação não as define
           automaticamente.
         </p>
-      </figure>
-      <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container">
+      </figure>}
+      {parte === 'detalhes' && <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container">
         <table className="resumo-tabela">
           <caption>Prioridades dimensionais · {rotulo}</caption>
           <thead>
@@ -148,12 +150,12 @@ function DimensoesResumo({
             {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos do IEO</button>}
           </div>
         </details>
-      </div></details>
+      </div></details>}
     </div>
   );
 }
 
-function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsultarIeo?: () => void }) {
+function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo, parte }: { onConsultarIeo?: () => void; parte: 'grafico' | 'detalhes' }) {
   const chartWidth = 1080;
   const chartHeight = 470;
   const left = 82;
@@ -173,7 +175,7 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
   ];
   const coresPrioridade: Record<string, string> = { Crítica: '#b44747', Média: '#c5a542' };
   return <div className="space-y-3">
-    <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
+    {parte === 'grafico' && <figure className="resumo-cartao min-w-0 space-y-3" aria-labelledby="priorizacao-dimensoes-titulo">
       <figcaption><h5 id="priorizacao-dimensoes-titulo">Prioridades de dimensão e ordem de atuação</h5><p className="text-xs text-muted-foreground">Nota consolidada de priorização · escala de 0 a 4. Pontos e hastes refletem os valores históricos da referência; a nota atual permanece sem cálculo validado.</p></figcaption>
       <div><svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block w-full" role="img" aria-label="Gráfico de priorização consolidada por dimensão">
         <title>Nota consolidada de priorização por dimensão</title>
@@ -194,8 +196,8 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
       </svg></div>
       <div className="flex flex-wrap gap-4 text-xs"><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Crítica}}/>Prioridade crítica</span><span className="inline-flex items-center gap-2"><i className="size-3 rounded-full" style={{background:coresPrioridade.Média}}/>Prioridade média</span></div>
       <p className="text-xs text-muted-foreground">As cinco notas atuais por dimensão integrada não estão calculáveis enquanto o IEO aguarda reavaliação e o remapeamento dimensional permanece pendente. O gráfico preserva somente os pontos históricos informados; nenhum valor ausente foi convertido em zero.</p>
-    </figure>
-    <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
+    </figure>}
+    {parte === 'detalhes' && <details className="resumo-expansivel"><summary>Ver prioridades dimensionais</summary><div className="resumo-cartao resumo-tabela-container"><div className="overflow-x-auto"><table className="resumo-tabela resumo-tabela-prioridades min-w-[1450px]">
       <colgroup><col style={{width:85}}/><col style={{width:105}}/><col style={{width:320}}/><col style={{width:140}}/><col style={{width:140}}/><col style={{width:115}}/><col style={{width:165}}/><col style={{width:300}}/></colgroup>
       <caption>Prioridades dimensionais</caption>
       <thead><tr>{['Ordem','Prioridade','Dimensão integrada','Nota IEO','Nota Matriz','Nota Cesta','Consolidada','Fórmula'].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead>
@@ -205,8 +207,7 @@ function PrioridadesDimensionaisHistoricasAgromel({ onConsultarIeo }: { onConsul
         <td data-label="Nota IEO">{d.ieo}</td><td data-label="Nota Matriz">{d.matriz}</td>
         <td data-label="Nota Cesta">{d.cesta}</td><td data-label="Consolidada">{d.consolidada}</td><td data-label="Fórmula">{d.formula}</td>
       </tr>)}</tbody>
-    </table></div></div></details>
-    {onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos usados</button>}
+    </table></div></div>{onConsultarIeo && <button type="button" className="resumo-acao" onClick={onConsultarIeo}>Abrir perguntas e vínculos usados</button>}</details>}
   </div>;
 }
 
@@ -404,7 +405,7 @@ export function ResumoDiagnostico({
       <div className="resumo-prioridades-lado-a-lado">
       <section className="resumo-secao-prioridades-dimensionais" aria-label="Prioridades por dimensão">
         <h4>Prioridades de dimensão e ordem de atuação</h4>
-        {diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo
+        {diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel parte="grafico" onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo parte="grafico"
           historico={ieoPendente}
           dimensoes={resultado.porDimensao.map((d) => ({ ...d, codigos: DIMENSOES_IEO_CADERNO.find((item) => item.id === d.dimensaoId)?.codigos }))}
           onConsultarIeo={onConsultarIeo}
@@ -434,6 +435,7 @@ export function ResumoDiagnostico({
           </details>
         )}
       </section>
+      <div className="resumo-prioridades-detalhes">{diagnosticoAgromel ? <PrioridadesDimensionaisHistoricasAgromel parte="detalhes" onConsultarIeo={onConsultarIeo} /> : <DimensoesResumo parte="detalhes" dimensoes={resultado.porDimensao.map(d => ({ ...d, codigos: DIMENSOES_IEO_CADERNO.find(item => item.id === d.dimensaoId)?.codigos }))} onConsultarIeo={onConsultarIeo} rotulo={emRevisao ? 'Em revisão' : 'Síntese das respostas'} />}</div>
       </div>
       {prioridadeSelecionada && <PopupDetalhe titulo={prioridadeSelecionada.titulo} descricao={`${prioridadeSelecionada.codigo} · ${prioridadeSelecionada.etiqueta}`} aoFechar={() => setPrioridadeAberta(null)}>
         <div className="resumo-prioridade space-y-4">
