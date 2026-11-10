@@ -631,6 +631,14 @@ export interface ColunaGantt {
   fim: string;
 }
 
+/** Evita criar milhares de colunas quando uma data foi digitada incorretamente. */
+export function intervaloGanttExcessivo(limites: LimitesLinhaTempo): boolean {
+  const [ai, mi] = limites.inicio.split('-').map(Number);
+  const [af, mf] = limites.fim.split('-').map(Number);
+  const meses = (af - ai) * 12 + mf - mi + 1;
+  return !Number.isFinite(meses) || mi < 1 || mi > 12 || mf < 1 || mf > 12 || meses < 1 || meses > 600;
+}
+
 const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 /**
@@ -642,6 +650,7 @@ const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
  * elas saírem de registro.
  */
 export function colunasDaLinhaDoTempo(limites: LimitesLinhaTempo, escala: EscalaGantt): ColunaGantt[] {
+  if (intervaloGanttExcessivo(limites)) return [];
   const colunas: ColunaGantt[] = [];
   const [anoFim, mesFim] = limites.fim.split('-').map(Number);
   let [ano, mes] = limites.inicio.split('-').map(Number);

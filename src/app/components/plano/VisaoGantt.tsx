@@ -25,7 +25,7 @@ import { type Goal, type Activity, type Risk, type Deliverable } from '../../dat
 import { formatDateOnly } from '../../lib/dateOnly';
 import {
   estaAtrasada, hojeISO, periodoDaMeta, prazoDaMeta, limitesDaLinhaDoTempo, colunasDaLinhaDoTempo,
-  posicaoNaLinha, posicaoDeHoje, riscoDaEtapa,
+  posicaoNaLinha, posicaoDeHoje, riscoDaEtapa, intervaloGanttExcessivo,
   type EscalaGantt, type LimitesLinhaTempo, type PosicaoBarra,
 } from '../../lib/planoTrabalho';
 
@@ -138,6 +138,13 @@ export function VisaoGantt({
         Preencha as datas previstas ou realizadas na tabela ou no painel de cada registro.
       </div>
     );
+  }
+
+  if (intervaloGanttExcessivo(limites)) {
+    return <div className="p-8 text-sm" role="alert">
+      Não foi possível exibir o Gantt: o intervalo de datas do plano é inválido ou ultrapassa 50 anos
+      ({limites.inicio} a {limites.fim}). Confira as datas das metas, etapas e atividades na visão Tabela.
+    </div>;
   }
 
   const colunas = colunasDaLinhaDoTempo(limites, escala);

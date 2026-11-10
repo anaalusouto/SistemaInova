@@ -1,19 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Menu, Minus, Moon, Plus, Sun } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { Sidebar, type NavItem } from './components/Sidebar';
 import { MarcaCria } from './components/MarcaCria';
 import { useMenuLateral } from './theme/useMenuLateral';
-import { ProjectView } from './components/ProjectView';
-import { PortfolioView } from './components/PortfolioView';
-import { ReportsModule } from './components/ReportsModule';
-import { ConfiguracoesPage } from './components/ConfiguracoesPage';
-import { DiagnosticoModule } from './components/DiagnosticoModule';
-import { OrganizacoesModule } from './components/organizacoes/OrganizacoesModule';
 import { ROTA_INICIO, type RotaOrg } from './lib/navegacaoOrg';
 import { buscaDaOrganizacao, rotaDaBusca, type BuscaApp } from './lib/navegacaoApp';
-import { CronogramaPage } from './components/CronogramaPage';
 import { NotificationsBell, useApprovalToasts } from './components/NotificationsBell';
 import { useMentionToasts } from './mensagens/useMentionToasts';
 import { ProjectsProvider, useStore } from './store';
@@ -28,6 +21,14 @@ import { contextoDaNavegacao } from './assistant/context';
 import { resumirProjetoLocal } from './assistant/localBot';
 import { detalharProjetoLocal, projetoDaNavegacao } from './assistant/projectHelp';
 import { hojeISO } from './lib/planoTrabalho';
+
+const ProjectView = lazy(() => import('./components/ProjectView').then(m => ({ default: m.ProjectView })));
+const PortfolioView = lazy(() => import('./components/PortfolioView').then(m => ({ default: m.PortfolioView })));
+const ReportsModule = lazy(() => import('./components/ReportsModule').then(m => ({ default: m.ReportsModule })));
+const ConfiguracoesPage = lazy(() => import('./components/ConfiguracoesPage').then(m => ({ default: m.ConfiguracoesPage })));
+const DiagnosticoModule = lazy(() => import('./components/DiagnosticoModule').then(m => ({ default: m.DiagnosticoModule })));
+const OrganizacoesModule = lazy(() => import('./components/organizacoes/OrganizacoesModule').then(m => ({ default: m.OrganizacoesModule })));
+const CronogramaPage = lazy(() => import('./components/CronogramaPage').then(m => ({ default: m.CronogramaPage })));
 
 const GREETING_BY_PERIOD: Record<'manha' | 'tarde' | 'noite', string> = {
   manha: 'Bom dia',
@@ -151,7 +152,7 @@ function AppShell() {
           <ThemeToggleButton />
           <NotificationsBell onOpenProject={handleSelectProject} />
         </header>
-        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto">{renderMain()}</main>
+        <main className="flex-1 min-h-0 min-w-0 overflow-y-auto"><Suspense fallback={<div className="p-7 text-sm text-muted-foreground" role="status">Carregando seção…</div>}>{renderMain()}</Suspense></main>
       </div>
       <Toaster position="top-right" richColors closeButton />
       <AssistenteInova key={user?.login} contexto={contextoDaNavegacao(busca)} dados={{

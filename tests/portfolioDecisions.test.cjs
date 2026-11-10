@@ -22,6 +22,16 @@ function loadTs(file) {
 const { buildDecisionCharts } = loadTs('src/app/lib/portfolioDecisions');
 const { resumoAcompanhamento } = loadTs('src/app/lib/acompanhamentoPortfolio');
 
+test('Gantt recusa intervalo extremo sem gerar milhões de colunas', () => {
+  const { limitesDaLinhaDoTempo, intervaloGanttExcessivo, colunasDaLinhaDoTempo } = loadTs('src/app/lib/planoTrabalho');
+  const limites = limitesDaLinhaDoTempo([{ plannedStart: '2026-07-01', plannedEnd: '262027-03-31', deliverables: [] }]);
+  assert.equal(intervaloGanttExcessivo(limites), true);
+  assert.deepEqual(colunasDaLinhaDoTempo(limites, 'mes'), []);
+  const normal = { inicio: '2026-01-01', fim: '2027-03-31' };
+  assert.equal(intervaloGanttExcessivo(normal), false);
+  assert.equal(colunasDaLinhaDoTempo(normal, 'mes').length, 15);
+});
+
 test('Gantt inclui datas previstas e realizadas das atividades nos limites da escala', () => {
   const { limitesDaLinhaDoTempo, posicaoNaLinha } = loadTs('src/app/lib/planoTrabalho');
   const atividade = { plannedStart: '2026-01-15', plannedEnd: '2026-02-10', actualStart: '2026-03-01', actualEnd: '2026-05-20' };
