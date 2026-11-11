@@ -56,7 +56,7 @@ export function PrioridadesCruzadas({ projects, demonstrativo, onOpenProject }: 
   const funcoes = FUNCOES_MATRIZ.map(f => ({ ...f, quantidade: matrizes.filter(l => l.sinais!.funcoes.some(item => item.id === f.id && item.leitura === 'Lacuna crítica')).length }))
     .filter(f => f.quantidade > 0).sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
   const menorDimensao = [...dimensoes].filter(d => d.nota !== null).sort((a,b) => a.nota! - b.nota!)[0];
-  return <section className="mx-auto min-w-0 w-full max-w-6xl space-y-8" aria-labelledby="prioridades-cruzadas-titulo">
+  return <section className="min-w-0 w-full space-y-8" aria-labelledby="prioridades-cruzadas-titulo">
     <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Painel de portfólio · Mapeamento</p><h2 id="prioridades-cruzadas-titulo" className="mt-2 text-2xl font-bold sm:text-3xl">Funções × estrutura organizacional: onde agir primeiro</h2>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">Reúne a Matriz de Funções e o IEO para apoiar a análise das organizações. As funções e dimensões são evidências independentes; prioridades devem ser validadas com a organização.</p>
       <p className="mt-1 text-xs text-muted-foreground">Inclui organizações vinculadas aos projetos deste filtro e a aplicação mais recente em edição ou, se não houver, a última concluída. Notas parciais e informações ausentes são identificadas.</p></div>
