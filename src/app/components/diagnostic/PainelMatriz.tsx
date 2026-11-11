@@ -84,7 +84,7 @@ export function PainelMatriz({ cabecalho, linhas, onSelecionar, desabilitado, re
           </tbody>)}
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">{renderEdicao ? 'Edite as células e salve ou cancele cada linha. Tab percorre os campos; Enter salva a linha; Escape cancela. Em textos, Enter insere uma nova linha.' : 'Clique no nome de uma função para consultar ou editar suas respostas em pop-up.'}</p>
+      <p className="text-xs text-muted-foreground">{renderEdicao ? 'As alterações manuais são salvas automaticamente. Confira as respostas importadas antes de confirmá-las. Escape cancela alterações ainda não salvas.' : 'Clique no nome de uma função para consultar ou editar suas respostas em pop-up.'}</p>
     </section>
 
   </div>;

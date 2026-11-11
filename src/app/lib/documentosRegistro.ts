@@ -27,7 +27,7 @@ export function validarDestinoDocumento(d: DestinoDocumento) {
   )
     throw new Error("Informe um único registro de destino válido para o documento.");
 }
-export function validarDocumento(nome: string, mime: string, tamanho: number) {
+export function validarDocumento(nome: string, mime: string, tamanho: number, limite = LIMITE_DOCUMENTO) {
   if (
     typeof nome !== "string" ||
     !nome.trim() ||
@@ -38,5 +38,5 @@ export function validarDocumento(nome: string, mime: string, tamanho: number) {
   if (!TIPOS_DOCUMENTO.includes(mime))
     throw new Error("Tipo de documento não aceito. Use PDF, documento, planilha, texto ou imagem.");
   if (!Number.isSafeInteger(tamanho) || tamanho <= 0) throw new Error("O arquivo está vazio.");
-  if (tamanho > LIMITE_DOCUMENTO) throw new Error("O documento deve ter no máximo 3 MB.");
+  if (tamanho > limite) throw new Error(`O documento deve ter no máximo ${limite / 1024 / 1024} MB.`);
 }

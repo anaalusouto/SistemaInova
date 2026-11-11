@@ -31,6 +31,14 @@ export function AvaliacaoMatriz({ funcaoId, aoPendencias, ...props }: ContextoCa
     onError: (e: Error) => setErro(e.message + ' Suas alterações continuam neste formulário.'),
   });
   usePendenciaModulo(!props.readOnly && (sujo || salvar.isPending));
+  useEffect(() => {
+    if (props.readOnly || !sujo || salvar.isPending || erro) return;
+    const timer = window.setTimeout(() => {
+      try { validarRespostaCaderno(funcaoId, '', valores); salvar.mutate(); }
+      catch (e) { setErro((e as Error).message); }
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [props.readOnly, sujo, salvar.isPending, erro, valores, versao, funcaoId]);
   const pendente = sujo || salvar.isPending;
   useEffect(() => {
     aoPendencias(antes => Boolean(antes[pendenciaId]) === pendente ? antes : { ...antes, [pendenciaId]: pendente });
@@ -50,7 +58,8 @@ export function AvaliacaoMatriz({ funcaoId, aoPendencias, ...props }: ContextoCa
       </select></label>
       <label className="block text-xs">Observação da avaliação<textarea className="mt-1 w-full min-w-0 rounded-lg border bg-card p-2 text-sm" aria-label={`Observação da avaliação ${funcaoId}`} rows={3} maxLength={20000} value={valores.relato} onChange={e => { setValores(v => ({ ...v, relato: e.target.value })); setSujo(true); setErro(''); }}/></label>
       <p className="text-xs text-muted-foreground">Escala de 1 a 4: quanto menor a nota, maior a necessidade de desenvolvimento. Não se aplica exige justificativa. Sem evidências, mantenha Não avaliado.</p>
-      <button type="submit" disabled={!sujo} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-50">{salvar.isPending ? 'Salvando…' : 'Salvar avaliação'}</button>
+      <p role="status" className="text-xs text-muted-foreground">{salvar.isPending ? 'Salvando avaliação…' : sujo ? 'Avaliação aguardando salvamento automático.' : registro ? 'Avaliação salva.' : 'Sem avaliação registrada.'}</p>
+      {erro && <button type="submit" disabled={!sujo} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-50">Tentar salvar novamente</button>}
       <button type="button" disabled={!sujo} className="ml-2 text-xs underline disabled:opacity-50" onClick={() => { setValores(registro?.resposta ?? valoresVazios()); setVersao(registro?.versao ?? 0); setSujo(false); setErro(''); }}>Cancelar avaliação</button>
       {sujo && <p role="status" className="text-xs">Avaliação com alterações não salvas.</p>}
     </fieldset>

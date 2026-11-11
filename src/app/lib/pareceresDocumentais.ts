@@ -1,4 +1,4 @@
-import { LIMITE_DOCUMENTO, validarDocumento } from './documentosRegistro';
+import { validarDocumento } from './documentosRegistro';
 
 export interface AnexoParecer {
   id: string;
@@ -48,14 +48,11 @@ export function agruparPareceres(rows: DocumentoParecerRow[], organizacaoId: str
   return [...grupos.values()];
 }
 
-// O transporte base64 tem o mesmo teto de 3 MB usado nos documentos existentes.
-// O limite é do cadastro inteiro, para que vários anexos caibam na requisição.
+export const LIMITE_ARQUIVO_PARECER = 20 * 1024 * 1024;
 export function validarArquivosParecer(arquivos: { nomeArquivo: string; tipoMime: string; tamanhoBytes: number }[]) {
   if (!Array.isArray(arquivos) || !arquivos.length) throw new Error('Selecione ao menos um arquivo para o parecer.');
-  let total = 0;
+  if (arquivos.length > 50) throw new Error('Selecione até 50 arquivos por parecer.');
   for (const arquivo of arquivos) {
-    validarDocumento(arquivo.nomeArquivo, arquivo.tipoMime, arquivo.tamanhoBytes);
-    total += arquivo.tamanhoBytes;
+    validarDocumento(arquivo.nomeArquivo, arquivo.tipoMime, arquivo.tamanhoBytes, LIMITE_ARQUIVO_PARECER);
   }
-  if (total > LIMITE_DOCUMENTO) throw new Error('Os anexos do parecer devem somar no máximo 3 MB.');
 }

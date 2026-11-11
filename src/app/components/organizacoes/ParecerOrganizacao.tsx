@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Building2, Paperclip, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/authStore';
-import { listarPareceresDocumentais, criarParecerDocumental, excluirParecerDocumental } from '../../pareceresDocumentais.server';
+import { listarPareceresDocumentais, prepararArquivosParecer, concluirArquivosParecer, cancelarArquivosParecer, excluirParecerDocumental } from '../../pareceresDocumentais.server';
+import { supabase } from '../../../integrations/supabase/client';
 import { abrirDocumentoRegistro } from '../../documentosRegistro.server';
 import { EXTENSOES_DOCUMENTO } from '../../lib/documentosRegistro';
 import { validarArquivosParecer, type ParecerDocumental } from '../../lib/pareceresDocumentais';
@@ -110,15 +111,6 @@ export function ParecerOrganizacao({ organizacaoId, relatorioUrl, aoVoltar }: {
   </div>;
 }
 
-function lerArquivo(arquivo: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const leitor = new FileReader();
-    leitor.onload = () => resolve(String(leitor.result));
-    leitor.onerror = () => reject(new Error(`Não foi possível ler ${arquivo.name}.`));
-    leitor.readAsDataURL(arquivo);
-  });
-}
-
 function NovoParecer({ organizacaoId, aoFechar, aoSalvar }: { organizacaoId: string; aoFechar: () => void; aoSalvar: () => Promise<void> }) {
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [salvando, setSalvando] = useState(false);
@@ -127,13 +119,28 @@ function NovoParecer({ organizacaoId, aoFechar, aoSalvar }: { organizacaoId: str
     if (salvando) return;
     setErro(null);
     setSalvando(true);
+    let manifesto: string | undefined;
+    let finalizacaoIniciada = false;
     try {
       validarArquivosParecer(arquivos.map(a => ({ nomeArquivo: a.name, tipoMime: a.type, tamanhoBytes: a.size })));
-      const anexos = await Promise.all(arquivos.map(async a => ({ nomeArquivo: a.name, tipoMime: a.type, dataUrl: await lerArquivo(a) })));
-      await criarParecerDocumental({ data: { organizacaoId, arquivos: anexos } });
+      const preparado = await prepararArquivosParecer({ data: { organizacaoId, arquivos: arquivos.map(a => ({ nomeArquivo: a.name, tipoMime: a.type, tamanhoBytes: a.size })) } });
+      manifesto = preparado.manifesto;
+      for (let i = 0; i < arquivos.length; i++) {
+        const arquivo = arquivos[i], destino = preparado.destinos[i];
+        const { error } = await supabase.storage.from('projeto-anexos').uploadToSignedUrl(destino.storagePath, destino.token, arquivo, { contentType: arquivo.type, upsert: false });
+        if (error) throw new Error(`Não foi possível enviar ${arquivo.name}. Tente novamente.`);
+      }
+      finalizacaoIniciada = true;
+      await concluirArquivosParecer({ data: { organizacaoId, manifesto } });
       toast.success('Parecer salvo.');
       await aoSalvar();
-    } catch (e) { setErro(e instanceof Error ? e.message : 'Não foi possível salvar o parecer.'); }
+    } catch (e) {
+      if (manifesto && !finalizacaoIniciada) {
+        try { await cancelarArquivosParecer({ data: { organizacaoId, manifesto } }); }
+        catch { setErro('Não foi possível concluir o envio. Atualize a lista de pareceres antes de tentar novamente.'); return; }
+      }
+      setErro(finalizacaoIniciada ? 'Não foi possível confirmar o parecer. Atualize a lista antes de tentar novamente.' : e instanceof Error ? e.message : 'Não foi possível salvar o parecer.');
+    }
     finally { setSalvando(false); }
   };
   return <Dialog.Root open onOpenChange={aberto => { if (!aberto && !salvando) aoFechar(); }}>
@@ -144,7 +151,7 @@ function NovoParecer({ organizacaoId, aoFechar, aoSalvar }: { organizacaoId: str
           <Dialog.Title className="text-lg font-semibold">Novo parecer</Dialog.Title>
           <Dialog.Close disabled={salvando} aria-label="Fechar cadastro de parecer" className="p-1 rounded hover:bg-accent disabled:opacity-50"><X size={16} /></Dialog.Close>
         </div>
-        <Dialog.Description className="text-sm text-muted-foreground mb-4">Selecione os arquivos que compõem este parecer. PDF, documentos, planilhas, textos e imagens; até 3 MB no total.</Dialog.Description>
+        <Dialog.Description className="text-sm text-muted-foreground mb-4">Selecione os arquivos que compõem este parecer. PDF, documentos, planilhas, textos e imagens; até 20 MB por arquivo e 50 arquivos por parecer.</Dialog.Description>
         <form onSubmit={e => { e.preventDefault(); void salvar(); }} className="space-y-4">
           <label className="flex flex-col gap-2 text-sm">Anexos do parecer *
             <input type="file" multiple accept={EXTENSOES_DOCUMENTO} disabled={salvando} className="w-full min-w-0 rounded-lg border p-2 text-xs" onChange={e => {

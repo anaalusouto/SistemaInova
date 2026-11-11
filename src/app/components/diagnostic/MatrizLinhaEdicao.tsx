@@ -57,7 +57,7 @@ export function MatrizLinhaEdicao({ id, formularioId, valores, estado, bloqueado
         <fieldset disabled={bloqueado} className="space-y-2">
           {importada && <label className="flex items-start gap-2 text-xs"><input type="checkbox" required checked={confirmado} onChange={e => aoConferir(e.target.checked)} />Conferi esta função e as decisões dos campos ambíguos. Campos não identificados permanecerão vazios.</label>}
           <div className="flex flex-wrap gap-2">
-            <button type="submit" disabled={!pendente} className="rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs disabled:opacity-50">Salvar linha</button>
+            {(importada || erro) && <button type="submit" disabled={!pendente} className="rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs disabled:opacity-50">{erro ? 'Tentar salvar novamente' : 'Confirmar e salvar'}</button>}
             <button type="button" disabled={!pendente} onClick={aoCancelar} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-50">Cancelar</button>
           </div>
         </fieldset>

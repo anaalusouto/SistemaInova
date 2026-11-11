@@ -15,8 +15,8 @@ const one=(tree,predicate)=>{const encontrados=nodes(tree,predicate);assert.equa
 function ambiente(importacao=null) {
   const banco=new Map(),gravacoes=[],consultas=[];let falha=false;
   function abrir(organizacaoId='org-a',diagnosticoId='diag-a',readOnly=false) {
-    const contexto=`${organizacaoId}:${diagnosticoId}`;let cursor=0;const estados=[];
-    const react={...React,useEffect(){},useState(initial){const i=cursor++;if(!(i in estados))estados[i]=initial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];},useRef(initial){const i=cursor++;return estados[i]??(estados[i]={current:initial});},useMemo:f=>f()};
+    const contexto=`${organizacaoId}:${diagnosticoId}`;let cursor=0;const estados=[];let efeitos=[];
+    const react={...React,useEffect(fn){efeitos.push(fn);},useState(initial){const i=cursor++;if(!(i in estados))estados[i]=initial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];},useRef(initial){const i=cursor++;return estados[i]??(estados[i]={current:initial});},useMemo:f=>f()};
     const client={invalidateQueries(){},setQueryData(key,update){assert.deepEqual(key,['diagnostico-matriz',diagnosticoId,organizacaoId]);banco.set(contexto,update(banco.get(contexto)));}};
     const mocks={react,sonner:{toast:{success(){},error(){}}},'../PopupDetalhe':{PopupDetalhe:({children})=>children},'./AvaliacaoMatriz':{AvaliacaoMatriz:()=>null},'../../diagnosticos.server':{},'@tanstack/react-query':{
       useQuery(options){consultas.push(options.queryKey);return {data:options.queryKey[0]==='matriz-importacao'?importacao:banco.get(contexto)??[]};},useQueryClient:()=>client,
@@ -24,7 +24,7 @@ function ambiente(importacao=null) {
     }};
     const {MatrizFuncionalTab}=load('src/app/components/diagnostic/MatrizPrototipoTab.tsx',mocks);
     const root=MatrizFuncionalTab({organizacaoId,diagnosticoId,readOnly});
-    return {key:root.key,chaveAtual(){return MatrizFuncionalTab({organizacaoId,diagnosticoId,readOnly}).key;},render(){cursor=0;const atual=MatrizFuncionalTab({organizacaoId,diagnosticoId,readOnly});return atual.type(atual.props);}};
+    return {key:root.key,chaveAtual(){return MatrizFuncionalTab({organizacaoId,diagnosticoId,readOnly}).key;},render(){cursor=0;efeitos=[];const atual=MatrizFuncionalTab({organizacaoId,diagnosticoId,readOnly});return atual.type(atual.props);},executarAuto(){let tarefa;const anterior=global.window;global.window={setTimeout:fn=>{tarefa=fn;return 1;},clearTimeout(){}};try{efeitos.at(-1)?.();tarefa?.();}finally{global.window=anterior;}}};
   }
   return {abrir,banco,gravacoes,consultas,simularFalha:v=>{falha=v;},atualizarImportacao:v=>{importacao=v;}};
 }
@@ -37,6 +37,40 @@ function preencher(editor,label,valor) {
 }
 const clicar=(editor,nome)=>{const tree=editor.render();const modal=nodes(tree,n=>n.props?.['data-inova-form']==='matriz')[0];return one(modal??tree,n=>n.type==='button'&&n.props.children===nome).props.onClick();};
 const salvar=editor=>one(editor.render(),n=>n.type==='form').props.onSubmit({preventDefault(){}});
+
+test('edição manual é salva automaticamente após alteração sem clicar em salvar',()=>{
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);preencher(e,'Observação','Registro automático');
+  e.render();e.executarAuto();
+  assert.equal(a.gravacoes.length,1);
+  assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Registro automático');
+});
+test('falha no salvamento automático preserva o rascunho e não repete sem nova ação',()=>{
+  const a=ambiente(),e=a.abrir();e.render();funcao(e);preencher(e,'Observação','Rascunho preservado');
+  a.simularFalha(true);e.render();e.executarAuto();assert.equal(a.gravacoes.length,1);
+  assert.equal(one(e.render(),n=>n.type==='textarea'&&n.props.value==='Rascunho preservado').props.value,'Rascunho preservado');
+  e.executarAuto();assert.equal(a.gravacoes.length,1);
+  a.simularFalha(false);preencher(e,'Observação','Rascunho corrigido');e.render();e.executarAuto();
+  assert.equal(a.banco.get('org-a:diag-a')[0].observacoes,'Rascunho corrigido');
+});
+test('resposta importada não é salva automaticamente antes da conferência',()=>{
+  const {interpretarTextoMatriz}=load('src/app/diagnostic/importarMatriz.ts',{});
+  const dados=interpretarTextoMatriz('F01\nAtuação: Executa\nExperiência: Inicial');
+  const a=ambiente({id:'i1',dados,origem:{nomeArquivo:'origem.pdf'},pendentes:['F01'],estado:'pendente'}),e=a.abrir();
+  e.render();preencher(e,'Observação','Conferência necessária');e.render();e.executarAuto();
+  assert.equal(a.gravacoes.length,0);
+});
+test('avaliação da matriz também salva automaticamente com a versão da resposta',async()=>{
+  let cursor=0,efeitos=[],pendente;const estados=[],gravacoes=[];
+  const react={...React,useId:()=>':teste:',useState(inicial){const i=cursor++;if(!(i in estados))estados[i]=typeof inicial==='function'?inicial():inicial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];},useEffect(fn){efeitos.push(fn);}};
+  const resposta={valor:'2',selecoes:[],relato:'',fonte:'',respondentes:''};
+  const mocks={react,'./CadernoItens':{useCaderno:()=>({data:[]})},'../../caderno.server':{salvarRespostaCaderno:async({data})=>{gravacoes.push(data);return {codigo:'F01',contexto:'',resposta:data.resposta,versao:1};}},'@tanstack/react-query':{useQueryClient:()=>({setQueryData(){},invalidateQueries(){}}),useMutation:op=>({isPending:false,mutate:()=>{pendente=op.mutationFn().then(op.onSuccess);}})}};
+  const {AvaliacaoMatriz}=load('src/app/components/diagnostic/AvaliacaoMatriz.tsx',mocks);
+  const render=()=>{cursor=0;efeitos=[];return AvaliacaoMatriz({funcaoId:'F01',diagnosticoId:'d1',organizacaoId:'o1',readOnly:false,aoPendencias(){}});};
+  one(render(),n=>n.type==='select').props.onChange({target:{value:resposta.valor}});render();
+  let tarefa;const anterior=global.window;global.window={setTimeout:fn=>{tarefa=fn;return 1;},clearTimeout(){}};
+  try{efeitos[1]();tarefa();await pendente;}finally{global.window=anterior;}
+  assert.equal(gravacoes.length,1);assert.equal(gravacoes[0].resposta.valor,'2');assert.equal(gravacoes[0].versao,0);
+});
 
 test('criar do zero apresenta exatamente 21 funções e todos os campos de resposta vazios',()=>{
   const a=ambiente(),e=a.abrir();e.render();

@@ -18,11 +18,14 @@ const row = (n, org = 1, grupo) => ({ id: id(n), area: 'parecer', comunidade_id:
 function ambiente(op = {}) {
   let rows = op.rows ?? [];
   const objetos = new Set(rows.map(r => r.storage_path));
+  const metadados = new Map();
   const chamadas = [];
   let uploads = 0;
   const db = {
     storage: { from: () => ({
       async upload(path) { chamadas.push('upload'); if (++uploads === op.falhaUpload) return { error: { message: 'falhou' } }; objetos.add(path); return {}; },
+      async createSignedUploadUrl(path) { chamadas.push('assinar'); return { data: { token: `token-${path}` } }; },
+      async info(path) { return objetos.has(path) ? { data: metadados.get(path) } : { error: { message: 'ausente' } }; },
       async remove(paths) { chamadas.push('storage.remove'); if (op.falhaLimpeza) return { error: { message: 'falhou' } }; paths.forEach(p => objetos.delete(p)); return {}; },
     }) },
     from(tabela) {
@@ -52,16 +55,44 @@ function ambiente(op = {}) {
       return q;
     },
   };
-  const sessao = async () => { if (op.semSessao) throw new Error('Sessão expirada'); return { displayName: 'Equipe' }; };
+  const sessao = async () => { if (op.semSessao) throw new Error('Sessão expirada'); return { id:'usuario-1', displayName: 'Equipe' }; };
   const api = carregar('src/app/pareceresDocumentais.server.ts', {
     '@tanstack/react-start': { createServerFn: () => ({ validator: () => ({ handler: f => f }) }) },
     './lib/documentosRegistro': docs, './lib/pareceresDocumentais': helper,
-    './sessao.server': { exigirSessao: sessao, exigirEscrita: async () => { await sessao(); if (op.readOnly) throw new Error('Sem permissão'); return { displayName: 'Equipe' }; } },
+    './sessao.server': { exigirSessao: sessao, exigirEscrita: async () => { await sessao(); if (op.readOnly) throw new Error('Sem permissão'); return { id:'usuario-1', displayName: 'Equipe' }; } },
     '../integrations/supabase/client.server': { supabaseAdmin: db },
   });
-  return { ...api, objetos, chamadas, rows: () => rows };
+  return { ...api, objetos, chamadas, rows: () => rows, enviarDireto(path, tamanho, tipo) { objetos.add(path); metadados.set(path,{size:tamanho,contentType:tipo}); } };
 }
 const arquivo = nome => ({ nomeArquivo: nome, tipoMime: 'application/pdf', dataUrl: 'data:application/pdf;base64,JVBERg==' });
+
+test('envio direto registra anexos de até 20 MB e não remove arquivos já registrados', async () => {
+  const antes=process.env.SUPABASE_SERVICE_ROLE_KEY;process.env.SUPABASE_SERVICE_ROLE_KEY='chave-de-teste';
+  try {
+    const a=ambiente(), arquivos=[{nomeArquivo:'maior.pdf',tipoMime:'application/pdf',tamanhoBytes:20*1024*1024},{nomeArquivo:'outro.pdf',tipoMime:'application/pdf',tamanhoBytes:4*1024*1024}];
+    const preparado=await a.prepararArquivosParecer({data:{organizacaoId:id(1),arquivos}});
+    preparado.destinos.forEach((d,i)=>a.enviarDireto(d.storagePath,arquivos[i].tamanhoBytes,arquivos[i].tipoMime));
+    await a.concluirArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto}});
+    await a.concluirArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto}});
+    await a.cancelarArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto}});
+    const lista=await a.listarPareceresDocumentais({data:{organizacaoId:id(1)}});
+    assert.equal(lista.length,1);assert.equal(lista[0].anexos.length,2);assert.equal(a.objetos.size,2);
+  } finally { if(antes===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=antes; }
+});
+
+test('envio direto rejeita manifesto adulterado e tamanho divergente, limpando somente temporários', async () => {
+  const antes=process.env.SUPABASE_SERVICE_ROLE_KEY;process.env.SUPABASE_SERVICE_ROLE_KEY='chave-de-teste';
+  try {
+    const a=ambiente(), arquivos=[{nomeArquivo:'arquivo.pdf',tipoMime:'application/pdf',tamanhoBytes:500}];
+    const preparado=await a.prepararArquivosParecer({data:{organizacaoId:id(1),arquivos}});
+    a.enviarDireto(preparado.destinos[0].storagePath,501,'application/pdf');
+    await assert.rejects(a.concluirArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto}}),/confirmar/);
+    await assert.rejects(a.concluirArquivosParecer({data:{organizacaoId:id(2),manifesto:preparado.manifesto}}),/não pertence/);
+    await assert.rejects(a.concluirArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto+'x'}}),/inválido/);
+    await a.cancelarArquivosParecer({data:{organizacaoId:id(1),manifesto:preparado.manifesto}});
+    assert.equal(a.objetos.size,0);assert.equal(a.rows().length,0);
+  } finally { if(antes===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=antes; }
+});
 
 test('cadastro com dois anexos persiste um parecer e reaparece na listagem da organização', async () => {
   const a = ambiente({ rows: [row(3, 2)] });
@@ -118,10 +149,11 @@ test('servidor exige sessão para consulta e escrita para criar ou excluir', asy
   await assert.rejects(b.listarPareceresDocumentais({ data: { organizacaoId: id(1) } }), /Sessão/);
 });
 
-test('valida arquivos obrigatórios, tipos e limite total antes de enviar', async () => {
+test('valida arquivos obrigatórios, tipos e limite por arquivo antes de enviar', async () => {
   assert.throws(() => helper.validarArquivosParecer([]), /ao menos um/);
   assert.throws(() => helper.validarArquivosParecer([{ nomeArquivo: 'a.exe', tipoMime: 'application/octet-stream', tamanhoBytes: 5 }]), /Tipo/);
-  assert.throws(() => helper.validarArquivosParecer([1, 2].map(n => ({ nomeArquivo: `${n}.pdf`, tipoMime: 'application/pdf', tamanhoBytes: 2 * 1024 * 1024 }))), /somar/);
+  assert.doesNotThrow(() => helper.validarArquivosParecer([1, 2].map(n => ({ nomeArquivo: `${n}.pdf`, tipoMime: 'application/pdf', tamanhoBytes: 20 * 1024 * 1024 }))));
+  assert.throws(() => helper.validarArquivosParecer([{ nomeArquivo: 'a.pdf', tipoMime: 'application/pdf', tamanhoBytes: 20 * 1024 * 1024 + 1 }]), /20 MB/);
   const a = ambiente();
   await assert.rejects(a.criarParecerDocumental({ data: { organizacaoId: id(1), arquivos: [{ ...arquivo('a.pdf'), dataUrl: '' }] } }), /vazio/);
   assert.equal(a.objetos.size, 0);
@@ -134,6 +166,7 @@ function renderizar(op = {}) {
     '../../pareceresDocumentais.server': {}, '../../documentosRegistro.server': {},
     '../../lib/documentosRegistro': docs, '../../lib/pareceresDocumentais': helper,
     '../../lib/visualizacaoDocumento': {}, '../../lib/relatoriosOrg': { normalizarLinkRelatorio: () => null },
+    '../../../integrations/supabase/client': { supabase: {} },
     '../BotaoNovo': { BotaoNovo: ({ children }) => React.createElement('button', {}, children) },
     '../plano/camposFormulario': {}, '../responsive-tables.css': {},
   });
