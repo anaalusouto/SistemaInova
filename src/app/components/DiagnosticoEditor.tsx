@@ -18,6 +18,10 @@ import { NavegacaoModulo } from './NavegacaoModulo';
 import { PendenciasModulo, navegarSemPendencias } from './PendenciasModulo';
 import { EvidenciasDiagnosticoPanel } from './diagnostic/EvidenciasDiagnosticoPanel';
 import { EditorInformacoesDiagnostico } from './diagnostic/EditorInformacoesDiagnostico';
+import { PlanilhaCaderno } from './diagnostic/PlanilhaCaderno';
+import { PlanilhaCesta } from './diagnostic/PlanilhaCesta';
+import { IDENTIFICACAO_CADERNO, QUESTIONARIO_CADERNO, COMPLEMENTARES_CADERNO, EVIDENCIAS_CADERNO } from '../diagnostic/catalog/cadernoCria';
+import { lerModoPreenchimento, guardarModoPreenchimento, type ModoPreenchimento } from '../diagnostic/modoPreenchimento';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -49,6 +53,8 @@ export function DiagnosticoEditor(props: DiagnosticoEditorProps) {
 }
 
 function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNovaVersao, incorporado = false, instrumentoInicial = 'resumo', rotuloVoltar = 'Voltar', instrumentoAtual, onMudarInstrumento, onExcluido, onHistorico, haPendencias }: DiagnosticoEditorProps & { haPendencias: boolean }) {
+  const [modo, setModo] = useState<ModoPreenchimento>(()=>lerModoPreenchimento(diagnosticoId));
+  const [abaPlanilha, setAbaPlanilha] = useState<'matriz'|'ieo'|'cesta'>('matriz');
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
   const [evidenciasAberto, setEvidenciasAberto] = useState(false);
@@ -140,23 +146,25 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         </div>
       </div>
       <div className={`diagnostico-editor-corpo ${incorporado ? 'p-3 sm:p-6 min-w-0' : 'flex-1 min-h-0 overflow-y-auto p-3 sm:p-6'}`}>
-        {instrumentoInicial !== 'parecer' && <NavegacaoModulo abas={TABS} atual={tab} aoMudar={setTab} rotulo="Módulos do diagnóstico" bloqueado={haPendencias} className={tab === 'matriz' ? 'modulo-abas-matriz-neutras' : ''}/>}
+        {instrumentoInicial !== 'parecer' && <div className="mb-3 flex flex-wrap items-center gap-2 text-sm"><span>Modo de preenchimento:</span>{(['plataforma','planilha'] as const).map(m=><button key={m} type="button" aria-pressed={modo===m} className={`rounded border px-3 py-1.5 ${modo===m?'bg-primary text-primary-foreground':''}`} onClick={()=>navegarSemPendencias(haPendencias,()=>{setModo(m);guardarModoPreenchimento(diagnosticoId,m);})}>{m==='plataforma'?'Plataforma':'Planilha'}</button>)}</div>}
+        {instrumentoInicial !== 'parecer' && modo==='plataforma' && <NavegacaoModulo abas={TABS} atual={tab} aoMudar={setTab} rotulo="Módulos do diagnóstico" bloqueado={haPendencias} className={tab === 'matriz' ? 'modulo-abas-matriz-neutras' : ''}/>}
         <div className={`diagnostico-conteudo${instrumentoInicial !== 'parecer' ? ' diagnostico-conteudo-com-menu modulo-bloco' : ''}`}>
         {haPendencias && <p role="status" className="mb-4 rounded-lg border bg-muted px-3 py-2 text-sm">Alterações não salvas. Salve ou cancele antes de navegar.</p>}
         {isLoading && <p role="status">Carregando mapeamento…</p>}
         {error && <p role="alert">Não foi possível abrir o mapeamento. <button type="button" onClick={() => void refetch()}>Tentar novamente</button></p>}
-        {tab === 'resumo' && diagnostico && <div className="space-y-6">
+        {modo==='planilha' && instrumentoInicial!=='parecer' && diagnostico && <div className="space-y-4"><p className="text-sm">Preencha as três abas. O mapeamento permanece em edição para revisão.</p><nav aria-label="Abas da planilha" className="flex flex-wrap gap-2">{(['matriz','ieo','cesta'] as const).map(a=><button key={a} type="button" aria-pressed={abaPlanilha===a} className={`rounded border px-4 py-2 text-sm ${abaPlanilha===a?'bg-primary text-primary-foreground':''}`} onClick={()=>navegarSemPendencias(haPendencias,()=>setAbaPlanilha(a))}>{a==='ieo'?'IEO':a==='matriz'?'Matriz':'Cesta'}</button>)}</nav>{abaPlanilha==='matriz'&&<MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly||diagnostico.status==='concluido'} modoPlanilha/>}{abaPlanilha==='ieo'&&<PlanilhaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly||diagnostico.status==='concluido'} itens={[...IDENTIFICACAO_CADERNO,...QUESTIONARIO_CADERNO,...COMPLEMENTARES_CADERNO,...EVIDENCIAS_CADERNO]}/>}{abaPlanilha==='cesta'&&<PlanilhaCesta diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly||diagnostico.status==='concluido'}/>}</div>}
+        {(modo==='plataforma'||instrumentoInicial==='parecer') && tab === 'resumo' && diagnostico && <div className="space-y-6">
           <ResumoDiagnostico diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId}
             readOnly={readOnly || diagnostico.status === 'concluido'} onConsultarIeo={() => setTab('ieo')} onConsultarParecer={() => setTab('parecer')} />
         </div>}
-        {tab === 'matriz' && diagnostico && <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />}
-        {tab === 'ieo' && diagnostico && (
+        {modo==='plataforma' && tab === 'matriz' && diagnostico && <MatrizFuncionalTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />}
+        {modo==='plataforma' && tab === 'ieo' && diagnostico && (
           <QuestionarioCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
-        {tab === 'cesta' && diagnostico && (
+        {modo==='plataforma' && tab === 'cesta' && diagnostico && (
           <CestaCaderno diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} bloqueado={haPendencias} aoEditarImplantacao={(operacao,codigo)=>{setRegistroEditor(`${operacao}:${codigo}`);setSecaoEditor('Implantação');setEditorAberto(true);}} />
         )}
-        {tab === 'parecer' && diagnostico && (
+        {(modo==='plataforma'||instrumentoInicial==='parecer') && tab === 'parecer' && diagnostico && (
           <ParecerTecnicoTab diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} />
         )}
         </div>

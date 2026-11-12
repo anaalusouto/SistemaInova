@@ -10,6 +10,7 @@ import { useAuth } from '../auth/authStore';
 import { formatDateOnly } from '../lib/dateOnly';
 import { BotaoNovo } from './BotaoNovo';
 import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
+import { guardarModoPreenchimento, type ModoPreenchimento } from '../diagnostic/modoPreenchimento';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -35,6 +36,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const queryClient = useQueryClient();
   const [showNew, setShowNew] = useState(iniciarCriacao);
   const [novaData, setNovaData] = useState('');
+  const [modo, setModo] = useState<ModoPreenchimento>('plataforma');
 
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const comunidade = comunidades.find(c => c.id === comunidadeId);
@@ -47,6 +49,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const criar = useMutation({
     mutationFn: () => criarDiagnostico({ data: { comunidadeId, dataAplicacao: novaData } }),
     onSuccess: diag => {
+      guardarModoPreenchimento(diag.id, modo);
       queryClient.invalidateQueries({ queryKey: ['diagnosticos', comunidadeId] });
       queryClient.invalidateQueries({ queryKey: ['diagnostico-visao-geral'] });
       audit({ userLogin: user?.login ?? '—', area: 'mapeamento', action: 'criar mapeamento', detail: comunidade?.nome ?? comunidadeId, kind: 'alteracao' });
@@ -163,6 +166,10 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                 style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }}
               />
             </label>
+            <fieldset className="mb-4 space-y-2"><legend className="mb-2 text-sm font-medium">Como deseja preencher?</legend>
+              <label className="flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="radio" name="modo-mapeamento" checked={modo==='plataforma'} onChange={()=>setModo('plataforma')}/><span><strong>Modelo da plataforma</strong><span className="block text-xs text-muted-foreground">Preenchimento pelas telas atuais.</span></span></label>
+              <label className="flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="radio" name="modo-mapeamento" checked={modo==='planilha'} onChange={()=>setModo('planilha')}/><span><strong>Modelo de planilha</strong><span className="block text-xs text-muted-foreground">Preenchimento em Matriz, IEO e Cesta.</span></span></label>
+            </fieldset>
             <div className="flex items-center justify-end gap-2">
               <button type="button" onClick={() => setShowNew(false)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
                 Cancelar

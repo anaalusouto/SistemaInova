@@ -31,8 +31,8 @@ test('IEO atual cobre Q01–Q25 uma vez e ignora opções sem nota e contextos d
  assert.deepEqual([...codigos].sort(),catalogo.QUESTIONARIO_CADERNO.map(q=>q.codigo).sort());
  const r=(codigo,valor,contexto='')=>({codigo,contexto,resposta:{...valoresVazios(),valor}});
  const resultado=calcular([r('Q01','4'),r('Q03','2'),r('Q02','1'),r('Q06','NS'),r('Q07','NC'),r('Q08','NA'),r('Q25','D'),r('Q11','4','OP01'),r('1.1.1','4')]);
- assert.equal(resultado.geral,2);assert.equal(resultado.respondidas,7);assert.equal(resultado.pontuadas,3);
- assert.equal(resultado.porDimensao[0].media,3);assert.equal(resultado.porDimensao[2].media,null);
+ assert.equal(resultado.geral,7/3);assert.equal(resultado.respondidas,7);assert.equal(resultado.pontuadas,3);
+ assert.equal(resultado.porDimensao[0].media,7/3);assert.equal(resultado.porDimensao[2].media,null);
  assert.equal(calcular([]).geral,null);
 });
 
@@ -43,16 +43,13 @@ test('visualização atual mantém dimensões, termômetros, relatos e perguntas
  const mocks={'./IeoTab':{IeoTab:()=>null},'../../caderno.server':{},'@tanstack/react-query':{useQuery:()=>({data:[registro,registroNa]}),useMutation:()=>({}),useQueryClient:()=>({})}};
  const {QuestionarioCaderno}=load('src/app/components/diagnostic/QuestionarioCaderno.tsx',mocks);
  const html=renderToStaticMarkup(React.createElement(QuestionarioCaderno,{diagnosticoId:'d1',organizacaoId:'o1',readOnly:true}));
- assert.match(html,/Índice de Estruturação Organizacional/);assert.match(html,/Filtrar dimensão do IEO/);assert.match(html,/>Todas</);
+ assert.match(html,/Filtrar dimensão do IEO/);assert.match(html,/>Todas</);
  assert.ok(html.indexOf('Filtrar dimensão do IEO') < html.indexOf('Pontuações do IEO'));
- assert.match(html,/Média simples dos níveis válidos/);assert.match(html,/Resposta de 1 a 4/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
- assert.match(html,/md:grid-cols-2/);assert.match(html,/DIMENSÃO SELECIONADA/);assert.match(html,/normalização por pergunta/);
+ assert.match(html,/Média das dimensões com pontuação válida/);assert.match(html,/Resposta de 1 a 4/);assert.match(html,/3,0/);assert.match(html,/Decisões acompanhadas/);
+ assert.match(html,/Régua das cinco dimensões do IEO/);assert.match(html,/Respostas das cinco dimensões/);
  assert.equal((html.match(/role="table"/g)||[]).length,1);assert.match(html,/<span>0<\/span><span>1<\/span>/);assert.match(html,/<span>4<\/span>/);assert.match(html,/Q25/);assert.match(html,/N\/A/);
- assert.ok(html.indexOf('Gráfico horizontal das perguntas do IEO') < html.indexOf('Painel de síntese do IEO'));
- assert.ok(html.indexOf('Painel de síntese do IEO') < html.indexOf('Detalhes por dimensão'));
- assert.equal((html.match(/data-caderno-codigo="Q\d\d"/g)||[]).length,25);
- assert.deepEqual([...html.matchAll(/data-caderno-codigo="(Q\d\d)"/g)].map(m=>m[1]),dimensoes.flatMap(d=>d.perguntas.map(q=>q.codigo)));
- for(let i=1;i<=5;i++)assert.match(html,new RegExp(`Dimensão ${i} ·`));
+ assert.equal((html.match(/Ver resposta e relato/g)||[]).length,25);
+ for(const d of dimensoes) for(const q of d.perguntas) assert.match(html,new RegExp(q.codigo));
  assert.doesNotMatch(html,/<input|<textarea|Salvar resposta/);
 });
 

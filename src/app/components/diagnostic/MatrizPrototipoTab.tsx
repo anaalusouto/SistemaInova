@@ -13,7 +13,7 @@ import { PainelMatriz } from './PainelMatriz';
 import { AvaliacaoMatriz } from './AvaliacaoMatriz';
 import { validarConferencia, rascunhoVazio, type CampoImportado, type ConferenciaFuncao, type ImportacaoSalva, type DecisoesImportacao, type RascunhoMatriz } from '../../diagnostic/importarMatriz';
 
-interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean }
+interface Props { diagnosticoId: string; organizacaoId: string; readOnly: boolean; modoPlanilha?: boolean }
 type Draft = RascunhoMatriz;
 const inicial=(nome:string,r?:MatrizResposta):Draft=>({nomeFuncao:nome,atuacao:r?.atuacao[0]??null,
   experiencia:r?.experiencia??null,criticidade:r?.criticidade??null,interesse:r?.interesse??null,observacoes:r?.observacoes??null,externo:r?.externo??null});
@@ -27,7 +27,7 @@ export function MatrizFuncionalTab(props:Props) {
   return <MatrizDaAplicacao key={`${props.organizacaoId}:${props.diagnosticoId}`} {...props} importacao={pendente.data??null}
     onRegistro={r=>client.setQueryData(key,r)} onImportacaoAlterada={()=>void client.invalidateQueries({queryKey:key})}/>;
 }
-function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
+function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,modoPlanilha,importacao,onRegistro,onImportacaoAlterada}:Props&{importacao:ImportacaoSalva|null;onRegistro:(r:ImportacaoSalva|null)=>void;onImportacaoAlterada:()=>void}) {
   const client=useQueryClient();
   const importadasIniciais=Object.fromEntries((importacao?.pendentes??[]).map(id=>[id,importacao?.dados.respostas[id]??rascunhoVazio(FUNCOES_MATRIZ.find(f=>f.id===id)?.nome??id)]));
   const [aberta,setAberta]=useState<string|null>(importacao?.pendentes[0]??null);
@@ -42,7 +42,7 @@ function MatrizDaAplicacao({diagnosticoId,organizacaoId,readOnly,importacao,onRe
   const [confirmado,setConfirmado]=useState(false),[erroConferencia,setErroConferencia]=useState('');
   const [descartando,setDescartando]=useState(false);
   const [edicoes,setEdicoes]=useState<Record<string,EdicaoMatriz>>({});
-  const [edicaoTabela,setEdicaoTabela]=useState(false);
+  const [edicaoTabela,setEdicaoTabela]=useState(Boolean(modoPlanilha && !readOnly && !importacao?.pendentes.length));
   const [avaliacoesPendentes,setAvaliacoesPendentes]=useState<Record<string,boolean>>({});
   const temAvaliacaoPendente=Object.values(avaliacoesPendentes).some(Boolean);
   const [errosLinha,setErrosLinha]=useState<Record<string,string>>({});

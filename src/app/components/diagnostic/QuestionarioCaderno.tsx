@@ -75,7 +75,7 @@ export function QuestionarioCaderno(props: ContextoCaderno) {
           </div>
         </div>
         <div className="mt-3 grid gap-4 sm:grid-cols-[minmax(160px,1fr)_auto] sm:items-center">
-          <div className="min-w-0"><Termometro valor={resultado.geral} rotulo="IEO geral"/><p className="mt-2 text-xs text-muted-foreground">Média simples dos níveis válidos</p></div>
+          <div className="min-w-0"><Termometro valor={resultado.geral} rotulo="IEO geral"/><p className="mt-2 text-xs text-muted-foreground">Média das dimensões com pontuação válida</p></div>
           <p className="text-xs text-muted-foreground sm:text-right"><strong className="text-foreground">{avaliadasGerais}/{aplicaveisGerais}</strong> indicadores aplicáveis avaliados · {fmtPercentual(avaliadasGerais, aplicaveisGerais)}% de cobertura</p>
         </div>
       </div>

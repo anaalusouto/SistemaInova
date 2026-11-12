@@ -9,6 +9,7 @@ export function navegarSemPendencias(pendente: boolean, navegar: () => void) {
 
 type Registrar = (id: string, pendente: boolean) => void;
 const ContextoPendencias = createContext<Registrar | null>(null);
+const ContextoQuantidadePendencias = createContext(0);
 
 export function PendenciasModulo({ children, aoPendencias }: { children: ReactNode; aoPendencias: (pendente: boolean) => void }) {
   const [ids, setIds] = useState<Set<string>>(() => new Set());
@@ -26,8 +27,10 @@ export function PendenciasModulo({ children, aoPendencias }: { children: ReactNo
     window.addEventListener('beforeunload', avisar);
     return () => window.removeEventListener('beforeunload', avisar);
   }, [pendente]);
-  return <ContextoPendencias.Provider value={registrar}>{children}</ContextoPendencias.Provider>;
+  return <ContextoPendencias.Provider value={registrar}><ContextoQuantidadePendencias.Provider value={ids.size}>{children}</ContextoQuantidadePendencias.Provider></ContextoPendencias.Provider>;
 }
+
+export function useQuantidadePendencias() { return useContext(ContextoQuantidadePendencias); }
 
 export function usePendenciaModulo(pendente: boolean) {
   const registrar = useContext(ContextoPendencias);

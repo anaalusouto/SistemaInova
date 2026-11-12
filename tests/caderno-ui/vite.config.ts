@@ -13,9 +13,14 @@ export default defineConfig({root:path.resolve('tests/caderno-ui'),resolve:{alia
   export const listarRespostasCaderno=async()=>structuredClone(linhas);
   export const salvarRespostaCaderno=async({data:d})=>{if(new URLSearchParams(location.search).has('falha'))throw Error('Falha sintética de salvamento');if(new URLSearchParams(location.search).has('consulta'))throw Error('Somente leitura');validarRespostaCaderno(d.codigo,d.contexto,d.resposta);const antes=linhas.find(r=>r.codigo===d.codigo&&r.contexto===d.contexto);if((antes?.versao??0)!==d.versao)throw Error('Resposta alterada por outra pessoa');const r={...registro(d.codigo,d.contexto,null),resposta:d.resposta,versao:d.versao+1,atualizado_em:new Date().toISOString()};linhas=[...linhas.filter(a=>a.codigo!==d.codigo||a.contexto!==d.contexto),r];return structuredClone(r);};`;
   if(id==='\0diagnosticos-api')return `
-   let produtos=[{id:'00000000-0000-0000-0000-000000000011',diagnosticoId:'00000000-0000-0000-0000-000000000001',nome:'Mel',cadeia:'Apicultura',statusPreenchimento:'em_preenchimento',respostas:{},atualizadoEm:'2026-10-22'},{id:'00000000-0000-0000-0000-000000000012',nome:'Polpa de frutas',cadeia:'Frutas',statusPreenchimento:'em_preenchimento',respostas:{},atualizadoEm:'2026-10-22'}];
+   const base={diagnosticoId:'00000000-0000-0000-0000-000000000001',categoriaId:null,unidadeMedida:null,safra:{estado:'nao_informada',intervalos:[]},canaisComerciais:[],etapasEconomicas:[],statusPreenchimento:'em_preenchimento',respostas:{},atualizadoEm:'2026-10-22'};
+   let produtos=[{...base,id:'00000000-0000-0000-0000-000000000011',nome:'Mel',cadeia:'Apicultura'},{...base,id:'00000000-0000-0000-0000-000000000012',nome:'Polpa de frutas',cadeia:'Frutas'}];
+   let categorias=[];
+   export const listarCategoriasProduto=async()=>structuredClone(categorias);
+   export const criarCategoriaProduto=async({data})=>{const c={...data,id:crypto.randomUUID()};categorias=[...categorias,c];return c;};
+   export const salvarDadosCestaProduto=async({data})=>{const p=produtos.find(x=>x.id===data.produtoId);Object.assign(p,{...data,canaisComerciais:data.canaisComerciais,etapasEconomicas:data.etapasEconomicas});return structuredClone(p);};
    export const listarProdutos=async()=>structuredClone(produtos);
-   export const criarProduto=async({data})=>{const p={...data,id:crypto.randomUUID(),respostas:{},statusPreenchimento:'em_preenchimento',atualizadoEm:new Date().toISOString()};produtos=[...produtos,p];return p;};
+   export const criarProduto=async({data})=>{const p={...base,...data,id:crypto.randomUUID(),respostas:{},atualizadoEm:new Date().toISOString()};produtos=[...produtos,p];return p;};
    export const listarRespostasIeo=async()=>[];
    let matriz=[{funcaoId:'F01',nomeFuncao:'Representação e articulação institucional',atuacao:['Viabiliza e executa'],experiencia:'Recorrente',criticidade:'4',interesse:'4',observacoes:'Apoios recorrentes, com dependência de parceiros.',externo:'Parceiro sintético'}];
    export const listarRespostasMatriz=async()=>structuredClone(matriz);
