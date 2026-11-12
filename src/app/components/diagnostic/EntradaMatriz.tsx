@@ -6,13 +6,14 @@ import { usePendenciaModulo } from '../PendenciasModulo';
 interface Props { organizacaoId:string;diagnosticoId:string;onManual:()=>void; onImportar:(dados:ImportacaoSalva)=>void; onCancelar?:()=>void; temRespostas?:boolean }
 export function EntradaMatriz({organizacaoId,diagnosticoId,onManual,onImportar,onCancelar,temRespostas=false}:Props) {
   const [importando,setImportando]=useState(false),[erro,setErro]=useState('');
+  const [atualizacaoNecessaria,setAtualizacaoNecessaria]=useState(false);
   const [semCorrespondencias,setSemCorrespondencias]=useState<string[]|null>(null);
   const controle=useRef<AbortController|null>(null),selecionando=useRef(false);
   usePendenciaModulo(importando);
   useEffect(()=>()=>controle.current?.abort(),[]);
   async function importar(arquivo:File) {
     if(selecionando.current)return;selecionando.current=true;
-    const abort=new AbortController();controle.current=abort;setErro('');setSemCorrespondencias(null);setImportando(true);
+    const abort=new AbortController();controle.current=abort;setErro('');setAtualizacaoNecessaria(false);setSemCorrespondencias(null);setImportando(true);
     try {
       const {lerPdfMatriz}=await import('../../diagnostic/lerPdfMatriz');
       const texto=await lerPdfMatriz(arquivo,abort.signal);abort.signal.throwIfAborted();
@@ -25,7 +26,7 @@ export function EntradaMatriz({organizacaoId,diagnosticoId,onManual,onImportar,o
       const sha256=Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
       const resultado=await registrarImportacaoMatriz({data:{organizacaoId,diagnosticoId,texto,origem:{nomeArquivo:arquivo.name,sha256,tamanho:arquivo.size}}});
       if(!abort.signal.aborted)onImportar(resultado);
-    } catch(e) {if(!abort.signal.aborted)setErro(e instanceof Error?e.message:'Não foi possível ler o PDF.');}
+    } catch(e) {if(!abort.signal.aborted){const mensagem=e instanceof Error?e.message:'';const moduloIndisponivel=/failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed|loading chunk/i.test(mensagem);setAtualizacaoNecessaria(moduloIndisponivel);setErro(moduloIndisponivel?'A plataforma foi atualizada. Atualize esta página e selecione o PDF novamente. Salve antes quaisquer alterações pendentes.':mensagem||'Não foi possível ler o PDF.');}}
     finally {if(!abort.signal.aborted){selecionando.current=false;setImportando(false);}}
   }
   return <section aria-label="Iniciar mapeamento" className="space-y-4 max-w-5xl">
@@ -38,6 +39,7 @@ export function EntradaMatriz({organizacaoId,diagnosticoId,onManual,onImportar,o
     </div>
     {importando&&<p role="status">Lendo PDF e identificando respostas…</p>}
     {erro&&<p role="alert" className="text-sm">{erro}</p>}
+    {atualizacaoNecessaria&&<button type="button" className="rounded-lg border px-4 py-2 text-sm" onClick={()=>window.location.reload()}>Atualizar página</button>}
     {semCorrespondencias!==null&&<div role="status" className="rounded-xl border bg-card p-4 space-y-2 text-sm"><p className="font-medium">Importação sem correspondências</p><p>Nenhuma resposta pôde ser associada com segurança às funções oficiais. Nenhuma alteração foi feita na Matriz. Selecione outro PDF ou preencha manualmente.</p>{semCorrespondencias.length>0&&<details><summary>Respostas não associadas ({semCorrespondencias.length})</summary><ul className="list-disc pl-5">{semCorrespondencias.map((p,i)=><li key={i}>{p}</li>)}</ul></details>}</div>}
     {onCancelar&&<button type="button" disabled={importando} className="underline text-sm" onClick={onCancelar}>Voltar para a Matriz</button>}
   </section>;

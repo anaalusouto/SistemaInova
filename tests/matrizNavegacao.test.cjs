@@ -11,7 +11,7 @@ function carregar(arquivo,mocks={}) {
 const helper=carregar('src/app/diagnostic/navegacaoDiagnostico.ts');
 const diag=(id,versao,extra={})=>({id,versao,comunidadeId:'org-a',dataAplicacao:'2026-10-21',criadoEm:'2026-10-21T12:00:00Z',...extra});
 test('mapeamento atual respeita organização, aplicação e versão, sem confundir edição recente com versão atual',()=>{
-  const lista=[diag('v1',1,{atualizadoEm:'2030-01-01'}),diag('externo',99,{comunidadeId:'org-b'}),diag('antigo',10,{dataAplicacao:'2026-09-01'}),diag('v2',2)];
+  const lista=[diag('v1',1,{atualizadoEm:'2030-01-01'}),diag('externo',99,{comunidadeId:'org-b'}),diag('antigo',1,{dataAplicacao:'2026-09-01'}),diag('v2',2)];
   const antes=structuredClone(lista);
   assert.equal(helper.diagnosticoAtual(lista,'org-a').id,'v2');assert.deepEqual(lista,antes);
   assert.equal(helper.diagnosticoAtual(lista,'org-c'),null);
@@ -21,12 +21,14 @@ function ambiente({data=[diag('v2',2),diag('v1',1)],isLoading=false,error=null,b
   const entradas=[busca];let indice=0;
   const VisaoGeral=()=>null, Historico=()=>null, Editor=()=>null;
   const api=carregar('src/app/components/DiagnosticoModule.tsx',{
-    react:React,
+    react:{...React,useState:inicial=>[typeof inicial==='function'?inicial():inicial,()=>{}]},
     '@tanstack/react-router':{useSearch:()=>entradas[indice],useCanGoBack:()=>indice>0,useRouter:()=>({history:{back(){indice--;}}}),useNavigate:()=>({search,replace})=>{const nova=typeof search==='function'?search(entradas[indice]):search;if(replace)entradas[indice]=nova;else{entradas.splice(++indice);entradas.push(nova);}}},
     '@tanstack/react-query':{useQuery:()=>({data,isLoading,error,refetch(){}})},
     '../diagnosticos.server':{},'../diagnostic/navegacaoDiagnostico':helper,
     './DiagnosticoVisaoGeral':{DiagnosticoVisaoGeral:VisaoGeral},'./DiagnosticoOrganizacao':{DiagnosticoOrganizacao:Historico},'./DiagnosticoEditor':{DiagnosticoEditor:Editor},
   });
+  const original=api.DiagnosticoModule;
+  api.DiagnosticoModule=props=>{const tela=original(props);return tela.type===React.Fragment?React.Children.toArray(tela.props.children)[0]:tela;};
   return {...api,VisaoGeral,Historico,Editor};
 }
 test('Visão Geral abre versões; escolher uma versão abre seu Resumo e voltar retorna às versões',()=>{
@@ -37,13 +39,12 @@ test('Visão Geral abre versões; escolher uma versão abre seu Resumo e voltar 
   editor.props.onBack();assert.equal(render().type,a.Historico);assert.equal(render().props.comunidadeId,'org-a');
   render().props.onBack();assert.equal(render().type,a.VisaoGeral);
 });
-test('entrada na organização sempre começa nas versões, inclusive ao retornar ao Mapeamento',()=>{
+test('entrada na organização abre o mapeamento atual e permite acessar o histórico',()=>{
   for(const instrumentoInicial of ['resumo','matriz']){
     const a=ambiente();const tela=a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial});
-    assert.equal(tela.type,a.Historico);assert.equal(tela.props.incorporado,true);
-    tela.props.onSelectDiagnostico('v2');const editor=a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial});assert.equal(editor.type,a.Editor);
-    editor.props.onBack();assert.equal(a.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial}).type,a.Historico);
-    const novaEntrada=ambiente();assert.equal(novaEntrada.DiagnosticoModule({comunidadeId:'org-a',instrumentoInicial}).type,novaEntrada.Historico);
+    assert.equal(tela.type,a.EntradaDiagnosticoAtual);assert.equal(tela.props.incorporado,true);
+    const editor=a.EntradaDiagnosticoAtual(tela.props);assert.equal(editor.type,a.Editor);assert.equal(editor.props.diagnosticoId,'v2');
+    assert.equal(typeof tela.props.onHistorico,'function');
   }
 });
 test('acesso separado a Parecer mantém seu instrumento atual',()=>{
@@ -56,10 +57,44 @@ test('página de versões identifica todas as versões, inclusive a primeira',()
   const {DiagnosticoOrganizacao}=carregar('src/app/components/DiagnosticoOrganizacao.tsx',{
     './responsive-tables.css':{},'@tanstack/react-query':{useQuery:({queryKey})=>({data:queryKey[0]==='comunidades'?[{id:'org-a',nome:'Organização A'}]:[diag('v2',2),diag('v1',1)]}),useMutation:()=>({}),useQueryClient:()=>({})},
     '../comunidades.server':{},'../diagnosticos.server':{},'../audit/auditStore':{useAudit:()=>({log(){}})},'../auth/authStore':{useAuth:()=>({readOnly:true})},'../lib/dateOnly':{formatDateOnly:d=>d},'./BotaoNovo':{BotaoNovo:()=>null},
-    './diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:()=>null},
+    './diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:()=>null},'../diagnostic/modoPreenchimento':{guardarModoPreenchimento(){}},
   });
   const html=renderToStaticMarkup(React.createElement(DiagnosticoOrganizacao,{comunidadeId:'org-a',incorporado:true,onBack(){},onSelectDiagnostico(){}}));
   assert.match(html,/Versões do mapeamento/);assert.match(html,/Versão 1/);assert.match(html,/Versão 2/);assert.equal([...html.matchAll(/>\s*Visualizar\s*</g)].length,2);
+});
+
+test('novo mapeamento oferece escolha direta de planilha ou plataforma depois da data',()=>{
+  const {renderToStaticMarkup}=require('react-dom/server');
+  const {DiagnosticoOrganizacao}=carregar('src/app/components/DiagnosticoOrganizacao.tsx',{
+    './responsive-tables.css':{},'@tanstack/react-query':{useQuery:()=>({data:[]}),useMutation:()=>({}),useQueryClient:()=>({})},
+    '../comunidades.server':{},'../diagnosticos.server':{},'../audit/auditStore':{useAudit:()=>({log(){}})},'../auth/authStore':{useAuth:()=>({readOnly:false})},'../lib/dateOnly':{formatDateOnly:d=>d},'./BotaoNovo':{BotaoNovo:()=>null},
+    './diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:()=>null},'../diagnostic/modoPreenchimento':{guardarModoPreenchimento(){}},
+  });
+  const html=renderToStaticMarkup(React.createElement(DiagnosticoOrganizacao,{comunidadeId:'org-a',iniciarCriacao:true,onBack(){},onSelectDiagnostico(){}}));
+  assert.ok(html.indexOf('Data da aplicação') < html.indexOf('Preencher em planilha'));
+  assert.match(html,/Preencher em planilha/);assert.match(html,/Preencher na plataforma/);
+});
+
+test('cada opção cria o mapeamento e abre a versão com o formato escolhido',async()=>{
+  for(const [texto,modo] of [['Preencher em planilha','planilha'],['Preencher na plataforma','plataforma']]){
+    const estados=[];let cursor=0,aberto=null,preferencia=null,criado=null;
+    const react={...React,useState:inicial=>{const i=cursor++;if(!(i in estados))estados[i]=typeof inicial==='function'?inicial():inicial;return [estados[i],v=>{estados[i]=typeof v==='function'?v(estados[i]):v;}];}};
+    const {DiagnosticoOrganizacao}=carregar('src/app/components/DiagnosticoOrganizacao.tsx',{
+      react,'./responsive-tables.css':{},
+      '@tanstack/react-query':{useQuery:()=>({data:[]}),useMutation:config=>({mutate:async valor=>{const resultado=await config.mutationFn(valor);config.onSuccess(resultado,valor);}}),useQueryClient:()=>({invalidateQueries(){}})},
+      '../comunidades.server':{},'../diagnosticos.server':{criarDiagnostico:async({data})=>{criado=data;return {id:'novo-id'};}},
+      '../audit/auditStore':{useAudit:()=>({log(){}})},'../auth/authStore':{useAuth:()=>({readOnly:false})},'../lib/dateOnly':{formatDateOnly:d=>d},
+      './BotaoNovo':{BotaoNovo:()=>null},'./diagnostic/ExcluirDiagnosticoButton':{ExcluirDiagnosticoButton:()=>null},
+      '../diagnostic/modoPreenchimento':{guardarModoPreenchimento:(id,valor)=>{preferencia={id,valor};}},
+      sonner:{toast:{success(){},error(){}}},
+    });
+    const render=()=>{cursor=0;return DiagnosticoOrganizacao({comunidadeId:'org-a',iniciarCriacao:true,onBack(){},onSelectDiagnostico:id=>{aberto=id;}});};
+    const procurar=(elemento,predicado)=>{if(!elemento||typeof elemento!=='object')return null;if(predicado(elemento))return elemento;for(const filho of React.Children.toArray(elemento.props?.children)){const achado=procurar(filho,predicado);if(achado)return achado;}return null;};
+    let tela=render();procurar(tela,e=>e.type==='input'&&e.props.type==='date').props.onChange({target:{value:'2026-11-12'}});
+    tela=render();const botao=procurar(tela,e=>e.type==='button'&&React.Children.toArray(e.props.children).some(c=>c?.props?.children===texto));
+    assert.ok(!botao.props.disabled);await botao.props.onClick();
+    assert.deepEqual(criado,{comunidadeId:'org-a',dataAplicacao:'2026-11-12'});assert.deepEqual(preferencia,{id:'novo-id',valor:modo});assert.equal(aberto,'novo-id');
+  }
 });
 
 test('voltar no editor restaura o instrumento anterior e depois a lista de versões',()=>{
@@ -77,7 +112,7 @@ test('link direto e exclusão têm retorno interno, sem abrir aplicação arbitr
   const render=()=>a.DiagnosticoModule({comunidadeId:'org-a'});
   assert.equal(render().props.diagnosticoId,'v1');assert.equal(render().props.instrumentoAtual,'ieo');
   render().props.onBack();assert.equal(render().type,a.Historico);
-  render().props.onSelectDiagnostico('v2');render().props.onExcluido();assert.equal(render().type,a.Historico);
+  render().props.onSelectDiagnostico('v2');render().props.onExcluido();assert.equal(render().type,a.EntradaDiagnosticoAtual);
 });
 
 test('entrada sem mapeamento oferece histórico/criação, enquanto carregamento e erro não abrem registro arbitrário',()=>{

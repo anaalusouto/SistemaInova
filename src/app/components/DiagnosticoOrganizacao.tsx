@@ -36,7 +36,6 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   const queryClient = useQueryClient();
   const [showNew, setShowNew] = useState(iniciarCriacao);
   const [novaData, setNovaData] = useState('');
-  const [modo, setModo] = useState<ModoPreenchimento>('plataforma');
 
   const { data: comunidades = [] } = useQuery({ queryKey: ['comunidades'], queryFn: () => listarComunidades() });
   const comunidade = comunidades.find(c => c.id === comunidadeId);
@@ -47,8 +46,8 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
   });
 
   const criar = useMutation({
-    mutationFn: () => criarDiagnostico({ data: { comunidadeId, dataAplicacao: novaData } }),
-    onSuccess: diag => {
+    mutationFn: (_modo: ModoPreenchimento) => criarDiagnostico({ data: { comunidadeId, dataAplicacao: novaData } }),
+    onSuccess: (diag, modo) => {
       guardarModoPreenchimento(diag.id, modo);
       queryClient.invalidateQueries({ queryKey: ['diagnosticos', comunidadeId] });
       queryClient.invalidateQueries({ queryKey: ['diagnostico-visao-geral'] });
@@ -142,7 +141,7 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
       {showNew && !readOnly && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15, 23, 42, 0.5)' }} onClick={() => setShowNew(false)}>
           <form
-            onSubmit={e => { e.preventDefault(); if (novaData) criar.mutate(); }}
+            onSubmit={e => e.preventDefault()}
             onClick={e => e.stopPropagation()}
             className="bg-card rounded-2xl border p-4 sm:p-6 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto"
             style={{ borderColor: 'var(--border)' }}
@@ -166,16 +165,14 @@ export function DiagnosticoOrganizacao({ comunidadeId, onBack, onSelectDiagnosti
                 style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--ink-1)' }}
               />
             </label>
-            <fieldset className="mb-4 space-y-2"><legend className="mb-2 text-sm font-medium">Como deseja preencher?</legend>
-              <label className="flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="radio" name="modo-mapeamento" checked={modo==='plataforma'} onChange={()=>setModo('plataforma')}/><span><strong>Modelo da plataforma</strong><span className="block text-xs text-muted-foreground">Preenchimento pelas telas atuais.</span></span></label>
-              <label className="flex items-start gap-2 rounded-lg border p-3 text-sm"><input type="radio" name="modo-mapeamento" checked={modo==='planilha'} onChange={()=>setModo('planilha')}/><span><strong>Modelo de planilha</strong><span className="block text-xs text-muted-foreground">Preenchimento em Matriz, IEO e Cesta.</span></span></label>
-            </fieldset>
+            <div className="mb-4 space-y-2"><p className="text-sm font-semibold">Como você quer preencher o mapeamento?</p><p className="text-xs text-muted-foreground">Escolha uma opção para criar e começar. Você poderá trocar depois.</p>
+              <button type="button" disabled={!novaData||criar.isPending} onClick={()=>criar.mutate('planilha')} className="w-full rounded-lg border-2 border-primary bg-primary/5 p-3 text-left text-sm disabled:opacity-50"><strong className="block">Preencher em planilha</strong><span className="block text-xs text-muted-foreground">Preencha Matriz, IEO e Cesta em tabelas.</span></button>
+              <button type="button" disabled={!novaData||criar.isPending} onClick={()=>criar.mutate('plataforma')} className="w-full rounded-lg border p-3 text-left text-sm disabled:opacity-50"><strong className="block">Preencher na plataforma</strong><span className="block text-xs text-muted-foreground">Use as telas atuais de cada instrumento.</span></button>
+              {criar.isPending&&<p role="status" className="text-xs">Criando mapeamento…</p>}
+            </div>
             <div className="flex items-center justify-end gap-2">
               <button type="button" onClick={() => setShowNew(false)} className="px-3 py-1.5 rounded-md border text-[13px]" style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
                 Cancelar
-              </button>
-              <button type="submit" disabled={criar.isPending} className="px-4 py-1.5 rounded-md text-[13px] font-medium text-white disabled:opacity-60" style={{ background: 'var(--primary)' }}>
-                Criar mapeamento
               </button>
             </div>
           </form>
