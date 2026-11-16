@@ -20,7 +20,7 @@ try {
  assert.equal((await db.query(`SELECT count(*)::int n FROM public.etapas WHERE nome='Etapa preservada'`)).rows[0].n,1);
  assert.equal((await db.query(`SELECT count(*)::int n FROM public.log_alteracoes_meta WHERE acao='excluir'`)).rows[0].n,0);
  // Reaplicação com dados existentes preserva a meta e seus vínculos.
- await db.exec(await readFile(path.join('supabase/migrations',arquivos.at(-1)),'utf8'));
+ await db.exec(await readFile(path.join('supabase/migrations',arquivos.find(a=>a.endsWith('_excluir_meta_segura.sql'))),'utf8'));
  assert.equal((await db.query(`SELECT count(*)::int n FROM public.etapas WHERE nome='Etapa preservada'`)).rows[0].n,1);
  for(const [sufixo,sql] of [
   ['003',`INSERT INTO public.plano_riscos(projeto_id,meta_id,titulo,descricao,probabilidade,impacto) SELECT id,'00000000-0000-4000-8000-000000000003','Risco','Risco',1,1 FROM public.projetos WHERE code='teste'`],

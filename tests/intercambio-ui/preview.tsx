@@ -1,0 +1,8 @@
+﻿import {useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {IntercambioMarkdownDialog} from '../../src/app/components/diagnostic/IntercambioMarkdownDialog';
+import {PendenciasModulo} from '../../src/app/components/PendenciasModulo';
+import {compararIntercambio,type DocumentoIntercambio} from '../../src/app/diagnostic/intercambioMarkdown';
+import '../../src/styles.css';
+const base:DocumentoIntercambio={formato:'sistemainova-mapeamento',versao:1,organizacaoId:'00000000-0000-4000-8000-000000000001',diagnosticoId:'00000000-0000-4000-8000-000000000002',secoes:{matriz:[],ieo:[{chave:'caderno:Q01:',titulo:'Q01 · Pergunta de teste',original:{valor:'1',selecoes:[],relato:'Antes',fonte:'',respondentes:''},resposta:{valor:'1',selecoes:[],relato:'Antes',fonte:'',respondentes:''}}],cesta:[]}};
+function App(){const [doc,setDoc]=useState(base),[aberto,setAberto]=useState(true),[mensagem,setMensagem]=useState('');return <PendenciasModulo aoPendencias={()=>{}}><main className="p-5"><h1>Teste isolado</h1><p role="status">{mensagem}</p><button onClick={()=>setAberto(true)}>Abrir intercâmbio</button>{aberto&&<IntercambioMarkdownDialog readOnly={false} aoFechar={()=>setAberto(false)} carregar={async()=>structuredClone(doc)} aplicar={async d=>{if(new URLSearchParams(location.search).has('falha'))throw Error('Falha simulada');const dif=compararIntercambio(d,doc);const copia=structuredClone(doc);for(const a of dif){const r=copia.secoes[a.secao].find(r=>r.chave===a.chave)!;r.original=a.proposto;r.resposta=a.proposto;}setDoc(copia);setMensagem('Aplicado: '+dif.length);}}/>}</main></PendenciasModulo>};createRoot(document.getElementById('root')!).render(<App/>);

@@ -12,6 +12,9 @@ import { interpretarTextoMatriz, validarConferencia, type ImportacaoSalva, type 
 import type { RegistroCaderno } from './diagnostic/cadernoCria';
 import { calcularNotaConsolidada } from './diagnostic/notaConsolidada';
 import { ieoAguardandoReavaliacao } from './diagnostic/validadeIeoCaderno';
+import { montarMapeamentoIntercambio } from './diagnostic/mapeamentoIntercambio';
+import { baseAssinaturaIntercambio, compararIntercambio, validarDocumentoIntercambio, type DocumentoIntercambio } from './diagnostic/intercambioMarkdown';
+import { validarAlteracoesIntercambio } from './diagnostic/validarIntercambio';
 
 const mensagemMapeamento=(erro:{message:string})=>erro.message.replace(/diagnóstico/gi,termo=>termo[0]==='D'?'Mapeamento':'mapeamento');
 
@@ -965,6 +968,53 @@ export const getDadosCompletosDiagnostico = createServerFn({ method: 'GET' })
       parecer: mapParecer(parecerRes.data, diagnosticoId),
       caderno: cadernoRes.data ?? [],
     };
+  });
+
+async function carregarIntercambio(organizacaoId:string, diagnosticoId:string):Promise<DocumentoIntercambio> {
+  const db=await getAdmin();
+  const [diagnostico,matriz,caderno,produtos,categorias]=await Promise.all([
+    db.from('diagnosticos').select('id').eq('id',diagnosticoId).eq('comunidade_id',organizacaoId).maybeSingle(),
+    db.from('diagnostico_matriz').select('*').eq('diagnostico_id',diagnosticoId),
+    db.from('diagnostico_caderno_respostas').select('*').eq('diagnostico_id',diagnosticoId),
+    db.from('diagnostico_produtos').select('*').eq('diagnostico_id',diagnosticoId),
+    db.from('diagnostico_cesta_categorias').select('*').eq('diagnostico_id',diagnosticoId),
+  ]);
+  if(diagnostico.error||!diagnostico.data)throw new Error('O mapeamento não pertence à organização selecionada.');
+  for(const resultado of [matriz,caderno,produtos,categorias])if(resultado.error)throw new Error(mensagemMapeamento(resultado.error));
+  return montarMapeamentoIntercambio({organizacaoId,diagnosticoId,matriz:(matriz.data??[]).map(mapMatrizResposta),caderno:caderno.data??[],produtos:(produtos.data??[]).map(mapProdutoRow),categorias:(categorias.data??[]).map((r:any)=>({id:r.id,diagnosticoId:r.diagnostico_id,nome:r.nome}))});
+}
+async function assinaturaIntercambio(documento:DocumentoIntercambio):Promise<string>{
+  const segredo=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!segredo)throw new Error('Não foi possível proteger o arquivo de intercâmbio.');
+  const {createHmac}=await import('node:crypto');
+  return createHmac('sha256',segredo).update('sistemainova-markdown-v1\n').update(baseAssinaturaIntercambio(documento)).digest('hex');
+}
+export const obterMapeamentoMarkdown = createServerFn({method:'GET'})
+  .validator((d:{organizacaoId:string;diagnosticoId:string})=>d)
+  .handler(async({data})=>{const documento=await carregarIntercambio(data.organizacaoId,data.diagnosticoId);return {...documento,assinatura:await assinaturaIntercambio(documento)};});
+
+export const aplicarMapeamentoMarkdown = createServerFn({method:'POST'})
+  .validator((d:{organizacaoId:string;diagnosticoId:string;documento:DocumentoIntercambio})=>d)
+  .handler(async({data}):Promise<number>=>{
+    const autor=await exigirEscritaDiagnostico();
+    if(new TextEncoder().encode(JSON.stringify(data.documento)).byteLength>10_000_000)throw new Error('O arquivo excede o limite de 10 MB.');
+    validarDocumentoIntercambio(data.documento);
+    const assinatura=await assinaturaIntercambio(data.documento);
+    const {timingSafeEqual}=await import('node:crypto');
+    if(typeof data.documento.assinatura!=='string'||!/^[a-f0-9]{64}$/.test(data.documento.assinatura)||!timingSafeEqual(Buffer.from(data.documento.assinatura,'hex'),Buffer.from(assinatura,'hex')))throw new Error('A referência original do arquivo foi alterada. Exporte novamente e preserve os campos original, as chaves e a assinatura.');
+    const atual=await carregarIntercambio(data.organizacaoId,data.diagnosticoId);
+    const alteracoes=compararIntercambio(data.documento,atual);
+    validarAlteracoesIntercambio(data.documento,alteracoes);
+    if(!alteracoes.length)throw new Error('Nenhuma alteração para importar.');
+    const lote=alteracoes.map(a=>{
+      const [tipo,id,contexto]=a.chave.split(':');
+      return {tipo,...(tipo==='caderno'?{codigo:id,contexto}:tipo==='matriz'?{codigo:id,nome:FUNCOES_MATRIZ.find(f=>f.id===id)!.nome}:{id}),original:a.original,proposto:a.proposto};
+    });
+    const db=await getAdmin();
+    const {data:total,error}=await db.rpc('importar_mapeamento_markdown',{p_organizacao:data.organizacaoId,p_diagnostico:data.diagnosticoId,p_autor:autor.id,p_alteracoes:lote});
+    if(error)throw new Error(mensagemMapeamento(error));
+    if(typeof total!=='number'||total!==lote.length)throw new Error('O banco não confirmou a importação completa.');
+    return total;
   });
 
 /** Copia uma tabela filha (chave composta diagnostico_id+campo) de um mapeamento pra outro. */

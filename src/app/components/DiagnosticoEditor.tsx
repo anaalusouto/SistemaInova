@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowLeft, Lock, CopyPlus, PencilLine } from 'lucide-react';
-import { getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, type DiagnosticoStatus } from '../diagnosticos.server';
+import { getDiagnostico, concluirDiagnostico, criarNovaVersaoDiagnostico, obterMapeamentoMarkdown, aplicarMapeamentoMarkdown, type DiagnosticoStatus } from '../diagnosticos.server';
 import { formatDateOnly } from '../lib/dateOnly';
 import type { InstrumentoDiagnostico } from '../lib/navegacaoApp';
 import { ExcluirDiagnosticoButton } from './diagnostic/ExcluirDiagnosticoButton';
@@ -22,6 +22,7 @@ import { PlanilhaCaderno } from './diagnostic/PlanilhaCaderno';
 import { PlanilhaCesta } from './diagnostic/PlanilhaCesta';
 import { IDENTIFICACAO_CADERNO, QUESTIONARIO_CADERNO, COMPLEMENTARES_CADERNO, EVIDENCIAS_CADERNO } from '../diagnostic/catalog/cadernoCria';
 import { lerModoPreenchimento, guardarModoPreenchimento, type ModoPreenchimento } from '../diagnostic/modoPreenchimento';
+import { IntercambioMarkdownDialog } from './diagnostic/IntercambioMarkdownDialog';
 
 const STATUS_LABEL: Record<DiagnosticoStatus, string> = { em_edicao: 'Em edição', concluido: 'Concluído' };
 
@@ -58,6 +59,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
   const [tabLocal, setTabLocal] = useState<TabId>(instrumentoInicial);
   const tab = instrumentoAtual ?? tabLocal;
   const [evidenciasAberto, setEvidenciasAberto] = useState(false);
+  const [arquivoAberto, setArquivoAberto] = useState(false);
   const [editorAberto, setEditorAberto] = useState(false);
   const [secaoEditor, setSecaoEditor] = useState<'Dados gerais' | 'Evidências' | 'Implantação' | 'Matriz Funcional' | 'Questões do IEO' | 'Produtos e serviços'>('Dados gerais');
   const [registroEditor, setRegistroEditor] = useState<string | undefined>();
@@ -119,6 +121,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
           {diagnostico && (
             <div className="diagnostico-acoes flex min-w-0 flex-wrap items-center gap-2">
               {onExcluido && <ExcluirDiagnosticoButton diagnostico={diagnostico} nomeOrganizacao={comunidades.find(c => c.id === diagnostico.comunidadeId)?.nome ?? 'Organização'} onExcluido={onExcluido} bloqueado={haPendencias} />}
+              {instrumentoInicial !== 'parecer' && <button type="button" className="rounded-lg border px-3 py-2 text-xs font-medium" onClick={()=>navegarSemPendencias(haPendencias,()=>setArquivoAberto(true))}>Exportar / importar .md</button>}
               <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium" onClick={() => navegarSemPendencias(haPendencias, () => { setRegistroEditor(undefined); setSecaoEditor(tab === 'matriz' ? 'Matriz Funcional' : tab === 'ieo' ? 'Questões do IEO' : tab === 'cesta' ? 'Produtos e serviços' : 'Dados gerais'); setEditorAberto(true); })}>
                 <PencilLine size={14} aria-hidden /> Editar informações
               </button>
@@ -170,6 +173,7 @@ function ConteudoDiagnosticoEditor({ diagnosticoId, organizacaoId, onBack, onNov
         </div>
       </div>
       {diagnostico && evidenciasAberto && <EvidenciasDiagnosticoPanel diagnosticoId={diagnosticoId} readOnly={readOnly || diagnostico.status === 'concluido'} aoFechar={() => setEvidenciasAberto(false)} aoGerenciar={() => { setEvidenciasAberto(false); setSecaoEditor('Evidências'); setEditorAberto(true); }} />}
+      {diagnostico && arquivoAberto && <IntercambioMarkdownDialog readOnly={readOnly||diagnostico.status==='concluido'} aoFechar={()=>setArquivoAberto(false)} carregar={()=>obterMapeamentoMarkdown({data:{organizacaoId:diagnostico.comunidadeId,diagnosticoId}})} aplicar={async documento=>{const total=await aplicarMapeamentoMarkdown({data:{organizacaoId:diagnostico.comunidadeId,diagnosticoId,documento}});await Promise.all([queryClient.invalidateQueries({queryKey:['caderno-cria',diagnosticoId]}),queryClient.invalidateQueries({queryKey:['diagnostico',diagnosticoId]}),queryClient.invalidateQueries({queryKey:['diagnostico-produtos',diagnosticoId]}),queryClient.invalidateQueries({queryKey:['cesta-categorias',diagnosticoId]}),queryClient.invalidateQueries({queryKey:['diagnostico-matriz',diagnosticoId]}),queryClient.invalidateQueries({queryKey:['portfolio-notas-mapeamento']}),queryClient.invalidateQueries({queryKey:['prioridades-cruzadas']}),queryClient.invalidateQueries({queryKey:['portfolio-detalhes-mapeamento']})]);toast.success(`${total} alteração(ões) importada(s).`);}}/>}
       {diagnostico && editorAberto && <EditorInformacoesDiagnostico diagnostico={diagnostico} diagnosticoId={diagnosticoId} organizacaoId={diagnostico.comunidadeId} readOnly={readOnly || diagnostico.status === 'concluido'} haPendencias={haPendencias} secaoInicial={secaoEditor} registroInicial={secaoEditor==='Implantação'?registroEditor:undefined} aoFechar={() => setEditorAberto(false)} aoGerenciarEvidencias={() => { setEditorAberto(false); setEvidenciasAberto(true); }} />}
     </div>
   );

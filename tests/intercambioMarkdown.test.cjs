@@ -1,0 +1,11 @@
+﻿const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs'), ts = require('typescript');
+const m={exports:{}};
+const js=ts.transpileModule(fs.readFileSync('src/app/diagnostic/intercambioMarkdown.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+new Function('require','module','exports',js)(require,m,m.exports);
+const {criarMarkdownMapeamento,lerMarkdownMapeamento,compararIntercambio}=m.exports;
+const base=()=>({formato:'sistemainova-mapeamento',versao:1,organizacaoId:'org',diagnosticoId:'diag',secoes:{matriz:[{chave:'F01',titulo:'Função',original:{valor:null},resposta:{valor:null}}],ieo:[{chave:'Q01',titulo:'Pergunta',original:{valor:'1',relato:'antes'},resposta:{valor:'1',relato:'antes'}}],cesta:[]}});
+test('Markdown preserva acentos, texto multilinha e todas as seções',()=>{const d=base();d.secoes.ieo[0].resposta.relato='Relato\ncom acentuação';assert.deepEqual(lerMarkdownMapeamento(criarMarkdownMapeamento(d)),d);});
+test('prévia distingue alteração, ausência de mudança e conflito',()=>{const atual=base(), d=base();d.secoes.ieo[0].resposta={valor:'2',relato:'depois'};let diff=compararIntercambio(d,atual);assert.equal(diff.length,1);assert.equal(diff[0].conflito,false);atual.secoes.ieo[0].resposta.relato='mudou na plataforma';diff=compararIntercambio(d,atual);assert.equal(diff[0].conflito,true);});
+test('rejeita outro mapeamento, duplicatas e arquivo estruturalmente incompleto',()=>{const a=base(),b=base();b.diagnosticoId='outro';assert.throws(()=>compararIntercambio(a,b),/outro mapeamento/);b.diagnosticoId='diag';b.secoes.ieo.push(b.secoes.ieo[0]);assert.throws(()=>criarMarkdownMapeamento(b),/duplicado/);b.secoes.ieo=[];assert.throws(()=>compararIntercambio(b,a),/mudaram/);assert.throws(()=>lerMarkdownMapeamento('# sem dados'),/bloco JSON/);});

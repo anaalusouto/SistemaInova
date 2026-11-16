@@ -1,0 +1,29 @@
+import { useState } from 'react';
+import { compararIntercambio, criarMarkdownMapeamento, lerMarkdownMapeamento, type AlteracaoIntercambio, type DocumentoIntercambio } from '../../diagnostic/intercambioMarkdown';
+import { validarAlteracoesIntercambio } from '../../diagnostic/validarIntercambio';
+import { usePendenciaModulo } from '../PendenciasModulo';
+
+interface Props {
+  carregar:()=>Promise<DocumentoIntercambio>;
+  aplicar:(documento:DocumentoIntercambio)=>Promise<void>;
+  readOnly:boolean;
+  aoFechar:()=>void;
+}
+function valorParaPrevia(a:AlteracaoIntercambio):unknown {
+  if(!a.chave.startsWith('novo_produto:')||!a.proposto||typeof a.proposto!=='object'||Array.isArray(a.proposto))return a.proposto;
+  const novo=a.proposto as unknown as {dados?:unknown;perguntas?:{codigo:string;titulo:string;resposta:{valor:unknown;selecoes:unknown[];relato:string;fonte:string;respondentes:string}}[]};
+  return {dados:novo.dados,perguntas:(novo.perguntas??[]).filter(p=>p.resposta.valor!==null||(Array.isArray(p.resposta.selecoes)&&p.resposta.selecoes.length>0)||p.resposta.relato||p.resposta.fonte||p.resposta.respondentes)};
+}
+/** O chamador precisa revalidar e aplicar todas as alterações em uma única transação. */
+export function IntercambioMarkdownDialog({carregar,aplicar,readOnly,aoFechar}:Props){
+  const [documento,setDocumento]=useState<DocumentoIntercambio|null>(null);
+  const [alteracoes,setAlteracoes]=useState<AlteracaoIntercambio[]>([]);
+  const [erro,setErro]=useState('');
+  const [ocupado,setOcupado]=useState(false);
+  usePendenciaModulo(Boolean(documento)||ocupado);
+  const exportar=async()=>{setOcupado(true);setErro('');try{const atual=await carregar();const blob=new Blob([criarMarkdownMapeamento(atual)],{type:'text/markdown;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='mapeamento-sistemainova.md';link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){setErro(e instanceof Error?e.message:'Não foi possível exportar.');}finally{setOcupado(false);}};
+  const selecionar=async(arquivo:File)=>{setOcupado(true);setErro('');setDocumento(null);setAlteracoes([]);try{if(!arquivo.name.toLocaleLowerCase('pt-BR').endsWith('.md'))throw new Error('Selecione um arquivo .md.');if(arquivo.size>10_000_000)throw new Error('O arquivo excede o limite de 10 MB.');const recebido=lerMarkdownMapeamento(await arquivo.text());const atual=await carregar();const diferencas=compararIntercambio(recebido,atual);setDocumento(recebido);setAlteracoes(diferencas);}catch(e){setErro(e instanceof Error?e.message:'Não foi possível ler o arquivo.');}finally{setOcupado(false);}};
+  const confirmar=async()=>{if(!documento)return;setOcupado(true);setErro('');try{const atual=await carregar();const diferencas=compararIntercambio(documento,atual);validarAlteracoesIntercambio(documento,diferencas);if(!diferencas.length)throw new Error('Nenhuma alteração para importar.');await aplicar(documento);setDocumento(null);setAlteracoes([]);aoFechar();}catch(e){setErro(e instanceof Error?e.message:'Não foi possível importar.');}finally{setOcupado(false);}};
+  const conflitos=alteracoes.some(a=>a.conflito);
+  return <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-3"><section role="dialog" aria-modal="true" aria-labelledby="intercambio-titulo" className="flex max-h-[90dvh] w-full max-w-4xl flex-col rounded-xl bg-card shadow-xl"><header className="flex items-center justify-between gap-3 border-b p-4"><h2 id="intercambio-titulo" className="font-semibold">Exportar ou importar mapeamento</h2><button type="button" disabled={ocupado} onClick={()=>{setDocumento(null);aoFechar();}} aria-label="Fechar">✕</button></header><div className="min-h-0 space-y-4 overflow-y-auto p-4"><p className="text-sm">Exporte o arquivo, revise seu conteúdo e importe a versão revisada para conferir as alterações. O modelo também permite incluir produtos novos na Cesta.</p><button type="button" disabled={ocupado} onClick={()=>void exportar()} className="rounded border px-3 py-2 text-sm">Exportar arquivo .md</button>{!readOnly&&<label className="block text-sm">Importar arquivo revisado<input type="file" accept=".md,text/markdown" disabled={ocupado} className="mt-1 block w-full text-sm" onChange={e=>{const arquivo=e.target.files?.[0];e.target.value='';if(arquivo)void selecionar(arquivo);}}/></label>}{erro&&<p role="alert" className="rounded border p-2 text-sm text-destructive">{erro}</p>}{ocupado&&<p role="status" className="text-sm">Processando…</p>}{documento&&<section aria-label="Prévia das alterações" className="space-y-3"><h3 className="font-semibold">Prévia: {alteracoes.length} alteração(ões)</h3>{conflitos&&<p role="alert" className="text-sm text-destructive">Há conflitos com edições feitas após a exportação. Exporte novamente e revise antes de importar.</p>}{alteracoes.map(a=><article key={`${a.secao}:${a.chave}`} className="min-w-0 rounded border p-3 text-sm"><h4 className="font-semibold break-words">{a.titulo}</h4>{a.conflito&&<p className="text-destructive">Alterado na plataforma após a exportação</p>}<div className="mt-2 grid gap-2 sm:grid-cols-2"><div><strong>Atual</strong><pre className="whitespace-pre-wrap break-all text-xs">{JSON.stringify(a.atual,null,2)}</pre></div><div><strong>Proposto</strong><pre className="whitespace-pre-wrap break-all text-xs">{JSON.stringify(valorParaPrevia(a),null,2)}</pre></div></div></article>)}<div className="flex flex-wrap gap-2"><button type="button" disabled={ocupado||conflitos||alteracoes.length===0} onClick={()=>void confirmar()} className="rounded bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50">Aplicar alterações</button><button type="button" disabled={ocupado} onClick={()=>{setDocumento(null);setAlteracoes([]);}} className="rounded border px-3 py-2 text-sm">Cancelar prévia</button></div></section>}</div></section></div>;
+}

@@ -1,0 +1,7 @@
+﻿const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+function load(file){file=path.resolve(file);if(!path.extname(file))file+='.ts';const mod={exports:{}};const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('require','module','exports',js)(r=>r.startsWith('.')?load(path.resolve(path.dirname(file),r)):require(r),mod,mod.exports);return mod.exports;}
+const {validarAlteracoesIntercambio:validar}=load('src/app/diagnostic/validarIntercambio.ts');
+const doc={organizacaoId:'00000000-0000-4000-8000-000000000001',diagnosticoId:'00000000-0000-4000-8000-000000000002'};
+const linha=(chave,proposto,secao='ieo')=>({chave,titulo:'Pergunta',secao,original:null,atual:null,proposto,conflito:false});
+test('valida respostas do caderno e exige justificativa',()=>{const r={valor:'NA',selecoes:[],relato:'',fonte:'',respondentes:''};assert.throws(()=>validar(doc,[linha('caderno:Q01:',r)]),/justificativa/i);r.relato='Não se aplica';assert.doesNotThrow(()=>validar(doc,[linha('caderno:Q01:',r)]));});
+test('bloqueia conflito e campos de matriz desconhecidos',()=>{const r=linha('matriz:F01',{atuacao:null,experiencia:null,criticidade:null,interesse:null,observacoes:null,externo:null},'matriz');r.conflito=true;assert.throws(()=>validar(doc,[r]),/alterado/);r.conflito=false;r.proposto.novo='x';assert.throws(()=>validar(doc,[r]),/inválidos/);});
