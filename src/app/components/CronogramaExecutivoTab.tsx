@@ -692,17 +692,16 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
   onTrack: (pid: number, patch: Partial<{ status: GanttStatus; inicio: string; fim: string; responsavel: string; observacao: string }>) => void;
 }) {
   void activityId;
-  const APP_PEOPLE = usePeople();
-  const [colunas, setColunas] = useState<'prazo' | 'responsavel'>('prazo');
+  const [colunas, setColunas] = useState<'prazo' | 'observacao'>('prazo');
   return (
     <div className="rounded-md overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      <label className="inline-flex items-center gap-2 px-3 py-2 text-xs">Colunas da tabela <select value={colunas} onChange={e => setColunas(e.target.value as typeof colunas)} className="rounded border bg-card px-2 py-1.5"><option value="prazo">Status e prazos</option><option value="responsavel">Responsável e observação</option></select></label>
+      <label className="inline-flex items-center gap-2 px-3 py-2 text-xs">Colunas da tabela <select value={colunas} onChange={e => setColunas(e.target.value as typeof colunas)} className="rounded border bg-card px-2 py-1.5"><option value="prazo">Status e prazos</option><option value="observacao">Observação</option></select></label>
       <div className="min-w-0">
       <table className="acompanhamento-grade w-full table-fixed text-[12px]">
         <thead>
           <tr style={{ background: 'var(--surface-1)' }}>
             <th className="text-left px-3 py-2 font-semibold" style={{ color: 'var(--ink-4)' }}>Projeto / Comunidade</th>
-            {colunas === 'prazo' ? <><th className="text-left px-3 py-2 font-semibold">Status</th><th className="text-left px-3 py-2 font-semibold">Início</th><th className="text-left px-3 py-2 font-semibold">Fim</th></> : <><th className="text-left px-3 py-2 font-semibold">Responsável</th><th className="text-left px-3 py-2 font-semibold">Observação</th></>}
+            {colunas === 'prazo' ? <><th className="text-left px-3 py-2 font-semibold">Status</th><th className="text-left px-3 py-2 font-semibold">Início</th><th className="text-left px-3 py-2 font-semibold">Fim</th></> : <th className="text-left px-3 py-2 font-semibold">Observação</th>}
           </tr>
         </thead>
         <tbody>
@@ -730,18 +729,10 @@ function TrackingTable({ activityId, fallback, projects, track, onTrack }: {
                   <input type="date" value={t.fim ?? fallback.fim ?? ''} onChange={e => onTrack(p.id, { fim: e.target.value })}
                     className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)' }} />
                 </td></>}
-                {colunas === 'responsavel' && <><td className="px-3 py-1.5">
-                  <select value={t.responsavel ?? fallback.responsavel ?? ''} onChange={e => onTrack(p.id, { responsavel: e.target.value })}
-                    className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)', background: 'var(--surface-0)' }}>
-                    <option value="">—</option>
-                    {APP_PEOPLE.map(pe => <option key={pe.login} value={pe.name}>{pe.name}</option>)}
-                    {t.responsavel && !APP_PEOPLE.some(pe => pe.name === t.responsavel) && <option value={t.responsavel}>{t.responsavel}</option>}
-                  </select>
-                </td>
-                <td className="px-3 py-1.5">
+                {colunas === 'observacao' && <td className="px-3 py-1.5">
                   <input value={t.observacao ?? ''} onChange={e => onTrack(p.id, { observacao: e.target.value })}
                     placeholder="—" className="w-full text-[11px] px-2 py-1 rounded" style={{ border: '1px solid var(--border)' }} />
-                </td></>}
+                </td>}
               </tr>
             );
           })}

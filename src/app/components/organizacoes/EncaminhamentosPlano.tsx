@@ -25,10 +25,9 @@ export function EncaminhamentosPlano({ orgId, foco, mostrarConcluidos }: { orgId
     <h2 className="font-semibold text-sm">Acompanhamentos do plano de trabalho ({linhas.filter(l => l.atividade.status !== 'Concluído').length} pendentes)</h2>
     <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Próximos passos das atividades vinculadas a esta organização. As alterações são salvas na atividade de origem; o status acompanha sua execução.</p>
     {projectsLoading ? <p className="text-sm">Carregando acompanhamentos…</p> : visiveis.length === 0 ? <p className="text-sm">Nenhuma ação de acompanhamento neste filtro.</p> :
-      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr>{['Ação', 'Responsável', 'Prazo', 'Status da atividade', 'Origem'].map(c => <th key={c} className="text-left p-2">{c}</th>)}</tr></thead>
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr>{['Ação', 'Prazo', 'Status da atividade', 'Origem'].map(c => <th key={c} className="text-left p-2">{c}</th>)}</tr></thead>
         <tbody>{visiveis.map(l => <tr key={l.atividade.id} ref={destaque.ref(l.atividade.id)} style={{ background: destaque.ativo(l.atividade.id) ? 'var(--brand-soft)' : undefined }}>
           <td className="p-2 whitespace-pre-wrap"><button className="text-left hover:underline" onClick={() => setSelecionada(l.atividade.id)}>{l.atividade.nextStep}</button></td>
-          <td className="p-2">{l.atividade.nextStepOwner || 'Não informado'}</td>
           <td className="p-2">{l.atividade.nextStepDue ? formatDateOnly(l.atividade.nextStepDue) : 'Não informado'}</td>
           <td className="p-2">{l.atividade.status}</td>
           <td className="p-2"><button className="text-left hover:underline" onClick={() => setSelecionada(l.atividade.id)}>{l.projeto.code} / {l.meta.name} / {l.etapa.name} / {l.atividade.name}</button></td>

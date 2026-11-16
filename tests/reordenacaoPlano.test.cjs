@@ -24,6 +24,25 @@ const helper = carregar('src/app/lib/reordenacaoPlano.ts');
 const plano = carregar('src/app/lib/planoRelatorio.ts');
 const { codigosHierarquicos } = carregar('src/app/lib/planoTrabalho.ts');
 const lista = [1, 2, 3, 4].map(n => ({ id: uid(n), order: n }));
+test('exclusão de meta exige escrita e preserva registros vinculados', async () => {
+  const somenteConsulta=carregar('src/app/planoTrabalho.server.ts',{
+    '@tanstack/react-start':{createServerFn:()=>{const f={validator(){return f;},handler(h){return args=>h(args);}};return f;}},
+    './sessao.server':{exigirEscrita:async()=>{throw new Error('Sem permissão');}},
+  });
+  await assert.rejects(somenteConsulta.excluirMeta({data:{metaId:uid(1)}}),/permissão/);
+  for (const tabelaVinculada of [null, 'etapas', 'plano_riscos', 'mudancas', 'orcamento_itens']) {
+    const chamadas=[];
+    const db={rpc:async(nome,params)=>{chamadas.push({nome,params});return {error:tabelaVinculada?{message:'Há registros vinculados'}:null};}};
+    const modulo=carregar('src/app/planoTrabalho.server.ts',{
+      '@tanstack/react-start':{createServerFn:()=>{const f={validator(){return f;},handler(h){return args=>h(args);}};return f;}},
+      './sessao.server':{exigirEscrita:async()=>({displayName:'Pessoa',role:'PMO'})},
+      '../integrations/supabase/client.server':{supabaseAdmin:db},
+    });
+    if(tabelaVinculada)await assert.rejects(modulo.excluirMeta({data:{metaId:uid(1)}}),/vinculados/);
+    else await modulo.excluirMeta({data:{metaId:uid(1)}});
+    assert.deepEqual(chamadas,[{nome:'excluir_meta_segura',params:{p_meta:uid(1),p_autor:'Pessoa',p_papel:'PMO'}}]);
+  }
+});
 test('número legado no título não duplica a posição atual nem altera o texto armazenado', () => {
   const { tituloSemNumeroLegado } = carregar('src/app/lib/tituloPlano.ts');
   for(const [tipo,nome,esperado] of [['etapa','1.2 Nome da etapa','Nome da etapa'],['etapa','Etapa 1.2 — Oficina','Oficina'],

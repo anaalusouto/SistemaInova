@@ -86,13 +86,12 @@ export function ParecerOrganizacao({ organizacaoId, relatorioUrl, aoVoltar }: {
         <div className="inova-table-frame overflow-x-auto">
           <table className="inova-table-cards w-full" aria-label="Pareceres da organização">
             <thead><tr style={{ background: 'var(--surface-1)' }}>
-              {['Parecer', 'Data de inclusão', 'Responsável', 'Anexos', 'Ação'].map(h => <th key={h} scope="col" className="px-4 py-2.5 text-left" style={{ fontSize: '0.71rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>)}
+              {['Parecer', 'Data de inclusão', 'Anexos', 'Ação'].map(h => <th key={h} scope="col" className="px-4 py-2.5 text-left" style={{ fontSize: '0.71rem', fontWeight: 600, color: 'var(--ink-5)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>{h}</th>)}
             </tr></thead>
             <tbody>
               {pareceres.map(p => <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
                 <td data-label="Parecer" className="px-4 py-3 text-sm break-words">{p.anexos[0]?.nomeArquivo}{p.anexos.length > 1 && <span className="block text-xs text-muted-foreground">e mais {p.anexos.length - 1} anexo(s)</span>}</td>
                 <td data-label="Data de inclusão" className="px-4 py-3 text-sm">{new Date(p.criadoEm).toLocaleDateString('pt-BR')}</td>
-                <td data-label="Responsável" className="px-4 py-3 text-sm">{p.enviadoPor}</td>
                 <td data-label="Anexos" className="px-4 py-3"><ul className="space-y-2">
                   {p.anexos.map(a => <li key={a.id}><button type="button" disabled={abrindo !== null} onClick={() => void abrir(a.id)} className="inline-flex items-start gap-1 text-left text-xs hover:underline disabled:opacity-50" style={{ color: 'var(--primary)' }} aria-label={`Consultar anexo ${a.nomeArquivo}`}>
                     <Paperclip size={13} className="shrink-0 mt-0.5" /><span className="break-all">{abrindo === a.id ? 'Abrindo…' : a.nomeArquivo}<span className="block text-muted-foreground">{Math.ceil(a.tamanhoBytes / 1024)} KB</span></span>
@@ -100,7 +99,7 @@ export function ParecerOrganizacao({ organizacaoId, relatorioUrl, aoVoltar }: {
                 </ul></td>
                 <td data-label="Ação" className="px-4 py-3">{!readOnly ? <button type="button" onClick={() => { setFalhaExclusao(null); setExcluir(p); }} className="text-[12px] font-medium text-destructive hover:underline" aria-label={`Excluir parecer ${p.anexos[0]?.nomeArquivo}`}>Excluir</button> : <span className="text-xs text-muted-foreground">Somente consulta</span>}</td>
               </tr>)}
-              {pareceres.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center" style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>Nenhum parecer registrado ainda para esta organização.</td></tr>}
+              {pareceres.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center" style={{ color: 'var(--ink-5)', fontSize: '0.8rem' }}>Nenhum parecer registrado ainda para esta organização.</td></tr>}
             </tbody>
           </table>
         </div>

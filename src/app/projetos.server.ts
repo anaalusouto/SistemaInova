@@ -455,8 +455,7 @@ async function aplicarOperacaoSql(supabaseAdmin: Awaited<ReturnType<typeof getAd
         const { error } = await supabaseAdmin.from('metas').insert({ projeto_id: projetoId, nome: str(payload.name, to || 'Nova meta'), ordem });
         if (error) throw new Error(error.message);
       } else if (op.action === 'excluir') {
-        const { error } = await supabaseAdmin.from('metas').delete().eq('id', op.targetId);
-        if (error) throw new Error(error.message);
+        throw new Error('Para excluir uma meta, abra os detalhes da meta e use a opção Excluir meta.');
       } else {
         const { error } = await supabaseAdmin.from('metas').update({ nome: to }).eq('id', op.targetId);
         if (error) throw new Error(error.message);

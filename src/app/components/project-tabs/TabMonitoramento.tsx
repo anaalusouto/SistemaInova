@@ -216,7 +216,7 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
                             <table className="w-full">
                               <thead>
                                 <tr style={{ background: 'var(--surface-1)' }}>
-                                  {['Atividade', 'Responsável', 'Data Prevista', 'Início', 'Conclusão', 'Progresso', 'Status', 'Obs'].map(h => (
+                                  {['Atividade', 'Data Prevista', 'Início', 'Conclusão', 'Progresso', 'Status', 'Obs'].map(h => (
                                     <th
                                       key={h}
                                       className="px-3 py-2 text-left"
@@ -242,9 +242,6 @@ export function TabMonitoramento({ project }: TabMonitoramentoProps) {
                                             {activity.name}
                                           </span>
                                         </div>
-                                      </td>
-                                      <td className="px-3 py-2.5">
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--ink-3)' }}>{activity.responsible}</span>
                                       </td>
                                       <td className="px-3 py-2.5">
                                         <span style={{ fontSize: '0.73rem', color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>

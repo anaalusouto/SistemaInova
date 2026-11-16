@@ -231,6 +231,16 @@ export const salvarMeta = createServerFn({ method: 'POST' })
     }
   });
 
+/** Exclui apenas metas sem vínculos, preservando etapas e registros associados. */
+export const excluirMeta = createServerFn({ method: 'POST' })
+  .validator((d: { metaId: string }) => d)
+  .handler(async ({ data }): Promise<void> => {
+    const sessao = await exigirEscrita();
+    const db = await getAdmin();
+    const { error } = await db.rpc('excluir_meta_segura', { p_meta: data.metaId, p_autor: sessao.displayName, p_papel: sessao.role });
+    if (error) throw new Error(error.message);
+  });
+
 export const criarEtapaDaMeta = createServerFn({ method: 'POST' })
   .validator((d: { metaId: string; nome: string }) => d)
   .handler(async ({ data }): Promise<void> => {

@@ -24,7 +24,7 @@ import {
   salvarPeriodoDaEtapa, criarAtividade, atualizarAtividade, excluirAtividade, alterarConclusaoPlano,
   criarTarefa, renomearTarefa, excluirTarefa, criarRisco, atualizarRisco, excluirRisco,
   criarParecer, atualizarParecer, excluirParecer, definirResponsavel, reordenarPlano,
-  salvarMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa, moverEtapaPlano,
+  salvarMeta, excluirMeta, criarEtapaDaMeta, renomearEtapa, excluirEtapa, moverEtapaPlano,
   type PeriodoEtapaInput, type SalvarMetaInput, type AtividadeInput, type RiscoInput, type ParecerInput,
 } from './planoTrabalho.server';
 import { enviarAnexo, removerAnexo, type AnexoInput } from './anexos.server';
@@ -164,6 +164,7 @@ type Ctx = {
   savePeriodoEtapa: (input: PeriodoEtapaInput) => Promise<void>;
   // Editar meta (RF04.1): direto, com histórico em log_alteracoes_meta.
   saveMeta: (input: SalvarMetaInput) => Promise<void>;
+  deleteMeta: (metaId: string) => Promise<void>;
   createEtapa: (metaId: string, nome: string) => Promise<void>;
   renameEtapa: (etapaId: string, nome: string) => Promise<void>;
   deleteEtapa: (etapaId: string) => Promise<void>;
@@ -388,6 +389,7 @@ export function ProjectsProvider({ children }: { children: ReactNode }) {
 
     savePeriodoEtapa: input => run(() => salvarPeriodoDaEtapa({ data: input })),
     saveMeta: input => run(() => salvarMeta({ data: input })),
+    deleteMeta: metaId => run(() => excluirMeta({ data: { metaId } })),
     createEtapa: (metaId, nome) => run(() => criarEtapaDaMeta({ data: { metaId, nome } })),
     renameEtapa: (etapaId, nome) => run(() => renomearEtapa({ data: { etapaId, nome } })),
     deleteEtapa: etapaId => run(() => excluirEtapa({ data: { etapaId } })),

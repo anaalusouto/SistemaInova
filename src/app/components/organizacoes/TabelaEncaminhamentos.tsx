@@ -99,7 +99,7 @@ export function TabelaEncaminhamentos({
         <table data-grupo={colunas} className="encaminhamentos-grade w-full table-fixed text-left text-sm" aria-label="Encaminhamentos">
           <thead>
             <tr className="border-b bg-muted/30">
-              {(colunas === "origem" ? ["Origem", "Vínculo", "Ação", "Status", "Ações"] : ["Origem", "Ação", "Responsável", "Prazo", "Status", "Ações"]).map((c) => (
+              {(colunas === "origem" ? ["Origem", "Vínculo", "Ação", "Status", "Ações"] : ["Origem", "Ação", "Prazo", "Status", "Ações"]).map((c) => (
                 <th className="p-3" key={c}>
                   {c}
                 </th>
@@ -145,7 +145,6 @@ export function TabelaEncaminhamentos({
                       {r.acao}
                     </button>
                   </td>
-                  {colunas === "acompanhamento" && <td className="p-3">{r.responsavel}</td>}
                   {colunas === "acompanhamento" && <td className="p-3">
                     {r.prazo ? formatDateOnly(r.prazo) : "Não informado"}
                   </td>}

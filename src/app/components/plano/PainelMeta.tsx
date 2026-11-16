@@ -155,11 +155,14 @@ export function PainelMeta({
   lateral?: ReactNode; bloqueado?: boolean;
 }) {
   const { readOnly } = useAuth();
-  const { createEtapa, deleteEtapa } = useStore();
+  const { createEtapa, deleteEtapa, deleteMeta } = useStore();
   const [editando, setEditando] = useState(false);
   const [novaEtapa, setNovaEtapa] = useState('');
   const [criando, setCriando] = useState(false);
   const [remover, setRemover] = useState<Deliverable | null>(null);
+  const [removerMeta, setRemoverMeta] = useState(false);
+  const [excluindoMeta, setExcluindoMeta] = useState(false);
+  const [erroMeta, setErroMeta] = useState('');
 
   const prazo = prazoDaMeta(meta);
   const avisos = divergenciaDaMeta(meta);
@@ -199,7 +202,7 @@ export function PainelMeta({
   };
 
   const acoes = !readOnly && !editando ? (
-    <BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar meta</BotaoAcao>
+    <><BotaoAcao aoClicar={() => setEditando(true)}><Pencil size={12} /> Editar meta</BotaoAcao><BotaoAcao aoClicar={() => { setErroMeta(''); setRemoverMeta(true); }}><Trash2 size={12} /> Excluir meta</BotaoAcao></>
   ) : undefined;
 
   return (
@@ -278,6 +281,7 @@ export function PainelMeta({
           aoConfirmar={() => void confirmarRemocao()}
         />
       )}
+      {removerMeta && <ConfirmarExclusao titulo={`Excluir a meta "${meta.name}"?`} descricao="A exclusão é permanente. Metas com etapas, riscos, mudanças ou itens de orçamento vinculados não podem ser excluídas até que esses vínculos sejam removidos ou transferidos." ocupado={excluindoMeta} erro={erroMeta || null} aoCancelar={() => setRemoverMeta(false)} aoConfirmar={() => { setExcluindoMeta(true); void deleteMeta(meta.id).then(() => { toast.success('Meta excluída.'); aoFechar(); }).catch(e => setErroMeta(mensagem(e))).finally(() => setExcluindoMeta(false)); }} />}
     </Painel>
   );
 }

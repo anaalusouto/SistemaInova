@@ -114,7 +114,7 @@ export function VisaoTabela({
     detalhes: ["Atividade", "Observações / resultado esperado", "Nível risco", "Vínculo orçamentário", "Anexo"],
     todas: COLUNAS_PLANO,
   };
-  const colunasVisiveis = colunas.filter(c => grupos[conjunto].includes(c));
+  const colunasVisiveis = colunas.filter(c => c !== 'Responsável' && grupos[conjunto].includes(c));
   const { tabelaRef, larguras, larguraTotal, controles, restaurar } = useLargurasTabela(colunasVisiveis);
   const somaLarguras = colunasVisiveis.reduce((s, c) => s + larguraInicialColuna(c), 0);
   const conclusoes = useMemo(
